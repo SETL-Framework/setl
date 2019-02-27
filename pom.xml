@@ -107,7 +107,7 @@
             <dependency>
                 <groupId>com.holdenkarau</groupId>
                 <artifactId>spark-testing-base_2.11</artifactId>
-                <version>${spark.version}_0.9.0</version>
+                <version>${spark.version}_0.11.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
