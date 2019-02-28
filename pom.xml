@@ -5,7 +5,7 @@
 
     <groupId>com.jcdecaux.datacorp</groupId>
     <artifactId>dc-spark-sdk</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>dc-spark-sdk</name>
@@ -75,27 +75,6 @@
             <artifactId>config</artifactId>
             <version>1.3.3</version>
         </dependency>
-        <dependency>
-            <groupId>org.rogach</groupId>
-            <artifactId>scallop_${scala.compat.version}</artifactId>
-            <version>3.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.10</version>
-        </dependency>
-        <!-- TODO Check Spark dependency:tree -->
-        <dependency>
-            <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-core4</artifactId>
-            <version>4.0.1-incubating</version>
-        </dependency>
 
         <!-- Test -->
         <dependency>
@@ -115,33 +94,6 @@
             <artifactId>spark-hive_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.spark</groupId>
-            <artifactId>spark-cassandra-connector-embedded_${scala.compat.version}</artifactId>
-            <version>2.4.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cassandra</groupId>
-            <artifactId>cassandra-all</artifactId>
-            <version>3.2</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>log4j-over-slf4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.jcdecaux.mobility.gemeo.core</groupId>
-            <artifactId>gemeo-client</artifactId>
-            <version>1.9.1</version>
         </dependency>
     </dependencies>
 
