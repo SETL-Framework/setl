@@ -6,21 +6,38 @@ import com.jcdecaux.datacorp.spark.factory.Factory
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
+/**
+  *
+  */
 class Step {
 
   private var previousStep: Option[Step] = None
   private var factories: ArrayBuffer[Factory[Dataset[_]]] = ArrayBuffer[Factory[Dataset[_]]]()
 
+  /**
+    *
+    * @param step
+    * @return
+    */
   def setPreviousStep(step: Step): Step = {
     previousStep = Some(step)
     this
   }
 
+  /**
+    *
+    * @param factory
+    * @return
+    */
   def addFactory(factory: Factory[Dataset[_]]): Step = {
     factories += factory
     this
   }
 
+  /**
+    *
+    * @return
+    */
   def run(): Step = {
     var inputs: mutable.Map[String, Dataset[_]] = mutable.HashMap.empty[String, Dataset[_]]
     var step: Option[Step] = previousStep
@@ -29,10 +46,6 @@ class Step {
       inputs ++= step.get.factories.map(factory => (factory.getClass.getCanonicalName, factory.get())).toMap
       step = step.get.previousStep
     }
-
-    println(inputs.size)
-
-    inputs.foreach(println)
 
     factories.foreach(factory => {
       factory
