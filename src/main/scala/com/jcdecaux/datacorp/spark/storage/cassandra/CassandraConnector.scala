@@ -25,7 +25,7 @@ trait CassandraConnector {
     * @param keyspace keyspace name
     * @return
     */
-  private[this] def read(spark: SparkSession, table: String, keyspace: String): DataFrame = {
+  private[this] def readCassandra(spark: SparkSession, table: String, keyspace: String): DataFrame = {
     logger.debug(s"Read $keyspace.$table")
     spark.read.cassandraFormat(table, keyspace).load()
   }
@@ -35,8 +35,8 @@ trait CassandraConnector {
     *
     * @return
     */
-  protected def read(): DataFrame = {
-    this.read(this.spark, this.table, this.keyspace)
+  protected def readCassandra(): DataFrame = {
+    this.readCassandra(this.spark, this.table, this.keyspace)
   }
 
   /**
@@ -46,7 +46,7 @@ trait CassandraConnector {
     * @param table    table name
     * @param keyspace keyspace name
     */
-  private[this] def write(df: DataFrame, table: String, keyspace: String): Unit = {
+  private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
     logger.debug(s"Write DataFrame to $keyspace.$table")
     df.write
       .cassandraFormat(table, keyspace)
@@ -59,8 +59,8 @@ trait CassandraConnector {
     *
     * @param df DataFrame to be saved
     */
-  protected def write(df: DataFrame): Unit = {
-    this.write(df, this.table, this.keyspace)
+  protected def writeCassandra(df: DataFrame): Unit = {
+    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**
@@ -68,7 +68,7 @@ trait CassandraConnector {
     *
     * @param df DataFrame that will be used to create Cassandra table
     */
-  protected def create(df: DataFrame): Unit = {
+  protected def createCassandra(df: DataFrame): Unit = {
     logger.debug(s"Create cassandra table $keyspace.$table")
     logger.debug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
     logger.debug(s"Clustering keys: ${clusteringKeyColumns.get.mkString(", ")}")
@@ -87,7 +87,7 @@ trait CassandraConnector {
     * @param query    query
     * @param keyspace keyspace name
     */
-  protected def delete(spark: SparkSession, table: String, query: String = "", keyspace: String): Unit = {
+  protected def deleteCassandra(query: String = "", keyspace: String): Unit = {
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)
       .deleteFromCassandra(keyspace, table)

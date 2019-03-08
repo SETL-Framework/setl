@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.storage.csv
+package com.jcdecaux.datacorp.spark.storage.parquet
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
@@ -6,7 +6,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * CSVConnector
   */
-trait CSVConnector {
+trait ParquetConnector {
 
   private[this] final val logger: Logger = Logger.getLogger(this.getClass)
 
@@ -16,23 +16,19 @@ trait CSVConnector {
   val delimiter: String = ";"
   val header: String = "true"
 
-  protected def readCSV(): DataFrame = {
+  protected def readParquet(): DataFrame = {
     logger.debug(s"Reading csv file from $path")
-    this.spark.read
-      .option("header", this.header)
-      .option("inferSchema", this.inferSchema)
-      .option("delimiter", this.delimiter)
-      .csv(path)
+    this.spark.read.csv(path)
   }
 
   /**
     *
     * @param df
     */
-  protected def writeCSV(df: DataFrame, saveMode: SaveMode): Unit = {
+  protected def writeParquet(df: DataFrame, saveMode: SaveMode): Unit = {
     logger.debug(s"Write DataFrame to $path")
     df.write
-      .mode(SaveMode.Append)
+      .mode(saveMode)
       .csv(path)
   }
 }

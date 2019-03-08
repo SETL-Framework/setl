@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.util
+package com.jcdecaux.datacorp.spark.exception
 
 import com.jcdecaux.datacorp.spark.storage.Filter
 

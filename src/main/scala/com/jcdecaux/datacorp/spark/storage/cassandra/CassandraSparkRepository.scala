@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.cassandra
 
 import org.apache.spark.sql.{Dataset, Encoder}
 import com.jcdecaux.datacorp.spark.storage.{Filter, SparkRepository}
-import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
+import com.jcdecaux.datacorp.spark.exception.SqlExpressionUtils
 
 /**
   * SparkCassandraRepository
@@ -18,7 +18,7 @@ trait CassandraSparkRepository[T] extends SparkRepository[T] with CassandraConne
     */
   def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
     this
-      .read()
+      .readCassandra()
       .as[T]
   }
 
@@ -31,7 +31,7 @@ trait CassandraSparkRepository[T] extends SparkRepository[T] with CassandraConne
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
     if(filters.nonEmpty) {
       this
-        .read()
+        .readCassandra()
         .filter(SqlExpressionUtils.build(filters))
         .as[T]
     } else {
@@ -47,7 +47,7 @@ trait CassandraSparkRepository[T] extends SparkRepository[T] with CassandraConne
     */
   def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
     this
-      .read()
+      .readCassandra()
       .filter(SqlExpressionUtils.request(filter))
       .as[T]
   }
@@ -59,8 +59,8 @@ trait CassandraSparkRepository[T] extends SparkRepository[T] with CassandraConne
     * @return
     */
   def save(data: Dataset[T])(implicit encoder: Encoder[T]): this.type = {
-    this.create(data.toDF())
-    this.write(data.toDF())
+    this.createCassandra(data.toDF())
+    this.writeCassandra(data.toDF())
     this
   }
 }
