@@ -25,7 +25,7 @@ trait StorageSparkRepository[T] extends SparkRepository[T] with CassandraConnect
       case Storage.CASSANDRA =>
         this.readCassandra()
       case Storage.PARQUET =>
-        this.readCSV()
+        this.readParquet()
       case Storage.CSV =>
         this.readCSV()
       case _ =>
@@ -71,16 +71,18 @@ trait StorageSparkRepository[T] extends SparkRepository[T] with CassandraConnect
   /**
     *
     * @param data
-    * @param saveMode
+    * @param saveMode Only usable for file storage (Parquet and CSV)
     * @param encoder
     * @return
     */
   def save(data: Dataset[T], saveMode: SaveMode = SaveMode.Overwrite)(implicit encoder: Encoder[T]): this.type = {
     storage match {
       case Storage.CASSANDRA =>
-        this.writeCSV(data.toDF(), saveMode)
-      case Storage.CSV =>
         this.writeCassandra(data.toDF())
+      case Storage.PARQUET =>
+        this.writeParquet(data.toDF(), saveMode)
+      case Storage.CSV =>
+        this.writeCSV(data.toDF(), saveMode)
       case _ =>
         throw new UnknownException("Unsupported storage " + storage.name() + " exception !")
     }
