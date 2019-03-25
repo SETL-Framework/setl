@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.csv
 
-import com.jcdecaux.datacorp.spark.storage.{Filter, SparkRepository}
-import com.jcdecaux.datacorp.spark.exception.SqlExpressionUtils
+import com.jcdecaux.datacorp.spark.storage.{Filter, Repository}
+import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
 import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
 
 /**
@@ -9,7 +9,7 @@ import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
   *
   * @tparam T
   */
-trait CSVSparkRepository[T] extends SparkRepository[T] with CSVConnector {
+trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
 
   /**
     *
@@ -58,7 +58,18 @@ trait CSVSparkRepository[T] extends SparkRepository[T] with CSVConnector {
     * @param encoder
     * @return
     */
-  def save(data: Dataset[T],  saveMode: SaveMode = SaveMode.Overwrite)(implicit encoder: Encoder[T]): this.type = {
+  def save(data: Dataset[T])(implicit encoder: Encoder[T]): this.type = {
+    this.save(data, SaveMode.Overwrite)
+    this
+  }
+
+  /**
+    *
+    * @param data
+    * @param encoder
+    * @return
+    */
+  def save(data: Dataset[T], saveMode: SaveMode)(implicit encoder: Encoder[T]): this.type = {
     this.writeCSV(data.toDF(), saveMode)
     this
   }

@@ -1,4 +1,4 @@
-package com.jcdceaux.datacorp.spark.enums;
+package com.jcdecaux.datacorp.spark.enums;
 
 /**
  * StorageType

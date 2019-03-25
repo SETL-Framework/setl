@@ -116,6 +116,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     appEnv match {
       case "dev" =>
         this.config.setMaster("local[*]")
+      case _ =>
     }
 
     this

@@ -1,15 +1,15 @@
 package com.jcdecaux.datacorp.spark.storage.cassandra
 
-import org.apache.spark.sql.{Dataset, Encoder}
-import com.jcdecaux.datacorp.spark.storage.{Filter, SparkRepository}
-import com.jcdecaux.datacorp.spark.exception.SqlExpressionUtils
+import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
+import com.jcdecaux.datacorp.spark.storage.{Filter, Repository}
+import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
 
 /**
   * SparkCassandraRepository
   *
   * @tparam T
   */
-trait CassandraSparkRepository[T] extends SparkRepository[T] with CassandraConnector {
+trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector {
 
   /**
     *

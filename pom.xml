@@ -19,7 +19,7 @@
         <scala.version>2.11.12</scala.version>
         <scala.compat.version>2.11</scala.compat.version>
         <spark.version>2.4.0</spark.version>
-        <dependencies.scope>compile</dependencies.scope>
+        <dependencies.scope>provided</dependencies.scope>
         <app.environment>dev</app.environment>
     </properties>
 
@@ -64,16 +64,12 @@
             <groupId>com.datastax.spark</groupId>
             <artifactId>spark-cassandra-connector_${scala.compat.version}</artifactId>
             <version>2.4.0</version>
+            <scope>${dependencies.scope}</scope>
         </dependency>
         <dependency>
             <groupId>com.crealytics</groupId>
             <artifactId>spark-excel_${scala.compat.version}</artifactId>
             <version>0.11.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>1.3.3</version>
         </dependency>
 
         <!-- Test -->
@@ -199,6 +195,12 @@
             <id>provided</id>
             <properties>
                 <dependencies.scope>provided</dependencies.scope>
+            </properties>
+        </profile>
+        <profile>
+            <id>compile</id>
+            <properties>
+                <dependencies.scope>compile</dependencies.scope>
             </properties>
         </profile>
     </profiles>

@@ -1,11 +1,11 @@
-package com.jcdecaux.datacorp.spark.exception
+package com.jcdecaux.datacorp.spark.util
 
 import java.text.SimpleDateFormat
 import java.util.TimeZone
 
-import scala.util.matching.Regex
-
 import org.joda.time.DateTime
+
+import scala.util.matching.Regex
 
 /**
   * DateUtil

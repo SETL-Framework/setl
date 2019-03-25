@@ -32,7 +32,7 @@ trait CSVConnector {
   protected def writeCSV(df: DataFrame, saveMode: SaveMode): Unit = {
     logger.debug(s"Write DataFrame to $path")
     df.write
-      .mode(SaveMode.Append)
+      .mode(saveMode)
       .csv(path)
   }
 }

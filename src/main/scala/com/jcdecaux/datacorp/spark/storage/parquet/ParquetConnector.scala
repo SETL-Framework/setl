@@ -12,13 +12,10 @@ trait ParquetConnector {
 
   val spark: SparkSession
   val path: String
-  val inferSchema: String = "true"
-  val delimiter: String = ";"
-  val header: String = "true"
 
   protected def readParquet(): DataFrame = {
     logger.debug(s"Reading csv file from $path")
-    this.spark.read.csv(path)
+    this.spark.read.parquet(path)
   }
 
   /**
@@ -29,6 +26,6 @@ trait ParquetConnector {
     logger.debug(s"Write DataFrame to $path")
     df.write
       .mode(saveMode)
-      .csv(path)
+      .parquet(path)
   }
 }
