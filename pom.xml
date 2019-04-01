@@ -5,7 +5,7 @@
 
     <groupId>com.jcdecaux.datacorp</groupId>
     <artifactId>dc-spark-sdk</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.2</version>
     <packaging>jar</packaging>
 
     <name>dc-spark-sdk</name>
@@ -70,6 +70,7 @@
             <groupId>com.crealytics</groupId>
             <artifactId>spark-excel_${scala.compat.version}</artifactId>
             <version>0.11.1</version>
+            <scope>${dependencies.scope}</scope>
         </dependency>
 
         <!-- Test -->
@@ -127,24 +128,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>1.0</version>
@@ -183,7 +166,7 @@
                 </executions>
                 <configuration>
                     <serverId>nexus</serverId>
-                    <nexusUrl>http://maven.jcdecaux.com/</nexusUrl>
+                    <nexusUrl>http://nexus.jcdecaux.com/</nexusUrl>
                     <skipStaging>true</skipStaging>
                 </configuration>
             </plugin>
@@ -205,11 +188,14 @@
         </profile>
     </profiles>
 
-    <repositories>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-datacorp-snapshots</id>
+            <url>http://nexus.jcdecaux.com/repository/snapshots-DATACORP/</url>
+        </snapshotRepository>
         <repository>
-            <id>jcdecaux-nexus-release</id>
-            <name>JCDECAUX Release Nexus Repository</name>
-            <url>http://maven.jcdecaux.com/content/repositories/releases</url>
+            <id>nexus-datacorp-releases</id>
+            <url>http://nexus.jcdecaux.com/repository/releases-DATACORP/</url>
         </repository>
-    </repositories>
+    </distributionManagement>
 </project>
