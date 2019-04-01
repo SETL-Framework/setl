@@ -5,13 +5,15 @@
 
     <groupId>com.jcdecaux.datacorp</groupId>
     <artifactId>dc-spark-sdk</artifactId>
-    <version>0.1.2</version>
+    <version>${revision}${changelist}</version>
     <packaging>jar</packaging>
 
     <name>dc-spark-sdk</name>
     <description>dc-spark-sdk</description>
 
     <properties>
+        <revision>0.1.2</revision>
+        <changelist>-SNAPSHOT</changelist>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
