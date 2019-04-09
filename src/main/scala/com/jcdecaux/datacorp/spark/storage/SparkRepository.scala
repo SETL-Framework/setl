@@ -51,7 +51,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
     val df = read()
-    if(filters.nonEmpty) {
+    if(filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
       df.filter(SqlExpressionUtils.build(filters))
         .as[T]
     } else {
