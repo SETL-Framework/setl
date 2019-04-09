@@ -12,6 +12,7 @@ trait ParquetConnector {
 
   val spark: SparkSession
   val path: String
+  val table: String
 
   protected def readParquet(): DataFrame = {
     logger.debug(s"Reading csv file from $path")
@@ -26,6 +27,7 @@ trait ParquetConnector {
     logger.debug(s"Write DataFrame to $path")
     df.write
       .mode(saveMode)
-      .parquet(path)
+      .option("path", path)
+      .saveAsTable(table)
   }
 }
