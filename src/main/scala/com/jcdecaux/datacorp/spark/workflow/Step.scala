@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
-import org.apache.spark.sql.Dataset
 import com.jcdecaux.datacorp.spark.factory.Factory
+import org.apache.spark.sql.Dataset
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -42,7 +42,7 @@ class Step {
     var inputs: mutable.Map[String, Dataset[_]] = mutable.HashMap.empty[String, Dataset[_]]
     var step: Option[Step] = previousStep
 
-    while(step.isDefined) {
+    while (step.isDefined) {
       inputs ++= step.get.factories.map(factory => (factory.getClass.getCanonicalName, factory.get())).toMap
       step = step.get.previousStep
     }

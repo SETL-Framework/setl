@@ -26,13 +26,21 @@ trait CSVConnector {
   }
 
   /**
-    *
-    * @param df
+    * Write a [[DataFrame]] into the default path with the given save mode
     */
   protected def writeCSV(df: DataFrame, saveMode: SaveMode): Unit = {
+    this.writeCSV(df, this.path, saveMode)
+  }
+
+  /**
+    * Write a [[DataFrame]] into the given path with the given save mode
+    */
+  private[this] def writeCSV(df: DataFrame, path: String, saveMode: SaveMode): Unit = {
     logger.debug(s"Write DataFrame to $path")
     df.write
       .mode(saveMode)
+      .option("header", this.header)
+      .option("delimiter", this.delimiter)
       .csv(path)
   }
 }

@@ -28,12 +28,13 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   final private val logger: Logger = Logger.getLogger(this.getClass)
 
-  var appName: String = _
-  var appEnv: String = _
+  var appName: String = "SparkApplication"
+  var appEnv: String = "dev"
   var cassandraHost: String = _
   var config: SparkConf = new SparkConf()
   var initialization: Boolean = true
   var spark: SparkSession = _
+  var sparkHost: String = _
 
 
   /**
@@ -53,7 +54,12 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
     usages.toSet.foreach((usage: String) => {
       usage match {
-        case "cassandra" => this.config.set("spark.cassandra.connection.host", cassandraHost)
+        case "cassandra" =>
+          if (cassandraHost != null) {
+            this.config.set("spark.cassandra.connection.host", cassandraHost)
+          } else {
+            throw new NoSuchElementException("Cassandra host not set")
+          }
         case "test" => logger.warn("Testing usage")
         case _ => logger.error(s"Skip unknown usage: $usage")
       }
@@ -83,7 +89,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   /**
     * Set the application envir
     *
-    * @param name name of app
+    * @param env environment of app
     * @return
     */
   def setEnv(env: String): this.type = {
@@ -95,7 +101,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   /**
     * Set the application envir
     *
-    * @param name name of app
+    * @param host cassandra host
     * @return
     */
   def setCassandraHost(host: String): this.type = {
@@ -106,7 +112,13 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   private def configureGeneralProperties(): this.type = {
     logger.debug("Set general properties")
-    this.config.setAppName(appName)
+
+    if (appName != null) {
+      this.config.setAppName(appName)
+    } else {
+      throw new NoSuchElementException("No AppName was found.")
+    }
+
     this
   }
 
@@ -117,6 +129,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
       case "dev" =>
         this.config.setMaster("local[*]")
       case _ =>
+        this.config.setMaster(sparkHost)
     }
 
     this

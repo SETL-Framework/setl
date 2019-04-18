@@ -8,7 +8,7 @@ import org.apache.spark.sql.Dataset
   *
   * @tparam A the type of object that the factory is supposed to produce
   */
-trait Factory[+A] {
+trait Factory[A] {
 
   private var inputs: Map[String, Dataset[_]] = Map()
 

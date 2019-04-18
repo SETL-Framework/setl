@@ -1,12 +1,14 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import java.io.IOException
+
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.storage.cassandra.CassandraConnector
 import com.jcdecaux.datacorp.spark.storage.csv.CSVConnector
 import com.jcdecaux.datacorp.spark.storage.parquet.ParquetConnector
 import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
-import org.apache.spark.sql.{DataFrame, Dataset, Encoder, SaveMode}
+import org.apache.spark.sql._
 
 /**
   * StorageSparkRepository
@@ -21,6 +23,8 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     * @param encoder
     * @return
     */
+  @throws[IOException]("Cassandra table does not exist")
+  @throws[AnalysisException]("Path does not exist")
   private def read()(implicit encoder: Encoder[T]): DataFrame = {
     storage match {
       case Storage.CASSANDRA =>
@@ -39,6 +43,8 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     * @param encoder
     * @return
     */
+  @throws[IOException]("Cassandra table does not exist")
+  @throws[AnalysisException]("Path does not exist")
   def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
     read().as[T]
   }
