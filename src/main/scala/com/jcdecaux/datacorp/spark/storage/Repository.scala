@@ -1,6 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage
 
-import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
+import org.apache.spark.sql.{Dataset, Encoder}
 
 trait Repository[T] {
 

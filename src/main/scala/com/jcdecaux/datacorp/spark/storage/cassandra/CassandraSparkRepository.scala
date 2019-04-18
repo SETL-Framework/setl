@@ -1,19 +1,20 @@
 package com.jcdecaux.datacorp.spark.storage.cassandra
 
-import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
 import com.jcdecaux.datacorp.spark.storage.{Filter, Repository}
 import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
+import org.apache.spark.sql.{Dataset, Encoder}
 
 /**
   * SparkCassandraRepository
   *
-  * @tparam T
+  * @tparam T the corresponding Scala class for a Cassandra table
   */
 trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector {
 
   /**
+    * Return all the rows
     *
-    * @param encoder
+    * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
     * @return
     */
   def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
@@ -23,9 +24,10 @@ trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector 
   }
 
   /**
+    * Find rows matching the given filter conditions
     *
-    * @param filters
-    * @param encoder
+    * @param filters a set of filter conditions
+    * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
     * @return
     */
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
@@ -40,9 +42,10 @@ trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector 
   }
 
   /**
+    * Find rows matching the given filter condition
     *
-    * @param filter
-    * @param encoder
+    * @param filter  a filter condition
+    * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
     * @return
     */
   def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
@@ -53,9 +56,10 @@ trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector 
   }
 
   /**
+    * Save a Dataset to Cassandra
     *
-    * @param data
-    * @param encoder
+    * @param data    Spark Dataset to save
+    * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
     * @return
     */
   def save(data: Dataset[T])(implicit encoder: Encoder[T]): this.type = {

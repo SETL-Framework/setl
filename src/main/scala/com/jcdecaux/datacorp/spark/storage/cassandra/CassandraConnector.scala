@@ -2,10 +2,9 @@ package com.jcdecaux.datacorp.spark.storage.cassandra
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
-
 import org.apache.log4j.Logger
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.cassandra._
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 trait CassandraConnector {
 
@@ -82,14 +81,21 @@ trait CassandraConnector {
   /**
     * Delete a record
     *
-    * @param spark    spark session
-    * @param table    table name
-    * @param query    query
+    * @param query    query string
     * @param keyspace keyspace name
     */
-  protected def deleteCassandra(query: String = "", keyspace: String): Unit = {
+  private[this] def deleteCassandra(query: String, table: String, keyspace: String): Unit = {
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)
       .deleteFromCassandra(keyspace, table)
+  }
+
+  /**
+    * Delete a record
+    *
+    * @param query query string
+    */
+  protected def deleteCassandra(query: String): Unit = {
+    this.deleteCassandra(query, this.table, this.keyspace)
   }
 }
