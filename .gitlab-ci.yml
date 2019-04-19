@@ -1,57 +1,27 @@
+image: maven:3.6-jdk-8
+
 stages:
-  - test
   - build
-  - upload
+  - test
   - deploy
+
+build:
+  stage: build
+  script:
+    - mvn clean compile
 
 test:
   stage: test
-  image: maven:3.6-jdk-8-alpine
   script:
-    - chmod a+x mvnw
-    - ./mvnw clean test
-  tags:
-    - lab
+    - export JAVA_TOOL_OPTIONS="-Xmx1024m -Xms1024m"  # solve jvm heap size problem
+    - mvn clean test
 
-build:lab:
-  stage: build
-  script:
-    - chmod a+x mvnw
-    - ./mvnw -Dchangelist=${CHANGELIST} -Drevision=${VERSION} clean package -DskipTests
-  artifacts:
-    name: dc-spark-core
-    paths:
-      - target/dc-spark-sdk-${VERSION}${CHANGELIST}.jar
-    expire_in: 2 hrs
-  tags:
-    - lab
-  only:
-    - master
-
-upload:lab:
-  stage: upload
-  script:
-    - scp -v target/dc-spark-sdk-${VERSION}${CHANGELIST}.jar root@master-dc:/opt/apps/spark/jars/external/gitlab/dc-spark-sdk-${VERSION}${CHANGELIST}.jar
-  dependencies:
-    - build:lab
-  environment:
-    name: lab
-  tags:
-    - lab
-  only:
-    - master
-
-#Deployment to Nexus SNAPSHOT: the version should be defined in pom
 deploy:snapshot:
   stage: deploy
   script:
     - mvn clean deploy -DskipTests -Pprovided
   dependencies:
-    - build:lab
-  environment:
-    name: lab
-  tags:
-    - lab
+    - test
   only:
     - master
   when: manual
@@ -61,11 +31,7 @@ deploy:release:
   script:
     - mvn -Dchangelist= clean deploy -DskipTests -Pprovided
   dependencies:
-    - build:lab
-  environment:
-    name: lab
-  tags:
-    - lab
+    - test
   only:
     - master
   when: manual

@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.enums;
 
 public enum ValueType {
     STRING("string"),
-    DATETIME("datetime"),
+    DATETIME("timestamp"),
     DATE("date"),
     NUMBER("number");
 
