@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import com.jcdecaux.datacorp.spark.enums.ValueType
+
 /**
   * Filter
   *
@@ -15,4 +17,20 @@ package com.jcdecaux.datacorp.spark.storage
   * @param value
   */
 case class Filter(column: String, operator: String, nature: String, value: Option[String]) {
+
+  def toFilterCondition: Condition = {
+    Condition(
+      key = this.column,
+      operator = this.operator,
+      value = this.value,
+      valueType = this.nature.toLowerCase() match {
+        case "string" => ValueType.STRING
+        case "datetime" => ValueType.DATETIME
+        case "date" => ValueType.DATE
+        case "number" => ValueType.NUMBER
+        case _ => ValueType.NUMBER
+      }
+    )
+  }
+
 }
