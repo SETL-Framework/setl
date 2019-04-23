@@ -65,6 +65,18 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     }
   }
 
+  def findByCondition(conditions: Set[Condition])(implicit encoder: Encoder[T]): Dataset[T] = {
+    import com.jcdecaux.datacorp.spark.util.FilterUtils._
+
+    val df = read()
+    if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
+      df.filter(conditions.toSqlRequest)
+        .as[T]
+    } else {
+      df.as[T]
+    }
+  }
+
   /**
     *
     * @param filter
@@ -73,6 +85,10 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
     this.findBy(Set(filter))
+  }
+
+  def findByCondition(condition: Condition)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findByCondition(Set(condition))
   }
 
   /**

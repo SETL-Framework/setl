@@ -104,6 +104,20 @@ class MockCassandra(connector: CassandraConnector, keyspace: String) {
       session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '60-120',  '2018-01-01', 0.05);")
       session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '120',     '2018-01-01', 0.05);")
 
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '0-5',     '2018-01-02', 0.4);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '5-10',    '2018-01-02', 0.2);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '10-15',   '2018-01-02', 0.1);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '15-30',   '2018-01-02', 0.1);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '30-60',   '2018-01-02', 0.1);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '60-120',  '2018-01-02', 0.05);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '120',     '2018-01-02', 0.05);")
+
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '0-5',     '2018-01-03', 0.4);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '5-10',    '2018-01-03', 0.2);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '10-15',   '2018-01-03', 0.1);")
+      session.execute(s"INSERT INTO $keyspace.$table(country, location, asset, dwell_time, date, percent) VALUES ('SG', 'SIN-T1', 'asset-4', '15-30',   '2018-01-03', 0.1);")
+
+
     })
 
     this
