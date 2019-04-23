@@ -5,21 +5,28 @@ stages:
   - test
   - deploy
 
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode"
+
+cache:
+  paths:
+    - target/
+
 build:
   stage: build
   script:
-    - mvn clean compile
+    - mvn clean $MAVEN_CLI_OPTS compile
 
 test:
   stage: test
   script:
     - export JAVA_TOOL_OPTIONS="-Xmx1024m -Xms1024m"  # solve jvm heap size problem
-    - mvn clean test
+    - mvn $MAVEN_CLI_OPTS test
 
 deploy:snapshot:
   stage: deploy
   script:
-    - mvn clean deploy -DskipTests -Pprovided
+    - mvn -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
     - test
   only:
@@ -29,7 +36,7 @@ deploy:snapshot:
 deploy:release:
   stage: deploy
   script:
-    - mvn -Dchangelist= clean deploy -DskipTests -Pprovided
+    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
     - test
   only:
