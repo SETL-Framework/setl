@@ -54,7 +54,11 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
     )
     assert(cqlRepo.findBy(filter).count() === 1)
 
+  }
 
+  test("find by date") {
+    val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
+    import spark.implicits._
     /*
      * find by date
      */
@@ -72,7 +76,12 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
 
     val dateFilter3 = Condition("date", "=", Some("2018-01-03"), ValueType.DATE)
     assert(dwellRepo.findByCondition(dateFilter3).count() === 4)
+  }
 
+  test("find by datetime") {
+
+    val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
+    import spark.implicits._
     /*
      * find by datetime
      */
@@ -98,6 +107,7 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
       Condition("datetime", "=", Some("2018-01-01 17:00:00"), ValueType.DATETIME)
     )
     assert(trafficRepo.findByCondition(datetimeCondition3).count() === 1)
+
   }
 
   test("CSV") {
