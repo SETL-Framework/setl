@@ -14,6 +14,8 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
 
   import SparkRepositorySuite.deleteRecursively
 
+  var mockCassandra: MockCassandra = _
+
   val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
@@ -30,10 +32,9 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    new MockCassandra(connector, MockCassandra.keyspace)
+    mockCassandra = new MockCassandra(connector, MockCassandra.keyspace)
       .generateKeyspace()
-      .generateDwellTime("dwell")
-      .generateTraffic("traffic")
+
 
   }
 
@@ -57,6 +58,7 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
   }
 
   test("find by date") {
+    mockCassandra.generateDwellTime("dwell")
     val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
     import spark.implicits._
     /*
@@ -79,6 +81,7 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
   }
 
   test("find by datetime") {
+    mockCassandra.generateTraffic("traffic")
 
     val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
     import spark.implicits._
