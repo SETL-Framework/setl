@@ -1,9 +1,11 @@
 package com.jcdecaux.datacorp.spark.storage
 
 import java.io.{File, IOException}
+import java.util.TimeZone
 
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
+import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.AnalysisException
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
@@ -55,61 +57,61 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
 
   }
 
-  //  test("find by date") {
-  //    mockCassandra.generateDwellTime("dwell")
-  //    val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
-  //    import spark.implicits._
-  //    /*
-  //     * find by date
-  //     */
-  //    val dwellRepo = new TestDwellTimeRepository(spark)
-  //    assert(dwellRepo.findAll().count() === 39)
-  //
-  //    val dateFilter = Set(Condition("date", ">", Some("2018-01-01"), ValueType.DATE))
-  //    assert(dwellRepo.findByCondition(dateFilter).count() === 11)
-  //
-  //    val dateFilter2 = Set(
-  //      Condition("date", ">", Some("2018-01-01"), ValueType.DATE),
-  //      Condition("date", "<=", Some("2018-01-02"), ValueType.DATE)
-  //    )
-  //    assert(dwellRepo.findByCondition(dateFilter2).count() === 7)
-  //
-  //    val dateFilter3 = Condition("date", "=", Some("2018-01-03"), ValueType.DATE)
-  //    assert(dwellRepo.findByCondition(dateFilter3).count() === 4)
-  //  }
-  //
-  //  test("find by datetime") {
-  //    mockCassandra.generateTraffic("traffic")
-  //
-  //    val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
-  //    import spark.implicits._
-  //    /*
-  //     * find by datetime
-  //     */
-  //    val trafficRepo = new TestTrafficRepository(spark)
-  //    assert(trafficRepo.findAll().count() === 24 * 4)
-  //
-  //    val datetimeCondition = Set(
-  //      Condition("datetime", ">=", Some("2018-01-01 00:00:00"), ValueType.DATETIME),
-  //      Condition("datetime", "<=", Some("2018-01-01 05:00:00"), ValueType.DATETIME)
-  //    )
-  //    println(TimeZone.getDefault)
-  //    trafficRepo.findByCondition(datetimeCondition).show(200)
-  //    assert(trafficRepo.findByCondition(datetimeCondition).count() === 24, "Please make sure that the system timezone is set to UTC")
-  //
-  //    val datetimeCondition2 = Set(
-  //      Condition("asset", "=", Some("asset-3"), ValueType.STRING),
-  //      Condition("datetime", ">", Some("2018-01-01 17:00:00"), ValueType.DATETIME)
-  //    )
-  //    assert(trafficRepo.findByCondition(datetimeCondition2).count() === 6)
-  //
-  //    val datetimeCondition3 = Set(
-  //      Condition("asset", "=", Some("asset-3"), ValueType.STRING),
-  //      Condition("datetime", "=", Some("2018-01-01 17:00:00"), ValueType.DATETIME)
-  //    )
-  //    assert(trafficRepo.findByCondition(datetimeCondition3).count() === 1)
-  //
-  //  }
+  test("find by date") {
+    mockCassandra.generateDwellTime("dwell")
+    val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
+    import spark.implicits._
+    /*
+     * find by date
+     */
+    val dwellRepo = new TestDwellTimeRepository(spark)
+    assert(dwellRepo.findAll().count() === 39)
+
+    val dateFilter = Set(Condition("date", ">", Some("2018-01-01"), ValueType.DATE))
+    assert(dwellRepo.findByCondition(dateFilter).count() === 11)
+
+    val dateFilter2 = Set(
+      Condition("date", ">", Some("2018-01-01"), ValueType.DATE),
+      Condition("date", "<=", Some("2018-01-02"), ValueType.DATE)
+    )
+    assert(dwellRepo.findByCondition(dateFilter2).count() === 7)
+
+    val dateFilter3 = Condition("date", "=", Some("2018-01-03"), ValueType.DATE)
+    assert(dwellRepo.findByCondition(dateFilter3).count() === 4)
+  }
+
+  test("find by datetime") {
+    mockCassandra.generateTraffic("traffic")
+
+    val spark = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
+    import spark.implicits._
+    /*
+     * find by datetime
+     */
+    val trafficRepo = new TestTrafficRepository(spark)
+    assert(trafficRepo.findAll().count() === 24 * 4)
+
+    val datetimeCondition = Set(
+      Condition("datetime", ">=", Some("2018-01-01 00:00:00"), ValueType.DATETIME),
+      Condition("datetime", "<=", Some("2018-01-01 05:00:00"), ValueType.DATETIME)
+    )
+    println(TimeZone.getDefault)
+    trafficRepo.findByCondition(datetimeCondition).show(200)
+    assert(trafficRepo.findByCondition(datetimeCondition).count() === 24, "Please make sure that the system timezone is set to UTC")
+
+    val datetimeCondition2 = Set(
+      Condition("asset", "=", Some("asset-3"), ValueType.STRING),
+      Condition("datetime", ">", Some("2018-01-01 17:00:00"), ValueType.DATETIME)
+    )
+    assert(trafficRepo.findByCondition(datetimeCondition2).count() === 6)
+
+    val datetimeCondition3 = Set(
+      Condition("asset", "=", Some("asset-3"), ValueType.STRING),
+      Condition("datetime", "=", Some("2018-01-01 17:00:00"), ValueType.DATETIME)
+    )
+    assert(trafficRepo.findByCondition(datetimeCondition3).count() === 1)
+
+  }
 
   test("CSV") {
     val spark = new SparkSessionBuilder().setEnv("dev").build().get()
