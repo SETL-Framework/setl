@@ -25,7 +25,7 @@ trait CassandraConnector {
     * @return
     */
   private[this] def readCassandra(spark: SparkSession, table: String, keyspace: String): DataFrame = {
-    logger.debug(s"Read $keyspace.$table")
+    logger.debug(s"Read Cassandra table $keyspace.$table")
     spark.read.cassandraFormat(table, keyspace).load()
   }
 
@@ -46,7 +46,7 @@ trait CassandraConnector {
     * @param keyspace keyspace name
     */
   private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
-    logger.debug(s"Write DataFrame to $keyspace.$table")
+    logger.debug(s"Write DataFrame to Cassandra table $keyspace.$table")
     df.write
       .cassandraFormat(table, keyspace)
       .mode(SaveMode.Append)
