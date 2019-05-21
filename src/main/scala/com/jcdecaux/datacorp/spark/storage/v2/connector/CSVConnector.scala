@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.storage.csv
+package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.jcdecaux.datacorp.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
@@ -6,20 +6,19 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * CSVConnector contains functionality for transforming [[DataFrame]] into csv files
   */
-trait CSVConnector extends Logging {
-
-  val spark: SparkSession
-  val path: String
-  val inferSchema: String = "true"
-  val delimiter: String = ";"
-  val header: String = "true"
+class CSVConnector(val spark: SparkSession,
+                   val path: String,
+                   val inferSchema: String,
+                   val delimiter: String,
+                   val header: String,
+                   val saveMode: SaveMode) extends Connector[DataFrame] with Logging {
 
   /**
     * Read a [[DataFrame]] from a csv file with the path defined during the instantiation.
     *
     * @return
     */
-  protected def readCSV(): DataFrame = {
+  override def read(): DataFrame = {
     log.debug(s"Reading csv file from $path")
     this.spark.read
       .option("header", this.header)
@@ -31,7 +30,7 @@ trait CSVConnector extends Logging {
   /**
     * Write a [[DataFrame]] into the default path with the given save mode
     */
-  protected def writeCSV(df: DataFrame, saveMode: SaveMode): Unit = {
+  override def write(df: DataFrame): Unit = {
     this.writeCSV(df, this.path, saveMode)
   }
 

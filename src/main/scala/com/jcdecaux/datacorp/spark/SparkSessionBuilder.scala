@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark
 
 import com.jcdecaux.datacorp.spark.factory.Builder
-import org.apache.log4j.Logger
+import com.jcdecaux.datacorp.spark.internal.Logging
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -24,9 +24,7 @@ import org.apache.spark.sql.SparkSession
   *               <li>TODO</li>
   *               </ul>
   */
-class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
-
-  final private val logger: Logger = Logger.getLogger(this.getClass)
+class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Logging {
 
   var appName: String = "SparkApplication"
   var appEnv: String = "dev"
@@ -44,7 +42,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     */
   def build(): this.type = {
     if (initialization) {
-      logger.debug("Initialize spark config")
+      log.debug("Initialize spark config")
       this.config = new SparkConf()
     }
 
@@ -60,12 +58,12 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
           } else {
             throw new NoSuchElementException("Cassandra host not set")
           }
-        case "test" => logger.warn("Testing usage")
-        case _ => logger.error(s"Skip unknown usage: $usage")
+        case "test" => log.warn("Testing usage")
+        case _ => log.error(s"Skip unknown usage: $usage")
       }
     })
 
-    logger.info(s"Spark session summarize: \n${config.toDebugString}")
+    log.info(s"Spark session summarize: \n${config.toDebugString}")
     this.spark = SparkSession
       .builder()
       .config(this.config)
@@ -81,7 +79,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def setAppName(name: String): this.type = {
-    logger.debug(s"Set application name to $name")
+    log.debug(s"Set application name to $name")
     appName = name
     this
   }
@@ -93,7 +91,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def setEnv(env: String): this.type = {
-    logger.debug(s"Set application environment to $env")
+    log.debug(s"Set application environment to $env")
     appEnv = env
     this
   }
@@ -105,13 +103,13 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def setCassandraHost(host: String): this.type = {
-    logger.debug(s"Set cassandra host to $host")
+    log.debug(s"Set cassandra host to $host")
     cassandraHost = host
     this
   }
 
   private def configureGeneralProperties(): this.type = {
-    logger.debug("Set general properties")
+    log.debug("Set general properties")
 
     if (appName != null) {
       this.config.setAppName(appName)
@@ -123,8 +121,8 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   private def configureEnvironmentProperties(): this.type = {
-    logger.debug("Set environment related properties")
-    logger.debug(s"Detect $appEnv environment")
+    log.debug("Set environment related properties")
+    log.debug(s"Detect $appEnv environment")
     appEnv match {
       case "dev" =>
         this.config.setMaster("local[*]")
@@ -142,7 +140,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def configure(conf: SparkConf): this.type = {
-    this.logger.info("Set customized spark configuration")
+    log.info("Set customized spark configuration")
     this.config = conf
     this.initialization = false
     this

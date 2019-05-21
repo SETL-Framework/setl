@@ -8,6 +8,7 @@ package com.jcdecaux.datacorp.spark.factory
 trait Builder[A] {
 
   /**
+    * Build an object
     *
     * @return
     */

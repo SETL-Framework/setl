@@ -1,5 +1,11 @@
 package com.jcdecaux.datacorp.spark.factory
 
+/**
+  * A MLTransformer is a basic transformer with a ML model and ML-related functionality.
+  *
+  * @tparam T Data type of the transformer
+  * @tparam M Type of the model
+  */
 trait MLTransformer[T, M] extends Transformer[T] {
   var model: M = _
 
