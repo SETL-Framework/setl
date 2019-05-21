@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.storage.cassandra
+package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
@@ -9,13 +9,11 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * CassandraConnector establish the connection to a given cassandra table of a given keyspace
   */
-trait CassandraConnector extends Logging {
-
-  val keyspace: String
-  val table: String
-  val spark: SparkSession
-  val partitionKeyColumns: Option[Seq[String]]
-  val clusteringKeyColumns: Option[Seq[String]]
+class CassandraConnector(val keyspace: String,
+                         val table: String,
+                         val spark: SparkSession,
+                         val partitionKeyColumns: Option[Seq[String]],
+                         val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector[DataFrame] with Logging {
 
   /**
     * Read a cassandra table
@@ -35,7 +33,7 @@ trait CassandraConnector extends Logging {
     *
     * @return
     */
-  protected def readCassandra(): DataFrame = {
+  override def read(): DataFrame = {
     this.readCassandra(this.spark, this.table, this.keyspace)
   }
 
@@ -59,7 +57,7 @@ trait CassandraConnector extends Logging {
     *
     * @param df DataFrame to be saved
     */
-  protected def writeCassandra(df: DataFrame): Unit = {
+  override def write(df: DataFrame): Unit = {
     this.writeCassandra(df, this.table, this.keyspace)
   }
 
@@ -68,10 +66,10 @@ trait CassandraConnector extends Logging {
     *
     * @param df DataFrame that will be used to create Cassandra table
     */
-  protected def createCassandra(df: DataFrame): Unit = {
+  override def create(df: DataFrame): Unit = {
     log.debug(s"Create cassandra table $keyspace.$table")
     log.debug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
-    log.debug(s"Clustering keys: ${clusteringKeyColumns.get.mkString(", ")}")
+    log.debug(s"Clustering keys: ${clusteringKeyColumns.getOrElse(Seq("None")).mkString(", ")}")
     try {
       df.createCassandraTable(keyspace, table, partitionKeyColumns, clusteringKeyColumns)
     } catch {
@@ -96,7 +94,7 @@ trait CassandraConnector extends Logging {
     *
     * @param query query string
     */
-  protected def deleteCassandra(query: String): Unit = {
+  override def delete(query: String): Unit = {
     this.deleteCassandra(query, this.table, this.keyspace)
   }
 }

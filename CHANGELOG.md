@@ -1,6 +1,13 @@
+## 0.2.0 (2019-05-21)
+- Changed spark version to 2.4.3
+- Added `SparkRepositoryBuilder` that allows creation of a `SparkRepository` for a given class without creating a 
+dedicated `Repository` class
+- Added Excel support for `SparkRepository` by creating `ExcelConnector`
+- Added `Logging` trait
+
 ## 0.1.6 (2019-04-25)
-- Added unittests
 - Fixed `Factory` class covariance issue (0764d10d616c3171d9bfd58acfffafbd8b9dda15)
+- Added documentation
 
 ## 0.1.5 (2019-04-23)
 - Added changelog

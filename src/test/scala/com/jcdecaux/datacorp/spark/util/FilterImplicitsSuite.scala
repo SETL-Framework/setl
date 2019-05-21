@@ -4,9 +4,9 @@ import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.storage.{Condition, Filter}
 import org.scalatest.FunSuite
 
-class FilterUtilsSuite extends FunSuite {
+class FilterImplicitsSuite extends FunSuite {
 
-  import FilterUtils._
+  import FilterImplicits._
 
   test("Datetime/date filter to SQL request") {
 
@@ -69,11 +69,11 @@ class FilterUtilsSuite extends FunSuite {
   }
 
   test("Filter to condition") {
-    val datetimeFilter = Filter("dt", "<=", "datetime", Some("2019-01-01 00:00:05.1")).toFilterCondition
+    val datetimeFilter = Filter("dt", "<=", "datetime", Some("2019-01-01 00:00:05.1")).toCondition
     assert(datetimeFilter.toSqlRequest === "dt <= cast('2019-01-01 00:00:05' as timestamp)")
 
-    val datetimeFilter2 = Filter("dt", ">", "datetime", Some("2019-01-01")).toFilterCondition
-    val datetimeFilter21 = Filter("dt", ">", "datetime", Some("2019-01-01 00:00:00")).toFilterCondition
+    val datetimeFilter2 = Filter("dt", ">", "datetime", Some("2019-01-01")).toCondition
+    val datetimeFilter21 = Filter("dt", ">", "datetime", Some("2019-01-01 00:00:00")).toCondition
     assert(datetimeFilter2.toSqlRequest === "dt > cast('2019-01-01 00:00:00' as timestamp)")
     assert(datetimeFilter21.toSqlRequest === "dt > cast('2019-01-01 00:00:00' as timestamp)")
 

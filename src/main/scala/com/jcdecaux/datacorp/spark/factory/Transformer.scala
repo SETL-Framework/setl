@@ -3,12 +3,19 @@ package com.jcdecaux.datacorp.spark.factory
 /**
   * A transformer can transform data into a type A
   *
-  * @tparam A : Type of output data
+  * @tparam T : Type of output data
   */
-trait Transformer[A] {
+trait Transformer[T] {
 
-  def transformed: A
+  /**
+    * Get the transformed data
+    *
+    * @return
+    */
+  def transformed: T
 
-  /** Process the current data */
+  /**
+    * Transform the current data
+    */
   def transform(): this.type
 }
