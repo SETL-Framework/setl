@@ -36,7 +36,7 @@ class ExcelConnector(val spark: SparkSession,
                      var workbookPassword: Option[String] = None,
                      var schema: Option[StructType] = None,
                      var saveMode: SaveMode = SaveMode.Overwrite
-                    ) extends Connector[DataFrame] with Logging {
+                    ) extends Connector with Logging {
 
   var reader: DataFrameReader = _
   var writer: DataFrameWriter[Row] = _

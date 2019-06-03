@@ -13,7 +13,7 @@ class CassandraConnector(val keyspace: String,
                          val table: String,
                          val spark: SparkSession,
                          val partitionKeyColumns: Option[Seq[String]],
-                         val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector[DataFrame] with Logging {
+                         val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector with Logging {
 
   /**
     * Read a cassandra table

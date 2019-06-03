@@ -5,7 +5,7 @@ import com.jcdecaux.datacorp.spark.factory.Builder
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.v2.connector._
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 /**
   * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
@@ -27,6 +27,15 @@ class SparkRepositoryBuilder[DataType](val storage: Storage) extends Builder[v2.
   private[spark] var delimiter: String = ";"
   private[spark] var header: String = "true"
   private[spark] var saveMode: SaveMode = SaveMode.Overwrite
+
+  private[spark] var dataAddress: String = "A1"
+  private[spark] var treatEmptyValuesAsNulls: String = "true"
+  private[spark] var addColorColumns: String = "false"
+  private[spark] var timestampFormat: String = "yyyy-mm-dd hh:mm:ss.000"
+  private[spark] var dateFormat: String = "yyyy-mm-dd"
+  private[spark] var maxRowsInMemory: Option[Long] = None
+  private[spark] var excerptSize: Long = 10
+  private[spark] var workbookPassword: Option[String] = None
 
   def setKeyspace(keyspace: String): this.type = {
     this.keyspace = keyspace
@@ -88,7 +97,55 @@ class SparkRepositoryBuilder[DataType](val storage: Storage) extends Builder[v2.
     this
   }
 
-  private[this] var connector: Connector[DataFrame] = _
+  def setDataAddress(address: String): this.type = {
+    this.dataAddress = address
+    this
+  }
+
+  def treatEmptyValuesAsNulls(boo: Boolean): this.type = {
+    if (boo) {
+      this.treatEmptyValuesAsNulls = "true"
+    } else {
+      this.treatEmptyValuesAsNulls = "false"
+    }
+    this
+  }
+
+  def addColorColumns(boo: Boolean): this.type = {
+    if (boo) {
+      this.addColorColumns = "true"
+    } else {
+      this.addColorColumns = "false"
+    }
+    this
+  }
+
+  def setTimestampFormat(fmt: String): this.type = {
+    this.timestampFormat = fmt
+    this
+  }
+
+  def setDateFormat(fmt: String): this.type = {
+    this.dateFormat = fmt
+    this
+  }
+
+  def setMaxRowsInMemory(maxRowsInMemory: Option[Long]): this.type = {
+    this.maxRowsInMemory = maxRowsInMemory
+    this
+  }
+
+  def setExcerptSize(size: Long): this.type = {
+    this.excerptSize = size
+    this
+  }
+
+  def setWorbookPassword(pwd: Option[String]): this.type = {
+    this.workbookPassword = pwd
+    this
+  }
+
+  private[this] var connector: Connector = _
   private[this] var sparkRepository: v2.repository.SparkRepository[DataType] = _
 
   /**
@@ -110,7 +167,7 @@ class SparkRepositoryBuilder[DataType](val storage: Storage) extends Builder[v2.
     *
     * @return [[Connector]]
     */
-  protected def createConnector(): Connector[DataFrame] = {
+  protected def createConnector(): Connector = {
     this.storage match {
       case Storage.CASSANDRA =>
         log.info("Detect Cassandra storage")
@@ -154,7 +211,15 @@ class SparkRepositoryBuilder[DataType](val storage: Storage) extends Builder[v2.
           spark = spark,
           path = path,
           useHeader = header,
+          dataAddress = dataAddress,
+          treatEmptyValuesAsNulls = treatEmptyValuesAsNulls,
           inferSchema = inferSchema,
+          addColorColumns = addColorColumns,
+          timestampFormat = timestampFormat,
+          dateFormat = dateFormat,
+          maxRowsInMemory = maxRowsInMemory,
+          excerptSize = excerptSize,
+          workbookPassword = workbookPassword,
           schema = schema,
           saveMode = saveMode
         )
@@ -164,7 +229,7 @@ class SparkRepositoryBuilder[DataType](val storage: Storage) extends Builder[v2.
     }
   }
 
-  def setConnector(connector: Connector[DataFrame]): this.type = {
+  def setConnector(connector: Connector): this.type = {
     log.info(s"Set user-defined ${connector.getClass} connector")
     this.connector = connector
     this

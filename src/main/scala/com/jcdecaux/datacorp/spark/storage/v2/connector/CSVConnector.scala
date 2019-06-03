@@ -11,7 +11,7 @@ class CSVConnector(val spark: SparkSession,
                    val inferSchema: String,
                    val delimiter: String,
                    val header: String,
-                   val saveMode: SaveMode) extends Connector[DataFrame] with Logging {
+                   val saveMode: SaveMode) extends Connector with Logging {
 
   /**
     * Read a [[DataFrame]] from a csv file with the path defined during the instantiation.

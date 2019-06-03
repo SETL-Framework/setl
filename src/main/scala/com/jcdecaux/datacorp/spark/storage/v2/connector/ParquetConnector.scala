@@ -9,7 +9,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 class ParquetConnector(val spark: SparkSession,
                        val path: String,
                        val table: String,
-                       val saveMode: SaveMode) extends Connector[DataFrame] with Logging {
+                       val saveMode: SaveMode) extends Connector with Logging {
 
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
@@ -24,7 +24,7 @@ class ParquetConnector(val spark: SparkSession,
   /**
     * Write a [[DataFrame]] into parquet file
     *
-    * @param df
+    * @param df dataframe to be written
     */
   override def write(df: DataFrame): Unit = {
     log.debug(s"Write DataFrame to $path")
