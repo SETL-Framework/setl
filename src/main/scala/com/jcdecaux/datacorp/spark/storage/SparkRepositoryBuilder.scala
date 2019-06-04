@@ -140,7 +140,7 @@ class SparkRepositoryBuilder[DataType](val storage: Storage) extends Builder[v2.
     this
   }
 
-  def setWorbookPassword(pwd: Option[String]): this.type = {
+  def setWorkbookPassword(pwd: Option[String]): this.type = {
     this.workbookPassword = pwd
     this
   }
