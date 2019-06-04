@@ -1,5 +1,6 @@
 ## 0.2.1 (2019-06-03)
 - Removed unnecessary Type variable in `Connector` 
+- Add enumeration `AppEnv`
 
 ## 0.2.0 (2019-05-21)
 - Changed spark version to 2.4.3
