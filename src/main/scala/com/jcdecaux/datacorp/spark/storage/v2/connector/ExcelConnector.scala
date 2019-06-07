@@ -110,7 +110,9 @@ class ExcelConnector(val spark: SparkSession,
       .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
 
     saveMode match {
-      case SaveMode.Append => writer.mode("append")
+      case SaveMode.Append =>
+        log.warn("It seems that the Append save mode doesn't work properly. Please make sure that your data are written correctly")
+        writer.mode("append")
       case SaveMode.Overwrite => writer.mode("overwrite")
       case _ => throw new IllegalArgumentException(s"Unknown save mode: $saveMode")
     }

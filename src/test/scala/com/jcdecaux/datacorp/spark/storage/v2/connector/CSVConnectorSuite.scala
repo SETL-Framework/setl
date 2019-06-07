@@ -17,8 +17,7 @@ class CSVConnectorSuite extends FunSuite {
 
   import SparkRepositorySuite.deleteRecursively
 
-  test("IO") {
-
+  test("IO CSVConnector") {
     import spark.implicits._
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -38,7 +37,7 @@ class CSVConnectorSuite extends FunSuite {
 
   }
 
-  test("IO with auxiliary constructor") {
+  test(s"IO with auxiliary CSVConnector constructor") {
     import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(
@@ -55,6 +54,6 @@ class CSVConnectorSuite extends FunSuite {
     val df = connector.read()
     df.show()
     assert(df.count() === 6)
-    deleteRecursively(new File("src/test/resources/test_config_csv"))
+    deleteRecursively(new File(Properties.csvConfig.getString("path")))
   }
 }

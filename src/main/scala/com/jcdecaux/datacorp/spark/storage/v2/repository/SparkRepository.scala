@@ -20,6 +20,8 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
     this
   }
 
+  def getConnector: Connector = this.connector
+
   /**
     * Find data by giving a set of conditions
     *

@@ -58,7 +58,7 @@ class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with Spark
     assert(cqlConnector.read().count() === 2)
   }
 
-  test("Test with auxiliary connector constructor") {
+  test("Test with auxiliary cassandra connector constructor") {
     import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(
@@ -68,6 +68,9 @@ class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with Spark
     ).toDS()
 
     val connector = new CassandraConnector(spark, Properties.cassandraConfig)
+
+    assert(connector.partitionKeyColumns === Option(Seq("partition1", "partition2")))
+    assert(connector.clusteringKeyColumns === Option(Seq("clustering1")))
 
     // Create table and write data
     connector.create(testTable.toDF())

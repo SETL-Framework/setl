@@ -19,8 +19,7 @@ class ParquetConnectorSuite extends FunSuite {
   val parquetConnector = new ParquetConnector(spark, path, table, SaveMode.Overwrite)
 
 
-  test("parquet IO") {
-
+  test("parquet connector  IO ") {
     import spark.implicits._
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -39,7 +38,7 @@ class ParquetConnectorSuite extends FunSuite {
 
   }
 
-  test("IO with auxiliary constructor") {
+  test("IO with auxiliary parquet connector constructor") {
     import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(

@@ -25,7 +25,8 @@ class ExcelConnectorSuite extends FunSuite {
     TestObject2("string3", 5, 0.000000001685400132103450D, new Timestamp(1557153268000L), new Date(1557100800000L), 999999999999999999L)
   ).toDS()
 
-  test("IO with default parameters") {
+  test("IO with default excel connector parameters") {
+
     val excelConnector = new ExcelConnector(spark, path, "true")
 
     testTable.toDF.show(false)
@@ -42,7 +43,8 @@ class ExcelConnectorSuite extends FunSuite {
 
   }
 
-  test("IO with customized format") {
+  test("IO with customized format excel connector") {
+
     val schema: StructType = StructType(Array(
       StructField("col1", StringType),
       StructField("col2", IntegerType),
@@ -76,7 +78,8 @@ class ExcelConnectorSuite extends FunSuite {
 
   }
 
-  test("IO with auxiliary constructor") {
+  test("IO with excel connector auxiliary constructor") {
+
     import spark.implicits._
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),

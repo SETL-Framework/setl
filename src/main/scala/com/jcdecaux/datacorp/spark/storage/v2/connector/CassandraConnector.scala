@@ -75,6 +75,7 @@ class CassandraConnector(val keyspace: String,
     * @param df DataFrame to be saved
     */
   override def write(df: DataFrame): Unit = {
+    this.create(df)
     this.writeCassandra(df, this.table, this.keyspace)
   }
 

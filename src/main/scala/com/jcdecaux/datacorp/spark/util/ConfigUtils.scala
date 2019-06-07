@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.util
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.typesafe.config.{Config, ConfigException}
 
 object ConfigUtils {
@@ -85,6 +86,19 @@ object ConfigUtils {
     }
   }
 
+  private[spark] implicit val StorageGetter: ConfigGetter[Storage] = new ConfigGetter[Storage] {
+    override def get(config: Config, path: String): Option[Storage] = {
+
+      try {
+        Option(Storage.valueOf(config.getString(path)))
+      } catch {
+        case m: ConfigException.Missing => throw m
+        case w: ConfigException.WrongType => throw w
+      }
+
+    }
+  }
+
   def getAs[T](config: Config, path: String)(implicit getter: ConfigGetter[T]): Option[T] = getter.get(config, path)
 
   def getList(config: Config, path: String): Option[Array[AnyRef]] = {
@@ -98,7 +112,7 @@ object ConfigUtils {
 
   def isDefined(config: Config, path: String): Boolean = {
     try {
-      config.getString(path) != null
+      config.getAnyRef(path) != null
     } catch {
       case _: ConfigException => false
     }
