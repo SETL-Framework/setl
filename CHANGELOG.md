@@ -1,6 +1,11 @@
 ## 0.2.1 (2019-06-03)
 - Removed unnecessary Type variable in `Connector` 
-- Add enumeration `AppEnv`
+- Added `ConnectorBuilder` to directely build a connector from a typesafe's `Config` object
+- Added auxiliary constructor in `SparkRepositoryBuilder` so we can create a repository like this: 
+  ```scala
+  val repo = new SparkRepositoryBuilder[TestObject](config).setSpark(spark).build().get()
+  ```
+- Added enumeration `AppEnv`
 
 ## 0.2.0 (2019-05-21)
 - Changed spark version to 2.4.3
