@@ -3,10 +3,11 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 import java.io.File
 import java.sql.{Date, Timestamp}
 
+import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite
-import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject2}
+import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject, TestObject2}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
 
 class ExcelConnectorSuite extends FunSuite {
@@ -57,7 +58,8 @@ class ExcelConnectorSuite extends FunSuite {
       useHeader = "true",
       timestampFormat = "dd/mm/yyyy hh:mm:ss",
       dateFormat = "dd/mm/yy",
-      schema = Some(schema)
+      schema = Some(schema),
+      saveMode = SaveMode.Append // TODO SaveMode.Append seems not working.
     )
 
     excelConnector.write(testTable.toDF)
@@ -71,6 +73,27 @@ class ExcelConnectorSuite extends FunSuite {
     assert(df.head.getAs[Date]("col5").getTime === 1557100800000L)
 
     deleteRecursively(new File(path))
+
+  }
+
+  test("IO with auxiliary constructor") {
+    import spark.implicits._
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val connector = new ExcelConnector(spark = spark, config = Properties.excelConfig)
+
+    testTable.toDF.show()
+    connector.write(testTable.toDF)
+
+    val df = connector.read()
+
+    df.show()
+    assert(df.count() === 3)
+    deleteRecursively(new File("src/test/resources/test_config_excel.xlsx"))
 
   }
 

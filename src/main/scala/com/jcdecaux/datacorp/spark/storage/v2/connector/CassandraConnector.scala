@@ -3,6 +3,8 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
 import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.typesafe.config.Config
 import org.apache.spark.sql.cassandra._
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
@@ -14,6 +16,21 @@ class CassandraConnector(val keyspace: String,
                          val spark: SparkSession,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector with Logging {
+
+  def this(spark: SparkSession, config: Config) = this(
+    keyspace = ConfigUtils.getAs[String](config, "keyspace").get,
+    table = ConfigUtils.getAs[String](config, "table").get,
+    spark = spark,
+    partitionKeyColumns =
+      Option(ConfigUtils.getList(config, "partitionKeyColumns").get.map(_.toString)),
+    clusteringKeyColumns =
+      if (ConfigUtils.isDefined(config, "clusteringKeyColumns")) {
+        Option(ConfigUtils.getList(config, "clusteringKeyColumns").get.map(_.toString))
+      } else {
+        None
+      }
+  )
+
 
   /**
     * Read a cassandra table

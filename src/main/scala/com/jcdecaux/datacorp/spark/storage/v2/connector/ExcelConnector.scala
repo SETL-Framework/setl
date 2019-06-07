@@ -1,6 +1,8 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.typesafe.config.Config
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.StructType
 
@@ -40,6 +42,44 @@ class ExcelConnector(val spark: SparkSession,
 
   var reader: DataFrameReader = _
   var writer: DataFrameWriter[Row] = _
+
+  def this(spark: SparkSession, config: Config) = this(
+    spark = spark,
+    path =
+      ConfigUtils.getAs[String](config, "path").get,
+    useHeader =
+      ConfigUtils.getAs[String](config, "useHeader").get,
+    dataAddress =
+      ConfigUtils.getAs[String](config, "dataAddress").getOrElse("A1"),
+    treatEmptyValuesAsNulls =
+      ConfigUtils.getAs[String](config, "treatEmptyValuesAsNulls").getOrElse("true"),
+    inferSchema =
+      ConfigUtils.getAs[String](config, "inferSchema").getOrElse("false"),
+    addColorColumns =
+      ConfigUtils.getAs[String](config, "addColorColumns").getOrElse("false"),
+    timestampFormat =
+      ConfigUtils.getAs[String](config, "timestampFormat").getOrElse("yyyy-mm-dd hh:mm:ss.000"),
+    dateFormat =
+      ConfigUtils.getAs[String](config, "dateFormat").getOrElse("yyyy-mm-dd"),
+    maxRowsInMemory =
+      ConfigUtils.getAs[Long](config, "maxRowsInMemory"),
+    excerptSize =
+      ConfigUtils.getAs[Long](config, "excerptSize").getOrElse(10),
+    workbookPassword =
+      ConfigUtils.getAs[String](config, "workbookPassword"),
+    schema =
+      if (ConfigUtils.getAs[String](config, "schema").isDefined) {
+        Option(StructType.fromDDL(ConfigUtils.getAs[String](config, "schema").get))
+      } else {
+        None
+      },
+    saveMode =
+      if (ConfigUtils.getAs[String](config, "saveMode").isDefined) {
+        SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
+      } else {
+        SaveMode.Overwrite
+      }
+  )
 
   override def read(): DataFrame = {
     reader = spark

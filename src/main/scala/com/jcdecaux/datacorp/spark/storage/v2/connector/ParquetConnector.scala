@@ -1,6 +1,8 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
@@ -10,6 +12,14 @@ class ParquetConnector(val spark: SparkSession,
                        val path: String,
                        val table: String,
                        val saveMode: SaveMode) extends Connector with Logging {
+
+  def this(spark: SparkSession, config: Config) = this(
+    spark = spark,
+    path = ConfigUtils.getAs[String](config, "path").get,
+    table = ConfigUtils.getAs[String](config, "table").get,
+    saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
+  )
+
 
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
