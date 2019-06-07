@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.datastax.spark.connector.cql.{CassandraConnector => CC}
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
+import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
@@ -55,5 +56,33 @@ class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with Spark
     // delete row
     cqlConnector.delete("partition1 = 1 and partition2 = 'p1'")
     assert(cqlConnector.read().count() === 2)
+  }
+
+  test("Test with auxiliary cassandra connector constructor") {
+    import spark.implicits._
+
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val connector = new CassandraConnector(spark, Properties.cassandraConfig)
+
+    assert(connector.partitionKeyColumns === Option(Seq("partition1", "partition2")))
+    assert(connector.clusteringKeyColumns === Option(Seq("clustering1")))
+
+    // Create table and write data
+    connector.create(testTable.toDF())
+    connector.write(testTable.toDF())
+
+    // read table
+    val readTable = connector.read()
+    readTable.show()
+    assert(readTable.count() === 3)
+
+    // delete row
+    connector.delete("partition1 = 1 and partition2 = 'p1'")
+    assert(connector.read().count() === 2)
   }
 }

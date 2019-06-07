@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import org.apache.spark.sql.DataFrame
+
 /**
   * A connector is used by a [[com.jcdecaux.datacorp.spark.storage.v2.repository.Repository]] to access a data persistence store.
   *
@@ -9,12 +11,11 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
   * <li>Write data into the persistence store</li>
   * </ul>
   *
-  * @tparam T : data type
   */
-trait Connector[T] {
+trait Connector {
 
-  def read(): T
+  def read(): DataFrame
 
-  def write(t: T): Unit
+  def write(t: DataFrame): Unit
 
 }
