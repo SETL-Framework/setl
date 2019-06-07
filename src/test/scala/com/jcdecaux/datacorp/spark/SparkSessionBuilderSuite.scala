@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark
 
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
+import com.jcdecaux.datacorp.spark.enums.AppEnv
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.cassandra._
@@ -29,7 +30,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
   test("Default instantiation") {
     val sparkSessionBuilder = new SparkSessionBuilder()
 
-    assert(sparkSessionBuilder.appEnv === "dev")
+    assert(sparkSessionBuilder.appEnv === AppEnv.DEV)
     assert(sparkSessionBuilder.appName === "SparkApplication")
     assert(sparkSessionBuilder.cassandraHost === null)
     assert(sparkSessionBuilder.config.getClass === classOf[SparkConf])

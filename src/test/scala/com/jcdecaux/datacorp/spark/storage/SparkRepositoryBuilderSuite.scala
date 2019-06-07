@@ -5,9 +5,11 @@ import java.sql.{Date, Timestamp}
 
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
+import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import com.jcdecaux.datacorp.spark.storage.v2.connector.ExcelConnector
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
+import com.typesafe.config.Config
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
@@ -71,8 +73,8 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.CSV)
 
-    repoBuilder.spark = spark
-    repoBuilder.path = "src/test/resources/test_csv"
+    repoBuilder.setSpark(spark)
+    repoBuilder.setPath("src/test/resources/test_csv")
 
     val repo = repoBuilder.build().get()
 
@@ -92,7 +94,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.PARQUET)
 
     repoBuilder.table = "test"
-    repoBuilder.spark = spark
+    repoBuilder.spark = Option(spark)
     repoBuilder.path = "src/test/resources/test_parquet"
 
     val repo = repoBuilder.build().get()
@@ -174,6 +176,36 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     assert(df.head.col5.getTime === 1557100800000L)
 
     deleteRecursively(new File(path))
+  }
+
+  test("Build with connector configuration") {
+    sparkRepositoryBuilderWithConfigTest(Properties.csvConfigRepoBuilder)
+    deleteRecursively(new File(Properties.csvConfigRepoBuilder.getString("path")))
+
+    sparkRepositoryBuilderWithConfigTest(Properties.parquetConfigRepoBuilder)
+    deleteRecursively(new File("src/test/resources/test_config_parquet4")) // do not use Properties.parquetConfigRepoBuilder.getPath
+
+    sparkRepositoryBuilderWithConfigTest(Properties.excelConfigRepoBuilder)
+    deleteRecursively(new File(Properties.excelConfigRepoBuilder.getString("path")))
+
+    sparkRepositoryBuilderWithConfigTest(Properties.cassandraConfigRepoBuilder)
+    //    deleteRecursively(new File(Properties.csvConfig.getString("path")))
+
+  }
+
+  private[this] def sparkRepositoryBuilderWithConfigTest(config: Config): Unit = {
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val repo = new SparkRepositoryBuilder[TestObject](config).setSpark(spark).build().get()
+    repo.save(testTable)
+    val df = repo.findAll()
+
+    df.show(false)
+    assert(df.count() === 3)
   }
 
 

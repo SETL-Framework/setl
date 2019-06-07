@@ -3,13 +3,11 @@ package com.jcdecaux.datacorp.spark.storage.v2.repository
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.v2.connector.{Connector, EnrichConnector}
-import org.apache.spark.sql.{DataFrame, Dataset, Encoder}
+import org.apache.spark.sql.{Dataset, Encoder}
 
 class SparkRepository[DataType] extends Repository[DataType] with Logging {
 
-  type ConnectorType = Connector[DataFrame]
-
-  private[this] var connector: ConnectorType = _
+  private[this] var connector: Connector = _
 
   /**
     * Set the connector of this spark repository
@@ -17,10 +15,12 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
     * @param connector [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]] an user defined connector
     * @return
     */
-  def setConnector(connector: ConnectorType): this.type = {
+  def setConnector(connector: Connector): this.type = {
     this.connector = connector
     this
   }
+
+  def getConnector: Connector = this.connector
 
   /**
     * Find data by giving a set of conditions
@@ -72,7 +72,7 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
     */
   override def save(data: Dataset[DataType])(implicit encoder: Encoder[DataType]): SparkRepository.this.type = {
     try {
-      connector.asInstanceOf[EnrichConnector[DataFrame]].create(data.toDF())
+      connector.asInstanceOf[EnrichConnector].create(data.toDF())
     } catch {
       case nosuchelement: NoSuchMethodException =>
         log.info("There is no create method. Save directly the dataset")

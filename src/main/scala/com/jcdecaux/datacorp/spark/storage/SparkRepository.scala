@@ -34,7 +34,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
       case Storage.CSV =>
         this.readCSV()
       case _ =>
-        throw new UnknownException("Unsupported storage " + storage.name() + " exception !")
+        throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
     }
   }
 
@@ -119,7 +119,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
       case Storage.CSV =>
         this.writeCSV(data.toDF(), saveMode)
       case _ =>
-        throw new UnknownException("Unsupported storage " + storage.name() + " exception !")
+        throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
     }
     this
   }

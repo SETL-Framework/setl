@@ -1,6 +1,8 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
@@ -11,7 +13,16 @@ class CSVConnector(val spark: SparkSession,
                    val inferSchema: String,
                    val delimiter: String,
                    val header: String,
-                   val saveMode: SaveMode) extends Connector[DataFrame] with Logging {
+                   val saveMode: SaveMode) extends Connector with Logging {
+
+  def this(spark: SparkSession, config: Config) = this(
+    spark = spark,
+    path = ConfigUtils.getAs[String](config, "path").get,
+    inferSchema = ConfigUtils.getAs[String](config, "inferSchema").get,
+    delimiter = ConfigUtils.getAs[String](config, "delimiter").get,
+    header = ConfigUtils.getAs[String](config, "header").get,
+    saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
+  )
 
   /**
     * Read a [[DataFrame]] from a csv file with the path defined during the instantiation.

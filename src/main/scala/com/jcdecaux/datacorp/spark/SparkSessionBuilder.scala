@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark
 
+import com.jcdecaux.datacorp.spark.enums.AppEnv
 import com.jcdecaux.datacorp.spark.factory.Builder
 import com.jcdecaux.datacorp.spark.internal.Logging
 import org.apache.spark.SparkConf
@@ -11,11 +12,11 @@ import org.apache.spark.sql.SparkSession
   * <br>Usage:
   *
   * {{{
-  *   # Auto-configure
-  *   val spark: SparkSession = new SparkSessionBuilder("cassandra", "postgres").process().get()
+  *   // Auto-configure
+  *   val spark: SparkSession = new SparkSessionBuilder("cassandra", "postgres").build().get()
   *
-  *   # Build with your own SparkConf
-  *   val spark: SparkSession = new SparkSessionBuilder().configure(yourSparkConf).process().get()
+  *   // Build with your own SparkConf
+  *   val spark: SparkSession = new SparkSessionBuilder().configure(yourSparkConf).build().get()
   * }}}
   *
   * @param usages usages of the sparkSession, could be a list of the following elements:
@@ -27,12 +28,12 @@ import org.apache.spark.sql.SparkSession
 class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Logging {
 
   var appName: String = "SparkApplication"
-  var appEnv: String = "dev"
+  var appEnv: AppEnv = AppEnv.DEV
   var cassandraHost: String = _
   var config: SparkConf = new SparkConf()
   var initialization: Boolean = true
-  var spark: SparkSession = _
-  var sparkHost: String = _
+  private[spark] var spark: SparkSession = _
+  var sparkHost: String = "local[*]"
 
 
   /**
@@ -92,6 +93,11 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
     */
   def setEnv(env: String): this.type = {
     log.debug(s"Set application environment to $env")
+    appEnv = AppEnv.valueOf(env.toUpperCase())
+    this
+  }
+
+  def setEnv(env: AppEnv): this.type = {
     appEnv = env
     this
   }
@@ -124,7 +130,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
     log.debug("Set environment related properties")
     log.debug(s"Detect $appEnv environment")
     appEnv match {
-      case "dev" =>
+      case AppEnv.DEV =>
         this.config.setMaster("local[*]")
       case _ =>
         this.config.setMaster(sparkHost)

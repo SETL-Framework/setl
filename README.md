@@ -8,7 +8,7 @@ This project provides a general-proposed framework for data transformation appli
 <dependency>
   <groupId>com.jcdecaux.datacorp</groupId>
   <artifactId>dc-spark-sdk</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 

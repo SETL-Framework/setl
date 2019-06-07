@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import java.io.File
 
+import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
@@ -18,8 +19,7 @@ class ParquetConnectorSuite extends FunSuite {
   val parquetConnector = new ParquetConnector(spark, path, table, SaveMode.Overwrite)
 
 
-  test("IO") {
-
+  test("parquet connector  IO ") {
     import spark.implicits._
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -36,5 +36,25 @@ class ParquetConnectorSuite extends FunSuite {
     assert(df.count() === 3)
     deleteRecursively(new File(path))
 
+  }
+
+  test("IO with auxiliary parquet connector constructor") {
+    import spark.implicits._
+
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val connector = new ParquetConnector(spark, Properties.parquetConfig)
+
+    connector.write(testTable.toDF())
+    connector.write(testTable.toDF())
+
+    val df = connector.read()
+    df.show()
+    assert(df.count() === 6)
+    deleteRecursively(new File("src/test/resources/test_config_parquet"))
   }
 }
