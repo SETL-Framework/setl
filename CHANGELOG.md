@@ -1,6 +1,9 @@
+## 0.2.2 (2019-06-11)
+- Adding DynamoDB Connector
+
 ## 0.2.1 (2019-06-03)
 - Removed unnecessary Type variable in `Connector` 
-- Added `ConnectorBuilder` to directely build a connector from a typesafe's `Config` object
+- Added `ConnectorBuilder` to directly build a connector from a typesafe's `Config` object
 - Added auxiliary constructor in `SparkRepositoryBuilder` so we can create a repository like this: 
   ```scala
   val repo = new SparkRepositoryBuilder[TestObject](config).setSpark(spark).build().get()
