@@ -6,7 +6,6 @@ package com.jcdecaux.datacorp.spark.exception;
 public class UnknownException extends RuntimeException {
 
     /**
-     *
      * @param errorMessage
      */
     public UnknownException(String errorMessage) {

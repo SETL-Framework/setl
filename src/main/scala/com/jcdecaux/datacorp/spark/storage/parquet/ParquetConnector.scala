@@ -18,7 +18,7 @@ trait ParquetConnector extends Logging {
     * @return
     */
   protected def readParquet(): DataFrame = {
-    log.debug(s"Reading csv file from $path")
+    log.debug(s"Reading Parquet file from $path")
     this.spark.read.parquet(path)
   }
 
@@ -28,7 +28,7 @@ trait ParquetConnector extends Logging {
     * @param df dataframe
     */
   protected def writeParquet(df: DataFrame, saveMode: SaveMode): Unit = {
-    log.debug(s"Write DataFrame to $path")
+    log.debug(s"Write DataFrame to $path in Parquet format")
     df.write
       .mode(saveMode)
       .option("path", path)

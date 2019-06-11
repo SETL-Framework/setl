@@ -13,23 +13,12 @@ trait ParquetSparkRepository[T] extends Repository[T] with ParquetConnector {
 
   /**
     *
-    * @param encoder
-    * @return
-    */
-  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
-    this
-      .readParquet()
-      .as[T]
-  }
-
-  /**
-    *
     * @param filters
     * @param encoder
     * @return
     */
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
-    if(filters.nonEmpty) {
+    if (filters.nonEmpty) {
       this
         .readParquet()
         .filter(SqlExpressionUtils.build(filters))
@@ -37,6 +26,17 @@ trait ParquetSparkRepository[T] extends Repository[T] with ParquetConnector {
     } else {
       this.findAll()
     }
+  }
+
+  /**
+    *
+    * @param encoder
+    * @return
+    */
+  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
+    this
+      .readParquet()
+      .as[T]
   }
 
   /**

@@ -23,6 +23,18 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
   def getConnector: Connector = this.connector
 
   /**
+    * Find data by giving a single condition
+    *
+    * @param condition a [[Condition]]
+    * @param encoder   : implicit encoder of Spark
+    * @return
+    */
+  override def findBy(condition: Condition)(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
+    this.findBy(Set(condition))
+
+  }
+
+  /**
     * Find data by giving a set of conditions
     *
     * @param conditions Set of [[com.jcdecaux.datacorp.spark.storage.Condition]]
@@ -39,18 +51,6 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
     } else {
       df.as[DataType]
     }
-  }
-
-  /**
-    * Find data by giving a single condition
-    *
-    * @param condition a [[Condition]]
-    * @param encoder   : implicit encoder of Spark
-    * @return
-    */
-  override def findBy(condition: Condition)(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
-    this.findBy(Set(condition))
-
   }
 
   /**

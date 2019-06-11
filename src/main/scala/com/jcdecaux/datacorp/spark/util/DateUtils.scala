@@ -35,22 +35,6 @@ object DateUtils {
   val datePattern: Regex = "^\\d{4}-\\d{2}-\\d{2}$".r
 
   /**
-    * Parse a given date string with the given pattern to a [[java.sql.Timestamp]] object
-    *
-    * @param date     date string
-    * @param pattern  format of the given date string
-    * @param timeZone time zone of the given date string
-    * @return
-    */
-  def getDatetimeFromString(date: String,
-                            pattern: String = "yyyy-MM-dd HH:mm:ss",
-                            timeZone: String = "UTC"): java.sql.Timestamp = {
-    val formatter = new SimpleDateFormat(pattern)
-    formatter.setTimeZone(TimeZone.getTimeZone(timeZone))
-    new java.sql.Timestamp(formatter.parse(date).getTime)
-  }
-
-  /**
     * Parse a given date string with the given pattern to a [[java.sql.Date]] object
     *
     * @param date     date string
@@ -79,6 +63,22 @@ object DateUtils {
                            timeZone: String = "UTC"): java.sql.Timestamp = {
     val datetime = new DateTime(getDatetimeFromString(date, pattern, timeZone))
     new java.sql.Timestamp(datetime.withMinuteOfHour(0).withSecondOfMinute(0).withMillisOfSecond(0).toDate.getTime)
+  }
+
+  /**
+    * Parse a given date string with the given pattern to a [[java.sql.Timestamp]] object
+    *
+    * @param date     date string
+    * @param pattern  format of the given date string
+    * @param timeZone time zone of the given date string
+    * @return
+    */
+  def getDatetimeFromString(date: String,
+                            pattern: String = "yyyy-MM-dd HH:mm:ss",
+                            timeZone: String = "UTC"): java.sql.Timestamp = {
+    val formatter = new SimpleDateFormat(pattern)
+    formatter.setTimeZone(TimeZone.getTimeZone(timeZone))
+    new java.sql.Timestamp(formatter.parse(date).getTime)
   }
 
   /**

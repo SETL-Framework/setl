@@ -32,9 +32,8 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
   var cassandraHost: String = _
   var config: SparkConf = new SparkConf()
   var initialization: Boolean = true
-  private[spark] var spark: SparkSession = _
   var sparkHost: String = "local[*]"
-
+  private[spark] var spark: SparkSession = _
 
   /**
     * Automatic configuration according to the settings
@@ -69,6 +68,31 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
       .builder()
       .config(this.config)
       .getOrCreate()
+
+    this
+  }
+
+  private def configureGeneralProperties(): this.type = {
+    log.debug("Set general properties")
+
+    if (appName != null) {
+      this.config.setAppName(appName)
+    } else {
+      throw new NoSuchElementException("No AppName was found.")
+    }
+
+    this
+  }
+
+  private def configureEnvironmentProperties(): this.type = {
+    log.debug("Set environment related properties")
+    log.debug(s"Detect $appEnv environment")
+    appEnv match {
+      case AppEnv.DEV =>
+        this.config.setMaster("local[*]")
+      case _ =>
+        this.config.setMaster(sparkHost)
+    }
 
     this
   }
@@ -111,31 +135,6 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
   def setCassandraHost(host: String): this.type = {
     log.debug(s"Set cassandra host to $host")
     cassandraHost = host
-    this
-  }
-
-  private def configureGeneralProperties(): this.type = {
-    log.debug("Set general properties")
-
-    if (appName != null) {
-      this.config.setAppName(appName)
-    } else {
-      throw new NoSuchElementException("No AppName was found.")
-    }
-
-    this
-  }
-
-  private def configureEnvironmentProperties(): this.type = {
-    log.debug("Set environment related properties")
-    log.debug(s"Detect $appEnv environment")
-    appEnv match {
-      case AppEnv.DEV =>
-        this.config.setMaster("local[*]")
-      case _ =>
-        this.config.setMaster(sparkHost)
-    }
-
     this
   }
 

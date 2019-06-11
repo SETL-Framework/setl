@@ -13,7 +13,13 @@ trait Conf extends Serializable with TypeConverterImplicits {
     this
   }
 
-  private[this] def getOption(key: String): Option[String] = Option(settings.get(key))
+  /**
+    * Get a configuration under the string format
+    *
+    * @param key Key of the configuration
+    * @return
+    */
+  def get(key: String): Option[String] = getAs[String](key)
 
   /**
     * Get a configuration and convert to the given type, return None if it's not set
@@ -30,11 +36,5 @@ trait Conf extends Serializable with TypeConverterImplicits {
     }
   }
 
-  /**
-    * Get a configuration under the string format
-    *
-    * @param key Key of the configuration
-    * @return
-    */
-  def get(key: String): Option[String] = getAs[String](key)
+  private[this] def getOption(key: String): Option[String] = Option(settings.get(key))
 }

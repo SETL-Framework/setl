@@ -12,11 +12,49 @@ import org.apache.spark.sql._
 
 /**
   * StorageSparkRepository
+  *
   * @tparam T
   */
 trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVConnector with ParquetConnector {
 
   val storage: Storage
+
+  /**
+    *
+    * @param encoder
+    * @return
+    */
+  @throws[IOException]("Cassandra table does not exist")
+  @throws[AnalysisException]("Path does not exist")
+  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
+    read().as[T]
+  }
+
+  /**
+    *
+    * @param filter
+    * @param encoder
+    * @return
+    */
+  def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findBy(Set(filter))
+  }
+
+  /**
+    *
+    * @param filters
+    * @param encoder
+    * @return
+    */
+  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
+    val df = read()
+    if (filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
+      df.filter(SqlExpressionUtils.build(filters))
+        .as[T]
+    } else {
+      df.as[T]
+    }
+  }
 
   /**
     *
@@ -38,31 +76,8 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     }
   }
 
-  /**
-    *
-    * @param encoder
-    * @return
-    */
-  @throws[IOException]("Cassandra table does not exist")
-  @throws[AnalysisException]("Path does not exist")
-  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
-    read().as[T]
-  }
-
-  /**
-    *
-    * @param filters
-    * @param encoder
-    * @return
-    */
-  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
-    val df = read()
-    if(filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
-      df.filter(SqlExpressionUtils.build(filters))
-        .as[T]
-    } else {
-      df.as[T]
-    }
+  def findByCondition(condition: Condition)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findByCondition(Set(condition))
   }
 
   def findByCondition(conditions: Set[Condition])(implicit encoder: Encoder[T]): Dataset[T] = {
@@ -75,20 +90,6 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     } else {
       df.as[T]
     }
-  }
-
-  /**
-    *
-    * @param filter
-    * @param encoder
-    * @return
-    */
-  def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
-    this.findBy(Set(filter))
-  }
-
-  def findByCondition(condition: Condition)(implicit encoder: Encoder[T]): Dataset[T] = {
-    this.findByCondition(Set(condition))
   }
 
   /**

@@ -20,7 +20,6 @@ class ParquetConnector(val spark: SparkSession,
     saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
   )
 
-
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
     *

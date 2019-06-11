@@ -5,9 +5,7 @@ import com.typesafe.config.{Config, ConfigException}
 
 object ConfigUtils {
 
-  private[spark] trait ConfigGetter[T] {
-    def get(config: Config, path: String): Option[T]
-  }
+  def getAs[T](config: Config, path: String)(implicit getter: ConfigGetter[T]): Option[T] = getter.get(config, path)
 
   private[spark] implicit val stringGetter: ConfigGetter[String] = new ConfigGetter[String] {
     override def get(config: Config, path: String): Option[String] = {
@@ -99,8 +97,6 @@ object ConfigUtils {
     }
   }
 
-  def getAs[T](config: Config, path: String)(implicit getter: ConfigGetter[T]): Option[T] = getter.get(config, path)
-
   def getList(config: Config, path: String): Option[Array[AnyRef]] = {
     try {
       Option(config.getList(path).unwrapped().toArray())
@@ -116,5 +112,9 @@ object ConfigUtils {
     } catch {
       case _: ConfigException => false
     }
+  }
+
+  private[spark] trait ConfigGetter[T] {
+    def get(config: Config, path: String): Option[T]
   }
 }

@@ -12,7 +12,7 @@
     <description>dc-spark-sdk</description>
 
     <properties>
-        <revision>0.2.1</revision>
+        <revision>0.2.2</revision>
         <changelist>-SNAPSHOT</changelist>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -72,6 +72,12 @@
             <groupId>com.crealytics</groupId>
             <artifactId>spark-excel_${scala.compat.version}</artifactId>
             <version>0.11.1</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.audienceproject</groupId>
+            <artifactId>spark-dynamodb_2.11</artifactId>
+            <version>0.4.0</version>
             <scope>${dependencies.scope}</scope>
         </dependency>
 
