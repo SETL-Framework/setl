@@ -5,7 +5,7 @@ import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
 import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
 
 /**
-  * SparkCassandraRepository
+  * ParquetSparkRepository
   *
   * @tparam T
   */
