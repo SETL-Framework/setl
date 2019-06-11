@@ -33,8 +33,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
   var config: SparkConf = new SparkConf()
   var initialization: Boolean = true
   private[spark] var spark: SparkSession = _
-  var sparkHost: String = "local[*]"
-
+  var sparkMaster: String = "local[*]"
 
   /**
     * Automatic configuration according to the settings
@@ -133,7 +132,6 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
       case AppEnv.DEV =>
         this.config.setMaster("local[*]")
       case _ =>
-        this.config.setMaster(sparkHost)
     }
 
     this
