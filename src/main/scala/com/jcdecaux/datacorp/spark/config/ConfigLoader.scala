@@ -8,8 +8,6 @@ import com.typesafe.config._
   */
 class ConfigLoader {
 
-  private[this] val fallBackConf: String = "application.conf"
-
   val config: Config =
     if (Seq("dev", "lab", "prod").contains(System.getenv("APP_ENV"))) {
       ConfigFactory.load(System.getenv("APP_ENV") + ".conf")
@@ -18,6 +16,7 @@ class ConfigLoader {
     } else {
       ConfigFactory.load()
     }.withFallback(ConfigFactory.load(fallBackConf))
+  private[this] val fallBackConf: String = "application.conf"
 
   def get(key: String): String = config.getString(key)
 

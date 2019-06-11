@@ -20,7 +20,7 @@ trait CSVConnector extends Logging {
     * @return
     */
   protected def readCSV(): DataFrame = {
-  log.debug(s"Reading CSV file from $path")
+    log.debug(s"Reading CSV file from $path")
     this.spark.read
       .option("header", this.header)
       .option("inferSchema", this.inferSchema)

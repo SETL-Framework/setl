@@ -12,6 +12,24 @@ import org.apache.spark.sql.{Dataset, Encoder}
 trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector {
 
   /**
+    * Find rows matching the given filter conditions
+    *
+    * @param filters a set of filter conditions
+    * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
+    * @return
+    */
+  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
+    if (filters.nonEmpty) {
+      this
+        .readCassandra()
+        .filter(SqlExpressionUtils.build(filters))
+        .as[T]
+    } else {
+      this.findAll()
+    }
+  }
+
+  /**
     * Return all the rows
     *
     * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
@@ -21,24 +39,6 @@ trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector 
     this
       .readCassandra()
       .as[T]
-  }
-
-  /**
-    * Find rows matching the given filter conditions
-    *
-    * @param filters a set of filter conditions
-    * @param encoder an implicit Encoder for converting a Cassandra table object to a Spark SQL representation
-    * @return
-    */
-  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
-    if(filters.nonEmpty) {
-      this
-        .readCassandra()
-        .filter(SqlExpressionUtils.build(filters))
-        .as[T]
-    } else {
-      this.findAll()
-    }
   }
 
   /**

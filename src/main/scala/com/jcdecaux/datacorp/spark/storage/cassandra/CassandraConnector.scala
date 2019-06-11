@@ -20,6 +20,15 @@ trait CassandraConnector extends Logging {
   /**
     * Read a cassandra table
     *
+    * @return
+    */
+  protected def readCassandra(): DataFrame = {
+    this.readCassandra(this.spark, this.table, this.keyspace)
+  }
+
+  /**
+    * Read a cassandra table
+    *
     * @param spark    spark session
     * @param table    table name
     * @param keyspace keyspace name
@@ -31,12 +40,12 @@ trait CassandraConnector extends Logging {
   }
 
   /**
-    * Read a cassandra table
+    * Write a DataFrame into a Cassandra table
     *
-    * @return
+    * @param df DataFrame to be saved
     */
-  protected def readCassandra(): DataFrame = {
-    this.readCassandra(this.spark, this.table, this.keyspace)
+  protected def writeCassandra(df: DataFrame): Unit = {
+    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**
@@ -52,15 +61,6 @@ trait CassandraConnector extends Logging {
       .cassandraFormat(table, keyspace)
       .mode(SaveMode.Append)
       .save()
-  }
-
-  /**
-    * Write a DataFrame into a Cassandra table
-    *
-    * @param df DataFrame to be saved
-    */
-  protected def writeCassandra(df: DataFrame): Unit = {
-    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**
@@ -82,6 +82,15 @@ trait CassandraConnector extends Logging {
   /**
     * Delete a record
     *
+    * @param query query string
+    */
+  protected def deleteCassandra(query: String): Unit = {
+    this.deleteCassandra(query, this.table, this.keyspace)
+  }
+
+  /**
+    * Delete a record
+    *
     * @param query    query string
     * @param keyspace keyspace name
     */
@@ -89,14 +98,5 @@ trait CassandraConnector extends Logging {
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)
       .deleteFromCassandra(keyspace, table)
-  }
-
-  /**
-    * Delete a record
-    *
-    * @param query query string
-    */
-  protected def deleteCassandra(query: String): Unit = {
-    this.deleteCassandra(query, this.table, this.keyspace)
   }
 }

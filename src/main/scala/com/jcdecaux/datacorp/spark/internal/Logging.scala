@@ -9,18 +9,18 @@ private[spark] trait Logging {
   // be serialized and used on another machine
   @transient private var logger: Logger = _
 
-  // Method to get the logger name for this object
-  protected def logName: String = {
-    // Ignore trailing $'s in the class names for Scala objects
-    this.getClass.getName.stripSuffix("$")
-  }
-
   // Method to get or create the logger for this object
   protected def log: Logger = {
     if (logger == null) {
       logger = LogManager.getLogger(logName)
     }
     logger
+  }
+
+  // Method to get the logger name for this object
+  protected def logName: String = {
+    // Ignore trailing $'s in the class names for Scala objects
+    this.getClass.getName.stripSuffix("$")
   }
 
 }

@@ -31,6 +31,14 @@ class CassandraConnector(val keyspace: String,
       }
   )
 
+  /**
+    * Read a cassandra table
+    *
+    * @return
+    */
+  override def read(): DataFrame = {
+    this.readCassandra(this.spark, this.table, this.keyspace)
+  }
 
   /**
     * Read a cassandra table
@@ -46,12 +54,13 @@ class CassandraConnector(val keyspace: String,
   }
 
   /**
-    * Read a cassandra table
+    * Write a DataFrame into a Cassandra table
     *
-    * @return
+    * @param df DataFrame to be saved
     */
-  override def read(): DataFrame = {
-    this.readCassandra(this.spark, this.table, this.keyspace)
+  override def write(df: DataFrame): Unit = {
+    this.create(df)
+    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**
@@ -67,16 +76,6 @@ class CassandraConnector(val keyspace: String,
       .cassandraFormat(table, keyspace)
       .mode(SaveMode.Append)
       .save()
-  }
-
-  /**
-    * Write a DataFrame into a Cassandra table
-    *
-    * @param df DataFrame to be saved
-    */
-  override def write(df: DataFrame): Unit = {
-    this.create(df)
-    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**
@@ -98,6 +97,15 @@ class CassandraConnector(val keyspace: String,
   /**
     * Delete a record
     *
+    * @param query query string
+    */
+  override def delete(query: String): Unit = {
+    this.deleteCassandra(query, this.table, this.keyspace)
+  }
+
+  /**
+    * Delete a record
+    *
     * @param query    query string
     * @param keyspace keyspace name
     */
@@ -105,14 +113,5 @@ class CassandraConnector(val keyspace: String,
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)
       .deleteFromCassandra(keyspace, table)
-  }
-
-  /**
-    * Delete a record
-    *
-    * @param query query string
-    */
-  override def delete(query: String): Unit = {
-    this.deleteCassandra(query, this.table, this.keyspace)
   }
 }

@@ -13,23 +13,12 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
 
   /**
     *
-    * @param encoder
-    * @return
-    */
-  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
-    this
-      .readCSV()
-      .as[T]
-  }
-
-  /**
-    *
     * @param filters
     * @param encoder
     * @return
     */
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
-    if(filters.nonEmpty) {
+    if (filters.nonEmpty) {
       this
         .readCSV()
         .filter(SqlExpressionUtils.build(filters))
@@ -37,6 +26,17 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
     } else {
       this.findAll()
     }
+  }
+
+  /**
+    *
+    * @param encoder
+    * @return
+    */
+  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
+    this
+      .readCSV()
+      .as[T]
   }
 
   /**
