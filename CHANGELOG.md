@@ -1,3 +1,6 @@
+## 0.2.3 (2019-06-11)
+- Remove scope provided from connectors and typesafe config
+
 ## 0.2.2 (2019-06-11)
 - Adding DynamoDB Connector
 
