@@ -1,30 +1,34 @@
 package com.jcdecaux.datacorp.spark.storage.parquet
 
-import org.apache.log4j.Logger
+import com.jcdecaux.datacorp.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
-  * CSVConnector
+  * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
   */
-trait ParquetConnector {
-
-  private[this] final val logger: Logger = Logger.getLogger(this.getClass)
+trait ParquetConnector extends Logging {
 
   val spark: SparkSession
   val path: String
   val table: String
 
+  /**
+    * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
+    *
+    * @return
+    */
   protected def readParquet(): DataFrame = {
-    logger.debug(s"Reading Parquet file from $path")
+    log.debug(s"Reading Parquet file from $path")
     this.spark.read.parquet(path)
   }
 
   /**
+    * Write a [[DataFrame]] into parquet file
     *
-    * @param df
+    * @param df dataframe
     */
   protected def writeParquet(df: DataFrame, saveMode: SaveMode): Unit = {
-    logger.debug(s"Write DataFrame to $path in Parquet format")
+    log.debug(s"Write DataFrame to $path in Parquet format")
     df.write
       .mode(saveMode)
       .option("path", path)

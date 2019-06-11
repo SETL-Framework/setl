@@ -1,14 +1,12 @@
 package com.jcdecaux.datacorp.spark.storage.csv
 
-import org.apache.log4j.Logger
+import com.jcdecaux.datacorp.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
-  * CSVConnector
+  * CSVConnector contains functionality for transforming [[DataFrame]] into csv files
   */
-trait CSVConnector {
-
-  private[this] final val logger: Logger = Logger.getLogger(this.getClass)
+trait CSVConnector extends Logging {
 
   val spark: SparkSession
   val path: String
@@ -16,8 +14,13 @@ trait CSVConnector {
   val delimiter: String = ";"
   val header: String = "true"
 
+  /**
+    * Read a [[DataFrame]] from a csv file with the path defined during the instantiation.
+    *
+    * @return
+    */
   protected def readCSV(): DataFrame = {
-    logger.debug(s"Reading CSV file from $path")
+  log.debug(s"Reading CSV file from $path")
     this.spark.read
       .option("header", this.header)
       .option("inferSchema", this.inferSchema)
@@ -36,7 +39,7 @@ trait CSVConnector {
     * Write a [[DataFrame]] into the given path with the given save mode
     */
   private[this] def writeCSV(df: DataFrame, path: String, saveMode: SaveMode): Unit = {
-    logger.debug(s"Write DataFrame to $path in CSV format")
+    log.debug(s"Write DataFrame to $path in CSV format")
     df.write
       .mode(saveMode)
       .option("header", this.header)

@@ -34,7 +34,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
       case Storage.CSV =>
         this.readCSV()
       case _ =>
-        throw new UnknownException("Unsupported storage " + storage.name() + " exception !")
+        throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
     }
   }
 
@@ -66,7 +66,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
   }
 
   def findByCondition(conditions: Set[Condition])(implicit encoder: Encoder[T]): Dataset[T] = {
-    import com.jcdecaux.datacorp.spark.util.FilterUtils._
+    import com.jcdecaux.datacorp.spark.util.FilterImplicits._
 
     val df = read()
     if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
@@ -94,7 +94,6 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
   /**
     *
     * @param data
-    * @param saveMode Only usable for file storage (Parquet and CSV)
     * @param encoder
     * @return
     */
@@ -120,7 +119,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
       case Storage.CSV =>
         this.writeCSV(data.toDF(), saveMode)
       case _ =>
-        throw new UnknownException("Unsupported storage " + storage.name() + " exception !")
+        throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
     }
     this
   }

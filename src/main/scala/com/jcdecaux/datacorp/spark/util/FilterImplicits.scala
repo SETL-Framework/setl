@@ -1,12 +1,10 @@
 package com.jcdecaux.datacorp.spark.util
 
 import com.jcdecaux.datacorp.spark.enums.ValueType
+import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.{Condition, Filter}
-import org.apache.log4j.Logger
 
-object FilterUtils {
-
-  private[this] val logger: Logger = Logger.getLogger(this.getClass)
+object FilterImplicits extends Logging {
 
   implicit class FiltersToRequest(filters: Set[Filter]) {
 
@@ -24,7 +22,7 @@ object FilterUtils {
         .map(_.toSqlRequest)
         .mkString(" AND ")
 
-      logger.debug(s"Query: $query")
+      log.debug(s"Query: $query")
       query
     }
   }
@@ -40,24 +38,8 @@ object FilterUtils {
       */
     @throws[IllegalArgumentException]
     def toSqlRequest: String = {
-      val query: String = if (filter.value.isDefined) {
-        filter.nature match {
-          case "datetime" =>
-            val t = DateUtils.reformatDateTimeString(filter.value.get, withTime = true, end = if (filter.operator.contains(">")) false else true)
-            s"${filter.column} ${filter.operator} cast('$t' as timestamp)"
-          case "date" =>
-            val t = DateUtils.reformatDateTimeString(filter.value.get, withTime = false, end = if (filter.operator.contains(">")) false else true)
-            s"${filter.column} ${filter.operator} cast('$t' as date)"
-          case "string" =>
-            s"${filter.column} ${filter.operator} '${filter.value.get}'"
-          case _ =>
-            s"${filter.column} ${filter.operator} ${filter.value.get}"
-        }
-      } else {
-        ""
-      }
-
-      logger.debug(s"Query: $query")
+      val query: String = filter.toCondition.toSqlRequest
+      log.debug(s"Query: $query")
       query
     }
   }
@@ -78,7 +60,7 @@ object FilterUtils {
         .map(_.toSqlRequest)
         .mkString(" AND ")
 
-      logger.debug(s"Query: $query")
+      log.debug(s"Query: $query")
       query
     }
   }
@@ -111,7 +93,7 @@ object FilterUtils {
         ""
       }
 
-      logger.debug(s"Query: $query")
+      log.debug(s"Query: $query")
       query
     }
   }

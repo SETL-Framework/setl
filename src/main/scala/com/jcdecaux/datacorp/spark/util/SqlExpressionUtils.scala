@@ -7,7 +7,7 @@ import com.jcdecaux.datacorp.spark.storage.Filter
   */
 object SqlExpressionUtils {
 
-  import FilterUtils._
+  import FilterImplicits._
 
   /**
     *

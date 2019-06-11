@@ -159,6 +159,7 @@ class SparkRepositorySuite extends FunSuite with EmbeddedCassandra with SparkTem
 
 object SparkRepositorySuite {
   def deleteRecursively(file: File): Unit = {
+    println(s"Remove ${file.getName}")
     if (file.isDirectory)
       file.listFiles.foreach(deleteRecursively)
     if (file.exists && !file.delete)

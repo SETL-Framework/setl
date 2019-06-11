@@ -2,6 +2,12 @@ package com.jcdecaux.datacorp.spark.storage
 
 import org.apache.spark.sql.{Dataset, Encoder}
 
+/**
+  * The goal of Repository is to significantly reduce the amount of boilerplate code required to
+  * implement data access layers for various persistence stores.
+  *
+  * @tparam T
+  */
 trait Repository[T] {
 
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T]
