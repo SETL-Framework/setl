@@ -63,7 +63,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   @throws[IOException]("Cassandra table does not exist")
   @throws[AnalysisException]("Path does not exist")
-  private def read()(implicit encoder: Encoder[T]): DataFrame = {
+  private[spark] def read()(implicit encoder: Encoder[T]): DataFrame = {
     storage match {
       case Storage.CASSANDRA =>
         this.readCassandra()

@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.ConfigUtils
 import com.typesafe.config.Config
@@ -31,14 +32,7 @@ class CassandraConnector(val keyspace: String,
       }
   )
 
-  /**
-    * Read a cassandra table
-    *
-    * @return
-    */
-  override def read(): DataFrame = {
-    this.readCassandra(this.spark, this.table, this.keyspace)
-  }
+  override val storage: Storage = Storage.CASSANDRA
 
   /**
     * Read a cassandra table
@@ -54,13 +48,12 @@ class CassandraConnector(val keyspace: String,
   }
 
   /**
-    * Write a DataFrame into a Cassandra table
+    * Read a cassandra table
     *
-    * @param df DataFrame to be saved
+    * @return
     */
-  override def write(df: DataFrame): Unit = {
-    this.create(df)
-    this.writeCassandra(df, this.table, this.keyspace)
+  override def read(): DataFrame = {
+    this.readCassandra(this.spark, this.table, this.keyspace)
   }
 
   /**
@@ -76,6 +69,16 @@ class CassandraConnector(val keyspace: String,
       .cassandraFormat(table, keyspace)
       .mode(SaveMode.Append)
       .save()
+  }
+
+  /**
+    * Write a DataFrame into a Cassandra table
+    *
+    * @param df DataFrame to be saved
+    */
+  override def write(df: DataFrame): Unit = {
+    this.create(df)
+    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**

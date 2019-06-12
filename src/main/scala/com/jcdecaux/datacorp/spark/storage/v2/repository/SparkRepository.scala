@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.repository
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.v2.connector.{Connector, EnrichConnector}
@@ -8,6 +9,8 @@ import org.apache.spark.sql.{Dataset, Encoder}
 class SparkRepository[DataType] extends Repository[DataType] with Logging {
 
   private[this] var connector: Connector = _
+
+  def getStorage: Storage = connector.storage
 
   /**
     * Set the connector of this spark repository

@@ -7,5 +7,7 @@ public enum Storage {
     CSV,
     EXCEL,
     PARQUET,
-    CASSANDRA
+    CASSANDRA,
+    DYNAMODB,
+    OTHER
 }

@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.ConfigUtils
 import com.typesafe.config.Config
@@ -23,6 +24,8 @@ class CSVConnector(val spark: SparkSession,
     header = ConfigUtils.getAs[String](config, "header").get,
     saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
   )
+
+  override val storage: Storage = Storage.CSV
 
   /**
     * Read a [[DataFrame]] from a csv file with the path defined during the instantiation.

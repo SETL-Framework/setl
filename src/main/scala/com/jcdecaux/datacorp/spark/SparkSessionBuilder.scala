@@ -91,7 +91,6 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Lo
       case AppEnv.DEV =>
         this.config.setMaster("local[*]")
       case _ =>
-        this.config.setMaster(sparkHost)
     }
 
     this

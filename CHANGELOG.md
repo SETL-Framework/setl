@@ -1,11 +1,15 @@
+## 0.2.5 (2019-06-12)
+- Added DynamoDB V2 repository
+- Added auxiliary constructors of case class `Condition`
+
 ## 0.2.4 (2019-06-11)
-- Adding DynamoDB Repository
+- Added DynamoDB Repository
 
 ## 0.2.3 (2019-06-11)
-- Remove scope provided from connectors and typesafe config
+- Removed scope provided from connectors and TypeSafe config
 
 ## 0.2.2 (2019-06-11)
-- Adding DynamoDB Connector
+- Added DynamoDB Connector
 
 ## 0.2.1 (2019-06-03)
 - Removed unnecessary Type variable in `Connector` 

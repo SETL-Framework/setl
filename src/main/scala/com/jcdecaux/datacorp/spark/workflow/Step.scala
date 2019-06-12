@@ -40,11 +40,11 @@ class Step {
     */
   def run(): Step = {
     var inputs: mutable.Map[String, Dataset[_]] = mutable.HashMap.empty[String, Dataset[_]]
-    var step: Option[Step] = previousStep
+    var _previousStep: Option[Step] = previousStep
 
-    while (step.isDefined) {
-      inputs ++= step.get.factories.map(factory => (factory.getClass.getCanonicalName, factory.get())).toMap
-      step = step.get.previousStep
+    while (_previousStep.isDefined) {
+      inputs ++= _previousStep.get.factories.map(factory => (factory.getClass.getCanonicalName, factory.get())).toMap
+      _previousStep = _previousStep.get.previousStep
     }
 
     factories.foreach(factory => {
