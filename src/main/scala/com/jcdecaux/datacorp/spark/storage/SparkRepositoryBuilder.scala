@@ -40,6 +40,9 @@ class SparkRepositoryBuilder[DataType](storage: Option[Storage],
   private[spark] var excerptSize: Long = 10
   private[spark] var workbookPassword: Option[String] = None
 
+  private[spark] var dynamoRegion: String = _
+  private[spark] var dynamoTable: String = _
+
   private[this] var connector: Connector = _
   private[this] var sparkRepository: v2.repository.SparkRepository[DataType] = _
 
@@ -250,6 +253,14 @@ class SparkRepositoryBuilder[DataType](storage: Option[Storage],
           saveMode = saveMode
         )
 
+      case Some(Storage.DYNAMODB) =>
+        log.info("Detect dynamodb storage")
+        new DynamoDBConnector(
+          spark = spark.get,
+          region = dynamoRegion,
+          table = dynamoTable,
+          saveMode = saveMode
+        )
 
       case _ => throw new UnknownException.Storage("The current storage is not supported")
     }

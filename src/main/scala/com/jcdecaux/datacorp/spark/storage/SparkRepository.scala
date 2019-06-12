@@ -26,26 +26,6 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   @throws[IOException]("Cassandra table does not exist")
   @throws[AnalysisException]("Path does not exist")
-  private def read()(implicit encoder: Encoder[T]): DataFrame = {
-    storage match {
-      case Storage.CASSANDRA =>
-        this.readCassandra()
-      case Storage.PARQUET =>
-        this.readParquet()
-      case Storage.CSV =>
-        this.readCSV()
-      case _ =>
-        throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
-    }
-  }
-
-  /**
-    *
-    * @param encoder
-    * @return
-    */
-  @throws[IOException]("Cassandra table does not exist")
-  @throws[AnalysisException]("Path does not exist")
   def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
     read().as[T]
   }
@@ -83,7 +63,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   @throws[IOException]("Cassandra table does not exist")
   @throws[AnalysisException]("Path does not exist")
-  private def read()(implicit encoder: Encoder[T]): DataFrame = {
+  private[spark] def read()(implicit encoder: Encoder[T]): DataFrame = {
     storage match {
       case Storage.CASSANDRA =>
         this.readCassandra()

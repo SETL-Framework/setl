@@ -13,6 +13,7 @@ object Properties extends ConfigLoader {
   val cassandraConfigConnector: Config = this.getObject("connector.cassandra")
   val csvConfigConnector: Config = this.getObject("connector.csv")
   val parquetConfigConnector: Config = this.getObject("connector.parquet")
+  val dynamoDbConfigConnector: Config = this.getObject("connector.dynamo")
 
   val excelConfigConnectorBuilder: Config = this.getObject("connectorBuilder.excel")
   val cassandraConfigConnectorBuilder: Config = this.getObject("connectorBuilder.cassandra")
