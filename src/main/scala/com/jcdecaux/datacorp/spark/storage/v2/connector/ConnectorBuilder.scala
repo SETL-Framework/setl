@@ -19,19 +19,29 @@ class ConnectorBuilder(val spark: SparkSession, val config: Config) extends Buil
     */
   override def build(): ConnectorBuilder.this.type = {
     connector = ConfigUtils.getAs[Storage](config, "storage") match {
+
       case Some(Storage.CASSANDRA) =>
         log.debug("Find cassandra storage")
         new CassandraConnector(spark, config)
+
       case Some(Storage.EXCEL) =>
         log.debug("Find excel storage")
         new ExcelConnector(spark, config)
+
       case Some(Storage.CSV) =>
         log.debug("Find csv storage")
         new CSVConnector(spark, config)
+
       case Some(Storage.PARQUET) =>
         log.debug("Find parquet storage")
         new ParquetConnector(spark, config)
-      case _ => throw new UnknownException.Storage("Unknown storage type")
+
+      case Some(Storage.DYNAMODB) =>
+        log.debug("Find dynamodb storage")
+        new DynamoDBConnector(spark, config)
+
+      case _ =>
+        throw new UnknownException.Storage("Unknown storage type")
     }
 
     this

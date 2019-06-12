@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.ConfigUtils
 import com.typesafe.config.Config
@@ -19,6 +20,8 @@ class ParquetConnector(val spark: SparkSession,
     table = ConfigUtils.getAs[String](config, "table").get,
     saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
   )
+
+  override val storage: Storage = Storage.PARQUET
 
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
