@@ -5,11 +5,28 @@ import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
 import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
 
 /**
-  * SparkCassandraRepository
+  * ParquetSparkRepository
   *
   * @tparam T
   */
 trait ParquetSparkRepository[T] extends Repository[T] with ParquetConnector {
+
+  /**
+    *
+    * @param filters
+    * @param encoder
+    * @return
+    */
+  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
+    if (filters.nonEmpty) {
+      this
+        .readParquet()
+        .filter(SqlExpressionUtils.build(filters))
+        .as[T]
+    } else {
+      this.findAll()
+    }
+  }
 
   /**
     *
@@ -20,23 +37,6 @@ trait ParquetSparkRepository[T] extends Repository[T] with ParquetConnector {
     this
       .readParquet()
       .as[T]
-  }
-
-  /**
-    *
-    * @param filters
-    * @param encoder
-    * @return
-    */
-  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
-    if(filters.nonEmpty) {
-      this
-        .readParquet()
-        .filter(SqlExpressionUtils.build(filters))
-        .as[T]
-    } else {
-      this.findAll()
-    }
   }
 
   /**

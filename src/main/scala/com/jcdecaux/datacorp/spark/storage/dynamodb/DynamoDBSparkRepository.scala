@@ -1,15 +1,15 @@
-package com.jcdecaux.datacorp.spark.storage.csv
+package com.jcdecaux.datacorp.spark.storage.dynamodb
 
 import com.jcdecaux.datacorp.spark.storage.{Filter, Repository}
 import com.jcdecaux.datacorp.spark.util.SqlExpressionUtils
 import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
 
 /**
-  * CSVSparkRepository
+  * DynamoDBSparkRepository
   *
   * @tparam T
   */
-trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
+trait DynamoDBSparkRepository[T] extends Repository[T] with DynamoDBConnector {
 
   /**
     *
@@ -20,7 +20,7 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
     if (filters.nonEmpty) {
       this
-        .readCSV()
+        .readDynamoDB()
         .filter(SqlExpressionUtils.build(filters))
         .as[T]
     } else {
@@ -35,7 +35,7 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
     */
   def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
     this
-      .readCSV()
+      .readDynamoDB()
       .as[T]
   }
 
@@ -47,7 +47,7 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
     */
   def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
     this
-      .readCSV()
+      .readDynamoDB()
       .filter(SqlExpressionUtils.request(filter))
       .as[T]
   }
@@ -70,7 +70,7 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
     * @return
     */
   def save(data: Dataset[T], saveMode: SaveMode)(implicit encoder: Encoder[T]): this.type = {
-    this.writeCSV(data.toDF(), saveMode)
+    this.writeDynamoDB(data.toDF(), saveMode)
     this
   }
 }

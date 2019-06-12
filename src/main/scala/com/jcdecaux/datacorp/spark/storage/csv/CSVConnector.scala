@@ -20,7 +20,7 @@ trait CSVConnector extends Logging {
     * @return
     */
   protected def readCSV(): DataFrame = {
-    log.debug(s"Reading csv file from $path")
+    log.debug(s"Reading CSV file from $path")
     this.spark.read
       .option("header", this.header)
       .option("inferSchema", this.inferSchema)
@@ -39,7 +39,7 @@ trait CSVConnector extends Logging {
     * Write a [[DataFrame]] into the given path with the given save mode
     */
   private[this] def writeCSV(df: DataFrame, path: String, saveMode: SaveMode): Unit = {
-    log.debug(s"Write DataFrame to $path")
+    log.debug(s"Write DataFrame to $path in CSV format")
     df.write
       .mode(saveMode)
       .option("header", this.header)

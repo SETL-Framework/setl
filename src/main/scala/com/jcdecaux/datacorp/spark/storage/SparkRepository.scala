@@ -12,6 +12,7 @@ import org.apache.spark.sql._
 
 /**
   * StorageSparkRepository
+  *
   * @tparam T
   */
 trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVConnector with ParquetConnector {
@@ -51,18 +52,52 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
 
   /**
     *
+    * @param filter
+    * @param encoder
+    * @return
+    */
+  def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findBy(Set(filter))
+  }
+
+  /**
+    *
     * @param filters
     * @param encoder
     * @return
     */
   def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
     val df = read()
-    if(filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
+    if (filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
       df.filter(SqlExpressionUtils.build(filters))
         .as[T]
     } else {
       df.as[T]
     }
+  }
+
+  /**
+    *
+    * @param encoder
+    * @return
+    */
+  @throws[IOException]("Cassandra table does not exist")
+  @throws[AnalysisException]("Path does not exist")
+  private def read()(implicit encoder: Encoder[T]): DataFrame = {
+    storage match {
+      case Storage.CASSANDRA =>
+        this.readCassandra()
+      case Storage.PARQUET =>
+        this.readParquet()
+      case Storage.CSV =>
+        this.readCSV()
+      case _ =>
+        throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
+    }
+  }
+
+  def findByCondition(condition: Condition)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findByCondition(Set(condition))
   }
 
   def findByCondition(conditions: Set[Condition])(implicit encoder: Encoder[T]): Dataset[T] = {
@@ -75,20 +110,6 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     } else {
       df.as[T]
     }
-  }
-
-  /**
-    *
-    * @param filter
-    * @param encoder
-    * @return
-    */
-  def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
-    this.findBy(Set(filter))
-  }
-
-  def findByCondition(condition: Condition)(implicit encoder: Encoder[T]): Dataset[T] = {
-    this.findByCondition(Set(condition))
   }
 
   /**

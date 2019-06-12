@@ -100,6 +100,15 @@ class CassandraConnector(val keyspace: String,
   /**
     * Delete a record
     *
+    * @param query query string
+    */
+  override def delete(query: String): Unit = {
+    this.deleteCassandra(query, this.table, this.keyspace)
+  }
+
+  /**
+    * Delete a record
+    *
     * @param query    query string
     * @param keyspace keyspace name
     */
@@ -107,14 +116,5 @@ class CassandraConnector(val keyspace: String,
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)
       .deleteFromCassandra(keyspace, table)
-  }
-
-  /**
-    * Delete a record
-    *
-    * @param query query string
-    */
-  override def delete(query: String): Unit = {
-    this.deleteCassandra(query, this.table, this.keyspace)
   }
 }

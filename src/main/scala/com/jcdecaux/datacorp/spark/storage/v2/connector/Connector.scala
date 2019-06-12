@@ -20,5 +20,4 @@ trait Connector {
   def read(): DataFrame
 
   def write(t: DataFrame): Unit
-
 }
