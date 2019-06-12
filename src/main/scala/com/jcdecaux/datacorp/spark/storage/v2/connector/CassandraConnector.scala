@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.ConfigUtils
 import com.typesafe.config.Config
@@ -31,6 +32,7 @@ class CassandraConnector(val keyspace: String,
       }
   )
 
+  override val storage: Storage = Storage.CASSANDRA
 
   /**
     * Read a cassandra table

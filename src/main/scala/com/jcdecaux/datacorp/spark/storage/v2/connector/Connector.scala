@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import org.apache.spark.sql.DataFrame
 
 /**
@@ -13,6 +14,8 @@ import org.apache.spark.sql.DataFrame
   *
   */
 trait Connector {
+
+  val storage: Storage
 
   def read(): DataFrame
 
