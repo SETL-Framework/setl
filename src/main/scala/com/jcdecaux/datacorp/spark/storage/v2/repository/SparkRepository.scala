@@ -1,12 +1,15 @@
 package com.jcdecaux.datacorp.spark.storage.v2.repository
 
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.v2.connector.{Connector, EnrichConnector}
 import org.apache.spark.sql.{Dataset, Encoder}
 
-class SparkRepository[DataType] extends Repository[DataType] with Logging {
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe.TypeTag
+
+class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Repository[DataType] with Logging {
 
   private[this] var connector: Connector = _
 
@@ -47,13 +50,21 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
   override def findBy(conditions: Set[Condition])(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
     import com.jcdecaux.datacorp.spark.util.FilterImplicits._
 
-    val df = connector.read()
-    if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
-      df.filter(conditions.toSqlRequest)
-        .as[DataType]
+    //    val df = connector.read()
+    //    if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
+    //      df.filter(conditions.toSqlRequest)
+    //        .as[DataType]
+    //    } else {
+    //      df.as[DataType]
+    //    }
+    //
+    val data = if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
+      connector.read().filter(conditions.toSqlRequest)
     } else {
-      df.as[DataType]
+      connector.read()
     }
+
+    SchemaConverter.fromDF[DataType](data)
   }
 
   /**
@@ -63,7 +74,9 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
     * @return
     */
   override def findAll()(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
-    connector.read().as[DataType]
+    //    connector.read().as[DataType]
+
+    SchemaConverter.fromDF[DataType](connector.read())
   }
 
   /**
@@ -83,7 +96,8 @@ class SparkRepository[DataType] extends Repository[DataType] with Logging {
         log.info("Current class has no create method. Save directly the dataset")
       case e: Throwable => throw e
     }
-    connector.write(data.toDF())
+    //    connector.write(data.toDF())
+    connector.write(SchemaConverter.toDF(data))
     this
   }
 }

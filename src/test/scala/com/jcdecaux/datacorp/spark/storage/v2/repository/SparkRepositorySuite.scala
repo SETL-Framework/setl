@@ -2,9 +2,10 @@ package com.jcdecaux.datacorp.spark.storage.v2.repository
 
 import java.io.File
 
+import com.jcdecaux.datacorp.spark.annotations.colName
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.storage.Condition
-import com.jcdecaux.datacorp.spark.storage.v2.connector.ParquetConnector
+import com.jcdecaux.datacorp.spark.storage.v2.connector.{CSVConnector, ParquetConnector}
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
@@ -44,4 +45,29 @@ class SparkRepositorySuite extends FunSuite {
 
   }
 
+  test("Test with annotated case class") {
+
+    val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
+    val path: String = "src/test/resources/test_parquet_with_anno"
+    val connector = new CSVConnector(spark, path, "false", ";", "true", SaveMode.Overwrite)
+    val condition = Condition("col1", "=", "a")
+
+
+    val repo = new SparkRepository[MyObject].setConnector(connector)
+
+    repo.save(ds)
+    val data = repo.findAll()
+    assert(data.columns === Array("column1", "column2"))
+
+    val rawData = connector.read()
+    assert(rawData.columns === Array("col1", "column2"))
+
+    val filteredData = repo.findBy(condition)
+    assert(filteredData.columns === Array("column1", "column2"))
+    assert(filteredData.count() === 1)
+
+  }
+
 }
+
+case class MyObject(@colName("col1") column1: String, column2: String)

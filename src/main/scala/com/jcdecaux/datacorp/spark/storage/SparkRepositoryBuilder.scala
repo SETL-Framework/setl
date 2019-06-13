@@ -9,14 +9,17 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe.TypeTag
+
 /**
   * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
   *
   * @param storage type of storage
   * @tparam DataType type of data
   */
-class SparkRepositoryBuilder[DataType](storage: Option[Storage],
-                                       config: Option[Config]) extends Builder[v2.repository.SparkRepository[DataType]] with Logging {
+class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: Option[Storage], config: Option[Config])
+  extends Builder[v2.repository.SparkRepository[DataType]] with Logging {
 
   private[spark] var keyspace: String = _
   private[spark] var table: String = _
