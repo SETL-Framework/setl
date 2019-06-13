@@ -1,6 +1,7 @@
 ## 0.2.5 (2019-06-12)
 - Added DynamoDB V2 repository
 - Added auxiliary constructors of case class `Condition`
+- Added SchemaConverter
 
 ## 0.2.4 (2019-06-11)
 - Added DynamoDB Repository
