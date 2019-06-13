@@ -27,6 +27,66 @@ Otherwise, add to your `pom.xml`
 </repositories>
 ```
 
+## Example
+
+### Data storage layer access
+Let's create a csv file.
+
+1. define a configuration file (eg. `application.conf`)
+    ```
+      csv {
+        storage = "CSV"
+        path = "file/path"
+        inferSchema = "true"
+        delimiter = ";"
+        header = "true"
+        saveMode = "Append"
+      }
+    ```
+2. Code:
+    ```scala
+     import com.jcdecaux.datacorp.spark.annotations.colName
+     import org.apache.spark.sql.{Dataset, SparkSession}
+     import com.jcdecaux.datacorp.spark.SparkSessionBuilder
+     import com.jcdecaux.datacorp.spark.config.ConfigLoader
+     import com.jcdecaux.datacorp.spark.storage.SparkRepositoryBuilder
+     import com.jcdecaux.datacorp.spark.storage.Condition
+  
+     object Properties extends ConfigLoader
+  
+     val spark = new SparkSessionBuilder().setEnv("dev").build().get()
+     import spark.implicits._
+  
+     case class MyObject(@colName("col1") column1: String, column2: String)
+     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
+      // +-------+-------+
+      // |column1|column2|
+      // +-------+-------+
+      // |      a|      A|
+      // |      b|      B|
+      // +-------+-------+  
+
+     val repository = new SparkRepositoryBuilder[MyObject](Properties.getObject("csv")).setSpark(spark).build().get()
+     repository.save(ds)
+  
+     // The column name will be changed automatically according to 
+     // the annotation `colName` when you define the case class 
+     // +----+-------+
+     // |col1|column2|
+     // +----+-------+
+     // |   a|      A|
+     // |   b|      B|
+     // +----+-------+
+  
+     val cond = Condition("col", "=", "a")
+  
+     repository.findBy(cond).show()
+     // +-------+-------+
+     // |column1|column2|
+     // +-------+-------+
+     // |      a|      A|
+     // +-------+-------+  
+    ```
 
 ## Build and deployment
 Maven is used as the dependency manager in this project.
