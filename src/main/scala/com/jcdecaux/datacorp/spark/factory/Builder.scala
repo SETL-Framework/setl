@@ -15,4 +15,6 @@ trait Builder[A] {
   def build(): this.type
 
   def get(): A
+
+  def getOrCreate(): A = this.build().get()
 }

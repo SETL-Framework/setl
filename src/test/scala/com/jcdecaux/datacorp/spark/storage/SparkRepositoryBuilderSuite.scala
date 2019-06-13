@@ -97,7 +97,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     repoBuilder.spark = Option(spark)
     repoBuilder.path = "src/test/resources/test_parquet"
 
-    val repo = repoBuilder.build().get()
+    val repo = repoBuilder.getOrCreate()
 
     repo.save(testTable)
     assert(repo.findAll().count() === 3)
@@ -128,7 +128,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
       .setPath("src/test/resources/test_excel.xlsx")
       .setSchema(schema)
 
-    val repo = repoBuilder.build().get()
+    val repo = repoBuilder.getOrCreate()
 
     repo.save(testTable)
     assert(repo.findAll().count() === 3)
