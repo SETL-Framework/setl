@@ -1,3 +1,9 @@
+## 0.2.6 (2019-06-18)
+- Added annotation `ColumnName`, which could be used to replace the current column name 
+with an alias in the data storage.
+- Added annotation `CompoundKey`. It could be used to define a compound key for databases 
+that only allow one partition key
+
 ## 0.2.5 (2019-06-12)
 - Added DynamoDB V2 repository
 - Added auxiliary constructors of case class `Condition`
