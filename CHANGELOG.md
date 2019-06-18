@@ -8,34 +8,6 @@ that only allow one partition key
 - Added DynamoDB V2 repository
 - Added auxiliary constructors of case class `Condition`
 - Added SchemaConverter
-  ```scala
-  import com.jcdecaux.datacorp.spark.annotations.colName
-  case class MyObject(@colName("col1") column1: String, column2: String)
-
-  val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
-  // +-------+-------+
-  // |column1|column2|
-  // +-------+-------+
-  // |      a|      A|
-  // |      b|      B|
-  // +-------+-------+
-
-  val df = SchemaConverter.toDF(ds)
-  // +----+-------+
-  // |col1|column2|
-  // +----+-------+
-  // |   a|      A|
-  // |   b|      B|
-  // +----+-------+
-
-  val ds2 = SchemaConverter.fromDF[MyObject](df)
-  // +-------+-------+
-  // |column1|column2|
-  // +-------+-------+
-  // |      a|      A|
-  // |      b|      B|
-  // +-------+-------+
-  ```
 
 ## 0.2.4 (2019-06-11)
 - Added DynamoDB Repository
@@ -49,10 +21,7 @@ that only allow one partition key
 ## 0.2.1 (2019-06-03)
 - Removed unnecessary Type variable in `Connector` 
 - Added `ConnectorBuilder` to directly build a connector from a typesafe's `Config` object
-- Added auxiliary constructor in `SparkRepositoryBuilder` so we can create a repository like this: 
-  ```scala
-  val repo = new SparkRepositoryBuilder[TestObject](config).setSpark(spark).build().get()
-  ```
+- Added auxiliary constructor in `SparkRepositoryBuilder`
 - Added enumeration `AppEnv`
 
 ## 0.2.0 (2019-05-21)

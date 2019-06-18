@@ -45,7 +45,9 @@ Let's create a csv file.
     ```
 2. Code:
     ```scala
-     import com.jcdecaux.datacorp.spark.annotations.colName
+     import com.jcdecaux.datacorp.spark.annotations.ColumnName
+     import com.jcdecaux.datacorp.spark.annotations.CompoundKey
+     
      import org.apache.spark.sql.{Dataset, SparkSession}
      import com.jcdecaux.datacorp.spark.SparkSessionBuilder
      import com.jcdecaux.datacorp.spark.config.ConfigLoader
@@ -57,7 +59,7 @@ Let's create a csv file.
      val spark = new SparkSessionBuilder().setEnv("dev").build().get()
      import spark.implicits._
   
-     case class MyObject(@colName("col1") column1: String, column2: String)
+     case class MyObject(@ColumnName("col1") @CompoundKey("2") column1: String, @CompoundKey("1") column2: String)
      val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
       // +-------+-------+
       // |column1|column2|
@@ -68,25 +70,31 @@ Let's create a csv file.
 
      val repository = new SparkRepositoryBuilder[MyObject](Properties.getObject("csv")).setSpark(spark).build().get()
      repository.save(ds)
-  
      // The column name will be changed automatically according to 
      // the annotation `colName` when you define the case class 
-     // +----+-------+
-     // |col1|column2|
-     // +----+-------+
-     // |   a|      A|
-     // |   b|      B|
-     // +----+-------+
+     // +----+-------+-----+
+     // |col1|column2| _key|
+     // +----+-------+-----+
+     // |   a|      A|  A-a|
+     // |   b|      B|  B-b|
+     // +----+-------+-----+
   
-     val cond = Condition("col", "=", "a")
+     val cond = Condition("col1", "=", "a")
   
      repository.findBy(cond).show()
+     // Dataset[MyObject] 
      // +-------+-------+
      // |column1|column2|
      // +-------+-------+
      // |      a|      A|
      // +-------+-------+  
     ```
+    
+### Transform data with Factory
+TBD
+
+### Handle workflow with Pipeline
+TBD
 
 ## Build and deployment
 Maven is used as the dependency manager in this project.
