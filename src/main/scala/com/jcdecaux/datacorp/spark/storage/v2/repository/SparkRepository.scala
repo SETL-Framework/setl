@@ -50,14 +50,6 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
   override def findBy(conditions: Set[Condition])(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
     import com.jcdecaux.datacorp.spark.util.FilterImplicits._
 
-    //    val df = connector.read()
-    //    if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
-    //      df.filter(conditions.toSqlRequest)
-    //        .as[DataType]
-    //    } else {
-    //      df.as[DataType]
-    //    }
-    //
     val data = if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
       connector.read().filter(conditions.toSqlRequest)
     } else {
@@ -74,8 +66,6 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
     * @return
     */
   override def findAll()(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
-    //    connector.read().as[DataType]
-
     SchemaConverter.fromDF[DataType](connector.read())
   }
 
@@ -96,7 +86,6 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
         log.info("Current class has no create method. Save directly the dataset")
       case e: Throwable => throw e
     }
-    //    connector.write(data.toDF())
     connector.write(SchemaConverter.toDF(data))
     this
   }

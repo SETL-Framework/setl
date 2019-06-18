@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.repository
 
 import java.io.File
 
-import com.jcdecaux.datacorp.spark.annotations.colName
+import com.jcdecaux.datacorp.spark.annotations.{ColumnName, CompoundKey}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.v2.connector.{CSVConnector, ParquetConnector}
@@ -60,14 +60,17 @@ class SparkRepositorySuite extends FunSuite {
     assert(data.columns === Array("column1", "column2"))
 
     val rawData = connector.read()
-    assert(rawData.columns === Array("col1", "column2"))
+    rawData.show()
+    assert(rawData.columns === Array("col1", "column2", "_key"))
 
     val filteredData = repo.findBy(condition)
     assert(filteredData.columns === Array("column1", "column2"))
     assert(filteredData.count() === 1)
 
+    deleteRecursively(new File(path))
+
   }
 
 }
 
-case class MyObject(@colName("col1") column1: String, column2: String)
+case class MyObject(@CompoundKey("2") @ColumnName("col1") column1: String, @CompoundKey("1") column2: String)

@@ -5,20 +5,21 @@ import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.factory.Builder
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.v2.connector._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
+// TODO : Qin should check the implementation of suffix
 /**
   * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
   *
   * @param storage type of storage
   * @tparam DataType type of data
   */
-class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: Option[Storage], config: Option[Config])
+class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: Option[Storage], var config: Option[Config])
   extends Builder[v2.repository.SparkRepository[DataType]] with Logging {
 
   private[spark] var keyspace: String = _
@@ -28,6 +29,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
   private[spark] var clusteringKeyColumns: Option[Seq[String]] = None
 
   private[spark] var path: String = _
+  private[spark] var suffix: Option[String] = None
   private[spark] var inferSchema: String = "true"
   private[spark] var schema: Option[StructType] = None
   private[spark] var delimiter: String = ";"
@@ -52,6 +54,29 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
   def this(storage: Storage) = this(Some(storage), None)
 
   def this(config: Config) = this(None, Some(config))
+
+  /**
+    * Only affect file storage system to get a specific path (exp : Reach -> suffix [Rome])
+    *
+    * @param pathSuffix
+    * @return
+    */
+  def setSuffix(pathSuffix: String): this.type = {
+    config match {
+      case Some(configuration) =>
+        try {
+          log.debug("Build connector with configuration")
+          config = Some(configuration.withValue("path", ConfigValueFactory.fromAnyRef(configuration.getString("path") + "/" + pathSuffix)))
+        } catch {
+          case missing: ConfigException.Missing => log.error("To use suffix please make sure you have a path in your configuration")
+          case e: Throwable => throw e
+        }
+      case _ =>
+        log.debug("No connector configuration was found. Setting suffix variable")
+        suffix = Some(pathSuffix)
+    }
+    this
+  }
 
   def setKeyspace(keyspace: String): this.type = {
     this.keyspace = keyspace
@@ -161,6 +186,10 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
     this
   }
 
+  def getSuffix: String = {
+    if(suffix.isDefined) "/" + suffix.get else ""
+  }
+
   /**
     * Build an object
     *
@@ -215,7 +244,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
         log.info("Detect CSV storage")
         new CSVConnector(
           spark = spark.get,
-          path = path,
+          path = path + getSuffix,
           inferSchema = inferSchema,
           delimiter = delimiter,
           header = header,
@@ -226,7 +255,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
         log.info("Detect Parquet storage")
         new ParquetConnector(
           spark = spark.get,
-          path = path,
+          path = path + getSuffix,
           table = table,
           saveMode = saveMode
         )
@@ -241,7 +270,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
 
         new ExcelConnector(
           spark = spark.get,
-          path = path,
+          path = path + getSuffix,
           useHeader = header,
           dataAddress = dataAddress,
           treatEmptyValuesAsNulls = treatEmptyValuesAsNulls,
