@@ -29,7 +29,7 @@ Otherwise, add to your `pom.xml`
 
 ## Example
 
-### Data storage layer access
+### Access data storage with SparkRepository
 Let's create a csv file.
 
 1. define a configuration file (eg. `application.conf`)
@@ -59,7 +59,9 @@ Let's create a csv file.
      val spark = new SparkSessionBuilder().setEnv("dev").build().get()
      import spark.implicits._
   
-     case class MyObject(@ColumnName("col1") @CompoundKey("2") column1: String, @CompoundKey("1") column2: String)
+     case class MyObject(@ColumnName("col1") @CompoundKey("2") column1: String, 
+                         @CompoundKey("1") column2: String)
+                      
      val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
       // +-------+-------+
       // |column1|column2|
@@ -68,7 +70,9 @@ Let's create a csv file.
       // |      b|      B|
       // +-------+-------+  
 
-     val repository = new SparkRepositoryBuilder[MyObject](Properties.getObject("csv")).setSpark(spark).build().get()
+     val repository = new SparkRepositoryBuilder[MyObject](Properties.getObject("csv"))
+       .setSpark(spark).build().get()
+    
      repository.save(ds)
      // The column name will be changed automatically according to 
      // the annotation `colName` when you define the case class 
@@ -90,10 +94,10 @@ Let's create a csv file.
      // +-------+-------+  
     ```
     
-### Transform data with Factory
+### Transform data with Factory and Transformer
 TBD
 
-### Handle workflow with Pipeline
+### Handle workflow with Pipeline and Step
 TBD
 
 ## Build and deployment
