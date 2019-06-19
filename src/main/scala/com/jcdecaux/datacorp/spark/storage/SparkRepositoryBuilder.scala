@@ -12,7 +12,6 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
-// TODO : Qin should check the implementation of suffix
 /**
   * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
   *
@@ -22,39 +21,49 @@ import scala.reflect.runtime.universe.TypeTag
 class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: Option[Storage], var config: Option[Config])
   extends Builder[v2.repository.SparkRepository[DataType]] with Logging {
 
-  private[spark] var keyspace: String = _
-  private[spark] var table: String = _
-  private[spark] var spark: Option[SparkSession] = None
-  private[spark] var partitionKeyColumns: Option[Seq[String]] = None
-  private[spark] var clusteringKeyColumns: Option[Seq[String]] = None
-
-  private[spark] var path: String = _
-  private[spark] var suffix: Option[String] = None
-  private[spark] var inferSchema: String = "true"
-  private[spark] var schema: Option[StructType] = None
-  private[spark] var delimiter: String = ";"
-  private[spark] var header: String = "true"
-  private[spark] var saveMode: SaveMode = SaveMode.Overwrite
-
-  private[spark] var dataAddress: String = "A1"
-  private[spark] var treatEmptyValuesAsNulls: String = "true"
-  private[spark] var addColorColumns: String = "false"
-  private[spark] var timestampFormat: String = "yyyy-mm-dd hh:mm:ss.000"
-  private[spark] var dateFormat: String = "yyyy-mm-dd"
-  private[spark] var maxRowsInMemory: Option[Long] = None
-  private[spark] var excerptSize: Long = 10
-  private[spark] var workbookPassword: Option[String] = None
-
-  private[spark] var dynamoRegion: String = _
-  private[spark] var dynamoTable: String = _
-
-  private[this] var connector: Connector = _
-  private[this] var sparkRepository: v2.repository.SparkRepository[DataType] = _
+  def this() = this(None, None)
 
   def this(storage: Storage) = this(Some(storage), None)
 
   def this(config: Config) = this(None, Some(config))
 
+  var keyspace: String = _
+  var table: String = _
+  var spark: Option[SparkSession] = None
+  var partitionKeyColumns: Option[Seq[String]] = None
+  var clusteringKeyColumns: Option[Seq[String]] = None
+
+  var path: String = _
+  var suffix: Option[String] = None
+  var inferSchema: String = "true"
+  var schema: Option[StructType] = None
+  var delimiter: String = ";"
+  var header: String = "true"
+  var saveMode: SaveMode = SaveMode.Overwrite
+
+  var dataAddress: String = "A1"
+  var treatEmptyValuesAsNulls: String = "true"
+  var addColorColumns: String = "false"
+  var timestampFormat: String = "yyyy-mm-dd hh:mm:ss.000"
+  var dateFormat: String = "yyyy-mm-dd"
+  var sheetName: Option[String] = Some("sheet1")
+  var maxRowsInMemory: Option[Long] = None
+  var excerptSize: Long = 10
+  var workbookPassword: Option[String] = None
+
+  var dynamoRegion: String = _
+  var dynamoTable: String = _
+
+  private[this] var connector: Connector = _
+  private[this] var sparkRepository: v2.repository.SparkRepository[DataType] = _
+
+  def setSpark(spark: SparkSession): this.type = {
+    this.spark = Option(spark)
+    this
+  }
+
+  // TODO : @Mounir: here we only handle parquet/csv/excel storage.
+  //                 No changes will be made for cassandra and dynamodb connector if we set a suffix
   /**
     * Only affect file storage system to get a specific path (exp : Reach -> suffix [Rome])
     *
@@ -65,7 +74,6 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
     config match {
       case Some(configuration) =>
         try {
-          log.debug("Build connector with configuration")
           config = Some(configuration.withValue("path", ConfigValueFactory.fromAnyRef(configuration.getString("path") + "/" + pathSuffix)))
         } catch {
           case missing: ConfigException.Missing => log.error("To use suffix please make sure you have a path in your configuration")
@@ -78,6 +86,11 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
     this
   }
 
+  def getSuffix: String = {
+    if(suffix.isDefined) "/" + suffix.get else ""
+  }
+
+  // TODO remove all the get/set methods and replace with a config object to simplify code
   def setKeyspace(keyspace: String): this.type = {
     this.keyspace = keyspace
     this
@@ -85,11 +98,6 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
 
   def setTable(table: String): this.type = {
     this.table = table
-    this
-  }
-
-  def setSpark(spark: SparkSession): this.type = {
-    this.spark = Option(spark)
     this
   }
 
@@ -186,10 +194,6 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
     this
   }
 
-  def getSuffix: String = {
-    if(suffix.isDefined) "/" + suffix.get else ""
-  }
-
   /**
     * Build an object
     *
@@ -278,6 +282,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
           addColorColumns = addColorColumns,
           timestampFormat = timestampFormat,
           dateFormat = dateFormat,
+          sheetName = sheetName,
           maxRowsInMemory = maxRowsInMemory,
           excerptSize = excerptSize,
           workbookPassword = workbookPassword,

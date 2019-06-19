@@ -34,6 +34,7 @@ class ExcelConnector(val spark: SparkSession,
                      var addColorColumns: String = "false",
                      var timestampFormat: String = "yyyy-mm-dd hh:mm:ss.000",
                      var dateFormat: String = "yyyy-mm-dd",
+                     var sheetName: Option[String] = Some("sheet1"),
                      var maxRowsInMemory: Option[Long] = None,
                      var excerptSize: Long = 10,
                      var workbookPassword: Option[String] = None,
@@ -63,6 +64,8 @@ class ExcelConnector(val spark: SparkSession,
       ConfigUtils.getAs[String](config, "timestampFormat").getOrElse("yyyy-mm-dd hh:mm:ss.000"),
     dateFormat =
       ConfigUtils.getAs[String](config, "dateFormat").getOrElse("yyyy-mm-dd"),
+    sheetName =
+      ConfigUtils.getAs[String](config, "sheetName"),
     maxRowsInMemory =
       ConfigUtils.getAs[Long](config, "maxRowsInMemory"),
     excerptSize =
@@ -95,6 +98,7 @@ class ExcelConnector(val spark: SparkSession,
       .option("timestampFormat", timestampFormat)
       .option("excerptSize", excerptSize)
 
+    if (sheetName.isDefined) reader.option("sheetName", sheetName.get)
     if (maxRowsInMemory.isDefined) reader.option("maxRowsInMemory", maxRowsInMemory.get)
     if (workbookPassword.isDefined) reader.option("workbookPassword", workbookPassword.get)
     if (schema.isDefined) reader.schema(schema.get)
@@ -110,6 +114,8 @@ class ExcelConnector(val spark: SparkSession,
       .option("dataAddress", dataAddress)
       .option("timestampFormat", timestampFormat)
       .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
+
+    if (sheetName.isDefined) writer.option("sheetName", sheetName.get)
 
     saveMode match {
       case SaveMode.Append =>
