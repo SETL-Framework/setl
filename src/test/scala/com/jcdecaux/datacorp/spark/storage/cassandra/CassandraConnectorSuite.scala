@@ -29,7 +29,7 @@ class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with Spark
       .generateCountry("countries")
   }
 
-  test("Manipulate cassandra table") {
+  test("Manipulate cassandra table (cassandra connector suite)") {
     import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(

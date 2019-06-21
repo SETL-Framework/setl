@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.factory.Builder
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 
@@ -18,7 +18,7 @@ class ConnectorBuilder(val spark: SparkSession, val config: Config) extends Buil
     * @return
     */
   override def build(): ConnectorBuilder.this.type = {
-    connector = ConfigUtils.getAs[Storage](config, "storage") match {
+    connector = TypesafeConfigUtils.getAs[Storage](config, "storage") match {
 
       case Some(Storage.CASSANDRA) =>
         log.debug("Find cassandra storage")

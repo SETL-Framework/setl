@@ -1,3 +1,7 @@
+## 0.2.7 (2019-06-21)
+- Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 
+of `SparkRepositoryBuilder` to use the conf object
+
 ## 0.2.6 (2019-06-18)
 - Added annotation `ColumnName`, which could be used to replace the current column name 
 with an alias in the data storage.

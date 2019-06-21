@@ -12,7 +12,7 @@
     <description>dc-spark-sdk</description>
 
     <properties>
-        <revision>0.2.6</revision>
+        <revision>0.2.7</revision>
         <changelist>-SNAPSHOT</changelist>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -196,6 +196,7 @@
                 <version>2.0.0</version>
                 <configuration>
                     <argLine>-Duser.timezone=${project.timezone}</argLine>
+                    <parallel>false</parallel>
                 </configuration>
                 <executions>
                     <execution>

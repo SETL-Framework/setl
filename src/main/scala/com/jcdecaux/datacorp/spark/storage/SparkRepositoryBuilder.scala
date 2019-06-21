@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import com.jcdecaux.datacorp.spark.config.Conf
+import com.jcdecaux.datacorp.spark.config.Conf.Serializer
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.factory.Builder
@@ -15,51 +17,50 @@ import scala.reflect.runtime.universe.TypeTag
 /**
   * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
   *
+  * @param spark   spark session
   * @param storage type of storage
+  * @param config  a [[com.typesafe.config.Config]] object
   * @tparam DataType type of data
   */
-class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: Option[Storage], var config: Option[Config])
+class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark: Option[SparkSession],
+                                                                       var storage: Option[Storage],
+                                                                       var config: Option[Config])
   extends Builder[v2.repository.SparkRepository[DataType]] with Logging {
 
-  def this() = this(None, None)
+  import Conf.Serializer._
 
-  def this(storage: Storage) = this(Some(storage), None)
+  def this() = this(None, None, None)
 
-  def this(config: Config) = this(None, Some(config))
+  def this(storage: Storage) = this(None, Some(storage), None)
 
-  var keyspace: String = _
-  var table: String = _
-  var spark: Option[SparkSession] = None
-  var partitionKeyColumns: Option[Seq[String]] = None
-  var clusteringKeyColumns: Option[Seq[String]] = None
+  def this(config: Config) = this(None, None, Some(config))
 
-  var path: String = _
-  var suffix: Option[String] = None
-  var inferSchema: String = "true"
-  var schema: Option[StructType] = None
-  var delimiter: String = ";"
-  var header: String = "true"
-  var saveMode: SaveMode = SaveMode.Overwrite
+  private[this] val conf: Conf = new Conf()
 
-  var dataAddress: String = "A1"
-  var treatEmptyValuesAsNulls: String = "true"
-  var addColorColumns: String = "false"
-  var timestampFormat: String = "yyyy-mm-dd hh:mm:ss.000"
-  var dateFormat: String = "yyyy-mm-dd"
-  var sheetName: Option[String] = Some("sheet1")
-  var maxRowsInMemory: Option[Long] = None
-  var excerptSize: Long = 10
-  var workbookPassword: Option[String] = None
-
-  var dynamoRegion: String = _
-  var dynamoTable: String = _
+  if (config.isEmpty) {
+    set("inferSchema", true)
+    set("delimiter", ";")
+    set("useHeader", true)
+    set("header", true)
+    set("saveMode", "Overwrite")
+    set("dataAddress", "A1")
+    set("treatEmptyValuesAsNulls", true)
+    set("addColorColumns", false)
+    set("timestampFormat", "yyyy-mm-dd hh:mm:ss.000")
+    set("dateFormat", "yyyy-mm-dd")
+    set("excerptSize", 10L)
+  }
 
   private[this] var connector: Connector = _
   private[this] var sparkRepository: v2.repository.SparkRepository[DataType] = _
 
-  def setSpark(spark: SparkSession): this.type = {
-    this.spark = Option(spark)
+  def set[T](key: String, value: T)(implicit converter: Serializer[T]): this.type = {
+    conf.set(key, value)
     this
+  }
+
+  def getAs[T](key: String)(implicit converter: Serializer[T]): Option[T] = {
+    conf.getAs[T](key)
   }
 
   // TODO : @Mounir: here we only handle parquet/csv/excel storage.
@@ -81,118 +82,53 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
         }
       case _ =>
         log.debug("No connector configuration was found. Setting suffix variable")
-        suffix = Some(pathSuffix)
+        set("path", s"${getAs[String]("path").get}/$pathSuffix")
     }
     this
   }
 
-  def getSuffix: String = {
-    if(suffix.isDefined) "/" + suffix.get else ""
-  }
-
-  // TODO remove all the get/set methods and replace with a config object to simplify code
-  def setKeyspace(keyspace: String): this.type = {
-    this.keyspace = keyspace
+  def setSpark(spark: SparkSession): this.type = {
+    this.spark = Option(spark)
     this
   }
 
-  def setTable(table: String): this.type = {
-    this.table = table
-    this
-  }
+  def setKeyspace(keyspace: String): this.type = set("keyspace", keyspace)
 
-  def setPartitionKeys(cols: Option[Seq[String]]): this.type = {
-    this.partitionKeyColumns = cols
-    this
-  }
+  def setTable(table: String): this.type = set("table", table)
 
-  def setClusteringKeys(cols: Option[Seq[String]]): this.type = {
-    this.clusteringKeyColumns = cols
-    this
-  }
+  def setPartitionKeys(cols: Option[Seq[String]]): this.type = set("partitionKeyColumns", cols.get.toArray)
 
-  def setPath(path: String): this.type = {
-    this.path = path
-    this
-  }
+  def setClusteringKeys(cols: Option[Seq[String]]): this.type = set("clusteringKeyColumns", cols.get.toArray)
 
-  def inferSchema(boo: Boolean): this.type = {
-    if (boo) {
-      this.inferSchema = "true"
-    } else {
-      this.inferSchema = "false"
-    }
+  def setPath(path: String): this.type = set("path", path)
 
-    this
-  }
+  def setInferSchema(boo: Boolean): this.type = set("inferSchema", boo)
 
-  def setSchema(schema: StructType): this.type = {
-    this.schema = Some(schema)
-    this
-  }
+  def setSchema(schema: StructType): this.type = set("schema", schema.toDDL)
 
-  def setDelimiter(delimiter: String): this.type = {
-    this.delimiter = delimiter
-    this
-  }
+  def setDelimiter(delimiter: String): this.type = set("delimiter", delimiter)
 
-  def header(boo: Boolean): this.type = {
-    this.header = if (boo) "true" else "false"
-    this
-  }
+  def setUseHeader(boo: Boolean): this.type = set("useHeader", boo)
 
-  def setSaveMode(saveMode: SaveMode): this.type = {
-    this.saveMode = saveMode
-    this
-  }
+  def setHeader(boo: Boolean): this.type = set("header", boo)
 
-  def setDataAddress(address: String): this.type = {
-    this.dataAddress = address
-    this
-  }
+  def setSaveMode(saveMode: SaveMode): this.type = set("saveMode", saveMode.toString)
 
-  def treatEmptyValuesAsNulls(boo: Boolean): this.type = {
-    if (boo) {
-      this.treatEmptyValuesAsNulls = "true"
-    } else {
-      this.treatEmptyValuesAsNulls = "false"
-    }
-    this
-  }
+  def setDataAddress(address: String): this.type = set("dataAddress", address)
 
-  def addColorColumns(boo: Boolean): this.type = {
-    if (boo) {
-      this.addColorColumns = "true"
-    } else {
-      this.addColorColumns = "false"
-    }
-    this
-  }
+  def setTreatEmptyValuesAsNulls(boo: Boolean): this.type = set("treatEmptyValuesAsNulls", boo)
 
-  def setTimestampFormat(fmt: String): this.type = {
-    this.timestampFormat = fmt
-    this
-  }
+  def setAddColorColumns(boo: Boolean): this.type = set("addColorColumns", boo)
 
-  def setDateFormat(fmt: String): this.type = {
-    this.dateFormat = fmt
-    this
-  }
+  def setTimestampFormat(fmt: String): this.type = set("timestampFormat", fmt)
 
-  def setMaxRowsInMemory(maxRowsInMemory: Option[Long]): this.type = {
-    this.maxRowsInMemory = maxRowsInMemory
-    this
-  }
+  def setDateFormat(fmt: String): this.type = set("dateFormat", fmt)
 
-  def setExcerptSize(size: Long): this.type = {
-    this.excerptSize = size
-    this
-  }
+  def setMaxRowsInMemory(maxRowsInMemory: Long): this.type = set("maxRowsInMemory", maxRowsInMemory)
 
-  def setWorkbookPassword(pwd: Option[String]): this.type = {
-    this.workbookPassword = pwd
-    this
-  }
+  def setExcerptSize(size: Long): this.type = set("excerptSize", size)
+
+  def setWorkbookPassword(pwd: String): this.type = set("workbookPassword", pwd)
 
   /**
     * Build an object
@@ -202,6 +138,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
   override def build(): SparkRepositoryBuilder.this.type = {
     if (connector == null) {
       log.info("No user-defined connector, create one according to the storage type")
+
       connector = createConnector()
     }
     sparkRepository = new v2.repository.SparkRepository[DataType].setConnector(connector)
@@ -236,68 +173,29 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](storage: 
     this.storage match {
       case Some(Storage.CASSANDRA) =>
         log.info("Detect Cassandra storage")
-        new CassandraConnector(
-          keyspace = keyspace,
-          table = table,
-          spark = spark.get,
-          partitionKeyColumns = partitionKeyColumns,
-          clusteringKeyColumns = clusteringKeyColumns
-        )
+        new CassandraConnector(spark.get, conf)
 
       case Some(Storage.CSV) =>
         log.info("Detect CSV storage")
-        new CSVConnector(
-          spark = spark.get,
-          path = path + getSuffix,
-          inferSchema = inferSchema,
-          delimiter = delimiter,
-          header = header,
-          saveMode = saveMode
-        )
+        new CSVConnector(spark.get, conf)
 
       case Some(Storage.PARQUET) =>
         log.info("Detect Parquet storage")
-        new ParquetConnector(
-          spark = spark.get,
-          path = path + getSuffix,
-          table = table,
-          saveMode = saveMode
-        )
+        new ParquetConnector(spark.get, conf)
 
       case Some(Storage.EXCEL) =>
         log.info("Detect excel storage")
 
-        if (inferSchema.toBoolean & schema.isEmpty) {
+        if (getAs[Boolean]("inferSchema").get & getAs[String]("schema").isEmpty) {
           log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
             "It's recommended to define a schema instead of infer one")
         }
 
-        new ExcelConnector(
-          spark = spark.get,
-          path = path + getSuffix,
-          useHeader = header,
-          dataAddress = dataAddress,
-          treatEmptyValuesAsNulls = treatEmptyValuesAsNulls,
-          inferSchema = inferSchema,
-          addColorColumns = addColorColumns,
-          timestampFormat = timestampFormat,
-          dateFormat = dateFormat,
-          sheetName = sheetName,
-          maxRowsInMemory = maxRowsInMemory,
-          excerptSize = excerptSize,
-          workbookPassword = workbookPassword,
-          schema = schema,
-          saveMode = saveMode
-        )
+        new ExcelConnector(spark.get, conf)
 
       case Some(Storage.DYNAMODB) =>
         log.info("Detect dynamodb storage")
-        new DynamoDBConnector(
-          spark = spark.get,
-          region = dynamoRegion,
-          table = dynamoTable,
-          saveMode = saveMode
-        )
+        new DynamoDBConnector(spark.get, conf)
 
       case _ => throw new UnknownException.Storage("The current storage is not supported")
     }

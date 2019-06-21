@@ -3,7 +3,7 @@ package com.jcdecaux.datacorp.spark.util
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.typesafe.config.{Config, ConfigException}
 
-object ConfigUtils {
+object TypesafeConfigUtils {
 
   def getAs[T](config: Config, path: String)(implicit getter: ConfigGetter[T]): Option[T] = getter.get(config, path)
 
@@ -12,7 +12,7 @@ object ConfigUtils {
       try {
         Option(config.getString(path))
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -23,7 +23,7 @@ object ConfigUtils {
       try {
         Option(config.getInt(path))
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -34,7 +34,7 @@ object ConfigUtils {
       try {
         Option(config.getLong(path))
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -45,7 +45,7 @@ object ConfigUtils {
       try {
         Option(config.getLong(path))
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -56,7 +56,7 @@ object ConfigUtils {
       try {
         Option(config.getLong(path))
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -67,7 +67,7 @@ object ConfigUtils {
       try {
         Option(config.getBoolean(path))
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -78,7 +78,7 @@ object ConfigUtils {
       try {
         Option(config.getList(path).unwrapped().toArray())
       } catch {
-        case m: ConfigException.Missing => None
+        case _: ConfigException.Missing => None
         case e: ConfigException.WrongType => throw e
       }
     }
@@ -101,7 +101,7 @@ object ConfigUtils {
     try {
       Option(config.getList(path).unwrapped().toArray())
     } catch {
-      case m: ConfigException.Missing => None
+      case _: ConfigException.Missing => None
       case e: ConfigException.WrongType => throw e
     }
   }

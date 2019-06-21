@@ -1,8 +1,9 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
@@ -18,11 +19,20 @@ class CSVConnector(val spark: SparkSession,
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
-    path = ConfigUtils.getAs[String](config, "path").get,
-    inferSchema = ConfigUtils.getAs[String](config, "inferSchema").get,
-    delimiter = ConfigUtils.getAs[String](config, "delimiter").get,
-    header = ConfigUtils.getAs[String](config, "header").get,
-    saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
+    path = TypesafeConfigUtils.getAs[String](config, "path").get,
+    inferSchema = TypesafeConfigUtils.getAs[String](config, "inferSchema").get,
+    delimiter = TypesafeConfigUtils.getAs[String](config, "delimiter").get,
+    header = TypesafeConfigUtils.getAs[String](config, "header").get,
+    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
+  )
+
+  def this(spark: SparkSession, conf: Conf) = this(
+    spark = spark,
+    path = conf.get("path").get,
+    inferSchema = conf.get("inferSchema").get,
+    delimiter = conf.get("delimiter").get,
+    header = conf.get("header").get,
+    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
   )
 
   override val storage: Storage = Storage.CSV

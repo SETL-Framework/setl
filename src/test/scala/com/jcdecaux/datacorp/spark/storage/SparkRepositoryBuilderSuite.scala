@@ -37,6 +37,18 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
       .generateTraffic("traffic")
   }
 
+  test("spark repository builder configuration") {
+
+    val builder = new SparkRepositoryBuilder[TestObject]()
+
+    builder.setPath("my/test/path")
+    assert(builder.getAs[String]("path").get === "my/test/path")
+
+    builder.setSuffix("adp")
+    assert(builder.getAs[String]("path").get === "my/test/path/adp")
+
+  }
+
   test("cassandra") {
 
     val testTable: Dataset[TestObject] = Seq(
@@ -80,7 +92,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
     repo.save(testTable)
     assert(repo.findAll().count() === 3)
-    deleteRecursively(new File(repoBuilder.path))
+    deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
 
   }
 
@@ -92,16 +104,15 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     ).toDS()
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.PARQUET)
-
-    repoBuilder.table = "test"
-    repoBuilder.spark = Option(spark)
-    repoBuilder.path = "src/test/resources/test_parquet"
+      .setSpark(spark)
+      .setTable("test")
+      .setPath("src/test/resources/test_parquet")
 
     val repo = repoBuilder.getOrCreate()
 
     repo.save(testTable)
     assert(repo.findAll().count() === 3)
-    deleteRecursively(new File(repoBuilder.path))
+    deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
 
   }
 
@@ -122,7 +133,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.EXCEL)
 
     repoBuilder
-      .inferSchema(false)
+      .setInferSchema(false)
       .setTable("test")
       .setSpark(spark)
       .setPath("src/test/resources/test_excel.xlsx")
@@ -132,7 +143,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
     repo.save(testTable)
     assert(repo.findAll().count() === 3)
-    deleteRecursively(new File(repoBuilder.path))
+    deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
 
   }
 
