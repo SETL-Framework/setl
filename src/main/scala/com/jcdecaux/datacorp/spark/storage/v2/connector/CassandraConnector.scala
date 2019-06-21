@@ -2,9 +2,10 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
+import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.cassandra._
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
@@ -18,19 +19,37 @@ class CassandraConnector(val keyspace: String,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector with Logging {
 
-  def this(spark: SparkSession, config: Config) = this(
-    keyspace = ConfigUtils.getAs[String](config, "keyspace").get,
-    table = ConfigUtils.getAs[String](config, "table").get,
+  def this(spark: SparkSession, conf: Conf) = this(
+    keyspace = conf.get("keyspace").get,
+    table = conf.get("table").get,
     spark = spark,
-    partitionKeyColumns =
-      Option(ConfigUtils.getList(config, "partitionKeyColumns").get.map(_.toString)),
+    partitionKeyColumns = Option(conf.getAs[Array[String]]("partitionKeyColumns").get.toSeq),
     clusteringKeyColumns =
-      if (ConfigUtils.isDefined(config, "clusteringKeyColumns")) {
-        Option(ConfigUtils.getList(config, "clusteringKeyColumns").get.map(_.toString))
+      if (conf.getAs[Array[String]]("clusteringKeyColumns").isDefined) {
+        Option(conf.getAs[Array[String]]("clusteringKeyColumns").get.toSeq)
       } else {
         None
       }
   )
+
+  def this(spark: SparkSession, config: Config) = this(
+    keyspace = TypesafeConfigUtils.getAs[String](config, "keyspace").get,
+    table = TypesafeConfigUtils.getAs[String](config, "table").get,
+    spark = spark,
+    partitionKeyColumns =
+      Option(TypesafeConfigUtils.getList(config, "partitionKeyColumns").get.map(_.toString)),
+    clusteringKeyColumns =
+      if (TypesafeConfigUtils.isDefined(config, "clusteringKeyColumns")) {
+        Option(TypesafeConfigUtils.getList(config, "clusteringKeyColumns").get.map(_.toString))
+      } else {
+        None
+      }
+  )
+
+  println(keyspace)
+  println(table)
+  println(partitionKeyColumns.getOrElse(Seq()).mkString(", "))
+  println(clusteringKeyColumns.getOrElse(Seq()).mkString(", "))
 
   override val storage: Storage = Storage.CASSANDRA
 

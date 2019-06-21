@@ -1,8 +1,9 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.util.ConfigUtils
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
@@ -16,9 +17,16 @@ class ParquetConnector(val spark: SparkSession,
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
-    path = ConfigUtils.getAs[String](config, "path").get,
-    table = ConfigUtils.getAs[String](config, "table").get,
-    saveMode = SaveMode.valueOf(ConfigUtils.getAs[String](config, "saveMode").get)
+    path = TypesafeConfigUtils.getAs[String](config, "path").get,
+    table = TypesafeConfigUtils.getAs[String](config, "table").get,
+    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
+  )
+
+  def this(spark: SparkSession, conf: Conf) = this(
+    spark = spark,
+    path = conf.get("path").get,
+    table = conf.get("table").get,
+    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
   )
 
   override val storage: Storage = Storage.PARQUET
