@@ -7,6 +7,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * DynamoDBConnector
   */
+@deprecated("the old connector interface is deprecated and will be removed from v0.3", "v0.2.0")
 trait DynamoDBConnector {
 
   private[this] final val logger: Logger = Logger.getLogger(this.getClass)

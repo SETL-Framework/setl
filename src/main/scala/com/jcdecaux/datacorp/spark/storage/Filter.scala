@@ -16,7 +16,7 @@ import com.jcdecaux.datacorp.spark.enums.ValueType
   * @param nature   datetime / date / string / long / int / double
   * @param value
   */
-@deprecated("Filter will be replaced by condition")
+@deprecated("Filter will be replaced by condition", "v0.2.0")
 case class Filter(column: String, operator: String, nature: String, value: Option[String]) {
 
   def toCondition: Condition = {

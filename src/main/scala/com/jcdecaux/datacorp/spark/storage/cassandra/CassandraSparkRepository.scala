@@ -9,6 +9,7 @@ import org.apache.spark.sql.{Dataset, Encoder}
   *
   * @tparam T the corresponding Scala class for a Cassandra table
   */
+@deprecated("the old repository interface is deprecated and will be removed from v0.3", "v0.2.0")
 trait CassandraSparkRepository[T] extends Repository[T] with CassandraConnector {
 
   /**

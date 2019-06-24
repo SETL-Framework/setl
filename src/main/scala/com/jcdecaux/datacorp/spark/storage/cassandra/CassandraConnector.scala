@@ -9,6 +9,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * CassandraConnector establish the connection to a given cassandra table of a given keyspace
   */
+@deprecated("the old connector interface is deprecated and will be removed from v0.3", "v0.2.0")
 trait CassandraConnector extends Logging {
 
   val keyspace: String

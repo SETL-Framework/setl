@@ -6,6 +6,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * CSVConnector contains functionality for transforming [[DataFrame]] into csv files
   */
+@deprecated("the old connector interface is deprecated and will be removed from v0.3", "v0.2.0")
 trait CSVConnector extends Logging {
 
   val spark: SparkSession

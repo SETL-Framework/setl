@@ -9,6 +9,7 @@ import org.apache.spark.sql.{Dataset, Encoder, SaveMode}
   *
   * @tparam T
   */
+@deprecated("the old repository interface is deprecated and will be removed from v0.3", "v0.2.0")
 trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
 
   /**
