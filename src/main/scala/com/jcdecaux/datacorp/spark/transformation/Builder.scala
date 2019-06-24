@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.factory
+package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 

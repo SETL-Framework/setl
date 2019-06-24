@@ -1,8 +1,8 @@
 package com.jcdecaux.datacorp.spark
 
 import com.jcdecaux.datacorp.spark.enums.AppEnv
-import com.jcdecaux.datacorp.spark.factory.Builder
 import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.transformation.Builder
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
