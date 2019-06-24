@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.config
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.SerializerException
 
 import scala.reflect.runtime.universe._
@@ -34,6 +35,7 @@ class Conf extends Serializable {
     * @tparam T define the type of output
     * @return
     */
+  @throws[SerializerException]
   def getAs[T](key: String)(implicit converter: Serializer[T]): Option[T] = {
     getOption(key) match {
       case Some(thing) => converter.deserialize(thing)
@@ -61,6 +63,13 @@ object Conf {
   }
 
   object Serializer {
+
+    implicit val storageLoader: Serializer[Storage] = new Serializer[Storage] {
+      override def deserialize(v: String): Option[Storage] = {
+        val f = (v: String) => Some(Storage.valueOf(v))
+        deserializeTester(f, v)
+      }
+    }
 
     implicit val stringLoader: Serializer[String] = new Serializer[String] {
       override def deserialize(v: String): Option[String] = Some(v)

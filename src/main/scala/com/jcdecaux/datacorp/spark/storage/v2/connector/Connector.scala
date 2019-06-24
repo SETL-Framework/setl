@@ -4,8 +4,10 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import org.apache.spark.sql.DataFrame
 
 /**
-  * A connector is used by a [[com.jcdecaux.datacorp.spark.storage.v2.repository.Repository]] to access a data persistence store.
+  * A connector it a fundamental element to access a data persistence store.
+  * It could be used by a [[com.jcdecaux.datacorp.spark.storage.v2.repository.Repository]].
   *
+  * <br>
   * A basic data storage connector has two main function:
   * <ul>
   * <li>Read data from the persistence store</li>

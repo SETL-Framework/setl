@@ -7,6 +7,7 @@ import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
+import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.storage.v2.connector.ExcelConnector
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
 import com.typesafe.config.Config
@@ -202,6 +203,17 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     sparkRepositoryBuilderWithConfigTest(Properties.cassandraConfigRepoBuilder)
     //    deleteRecursively(new File(Properties.csvConfig.getString("path")))
 
+  }
+
+  test("throw exceptions") {
+    // NullPointerException should be thrown if spark session is not set
+    assertThrows[NullPointerException](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
+
+    // UnknownException.Storage should be thrown if the given storage type is not supported
+    assertThrows[UnknownException.Storage](new SparkRepositoryBuilder[TestObject](Storage.OTHER).setSpark(spark).build())
+
+    // NoSuchElementException should be thrown if missing arguments
+    assertThrows[NoSuchElementException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
   }
 
   private[this] def sparkRepositoryBuilderWithConfigTest(config: Config): Unit = {

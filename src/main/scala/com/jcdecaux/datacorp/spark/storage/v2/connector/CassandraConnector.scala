@@ -19,6 +19,12 @@ class CassandraConnector(val keyspace: String,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector with Logging {
 
+  /**
+    * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
+    *
+    * @param spark spark session
+    * @param conf  [[com.jcdecaux.datacorp.spark.config.Conf]] object
+    */
   def this(spark: SparkSession, conf: Conf) = this(
     keyspace = conf.get("keyspace").get,
     table = conf.get("table").get,
@@ -32,6 +38,12 @@ class CassandraConnector(val keyspace: String,
       }
   )
 
+  /**
+    * Constructor with a [[com.typesafe.config.Config]] object
+    *
+    * @param spark  spark session
+    * @param config [[com.typesafe.config.Config]]
+    */
   def this(spark: SparkSession, config: Config) = this(
     keyspace = TypesafeConfigUtils.getAs[String](config, "keyspace").get,
     table = TypesafeConfigUtils.getAs[String](config, "table").get,
@@ -45,11 +57,6 @@ class CassandraConnector(val keyspace: String,
         None
       }
   )
-
-  println(keyspace)
-  println(table)
-  println(partitionKeyColumns.getOrElse(Seq()).mkString(", "))
-  println(clusteringKeyColumns.getOrElse(Seq()).mkString(", "))
 
   override val storage: Storage = Storage.CASSANDRA
 

@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.config
 
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.SerializerException
 import org.scalatest.FunSuite
 
@@ -22,6 +23,9 @@ class ConfSuite extends FunSuite {
     conf.set("floatArray", Array(1F, 2F, 3F))
     conf.set("doubleArray", Array(1D, 2D, 3D))
     conf.set("booleanArray", Array(true, false, true))
+
+    conf.set("storage", Storage.CASSANDRA)
+    conf.set("wrong_storage", "cassandraaa")
 
   }
 
@@ -61,6 +65,8 @@ class ConfSuite extends FunSuite {
     assert(conf.getAs[Array[Double]]("doubleArray").get === Array(1D, 2D, 3D))
     assert(conf.getAs[Array[Boolean]]("booleanArray").get === Array(true, false, true))
 
+    assert(conf.getAs[Storage]("storage").get === Storage.CASSANDRA)
+    assertThrows[SerializerException.Format](conf.getAs[Storage]("wrong_storage"))
     assert(conf.get("none") === None)
   }
 

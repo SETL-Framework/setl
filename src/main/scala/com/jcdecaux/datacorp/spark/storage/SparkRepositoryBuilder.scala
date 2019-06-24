@@ -31,6 +31,8 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
 
   def this() = this(None, None, None)
 
+  def this(spark: SparkSession) = this(Some(spark), None, None)
+
   def this(storage: Storage) = this(None, Some(storage), None)
 
   def this(config: Config) = this(None, None, Some(config))
@@ -38,6 +40,11 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
   private[this] val conf: Conf = new Conf()
 
   if (config.isEmpty) {
+
+    storage match {
+      case Some(s) => set("storage", s)
+      case _ =>
+    }
     set("inferSchema", true)
     set("delimiter", ";")
     set("useHeader", true)
@@ -92,6 +99,8 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
     this
   }
 
+  def setStorage(storage: Storage): this.type = set("storage", storage)
+
   def setKeyspace(keyspace: String): this.type = set("keyspace", keyspace)
 
   def setTable(table: String): this.type = set("table", table)
@@ -138,7 +147,6 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
   override def build(): SparkRepositoryBuilder.this.type = {
     if (connector == null) {
       log.info("No user-defined connector, create one according to the storage type")
-
       connector = createConnector()
     }
     sparkRepository = new v2.repository.SparkRepository[DataType].setConnector(connector)
@@ -152,16 +160,18 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
     */
   protected[this] def createConnector(): Connector = {
 
+    // Check if spark is set
     spark match {
       case None => throw new NullPointerException("SparkSession is not defined")
       case _ =>
     }
 
+    // if a typesafe config is set, then return a corresponding connector
     config match {
-      case Some(configuration) =>
+      case Some(typesafeConfig) =>
         try {
           log.debug("Build connector with configuration")
-          return new ConnectorBuilder(spark.get, configuration).build().get()
+          return new ConnectorBuilder(spark.get, typesafeConfig).build().get()
         } catch {
           case unknown: UnknownException.Storage => log.error("Unknown storage type in connector configuration")
           case e: Throwable => throw e
@@ -170,35 +180,9 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
       case _ => log.debug("No connector configuration was found, build with parameters")
     }
 
-    this.storage match {
-      case Some(Storage.CASSANDRA) =>
-        log.info("Detect Cassandra storage")
-        new CassandraConnector(spark.get, conf)
+    // Otherwise, build a connector according to the current configuration
+    new ConnectorBuilder(spark.get, conf).build().get()
 
-      case Some(Storage.CSV) =>
-        log.info("Detect CSV storage")
-        new CSVConnector(spark.get, conf)
-
-      case Some(Storage.PARQUET) =>
-        log.info("Detect Parquet storage")
-        new ParquetConnector(spark.get, conf)
-
-      case Some(Storage.EXCEL) =>
-        log.info("Detect excel storage")
-
-        if (getAs[Boolean]("inferSchema").get & getAs[String]("schema").isEmpty) {
-          log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
-            "It's recommended to define a schema instead of infer one")
-        }
-
-        new ExcelConnector(spark.get, conf)
-
-      case Some(Storage.DYNAMODB) =>
-        log.info("Detect dynamodb storage")
-        new DynamoDBConnector(spark.get, conf)
-
-      case _ => throw new UnknownException.Storage("The current storage is not supported")
-    }
   }
 
   def setConnector(connector: Connector): this.type = {

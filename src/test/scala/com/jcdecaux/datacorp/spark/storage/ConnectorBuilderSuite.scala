@@ -1,10 +1,12 @@
-package com.jcdecaux.datacorp.spark.storage.v2.connector
+package com.jcdecaux.datacorp.spark.storage
 
 import java.io.File
 
 import com.datastax.spark.connector.cql.{CassandraConnector => CC}
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
-import com.jcdecaux.datacorp.spark.config.Properties
+import com.jcdecaux.datacorp.spark.config.{Conf, Properties}
+import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.exception.{SerializerException, UnknownException}
 import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursively
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SparkSession}
@@ -84,6 +86,27 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
     df.show()
     assert(df.count() === 3)
     deleteRecursively(new File(Properties.excelConfigConnectorBuilder.getString("path")))
+  }
+
+  test("wrong builder configuration") {
+    // IllegalArgumentException should be thrown when the typesafe config contains a wrong storage type
+    assertThrows[IllegalArgumentException](new ConnectorBuilder(spark, Properties.wrongCsvConfigConnectorBuilder).build().get())
+
+    // SerializerException should be thrown when the storage type can't be parsed
+    assertThrows[SerializerException](
+      new ConnectorBuilder(spark, new Conf().set("storage", "BLABLA")).build().get()
+    )
+
+    // UnknownException.Storage should be thrown if the given storage is not supported
+    assertThrows[UnknownException.Storage](new ConnectorBuilder(spark, Properties.wrongCsvConfigConnectorBuilder2).build().get())
+    assertThrows[UnknownException.Storage](new ConnectorBuilder(spark, new Conf().set("storage", Storage.OTHER)).build().get())
+
+  }
+
+  test("Connector builder with two configurations") {
+    assertThrows[IllegalArgumentException](
+      new ConnectorBuilder(spark, Some(Properties.wrongCsvConfigConnectorBuilder2), Some(new Conf().set("storage", "BLABLA"))).build().get()
+    )
   }
 
 }
