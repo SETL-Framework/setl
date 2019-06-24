@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import org.apache.spark.sql.DataFrame
 
@@ -15,6 +16,7 @@ import org.apache.spark.sql.DataFrame
   * </ul>
   *
   */
+@InterfaceStability.Evolving
 trait Connector {
 
   val storage: Storage

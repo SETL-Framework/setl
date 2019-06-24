@@ -1,10 +1,13 @@
 package com.jcdecaux.datacorp.spark.factory
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+
 /**
   * A transformer can transform data into a type A
   *
   * @tparam T : Type of output data
   */
+@InterfaceStability.Evolving
 trait Transformer[T] {
 
   /**

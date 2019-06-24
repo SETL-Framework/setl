@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
@@ -25,6 +26,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
   * @param table    table name
   * @param saveMode save mode
   */
+@InterfaceStability.Evolving
 class DynamoDBConnector(val spark: SparkSession,
                         val region: String, // "eu-west-1"
                         val table: String,

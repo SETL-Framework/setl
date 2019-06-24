@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.connector
 
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
@@ -13,6 +14,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * CassandraConnector establish the connection to a given cassandra table of a given keyspace
   */
+@InterfaceStability.Evolving
 class CassandraConnector(val keyspace: String,
                          val table: String,
                          val spark: SparkSession,

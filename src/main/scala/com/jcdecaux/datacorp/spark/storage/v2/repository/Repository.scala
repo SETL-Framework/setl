@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.repository
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.storage.Condition
 import org.apache.spark.sql.{Dataset, Encoder}
 
@@ -9,6 +10,7 @@ import org.apache.spark.sql.{Dataset, Encoder}
   *
   * @tparam DataType
   */
+@InterfaceStability.Evolving
 trait Repository[DataType] {
 
   /**

@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.ValueType
 
 /**
@@ -10,6 +11,7 @@ import com.jcdecaux.datacorp.spark.enums.ValueType
   * @param value     value to compare
   * @param valueType type of the value
   */
+@InterfaceStability.Evolving
 case class Condition(key: String, operator: String, value: Option[String], valueType: ValueType) {
 
 }

@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.v2.repository
 
 import java.io.File
 
-import com.jcdecaux.datacorp.spark.annotations.{ColumnName, CompoundKey}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.v2.connector.{CSVConnector, ParquetConnector}

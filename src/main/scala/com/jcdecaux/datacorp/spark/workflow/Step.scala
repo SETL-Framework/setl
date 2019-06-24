@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.factory.Factory
 import org.apache.spark.sql.Dataset
 
@@ -9,6 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
   *
   */
+@InterfaceStability.Unstable
 class Step {
 
   private var previousStep: Option[Step] = None

@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
@@ -26,6 +27,7 @@ import org.apache.spark.sql.types.StructType
   * @param schema                  Optional, default: Either inferred schema, or all columns are Strings
   * @param saveMode                Optional, default: overwrite.
   */
+@InterfaceStability.Evolving
 class ExcelConnector(val spark: SparkSession,
                      val path: String,
                      var useHeader: String,

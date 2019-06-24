@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.connector
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
@@ -10,6 +11,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
   */
+@InterfaceStability.Evolving
 class ParquetConnector(val spark: SparkSession,
                        val path: String,
                        val table: String,

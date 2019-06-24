@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.v2.repository
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
@@ -9,6 +10,7 @@ import org.apache.spark.sql.{Dataset, Encoder}
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
+@InterfaceStability.Evolving
 class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Repository[DataType] with Logging {
 
   private[this] var connector: Connector = _

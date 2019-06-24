@@ -1,11 +1,14 @@
 package com.jcdecaux.datacorp.spark.factory
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+
 /**
   * A MLTransformer is a basic transformer with a ML model and ML-related functionality.
   *
   * @tparam T Data type of the transformer
   * @tparam M Type of the model
   */
+@InterfaceStability.Evolving
 trait MLTransformer[T, M] extends Transformer[T] {
   var model: M = _
 

@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.factory
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.spark.sql.Dataset
 
 /**
@@ -10,6 +11,7 @@ import org.apache.spark.sql.Dataset
   *
   * @tparam A the type of object that the factory is supposed to produce
   */
+@InterfaceStability.Evolving
 trait Factory[+A] {
 
   private var inputs: Map[String, Dataset[_]] = Map()

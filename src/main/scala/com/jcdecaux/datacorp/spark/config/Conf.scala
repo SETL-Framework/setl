@@ -2,12 +2,13 @@ package com.jcdecaux.datacorp.spark.config
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.SerializerException
 
 import scala.reflect.runtime.universe._
 
-
+@InterfaceStability.Evolving
 class Conf extends Serializable {
 
   import Conf.Serializer

@@ -1,6 +1,6 @@
 package com.jcdecaux.datacorp.spark.internal
 
-import com.jcdecaux.datacorp.spark.annotations.{ColumnName, CompoundKey}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
 import org.apache.spark.sql.catalyst.ScalaReflection
 import org.apache.spark.sql.types.{MetadataBuilder, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder, functions}

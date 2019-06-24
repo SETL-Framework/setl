@@ -45,9 +45,7 @@ Let's create a csv file.
     ```
 2. Code:
     ```scala
-     import com.jcdecaux.datacorp.spark.annotations.ColumnName
-     import com.jcdecaux.datacorp.spark.annotations.CompoundKey
-     
+     import com.jcdecaux.datacorp.spark.annotation._
      import org.apache.spark.sql.{Dataset, SparkSession}
      import com.jcdecaux.datacorp.spark.SparkSessionBuilder
      import com.jcdecaux.datacorp.spark.config.ConfigLoader

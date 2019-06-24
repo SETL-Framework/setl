@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.internal
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
-import com.jcdecaux.datacorp.spark.annotations.{ColumnName, CompoundKey}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
