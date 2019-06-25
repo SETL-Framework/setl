@@ -43,5 +43,7 @@ trait Factory[A] {
     */
   def get(): A
 
-  def deliver()(implicit tag: ru.TypeTag[A]): Deliverable[A] = new Deliverable[A](this.get())
+  def deliver()(implicit tag: ru.TypeTag[A]): Deliverable[A] = {
+    new Deliverable[A](this.get()).setProducer(ru.typeOf[Factory[A]])
+  }
 }
