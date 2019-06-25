@@ -5,7 +5,7 @@ import com.jcdecaux.datacorp.spark.config.Conf.Serializer
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.storage.v2.connector._
+import com.jcdecaux.datacorp.spark.storage.connector._
 import com.jcdecaux.datacorp.spark.transformation.Builder
 import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
 import org.apache.spark.sql.types.StructType
@@ -25,7 +25,7 @@ import scala.reflect.runtime.universe.TypeTag
 class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark: Option[SparkSession],
                                                                        var storage: Option[Storage],
                                                                        var config: Option[Config])
-  extends Builder[v2.repository.SparkRepository[DataType]] with Logging {
+  extends Builder[com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType]] with Logging {
 
   import Conf.Serializer._
 
@@ -59,7 +59,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
   }
 
   private[this] var connector: Connector = _
-  private[this] var sparkRepository: v2.repository.SparkRepository[DataType] = _
+  private[this] var sparkRepository: com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType] = _
 
   def set[T](key: String, value: T)(implicit converter: Serializer[T]): this.type = {
     conf.set(key, value)
@@ -149,7 +149,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
       log.info("No user-defined connector, create one according to the storage type")
       connector = createConnector()
     }
-    sparkRepository = new v2.repository.SparkRepository[DataType].setConnector(connector)
+    sparkRepository = new com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType].setConnector(connector)
     this
   }
 
@@ -196,5 +196,5 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
     *
     * @return [[SparkRepository]]
     */
-  override def get(): v2.repository.SparkRepository[DataType] = this.sparkRepository
+  override def get(): com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType] = this.sparkRepository
 }

@@ -4,14 +4,14 @@ import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.storage.v2.connector._
+import com.jcdecaux.datacorp.spark.storage.connector._
 import com.jcdecaux.datacorp.spark.transformation.Builder
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 
 /**
-  * ConnectorBuilder will build a [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]] object with the given
+  * ConnectorBuilder will build a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] object with the given
   * configuration.
   *
   * @param spark  spark session
@@ -46,7 +46,7 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     * the `Conf` object must have a key `storage` and the parameters corresponding to the storage
     *
     * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]]
-    * @return [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]]
+    * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]]
     */
   private[this] def buildConnectorWithConf(conf: Conf): Connector = {
     conf.getAs[Storage]("storage") match {
@@ -87,7 +87,7 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     * the `Config` object must have a key `storage` and the parameters corresponding to the storage
     *
     * @param config [[com.typesafe.config.Config]]
-    * @return [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]]
+    * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]]
     */
   private[this] def buildConnectorWithConfig(config: Config): Connector = {
     TypesafeConfigUtils.getAs[Storage](config, "storage") match {

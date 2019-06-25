@@ -1,7 +1,9 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import org.apache.spark.sql.Dataset
+import com.jcdecaux.datacorp.spark.internal.Deliverable
+
+import scala.reflect.runtime.{universe => ru}
 
 /**
   * Factory could be used to manipulate data.
@@ -12,39 +14,7 @@ import org.apache.spark.sql.Dataset
   * @tparam A the type of object that the factory is supposed to produce
   */
 @InterfaceStability.Evolving
-trait Factory[+A] {
-
-  private var inputs: Map[String, Dataset[_]] = Map()
-
-  /**
-    * Set the input of this factory
-    *
-    * @return
-    */
-  def setInputs(inputs: Map[String, Dataset[_]]): Factory[A] = {
-    this.inputs = inputs
-    this
-  }
-
-  /**
-    * Retrieve the input of this factory under the format of a map
-    *
-    * @return
-    */
-  def getInputs: Map[String, Dataset[_]] = {
-    inputs
-  }
-
-  /**
-    * Retrieve the corresponding input by specifying a class
-    *
-    * @param classOf
-    * @return
-    */
-  def getInput(classOf: Class[_]): Option[Dataset[_]] = {
-    inputs.get(classOf.getCanonicalName)
-  }
-
+trait Factory[A] {
   /**
     * Read data
     *
@@ -72,4 +42,6 @@ trait Factory[+A] {
     * @return
     */
   def get(): A
+
+  def deliver()(implicit tag: ru.TypeTag[A]): Deliverable[A] = new Deliverable[A](this.get())
 }

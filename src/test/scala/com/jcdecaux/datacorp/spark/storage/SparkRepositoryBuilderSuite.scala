@@ -8,7 +8,7 @@ import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, 
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import com.jcdecaux.datacorp.spark.exception.UnknownException
-import com.jcdecaux.datacorp.spark.storage.v2.connector.ExcelConnector
+import com.jcdecaux.datacorp.spark.storage.connector.ExcelConnector
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
 import com.typesafe.config.Config
 import org.apache.spark.sql.types._
