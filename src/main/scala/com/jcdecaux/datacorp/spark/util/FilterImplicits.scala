@@ -6,7 +6,6 @@ import com.jcdecaux.datacorp.spark.storage.Condition
 
 object FilterImplicits extends Logging {
 
-
   implicit class ConditionsToRequest(conditions: Set[Condition]) {
 
     /**
