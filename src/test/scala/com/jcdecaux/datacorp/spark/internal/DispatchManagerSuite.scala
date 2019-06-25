@@ -31,11 +31,11 @@ class MyFactory extends Factory[Container[Product2]] {
     this
   }
 
-  override def read(): Factory[Container[Product2]] = this
+  override def read(): MyFactory.this.type = this
 
-  override def process(): Factory[Container[Product2]] = this
+  override def process(): MyFactory.this.type = this
 
-  override def write(): Factory[Container[Product2]] = this
+  override def write(): MyFactory.this.type = this
 
   override def get(): Container[Product2] = output
 }
@@ -57,11 +57,11 @@ class MyFactory2 extends Factory[Dataset[Product2]] with Serializable {
     this
   }
 
-  override def read(): Factory[Dataset[Product2]] = this
+  override def read(): this.type = this
 
-  override def process(): Factory[Dataset[Product2]] = this
+  override def process(): this.type = this
 
-  override def write(): Factory[Dataset[Product2]] = this
+  override def write(): this.type = this
 
   override def get(): Dataset[Product2] = output
 }

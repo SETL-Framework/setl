@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Deliverable
+import com.jcdecaux.datacorp.spark.internal.{Deliverable, Logging}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -14,27 +14,27 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam A the type of object that the factory is supposed to produce
   */
 @InterfaceStability.Evolving
-trait Factory[A] {
+trait Factory[A] extends Logging {
   /**
     * Read data
     *
     * @return
     */
-  def read(): Factory[A]
+  def read(): this.type
 
   /**
     * Process data
     *
     * @return
     */
-  def process(): Factory[A]
+  def process(): this.type
 
   /**
     * Write data
     *
     * @return
     */
-  def write(): Factory[A]
+  def write(): this.type
 
   /**
     * Get the processed data
@@ -44,6 +44,10 @@ trait Factory[A] {
   def get(): A
 
   def deliver()(implicit tag: ru.TypeTag[A]): Deliverable[A] = {
-    new Deliverable[A](this.get()).setProducer(ru.typeOf[Factory[A]])
+    new Deliverable[A](this.get()).setProducer(tag.tpe)
+  }
+
+  def describe()(implicit tag: ru.TypeTag[A]): Unit = {
+    log.info(tag.tpe)
   }
 }
