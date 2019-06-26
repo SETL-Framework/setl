@@ -210,7 +210,7 @@ class DatasetFactory(spark: SparkSession) extends Factory[Dataset[Product1]] {
 class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
 
   @Delivery
-  var ds: Dataset[Product1] = _  // p2 should be produced by DatasetFactory, pipeline will handle the data transfer
+  var ds: Dataset[Product1] = _  // ds should be produced by DatasetFactory, pipeline will handle the data transfer
   var output: Dataset[Product2] = _
   override def read(): this.type = this
   override def process(): this.type = {
