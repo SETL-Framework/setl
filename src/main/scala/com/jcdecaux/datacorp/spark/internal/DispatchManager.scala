@@ -4,6 +4,7 @@ import com.jcdecaux.datacorp.spark.annotation.Delivery
 import com.jcdecaux.datacorp.spark.transformation.Factory
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 
 /**
@@ -23,6 +24,7 @@ class DispatchManager extends Logging {
 
   /**
     * Find the corresponding [[Deliverable]] from the pool with the given runtime Type information
+    *
     * @param t runtime type
     * @return
     */
@@ -40,7 +42,7 @@ class DispatchManager extends Logging {
     * @tparam T Type of factory
     * @return
     */
-  def dispatch[T <: Factory[_]](factory: T)(implicit tag: ru.TypeTag[T]): this.type = {
+  def dispatch[T <: Factory[_]](factory: T)(implicit tag: ru.TypeTag[T], classTag: ClassTag[T]): this.type = {
 
     getDeliveryAnnotatedMethod(factory)
       .foreach({
@@ -70,16 +72,28 @@ class DispatchManager extends Logging {
     * @tparam T type of factory
     * @return a Map of method name -> list of arguments type
     */
-  def getDeliveryAnnotatedMethod[T](factory: T)(implicit tag: ru.TypeTag[T]): Map[String, List[ru.Type]] = {
-    log.debug("Fetch methods having Delivery annotation")
-    val factoryInfo = tag.tpe.typeSymbol.info
-    val methodsWithDeliveryAnnotation = factoryInfo.decls
+  def getDeliveryAnnotatedMethod[T](factory: T)(implicit tag: ru.TypeTag[T], classTag: ClassTag[T]): Map[String, List[ru.Type]] = {
+    log.debug(s"Fetch methods of ${factory.getClass} having Delivery annotation")
+
+    val runtimeMirror = ru.runtimeMirror(getClass.getClassLoader)
+    val classSymbol = runtimeMirror.classSymbol(factory.getClass)
+
+    val methodsWithDeliveryAnnotation = classSymbol.info.decls
       .filter(x => x.annotations.exists(y => y.tree.tpe =:= ru.typeOf[Delivery]))
+
+    if (methodsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
 
     methodsWithDeliveryAnnotation.map({
       mth =>
-        log.debug(s"Find method ${tag.tpe}.${mth.name}")
-        (mth.name.toString, mth.typeSignature.paramLists.head.map(_.typeSignature))
+        if (mth.isMethod) {
+          log.debug(s"Find @Delivery annotated method ${factory.getClass.getCanonicalName}.${mth.name}")
+          (mth.name.toString, mth.typeSignature.paramLists.head.map(_.typeSignature))
+        } else {
+          log.debug(s"Find @Delivery annotated value ${factory.getClass.getCanonicalName}.${mth.name}")
+          val newMethod = classSymbol.info.decls.find(_.name.toString == mth.name.toString.trim + "_$eq").get
+          (newMethod.name.toString, newMethod.typeSignature.paramLists.head.map(_.typeSignature))
+        }
+
     }).toMap
   }
 }

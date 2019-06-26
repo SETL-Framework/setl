@@ -2,8 +2,9 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.internal.{Deliverable, DispatchManager, Logging}
 import com.jcdecaux.datacorp.spark.transformation.Factory
-import scala.reflect.runtime.{universe => ru}
+
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.runtime.{universe => ru}
 
 class Pipeline2 extends Logging {
 
@@ -40,7 +41,10 @@ class Pipeline2 extends Logging {
 
           // Dispatch input if stageID doesn't equal 0
           if (dispatchManagers.deliveries.nonEmpty) {
-            stage.factories.foreach(x => dispatchManagers.dispatch(x))
+            stage.factories.foreach({
+              x =>
+                dispatchManagers.dispatch(x)
+            })
           }
 
           // run the stage

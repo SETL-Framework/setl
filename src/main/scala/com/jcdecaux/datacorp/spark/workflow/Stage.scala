@@ -20,7 +20,7 @@ class Stage extends Logging {
 
   var deliveries: Array[Deliverable[_]] = _
 
-  def addFactory(factory: Factory[_]): this.type = {
+  def addFactory[T <: Factory[_]](factory: T): this.type = {
     factories += factory
     this
   }
@@ -38,4 +38,5 @@ class Stage extends Logging {
       .toArray
     this
   }
+
 }

@@ -5,10 +5,10 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import scala.reflect.runtime.{universe => ru}
 
 @InterfaceStability.Unstable
-class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
+class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
 
-  var producer: Option[ru.Type] = None
-  var consumer: Option[ru.Type] = None
+  var producer: Option[Class[_]] = None
+  var consumer: Option[Class[_]] = None
 
   def tagInfo: ru.Type = tag.tpe
 
@@ -18,7 +18,7 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
 
   def classInfo = payload.getClass
 
-  def setProducer(t: ru.Type): this.type = {
+  def setProducer(t: Class[_]): this.type = {
     producer = Some(t)
     this
   }

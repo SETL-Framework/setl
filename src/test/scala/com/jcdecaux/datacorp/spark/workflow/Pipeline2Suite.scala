@@ -13,69 +13,54 @@ case class Container[T](content: T)
 
 case class Container2[T](content: T)
 
+
 class ProductFactory extends Factory[Product] {
 
-  var id: String = _
-
   @Delivery
-  def setid(id: String): this.type = {
-    this.id = id
-    this
-  }
-
+  var id: String = _
   var output: Product = _
 
   override def read(): ProductFactory.this.type = this
-
   override def process(): ProductFactory.this.type = {
     output = Product(id)
     this
   }
 
   override def write(): ProductFactory.this.type = this
-
   override def get(): Product = output
 }
+
 
 class Product2Factory extends Factory[Product2] {
 
   var output: Product2 = _
 
   override def read(): this.type = this
-
   override def process(): this.type = {
     output = Product2("a", "b")
     this
   }
 
   override def write(): this.type = this
-
   override def get(): Product2 = output
 }
 
+
 class ContainerFactory extends Factory[Container[Product]] {
 
+  @Delivery
   var product1: Product = _
   var output: Container[Product] = _
 
-  @Delivery
-  def setProduct(v: Product): this.type = {
-    this.product1 = v
-    this
-  }
-
-
   override def read(): ContainerFactory.this.type = this
-
   override def process(): ContainerFactory.this.type = {
     output = Container(product1)
     this
   }
-
   override def write(): ContainerFactory.this.type = this
-
   override def get(): Container[Product] = output
 }
+
 
 class Container2Factory extends Factory[Container2[Product2]] {
 
@@ -88,16 +73,12 @@ class Container2Factory extends Factory[Container2[Product2]] {
     this
   }
 
-
   override def read(): this.type = this
-
   override def process(): this.type = {
     output = Container2(p2)
     this
   }
-
   override def write(): this.type = this
-
   override def get(): Container2[Product2] = output
 }
 
@@ -122,6 +103,8 @@ class Pipeline2Suite extends FunSuite {
       .addStage(stage2)
       .addStage(stage3)
       .run()
+
+    pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
 
     assert(pipeline.dispatchManagers.deliveries.length === 5)
 
