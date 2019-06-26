@@ -23,4 +23,9 @@ class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     this
   }
 
+  def setConsumer(t: Class[_]): this.type = {
+    consumer = Some(t)
+    this
+  }
+
 }

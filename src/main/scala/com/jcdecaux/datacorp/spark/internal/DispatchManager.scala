@@ -25,10 +25,27 @@ class DispatchManager extends Logging {
   /**
     * Find the corresponding [[Deliverable]] from the pool with the given runtime Type information
     *
-    * @param t runtime type
+    * @param deliveryType runtime type
     * @return
     */
-  def getDelivery(t: ru.Type): Option[Deliverable[_]] = deliveries.find(d => d.tagInfo == t)
+  def getDelivery(deliveryType: ru.Type, consumer: Class[_]): Option[Deliverable[_]] = {
+
+    val availableDeliverables = getDeliveries(deliveryType)
+
+    availableDeliverables.length match {
+      case 0 =>
+        log.warn("No deliverable available")
+        None
+      case 1 =>
+        log.debug("Find Deliverable")
+        Some(availableDeliverables.head)
+      case _ =>
+        log.warn("Find multiple Deliverables with same type, check the consumer")
+        availableDeliverables.filter(_.consumer.isDefined).find(_.consumer.get == consumer)
+    }
+  }
+
+  def getDeliveries(deliveryType: ru.Type): Array[Deliverable[_]] = deliveries.filter(d => d.tagInfo == deliveryType).toArray
 
   def collectDeliverable(factory: Factory[_]): this.type = {
     setDelivery(factory.deliver())
@@ -50,7 +67,7 @@ class DispatchManager extends Logging {
           val args = methodName._2.map({
             argsType =>
               log.debug(s"Distribute $argsType to ${tag.tpe}.${methodName._1}")
-              getDelivery(argsType) match {
+              getDelivery(argsType, factory.getClass) match {
                 case Some(thing) => thing
                 case _ => throw new NoSuchElementException(s"Can not find type $argsType from delivery manager")
               }

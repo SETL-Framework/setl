@@ -16,7 +16,7 @@ class Pipeline2 extends Logging {
     this
   }
 
-  def getOutput(t: ru.Type): Option[Deliverable[_]] = dispatchManagers.getDelivery(t)
+  def getOutput(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.getDeliveries(t)
 
   private[workflow] var stageCounter: Int = 0
 
