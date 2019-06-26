@@ -37,10 +37,10 @@ class DispatchManager extends Logging {
         log.warn("No deliverable available")
         None
       case 1 =>
-        log.debug("Find Deliverable")
+        log.debug("Deliverable found")
         Some(availableDeliverables.head)
       case _ =>
-        log.warn("Find multiple Deliverables with same type, check the consumer")
+        log.info("Multiple Deliverable with same type were found. Try matching by consumer")
         availableDeliverables.filter(_.consumer.isDefined).find(_.consumer.get == consumer)
     }
   }
@@ -55,7 +55,7 @@ class DispatchManager extends Logging {
     * Dispatch the right deliverable object to the corresponding methods (denoted by the @Delivery annotation) of a factory
     *
     * @param factory target factory
-    * @param tag     implicit runtime type tage
+    * @param tag     implicit runtime type tag
     * @tparam T Type of factory
     * @return
     */
@@ -66,10 +66,10 @@ class DispatchManager extends Logging {
         methodName =>
           val args = methodName._2.map({
             argsType =>
-              log.debug(s"Distribute $argsType to ${tag.tpe}.${methodName._1}")
+              log.debug(s"Dispatch $argsType to ${tag.tpe}.${methodName._1}")
               getDelivery(argsType, factory.getClass) match {
                 case Some(thing) => thing
-                case _ => throw new NoSuchElementException(s"Can not find type $argsType from delivery manager")
+                case _ => throw new NoSuchElementException(s"Can not find type $argsType from dispatch manager")
               }
           })
 

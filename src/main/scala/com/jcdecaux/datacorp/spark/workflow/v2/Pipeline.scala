@@ -12,19 +12,33 @@ class Pipeline extends Logging {
 
   var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   val dispatchManagers: DispatchManager = new DispatchManager
+  private[workflow] var stageCounter: Int = 0
 
   def setInput(v: Deliverable[_]): this.type = {
     dispatchManagers.setDelivery(v)
     this
   }
 
+  def setInput[T: ru.TypeTag](v: T, consumer: Option[Class[_]]): this.type = {
+    val deliverable = new Deliverable[T](v)
+
+    consumer match {
+      case Some(c) => deliverable.setConsumer(c)
+      case _ =>
+    }
+
+    setInput(deliverable)
+  }
+
+  def setInput[T: ru.TypeTag](v: T, consumer: Any): this.type = setInput(v, Some(consumer.getClass))
+
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
+
+  def setInput[T: ru.TypeTag](v: T): this.type = setInput(v, None)
+
   def getOutput(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.getDeliveries(t)
 
-  private[workflow] var stageCounter: Int = 0
-
-  def addStage(factory: Factory[_]): this.type = {
-    addStage(new Stage().addFactory(factory))
-  }
+  def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage $stageCounter")

@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
 import com.jcdecaux.datacorp.spark.internal.Deliverable
 import com.jcdecaux.datacorp.spark.transformation.Factory
-import org.apache.spark.sql.{Dataset, SparkSession, functions}
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 import scala.reflect.runtime.{universe => ru}
@@ -112,18 +112,21 @@ class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
 
   @Delivery
   var ds: Dataset[Product1] = _
+
+  @Delivery
+  var ds2: Dataset[Product2] = _
+
   var output: Dataset[Product2] = _
 
   override def read(): DatasetFactory2.this.type = this
 
   override def process(): DatasetFactory2.this.type = {
     import spark.implicits._
-    output = ds.withColumn("y", functions.lit("c2")).as[Product2]
+    output = ds.join(ds2, Seq("x")).as[Product2]
     this
   }
 
   override def write(): DatasetFactory2.this.type = {
-    output.show()
     this
   }
 
@@ -155,9 +158,7 @@ class PipelineSuite extends FunSuite {
       .run()
 
     pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
-
     assert(pipeline.dispatchManagers.deliveries.length === 5)
-
     println(pipeline.getOutput(ru.typeOf[Container2[Product2]]).head.get)
     assert(pipeline.getOutput(ru.typeOf[Container2[Product2]]).head.get == Container2(Product2("a", "b")))
 
@@ -166,6 +167,11 @@ class PipelineSuite extends FunSuite {
   test("Test Dataset pipeline") {
     val spark = new SparkSessionBuilder("dev").setEnv("dev").getOrCreate()
     import spark.implicits._
+
+    val ds2: Dataset[Product2] = Seq(
+      Product2("id_of_product1", "c2"),
+      Product2("pd1", "c2")
+    ).toDS
 
     val f1 = new ProductFactory
     val f2 = new DatasetFactory(spark)
@@ -178,17 +184,18 @@ class PipelineSuite extends FunSuite {
 
     pipeline
       .setInput(new Deliverable[String]("wrong_id_of_product1"))
-      .setInput(new Deliverable[String]("id_of_product1").setConsumer(f1.getClass))
+      .setInput[String]("id_of_product1", f1)
+      .setInput(ds2)
       .addStage(stage0)
       .addStage(stage1)
       .addStage(stage2)
       .run()
 
+    f3.get().show()
     assert(f3.get().count() === 2)
     assert(f3.get().filter($"x" === "pd1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
+    assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
 
   }
-
-
 }
