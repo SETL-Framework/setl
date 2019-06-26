@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.workflow
+package com.jcdecaux.datacorp.spark.workflow.v2
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
@@ -132,7 +132,7 @@ class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
   }
 }
 
-class Pipeline2Suite extends FunSuite {
+class PipelineSuite extends FunSuite {
 
   test("Test pipeline") {
 
@@ -141,7 +141,7 @@ class Pipeline2Suite extends FunSuite {
     val f3 = new ContainerFactory
     val f4 = new Container2Factory
 
-    val pipeline = new Pipeline2
+    val pipeline = new Pipeline
 
     val stage1 = new Stage().addFactory(f1).addFactory(f2)
     val stage2 = new Stage().addFactory(f3)
@@ -170,7 +170,7 @@ class Pipeline2Suite extends FunSuite {
     val f1 = new ProductFactory
     val f2 = new DatasetFactory(spark)
     val f3 = new DatasetFactory2(spark)
-    val pipeline = new Pipeline2
+    val pipeline = new Pipeline
 
     val stage0 = new Stage().addFactory(f1)
     val stage1 = new Stage().addFactory(f2)

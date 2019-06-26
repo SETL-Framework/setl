@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.workflow
+package com.jcdecaux.datacorp.spark.workflow.v2
 
 import com.jcdecaux.datacorp.spark.internal.{Deliverable, DispatchManager, Logging}
 import com.jcdecaux.datacorp.spark.transformation.Factory
@@ -6,7 +6,7 @@ import com.jcdecaux.datacorp.spark.transformation.Factory
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
-class Pipeline2 extends Logging {
+class Pipeline extends Logging {
 
   var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   val dispatchManagers: DispatchManager = new DispatchManager

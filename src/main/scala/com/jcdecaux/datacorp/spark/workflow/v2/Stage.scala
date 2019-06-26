@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.workflow
+package com.jcdecaux.datacorp.spark.workflow.v2
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.{Deliverable, Logging}
