@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.internal
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 /**
@@ -20,7 +21,7 @@ class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
     * type, it will select the correct deliverable by looking at the consumer
     */
-  var consumer: Option[Class[_]] = None
+  val consumer: ArrayBuffer[Class[_]] = ArrayBuffer()
 
   def tagInfo: ru.Type = tag.tpe
 
@@ -54,7 +55,7 @@ class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     * @return
     */
   def setConsumer(t: Class[_]): this.type = {
-    consumer = Some(t)
+    consumer.append(t)
     this
   }
 

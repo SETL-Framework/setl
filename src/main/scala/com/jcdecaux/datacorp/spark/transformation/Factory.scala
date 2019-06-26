@@ -47,6 +47,8 @@ abstract class Factory[+A](implicit tag: ru.TypeTag[A]) extends Logging {
     new Deliverable[A](this.get()).setProducer(this.getClass)
   }
 
+  def deliveryType(): ru.Type = tag.tpe
+
   def describe(): Unit = {
     log.info(this.getClass)
   }

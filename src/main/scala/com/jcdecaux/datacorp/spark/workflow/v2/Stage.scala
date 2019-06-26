@@ -9,7 +9,18 @@ import scala.collection.mutable.ArrayBuffer
 @InterfaceStability.Unstable
 class Stage extends Logging {
 
-  private[workflow] var stageId: Int = 0
+  private[this] var _end: Boolean = true
+
+  private[spark] def end: Boolean = _end
+
+  private[spark] def end_=(value: Boolean): Unit = {
+    _end = value
+  }
+
+  def start: Boolean = if (stageId == 0) true else false
+
+
+  private[workflow] var stageId: Int = _
 
   private[workflow] def setStageId(id: Int): this.type = {
     stageId = id

@@ -18,6 +18,8 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 private[spark] class DispatchManager extends Logging {
 
+  import DispatchManager._
+
   val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
   def setDelivery(v: Deliverable[_]): this.type = {
@@ -45,7 +47,7 @@ private[spark] class DispatchManager extends Logging {
         Some(availableDeliverables.head)
       case _ =>
         log.info("Multiple Deliverable with same type were found. Try matching by consumer")
-        availableDeliverables.filter(_.consumer.isDefined).find(_.consumer.get == consumer)
+        availableDeliverables.filter(_.consumer.nonEmpty).find(_.consumer.contains(consumer))
     }
   }
 
@@ -98,6 +100,9 @@ private[spark] class DispatchManager extends Logging {
     this
   }
 
+}
+
+object DispatchManager extends Logging {
   /**
     * Get the name and arguments type of methods having [[com.jcdecaux.datacorp.spark.annotation.Delivery]] annotation.
     *
@@ -105,7 +110,7 @@ private[spark] class DispatchManager extends Logging {
     * @tparam T type of factory
     * @return a Map of method name -> list of arguments type
     */
-  private[this] def getDeliveryAnnotatedMethod[T](obj: T): Map[String, List[ru.Type]] = {
+  private[spark] def getDeliveryAnnotatedMethod[T](obj: T): Map[String, List[ru.Type]] = {
     log.debug(s"Fetch methods of ${obj.getClass} having Delivery annotation")
 
     // Black magic XD

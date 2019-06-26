@@ -42,9 +42,25 @@ class Pipeline extends Logging {
 
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage $stageCounter")
+    markEndStage()
     stages += stage.setStageId(stageCounter)
     stageCounter += 1
     this
+  }
+
+  def getStage(id: Int): Stage = stages(id)
+
+  private[this] def markEndStage(): Unit = {
+    if (stages.nonEmpty) {
+      stages.last.end = false
+    }
+  }
+
+  def describe(): Unit = {
+
+
+
+
   }
 
   def run(): this.type = {

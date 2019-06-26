@@ -24,6 +24,7 @@ class ProductFactory extends Factory[Product1] {
   var output: Product1 = _
 
   override def read(): ProductFactory.this.type = this
+
   override def process(): ProductFactory.this.type = {
     output = Product1(id)
     this
@@ -40,12 +41,14 @@ class Product2Factory extends Factory[Product2] {
   var output: Product2 = _
 
   override def read(): this.type = this
+
   override def process(): this.type = {
     output = Product2("a", "b")
     this
   }
 
   override def write(): this.type = this
+
   override def get(): Product2 = output
 }
 
@@ -57,10 +60,12 @@ class ContainerFactory extends Factory[Container[Product1]] {
   var output: Container[Product1] = _
 
   override def read(): ContainerFactory.this.type = this
+
   override def process(): ContainerFactory.this.type = {
     output = Container(product1)
     this
   }
+
   override def write(): ContainerFactory.this.type = this
 
   override def get(): Container[Product1] = output
@@ -79,11 +84,14 @@ class Container2Factory extends Factory[Container2[Product2]] {
   }
 
   override def read(): this.type = this
+
   override def process(): this.type = {
     output = Container2(p2)
     this
   }
+
   override def write(): this.type = this
+
   override def get(): Container2[Product2] = output
 }
 
@@ -157,6 +165,8 @@ class PipelineSuite extends FunSuite {
       .addStage(stage3)
       .run()
 
+    new DAGInspector().inspect(pipeline).describe()
+
     pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
     assert(pipeline.dispatchManagers.deliveries.length === 5)
     println(pipeline.getOutput(ru.typeOf[Container2[Product2]]).head.get)
@@ -196,6 +206,12 @@ class PipelineSuite extends FunSuite {
     assert(f3.get().filter($"x" === "pd1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+
+    val pipeline2 = new Pipeline()
+      .setInput(new Deliverable[String]("wrong_id_of_product1"))
+      .setInput[String]("id_of_product1")
+      .addStage(stage0)
+    assertThrows[NoSuchElementException](pipeline2.run())
 
   }
 }
