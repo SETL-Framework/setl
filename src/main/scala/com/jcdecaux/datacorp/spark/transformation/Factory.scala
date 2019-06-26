@@ -48,7 +48,6 @@ abstract class Factory[+A](implicit tag: ru.TypeTag[A]) extends Logging {
   }
 
   def describe(): Unit = {
-    log.info(s"class: ${this.getClass}")
-    log.info(ru.typeOf[Factory[A]])
+    log.info(this.getClass)
   }
 }

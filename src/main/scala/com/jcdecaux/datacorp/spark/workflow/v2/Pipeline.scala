@@ -1,11 +1,13 @@
 package com.jcdecaux.datacorp.spark.workflow.v2
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.{Deliverable, DispatchManager, Logging}
 import com.jcdecaux.datacorp.spark.transformation.Factory
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
+@InterfaceStability.Unstable
 class Pipeline extends Logging {
 
   var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
