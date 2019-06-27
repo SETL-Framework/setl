@@ -74,6 +74,8 @@ class ContainerFactory extends Factory[Container[Product1]] {
 
 class Container2Factory extends Factory[Container2[Product2]] {
 
+  @Delivery
+  var p1: Product1 = _
   var p2: Product2 = _
   var output: Container2[Product2] = _
 
@@ -117,6 +119,9 @@ class DatasetFactory(spark: SparkSession) extends Factory[Dataset[Product1]] {
 }
 
 class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
+
+  @Delivery
+  var p1: Product1 = _
 
   @Delivery
   var ds: Dataset[Product1] = _
@@ -163,14 +168,17 @@ class PipelineSuite extends FunSuite {
       .addStage(stage1)
       .addStage(stage2)
       .addStage(stage3)
+      .describe()
       .run()
 
-    new DAGInspector().inspect(pipeline).describe()
-
-    pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
+    //    pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
     assert(pipeline.dispatchManagers.deliveries.length === 5)
-    println(pipeline.getOutput(ru.typeOf[Container2[Product2]]).head.get)
     assert(pipeline.getOutput(ru.typeOf[Container2[Product2]]).head.get == Container2(Product2("a", "b")))
+
+    // Check inspector
+    assert(pipeline.pipelineInspector.nodes.size === 4)
+    assert(pipeline.pipelineInspector.nodes.find(_.getName === "Container2Factory").get.input.length === 2)
+    assert(pipeline.pipelineInspector.flows.size === 3)
 
   }
 
@@ -199,6 +207,7 @@ class PipelineSuite extends FunSuite {
       .addStage(stage0)
       .addStage(stage1)
       .addStage(stage2)
+      .describe()
       .run()
 
     f3.get().show()
@@ -207,10 +216,16 @@ class PipelineSuite extends FunSuite {
     assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
 
+    // Check inspector
+    assert(pipeline.pipelineInspector.nodes.size === 3)
+    assert(pipeline.pipelineInspector.nodes.find(_.getName === "DatasetFactory2").get.input.length === 3)
+    assert(pipeline.pipelineInspector.flows.size === 3)
+
     val pipeline2 = new Pipeline()
       .setInput(new Deliverable[String]("wrong_id_of_product1"))
       .setInput[String]("id_of_product1")
       .addStage(stage0)
+
     assertThrows[NoSuchElementException](pipeline2.run())
 
   }

@@ -5,6 +5,7 @@
 - Added `workflow.v2.Pipeline`
 - Added `workflow.v2.stage`
 - Added `transformation.Factory[T]`
+- Added `PipelineInspector` to describe a pipeline
 
 ## 0.2.7 (2019-06-21)
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 

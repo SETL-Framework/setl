@@ -15,6 +15,8 @@ import scala.reflect.runtime.{universe => ru}
   */
 @InterfaceStability.Evolving
 abstract class Factory[+A](implicit tag: ru.TypeTag[A]) extends Logging {
+
+  def name: String = this.getClass.getCanonicalName
   /**
     * Read data
     *

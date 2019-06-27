@@ -12,6 +12,8 @@ class Pipeline extends Logging {
 
   var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   val dispatchManagers: DispatchManager = new DispatchManager
+  var pipelineInspector: PipelineInspector = _
+
   private[workflow] var stageCounter: Int = 0
 
   def setInput(v: Deliverable[_]): this.type = {
@@ -56,11 +58,9 @@ class Pipeline extends Logging {
     }
   }
 
-  def describe(): Unit = {
-
-
-
-
+  def describe(): this.type = {
+    pipelineInspector = new PipelineInspector(this).inspect().describe()
+    this
   }
 
   def run(): this.type = {
