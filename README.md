@@ -264,6 +264,40 @@ f3.get().show()
 //+--------------+---+
 ```
 
+You can also call the `pipeline.describe()` method to generate a pipeline summary
+```
+========== Pipeline Summary ==========
+
+----------   Nodes Summary  ----------
+Node   : ProductFactory
+Stage  : 0
+Input  : String
+Output : com.jcdecaux.datacorp.spark.workflow.v2.Product1
+--------------------------------------
+Node   : DatasetFactory
+Stage  : 1
+Input  : com.jcdecaux.datacorp.spark.workflow.v2.Product1
+Output : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product1]
+--------------------------------------
+Node   : DatasetFactory2
+Stage  : 2
+Input  : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product1]
+Output : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product2]
+--------------------------------------
+----------   Flows Summary  ----------
+Flow
+Stage     : 0
+Direction : ProductFactory ==> DatasetFactory
+PayLoad   : com.jcdecaux.datacorp.spark.workflow.v2.Product1
+--------------------------------------
+Flow
+Stage     : 1
+Direction : DatasetFactory ==> DatasetFactory2
+PayLoad   : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product1]
+--------------------------------------
+
+```
+
 ## Build and deployment
 Maven is used as the dependency manager in this project.
 
