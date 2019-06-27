@@ -4,29 +4,29 @@ import com.typesafe.config.Config
 
 object Properties extends ConfigLoader {
 
-  val excelConfig: Config = this.getObject("test.excel")
-  val cassandraConfig: Config = this.getObject("test.cassandra")
+  val excelConfig: Config = this.getConfig("test.excel")
+  val cassandraConfig: Config = this.getConfig("test.cassandra")
 
-  val csvConfig: Config = this.getObject("test.csv")
-  val parquetConfig: Config = this.getObject("test.parquet")
+  val csvConfig: Config = this.getConfig("test.csv")
+  val parquetConfig: Config = this.getConfig("test.parquet")
 
-  val excelConfigConnector: Config = this.getObject("connector.excel")
-  val cassandraConfigConnector: Config = this.getObject("connector.cassandra")
-  val csvConfigConnector: Config = this.getObject("connector.csv")
-  val parquetConfigConnector: Config = this.getObject("connector.parquet")
-  val dynamoDbConfigConnector: Config = this.getObject("connector.dynamo")
+  val excelConfigConnector: Config = this.getConfig("connector.excel")
+  val cassandraConfigConnector: Config = this.getConfig("connector.cassandra")
+  val csvConfigConnector: Config = this.getConfig("connector.csv")
+  val parquetConfigConnector: Config = this.getConfig("connector.parquet")
+  val dynamoDbConfigConnector: Config = this.getConfig("connector.dynamo")
 
-  val excelConfigConnectorBuilder: Config = this.getObject("connectorBuilder.excel")
-  val cassandraConfigConnectorBuilder: Config = this.getObject("connectorBuilder.cassandra")
-  val csvConfigConnectorBuilder: Config = this.getObject("connectorBuilder.csv")
-  val wrongCsvConfigConnectorBuilder: Config = this.getObject("connectorBuilder.wrong_csv")
-  val wrongCsvConfigConnectorBuilder2: Config = this.getObject("connectorBuilder.wrong_csv2")
-  val parquetConfigConnectorBuilder: Config = this.getObject("connectorBuilder.parquet")
+  val excelConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.excel")
+  val cassandraConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.cassandra")
+  val csvConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.csv")
+  val wrongCsvConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.wrong_csv")
+  val wrongCsvConfigConnectorBuilder2: Config = this.getConfig("connectorBuilder.wrong_csv2")
+  val parquetConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.parquet")
 
 
-  val excelConfigRepoBuilder: Config = this.getObject("repoBuilder.excel")
-  val cassandraConfigRepoBuilder: Config = this.getObject("repoBuilder.cassandra")
-  val csvConfigRepoBuilder: Config = this.getObject("repoBuilder.csv")
-  val parquetConfigRepoBuilder: Config = this.getObject("repoBuilder.parquet")
+  val excelConfigRepoBuilder: Config = this.getConfig("repoBuilder.excel")
+  val cassandraConfigRepoBuilder: Config = this.getConfig("repoBuilder.cassandra")
+  val csvConfigRepoBuilder: Config = this.getConfig("repoBuilder.csv")
+  val parquetConfigRepoBuilder: Config = this.getConfig("repoBuilder.parquet")
 
 }

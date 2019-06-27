@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.workflow.v2
+package com.jcdecaux.datacorp.spark.workflow
 
 case class Flow(payload: String, from: Node, to: Node, stage: Int) {
   def describe(): Unit = {

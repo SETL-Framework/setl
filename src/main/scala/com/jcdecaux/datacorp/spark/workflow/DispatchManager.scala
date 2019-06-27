@@ -1,7 +1,8 @@
-package com.jcdecaux.datacorp.spark.internal
+package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.{Delivery, InterfaceStability}
-import com.jcdecaux.datacorp.spark.transformation.Factory
+import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}

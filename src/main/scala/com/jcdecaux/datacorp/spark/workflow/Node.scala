@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.workflow.v2
+package com.jcdecaux.datacorp.spark.workflow
 
 case class Node(name: String, stage: Int, input: Array[String], output: String) {
 

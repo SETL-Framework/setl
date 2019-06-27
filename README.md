@@ -68,7 +68,7 @@ Let's create a csv file.
       // |      b|      B|
       // +-------+-------+  
 
-     val repository = new SparkRepositoryBuilder[MyObject](Properties.getObject("csv"))
+     val repository = new SparkRepositoryBuilder[MyObject](Properties.getConfig("csv"))
        .setSpark(spark).build().get()
     
      repository.save(ds)
@@ -168,10 +168,9 @@ This could be done with Pipeline, Stage and Factory
 ```scala
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
-import com.jcdecaux.datacorp.spark.internal.Deliverable
 import com.jcdecaux.datacorp.spark.transformation.Factory
 import org.apache.spark.sql.{Dataset, SparkSession, functions}
-import com.jcdecaux.datacorp.spark.workflow.v2.{Pipeline, Stage}
+import com.jcdecaux.datacorp.spark.workflow.{Pipeline, Stage}
 
 // Define our class
 case class Product1(x: String)
@@ -231,6 +230,10 @@ class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
 Now our classes are defined, let implement the complete data job:
 
 ```scala
+import com.jcdecaux.datacorp.spark.SparkSessionBuilder
+import com.jcdecaux.datacorp.spark.transformation.Deliverable
+import com.jcdecaux.datacorp.spark.workflow.{Pipeline, Stage}
+
 val spark = new SparkSessionBuilder("dev").setEnv("dev").getOrCreate()
 import spark.implicits._
 
@@ -272,28 +275,28 @@ You can also call the `pipeline.describe()` method to generate a pipeline summar
 Node   : ProductFactory
 Stage  : 0
 Input  : String
-Output : com.jcdecaux.datacorp.spark.workflow.v2.Product1
+Output : com.jcdecaux.datacorp.spark.workflow.Product1
 --------------------------------------
 Node   : DatasetFactory
 Stage  : 1
-Input  : com.jcdecaux.datacorp.spark.workflow.v2.Product1
-Output : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product1]
+Input  : com.jcdecaux.datacorp.spark.workflow.Product1
+Output : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.Product1]
 --------------------------------------
 Node   : DatasetFactory2
 Stage  : 2
-Input  : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product1]
-Output : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product2]
+Input  : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.Product1]
+Output : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.Product2]
 --------------------------------------
 ----------   Flows Summary  ----------
 Flow
 Stage     : 0
 Direction : ProductFactory ==> DatasetFactory
-PayLoad   : com.jcdecaux.datacorp.spark.workflow.v2.Product1
+PayLoad   : com.jcdecaux.datacorp.spark.workflow.Product1
 --------------------------------------
 Flow
 Stage     : 1
 Direction : DatasetFactory ==> DatasetFactory2
-PayLoad   : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.v2.Product1]
+PayLoad   : org.apache.spark.sql.Dataset[com.jcdecaux.datacorp.spark.workflow.Product1]
 --------------------------------------
 
 ```

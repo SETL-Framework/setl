@@ -1,26 +1,18 @@
-package com.jcdecaux.datacorp.spark.internal
+package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
-import com.jcdecaux.datacorp.spark.transformation.Factory
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.Dataset
 import org.scalatest.FunSuite
 
-case class Product(x: String)
-
-case class Product2(x: String)
-
-case class Container[T](content: T)
-
-case class Container2[T](content: T)
-
-class MyFactory extends Factory[Container[Product2]] {
+class MyFactory extends Factory[Container[Product23]] {
 
   var input: Container2[Product] = _
-  var output: Container[Product2] = _
+  var output: Container[Product23] = _
 
   @Delivery
-  def setOutput(v: Container[Product2]): this.type = {
+  def setOutput(v: Container[Product23]): this.type = {
     output = v
     this
   }
@@ -37,13 +29,13 @@ class MyFactory extends Factory[Container[Product2]] {
 
   override def write(): MyFactory.this.type = this
 
-  override def get(): Container[Product2] = output
+  override def get(): Container[Product23] = output
 }
 
-class MyFactory2 extends Factory[Dataset[Product2]] with Serializable {
+class MyFactory2 extends Factory[Dataset[Product23]] with Serializable {
 
   var input: Dataset[Product] = _
-  var output: Dataset[Product2] = _
+  var output: Dataset[Product23] = _
 
   @Delivery
   def setInput(v: Dataset[Product]): this.type = {
@@ -52,7 +44,7 @@ class MyFactory2 extends Factory[Dataset[Product2]] with Serializable {
   }
 
   @Delivery
-  def setOutput(v: Dataset[Product2]): this.type = {
+  def setOutput(v: Dataset[Product23]): this.type = {
     output = v
     this
   }
@@ -63,7 +55,7 @@ class MyFactory2 extends Factory[Dataset[Product2]] with Serializable {
 
   override def write(): this.type = this
 
-  override def get(): Dataset[Product2] = output
+  override def get(): Dataset[Product23] = output
 }
 
 class DispatchManagerSuite extends FunSuite {
@@ -72,8 +64,8 @@ class DispatchManagerSuite extends FunSuite {
 
     val CP = Container(Product("1"))
     val C2P = Container2(Product("1"))
-    val CP2 = Container(Product2("1"))
-    val C2P2 = Container2(Product2("1"))
+    val CP2 = Container(Product23("1"))
+    val C2P2 = Container2(Product23("1"))
 
     val myFactory = new MyFactory
 
@@ -101,7 +93,7 @@ class DispatchManagerSuite extends FunSuite {
     ).toDS()
 
     val dsP2 = Seq(
-      Product2("a2"), Product2("b2")
+      Product23("a2"), Product23("b2")
     ).toDS()
 
     val dsC1 = Seq(

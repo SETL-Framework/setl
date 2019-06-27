@@ -1,21 +1,13 @@
-package com.jcdecaux.datacorp.spark.workflow.v2
+package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
-import com.jcdecaux.datacorp.spark.internal.Deliverable
-import com.jcdecaux.datacorp.spark.transformation.Factory
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 import scala.reflect.runtime.{universe => ru}
 
-case class Product1(x: String)
-
-case class Product2(x: String, y: String)
-
-case class Container[T](content: T)
-
-case class Container2[T](content: T)
 
 class ProductFactory extends Factory[Product1] {
 

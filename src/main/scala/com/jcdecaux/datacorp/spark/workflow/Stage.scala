@@ -1,12 +1,12 @@
-package com.jcdecaux.datacorp.spark.workflow.v2
+package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.{Deliverable, Logging}
-import com.jcdecaux.datacorp.spark.transformation.Factory
+import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 
-@InterfaceStability.Unstable
+@InterfaceStability.Evolving
 class Stage extends Logging {
 
   private[this] var _end: Boolean = true

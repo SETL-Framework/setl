@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.{Deliverable, Logging}
+import com.jcdecaux.datacorp.spark.internal.Logging
 
 import scala.reflect.runtime.{universe => ru}
 

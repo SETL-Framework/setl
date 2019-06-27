@@ -1,7 +1,9 @@
-package com.jcdecaux.datacorp.spark.workflow.v2
+package com.jcdecaux.datacorp.spark.workflow
 
-import com.jcdecaux.datacorp.spark.internal.{DispatchManager, Logging}
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+import com.jcdecaux.datacorp.spark.internal.Logging
 
+@InterfaceStability.Evolving
 class PipelineInspector(val pipeline: Pipeline) extends Logging {
 
   var nodes: Set[Node] = _
