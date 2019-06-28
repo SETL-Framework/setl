@@ -59,13 +59,24 @@ class PipelineInspector(val pipeline: Pipeline) extends Logging {
   }
 
   def describe(): this.type = {
-    println("========== Pipeline Summary ==========")
-    println("")
+    println("========== Pipeline Summary ==========\n")
+
     println("----------   Nodes Summary  ----------")
-    nodes.foreach(_.describe())
+    if (nodes.nonEmpty) {
+      nodes.foreach(_.describe())
+    } else {
+      println("None")
+      println("--------------------------------------")
+    }
 
     println("----------   Flows Summary  ----------")
-    flows.foreach(_.describe())
+    if (flows.nonEmpty) {
+      flows.foreach(_.describe())
+    } else {
+      println("None")
+      println("--------------------------------------")
+    }
+
     this
   }
 }

@@ -20,6 +20,11 @@ class Conf extends Serializable {
     this
   }
 
+  def +=(conf: Conf): this.type = {
+    settings.putAll(conf.settings)
+    this
+  }
+
   /**
     * Get a configuration under the string format
     *
