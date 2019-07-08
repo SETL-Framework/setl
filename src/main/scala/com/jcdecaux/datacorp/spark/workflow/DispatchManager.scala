@@ -44,10 +44,10 @@ private[spark] class DispatchManager extends Logging {
         log.warn("No deliverable available")
         None
       case 1 =>
-        log.debug("Deliverable found")
+        log.debug("Deliverable received")
         Some(availableDeliverables.head)
       case _ =>
-        log.info("Multiple Deliverable with same type were found. Try matching by consumer")
+        log.info("Multiple Deliverable with same type were received. Try matching by consumer")
         availableDeliverables.filter(_.consumer.nonEmpty).find(_.consumer.contains(consumer))
     }
   }
@@ -74,10 +74,9 @@ private[spark] class DispatchManager extends Logging {
     * (denoted by the @Delivery annotation) of a factory
     *
     * @param factory target factory
-    * @tparam T Type of factory
     * @return
     */
-  def dispatch[T <: Factory[_]](factory: T): this.type = {
+  def dispatch(factory: Factory[_]): this.type = {
 
     getDeliveryAnnotatedMethod(factory)
       .foreach({

@@ -3,7 +3,6 @@ package com.jcdecaux.datacorp.spark.storage
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.connector._
 import com.jcdecaux.datacorp.spark.transformation.Builder
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
@@ -18,7 +17,7 @@ import org.apache.spark.sql.SparkSession
   * @param config optional, a [[com.typesafe.config.Config]] object
   * @param conf   optional, a [[com.jcdecaux.datacorp.spark.config.Conf]] object
   */
-class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val conf: Option[Conf]) extends Builder[Connector] with Logging {
+class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val conf: Option[Conf]) extends Builder[Connector] {
 
   def this(spark: SparkSession, config: Config) = this(spark, Some(config), None)
 

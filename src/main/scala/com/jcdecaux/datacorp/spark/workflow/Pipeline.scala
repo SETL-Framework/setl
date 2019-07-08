@@ -73,10 +73,7 @@ class Pipeline extends Logging {
 
           // Dispatch input if stageID doesn't equal 0
           if (dispatchManagers.deliveries.nonEmpty) {
-            stage.factories.foreach({
-              x =>
-                dispatchManagers.dispatch(x)
-            })
+            stage.factories.foreach(dispatchManagers.dispatch)
           }
 
           // run the stage

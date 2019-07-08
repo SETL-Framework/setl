@@ -4,7 +4,6 @@ import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.config.Conf.Serializer
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.storage.connector._
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.transformation.Builder
@@ -26,7 +25,7 @@ import scala.reflect.runtime.universe.TypeTag
 class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark: Option[SparkSession],
                                                                        var storage: Option[Storage],
                                                                        var config: Option[Config])
-  extends Builder[SparkRepository[DataType]] with Logging {
+  extends Builder[SparkRepository[DataType]] {
 
   import Conf.Serializer._
 

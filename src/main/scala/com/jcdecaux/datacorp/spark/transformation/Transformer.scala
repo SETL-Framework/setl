@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+import com.jcdecaux.datacorp.spark.internal.Logging
 
 /**
   * A transformer can transform data into a type A
@@ -8,7 +9,7 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
   * @tparam T : Type of output data
   */
 @InterfaceStability.Evolving
-trait Transformer[T] {
+trait Transformer[T] extends Logging {
 
   /**
     * Get the transformed data

@@ -1,7 +1,6 @@
 package com.jcdecaux.datacorp.spark
 
 import com.jcdecaux.datacorp.spark.enums.AppEnv
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.transformation.Builder
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -25,7 +24,7 @@ import org.apache.spark.sql.SparkSession
   *               <li>TODO</li>
   *               </ul>
   */
-class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] with Logging {
+class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   var appName: String = "SparkApplication"
   var appEnv: AppEnv = AppEnv.DEV

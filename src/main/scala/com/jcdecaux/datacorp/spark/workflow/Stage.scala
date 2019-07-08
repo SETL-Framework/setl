@@ -19,7 +19,6 @@ class Stage extends Logging {
 
   def start: Boolean = if (stageId == 0) true else false
 
-
   private[workflow] var stageId: Int = _
 
   private[workflow] def setStageId(id: Int): this.type = {
