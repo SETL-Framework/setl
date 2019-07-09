@@ -1,3 +1,7 @@
+## 0.2.8 (2019-07-09)
+- Add a second argument to CompoundKey to handle primary and sort keys
+- Adding a suffix option to repository save function
+
 ## 0.2.7 (2019-06-21)
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 
 of `SparkRepositoryBuilder` to use the conf object
