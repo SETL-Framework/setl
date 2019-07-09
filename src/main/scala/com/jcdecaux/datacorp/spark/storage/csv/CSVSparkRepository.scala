@@ -70,8 +70,8 @@ trait CSVSparkRepository[T] extends Repository[T] with CSVConnector {
     * @param encoder
     * @return
     */
-  def save(data: Dataset[T], saveMode: SaveMode)(implicit encoder: Encoder[T]): this.type = {
-    this.writeCSV(data.toDF(), saveMode)
+  def save(data: Dataset[T], saveMode: SaveMode = SaveMode.Overwrite, suffix: String = "")(implicit encoder: Encoder[T]): this.type = {
+    this.writeCSV(data.toDF(), saveMode, suffix)
     this
   }
 }

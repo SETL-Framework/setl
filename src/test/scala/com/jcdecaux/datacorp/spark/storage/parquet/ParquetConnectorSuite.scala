@@ -25,7 +25,7 @@ class ParquetConnectorSuite extends FunSuite with ParquetConnector {
     ).toDS()
 
     testTable.toDF.show()
-    this.writeParquet(testTable.toDF(), SaveMode.Overwrite)
+    this.writeParquet(testTable.toDF(), SaveMode.Overwrite, "")
 
     val df = this.readParquet()
     df.show()

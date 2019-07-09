@@ -26,7 +26,7 @@ class CSVConnectorSuite extends FunSuite with CSVConnector {
     ).toDS()
 
     testTable.toDF.show()
-    this.writeCSV(testTable.toDF, SaveMode.Overwrite)
+    this.writeCSV(testTable.toDF, SaveMode.Overwrite, "")
 
     val df = this.readCSV()
 

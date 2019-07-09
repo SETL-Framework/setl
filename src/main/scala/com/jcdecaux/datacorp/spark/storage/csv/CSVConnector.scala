@@ -32,8 +32,8 @@ trait CSVConnector extends Logging {
   /**
     * Write a [[DataFrame]] into the default path with the given save mode
     */
-  protected def writeCSV(df: DataFrame, saveMode: SaveMode): Unit = {
-    this.writeCSV(df, this.path, saveMode)
+  protected def writeCSV(df: DataFrame, saveMode: SaveMode, suffix: String): Unit = {
+    this.writeCSV(df, this.path + (if(!suffix.isEmpty) s"/$suffix" else ""), saveMode)
   }
 
   /**

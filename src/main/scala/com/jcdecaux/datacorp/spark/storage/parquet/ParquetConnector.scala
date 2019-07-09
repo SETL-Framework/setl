@@ -28,11 +28,11 @@ trait ParquetConnector extends Logging {
     *
     * @param df dataframe
     */
-  protected def writeParquet(df: DataFrame, saveMode: SaveMode): Unit = {
+  protected def writeParquet(df: DataFrame, saveMode: SaveMode, suffix: String): Unit = {
     log.debug(s"Write DataFrame to $path in Parquet format")
     df.write
       .mode(saveMode)
-      .option("path", path)
+      .option("path", path + (if(!suffix.isEmpty) s"/$suffix" else ""))
       .saveAsTable(table)
   }
 }

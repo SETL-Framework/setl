@@ -110,15 +110,15 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     * @param encoder
     * @return
     */
-  def save(data: Dataset[T], saveMode: SaveMode)(implicit encoder: Encoder[T]): this.type = {
+  def save(data: Dataset[T], saveMode: SaveMode = SaveMode.Overwrite, suffix: String = "")(implicit encoder: Encoder[T]): this.type = {
     storage match {
       case Storage.CASSANDRA =>
         this.createCassandra(data.toDF())
         this.writeCassandra(data.toDF())
       case Storage.PARQUET =>
-        this.writeParquet(data.toDF(), saveMode)
+        this.writeParquet(data.toDF(), saveMode, suffix)
       case Storage.CSV =>
-        this.writeCSV(data.toDF(), saveMode)
+        this.writeCSV(data.toDF(), saveMode, suffix)
       case _ =>
         throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
     }

@@ -70,8 +70,8 @@ trait ParquetSparkRepository[T] extends Repository[T] with ParquetConnector {
     * @param encoder
     * @return
     */
-  def save(data: Dataset[T], saveMode: SaveMode)(implicit encoder: Encoder[T]): this.type = {
-    this.writeParquet(data.toDF(), saveMode)
+  def save(data: Dataset[T], saveMode: SaveMode = SaveMode.Overwrite, suffix: String = "")(implicit encoder: Encoder[T]): this.type = {
+    this.writeParquet(data.toDF(), saveMode, suffix)
     this
   }
 }
