@@ -1,4 +1,4 @@
-## 0.2.8 (2019-07-09)
+## 0.2.8-snapshot (2019-07-09)
 - Add a second argument to CompoundKey to handle primary and sort keys
 - Adding a suffix option to repository save function
 
