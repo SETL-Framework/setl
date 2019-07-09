@@ -61,7 +61,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val rawData = connector.read()
     rawData.show()
-    assert(rawData.columns === Array("col1", "column2", "_key"))
+    assert(rawData.columns === Array("col1", "column2", "_sort_key"))
 
     val filteredData = repo.findBy(condition)
     assert(filteredData.columns === Array("column1", "column2"))
