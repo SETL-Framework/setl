@@ -73,4 +73,4 @@ class SparkRepositorySuite extends FunSuite {
 
 }
 
-case class MyObject(@CompoundKey("2") @ColumnName("col1") column1: String, @CompoundKey("1") column2: String)
+case class MyObject(@CompoundKey("sort", "2") @ColumnName("col1") column1: String, @CompoundKey("sort", "1") column2: String)

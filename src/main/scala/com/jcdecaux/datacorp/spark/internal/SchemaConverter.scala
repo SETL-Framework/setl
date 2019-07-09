@@ -109,7 +109,7 @@ private[spark] object SchemaConverter {
   private[this] def handleColumnNameFromDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
-      .map(x => x.metadata.getString(ColumnName.toString()) -> x.name)
+      .map(x => x.metadata.getStringArray(ColumnName.toString())(0) -> x.name)
       .toMap
 
     val newColumns = dataFrame.columns.map(columnName => changes.getOrElse(columnName, columnName))
@@ -147,7 +147,7 @@ private[spark] object SchemaConverter {
   private[this] def handleColumnNameToDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
-      .map(x => x.name -> x.metadata.getString(ColumnName.toString()))
+      .map(x => x.name -> x.metadata.getStringArray(ColumnName.toString())(0))
       .toMap
 
     val newColumns = dataFrame.columns.map(columnName => changes.getOrElse(columnName, columnName))
@@ -162,7 +162,8 @@ private[spark] object SchemaConverter {
     * @return
     */
   private[this] def handleCompoundKeyFromDF()(dataFrame: DataFrame): DataFrame = {
-    dataFrame.drop(compoundKeyName)
+    // TODO do it safely
+    dataFrame.drop(dataFrame.columns.filter(col => col.startsWith("_") && col.endsWith(compoundKeyName)): _*)
   }
 
   /**
@@ -194,15 +195,21 @@ private[spark] object SchemaConverter {
   private[this] def handleCompoundKeyToDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val keyColumns = structType
       .filter(_.metadata.contains(CompoundKey.toString()))
-      .sortBy(_.metadata.getString(CompoundKey.toString()).toInt)
-      .map(n => functions.col(n.name))
+      .groupBy(_.metadata.getStringArray(CompoundKey.toString())(0))
+      .map(row => (row._1, row._2.sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
+        .map(n => functions.col(n.name))))
 
-    if (keyColumns.isEmpty) {
-      dataFrame
-    } else {
-      dataFrame.withColumn(compoundKeyName, functions.concat_ws(compoundKeySeparator, keyColumns: _*))
+    var dataFrameWithKeys = dataFrame
+
+    println(keyColumns)
+
+    if (keyColumns.nonEmpty) {
+      keyColumns.foreach(row => {
+        dataFrameWithKeys = dataFrameWithKeys.withColumn("_" + row._1 + compoundKeyName, functions.concat_ws(compoundKeySeparator, row._2: _*))
+      })
     }
 
+    dataFrameWithKeys
   }
 
   /**
@@ -231,22 +238,23 @@ private[spark] object SchemaConverter {
             case ru.Literal(ru.Constant(name: String)) => name
           })
 
-          (ColumnName.toString(), value.get)
+          (ColumnName.toString(), Array(value.get))
 
         // Case where the field has annotation `CompoundKey`
         case compoundKey: ru.AnnotationApi if compoundKey.tree.tpe =:= ru.typeOf[CompoundKey] =>
-          val value = compoundKey.tree.children.tail.collectFirst({
-            case ru.Literal(ru.Constant(position: String)) => position
-          })
 
-          (CompoundKey.toString(), value.get)
+          val attributes = Some(compoundKey.tree.children.tail.collect({
+            case ru.Literal(ru.Constant(attribute: String)) => attribute
+          }))
+
+          (CompoundKey.toString(), attributes.get.toArray)
 
       }).toMap
 
       val metadataBuilder = new MetadataBuilder()
 
       annotations.foreach({
-        annotationData => metadataBuilder.putString(annotationData._1, annotationData._2)
+        annotationData => metadataBuilder.putStringArray(annotationData._1, annotationData._2)
       })
 
       StructField(field.name.toString, sparkType, nullable = true, metadataBuilder.build())

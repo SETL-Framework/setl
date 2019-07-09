@@ -42,13 +42,13 @@ class SchemaConverterSuite extends FunSuite {
 
     val df = SchemaConverter.toDF(ds)
     df.show()
-    assert(df.columns === Array("a", "b", "c", "_key"))
-    assert(df.collect().map(_.getAs[String]("_key")) === Array("A-a-1", "B-b-2", "C-c-3"))
-    assert(df.filter($"_key" === "C-c-3").collect().length === 1)
+    assert(df.columns === Array("a", "b", "c", "_sort_key", "_primary_key"))
+    assert(df.collect().map(_.getAs[String]("_primary_key")) === Array("a-1", "b-2", "c-3"))
+    assert(df.filter($"_primary_key" === "c-3").collect().length === 1)
 
     val ds2 = SchemaConverter.fromDF[TestCompoundKey](df)
     ds2.show()
-    assert(ds2.columns === Array("a", "b", "c"))
+    assert(ds2.columns sameElements Array("a", "b", "c"))
     assert(df.count() === ds2.count())
 
   }
@@ -57,4 +57,4 @@ class SchemaConverterSuite extends FunSuite {
 
 case class MyObject(@ColumnName("col1") column1: String, column2: String)
 
-case class TestCompoundKey(@CompoundKey("2") a: String, @CompoundKey("3") b: Int, @CompoundKey("1") c: String)
+case class TestCompoundKey(@CompoundKey("primary", "1") a: String, @CompoundKey("primary", "2") b: Int, @CompoundKey("sort", "1") c: String)
