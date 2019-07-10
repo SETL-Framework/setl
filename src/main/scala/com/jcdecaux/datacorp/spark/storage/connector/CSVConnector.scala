@@ -62,7 +62,10 @@ class CSVConnector(val spark: SparkSession,
   }
 
   /**
-    * Write a [[DataFrame]] into the default path with the given save mode
+    * Write a [[DataFrame]] into CSV file
+    *
+    * @param df     dataframe to be written
+    * @param suffix optional, String, write the df in a sub-directory of the defined path
     */
   override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
     suffix match {

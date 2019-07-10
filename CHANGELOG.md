@@ -1,15 +1,19 @@
-## 0.3.0 (2019-06-25)
+## 0.3.0 (2019-7-10)
+- Removed `EnrichedConnector`
+- Removed V1 interfaces
 - Added `Delivery` annotation
 - Added `DispatchManager` class. It will dispatch its deliverable object to setters (denoted by @Delivery) of a factory
 - Added `Deliverable` class, which contains a payload to be delivered
-- Added `workflow.v2.Pipeline`
-- Added `workflow.v2.stage`
+- Added `workflow.Pipeline`
+- Added `workflow.stage`
 - Added `transformation.Factory[T]`
 - Added `PipelineInspector` to describe a pipeline
-- Adding a suffix option to repository save function
+- Added `FileConnector` and `DBConnector`
+- Added an optional argument `suffix` in `FileConnector` and `SparkRepository`
+- Added method `partitionBy` in `FileConnector` and `SparkRepository`
 
 ## 0.2.8 (2019-07-09)
-- Add a second argument to CompoundKey to handle primary and sort keys
+- Added a second argument to CompoundKey to handle primary and sort keys
 
 ## 0.2.7 (2019-06-21)
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 

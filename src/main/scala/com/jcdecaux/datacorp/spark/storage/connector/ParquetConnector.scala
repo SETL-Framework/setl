@@ -36,7 +36,7 @@ class ParquetConnector(val spark: SparkSession,
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
     *
-    * @return
+    * @return DataFrame
     */
   override def read(): DataFrame = {
     log.debug(s"Reading csv file from $path")
@@ -54,7 +54,8 @@ class ParquetConnector(val spark: SparkSession,
   /**
     * Write a [[DataFrame]] into parquet file
     *
-    * @param df dataframe to be written
+    * @param df     dataframe to be written
+    * @param suffix optional, String, write the df in a sub-directory of the defined path
     */
   override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
     suffix match {
