@@ -106,7 +106,7 @@ private[spark] object SchemaConverter {
     * @param dataFrame
     * @return
     */
-  private[this] def handleColumnNameFromDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+  def handleColumnNameFromDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
       .map(x => x.metadata.getStringArray(ColumnName.toString())(0) -> x.name)
@@ -144,7 +144,7 @@ private[spark] object SchemaConverter {
     * @param dataFrame
     * @return
     */
-  private[this] def handleColumnNameToDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+  def handleColumnNameToDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
       .map(x => x.name -> x.metadata.getStringArray(ColumnName.toString())(0))
@@ -161,7 +161,7 @@ private[spark] object SchemaConverter {
     * @param dataFrame
     * @return
     */
-  private[this] def handleCompoundKeyFromDF()(dataFrame: DataFrame): DataFrame = {
+  def handleCompoundKeyFromDF()(dataFrame: DataFrame): DataFrame = {
     // TODO do it safely
     dataFrame.drop(dataFrame.columns.filter(col => col.startsWith("_") && col.endsWith(compoundKeyName)): _*)
   }
@@ -218,7 +218,7 @@ private[spark] object SchemaConverter {
     * @tparam T
     * @return
     */
-  private[this] def analyseSchema[T <: Product : ClassTag : ru.TypeTag]: StructType = {
+  def analyseSchema[T <: Product : ClassTag : ru.TypeTag]: StructType = {
 
     val runtimeMirror = ru.runtimeMirror(getClass.getClassLoader)
 
