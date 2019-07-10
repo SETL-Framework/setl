@@ -41,7 +41,7 @@ import scala.reflect.runtime.{universe => ru}
   *
   * }}}
   */
-private[spark] object SchemaConverter {
+object SchemaConverter {
 
   private[this] val compoundKeyName: String = "_key"
   private[this] val compoundKeySeparator: String = "-"
