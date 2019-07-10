@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
-import com.jcdecaux.datacorp.spark.storage.connector.{Connector, DBConnector}
+import com.jcdecaux.datacorp.spark.storage.connector.{Connector, DBConnector, FileConnector}
 import org.apache.spark.sql.{Dataset, Encoder}
 
 import scala.reflect.ClassTag
@@ -29,6 +29,14 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
   }
 
   def getConnector: Connector = this.connector
+
+  def partitionBy(columns: String*): this.type = {
+    connector match {
+      case c: FileConnector => c.partitionBy(columns: _*)
+      case _ =>
+    }
+    this
+  }
 
   /**
     * Find data by giving a single condition
@@ -79,14 +87,10 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
     * @return
     */
   override def save(data: Dataset[DataType], suffix: Option[String] = None)(implicit encoder: Encoder[DataType]): SparkRepository.this.type = {
-    try {
-      connector.asInstanceOf[DBConnector].create(data.toDF(), suffix)
-    } catch {
-      case nosuchelement: NoSuchMethodException =>
-        log.info("There is no create method. Save directly the dataset")
-      case classCast: ClassCastException =>
-        log.info("Current class has no create method. Save directly the dataset")
-      case e: Throwable => throw e
+
+    connector match {
+      case c: DBConnector => c.create(data.toDF(), suffix)
+      case _ => log.info("Current class has no create method. Save directly the dataset")
     }
     connector.write(SchemaConverter.toDF(data), suffix)
     this

@@ -40,7 +40,15 @@ class ParquetConnector(val spark: SparkSession,
     */
   override def read(): DataFrame = {
     log.debug(s"Reading csv file from $path")
-    this.spark.read.parquet(listFiles(): _*)
+    val df = this.spark.read
+      .option("basePath", path)
+      .parquet(listFiles(): _*)
+
+    if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffix)) {
+      df.drop(userDefinedSuffix)
+    } else {
+      df
+    }
   }
 
   /**
@@ -50,8 +58,12 @@ class ParquetConnector(val spark: SparkSession,
     */
   override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
     suffix match {
-      case Some(s) => writeParquet(df, s"$path/$s", saveMode)
-      case _ => writeParquet(df, path, saveMode)
+      case Some(s) =>
+        checkPartitionValidity(true)
+        writeParquet(df, s"${this.path}/$userDefinedSuffix=$s", saveMode)
+      case _ =>
+        checkPartitionValidity(false)
+        writeParquet(df, path, saveMode)
     }
   }
 
@@ -59,12 +71,9 @@ class ParquetConnector(val spark: SparkSession,
     log.debug(s"Write DataFrame to $absolutePath")
     df.write
       .mode(mode)
+      .partitionBy(_partition: _*)
       .option("path", absolutePath)
       .saveAsTable(table)
   }
 
-  //  override def delete(): Unit = {
-  //    val f = new File(path)
-  //    deleteRecursively(f)
-  //  }
 }

@@ -61,4 +61,39 @@ class CSVConnectorSuite extends FunSuite {
     csvConnector.delete()
     assertThrows[java.io.FileNotFoundException](csvConnector.read())
   }
+
+  test("test partition by") {
+    val dff: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(2, "p1", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L),
+      TestObject(3, "p2", "c3", 3L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val csvConnector2 = new CSVConnector(spark, path, "true", "|", "true", SaveMode.Overwrite)
+      .partitionBy("partition1", "partition2")
+
+    // with partition, with suffix
+    csvConnector2.write(dff.toDF, Some("1"))
+    csvConnector2.write(dff.toDF, Some("2"))
+    csvConnector2.dropUserDefinedSuffix = false
+
+    assertThrows[IllegalArgumentException](csvConnector2.write(dff.toDF))
+
+    csvConnector2.read().show()
+    assert(csvConnector2.read().count() === 12)
+    assert(csvConnector2.read().columns.length === 5)
+    csvConnector2.delete()
+
+    // with partition without suffix
+    csvConnector2.write(dff.toDF)
+    assert(csvConnector2.read().count() === 6)
+    assert(csvConnector2.read().columns.length === 4, "column suffix should not exists")
+    csvConnector2.dropUserDefinedSuffix = true
+    assert(csvConnector2.read().columns.length === 4, "column suffix should not exists")
+    csvConnector2.delete()
+
+  }
 }

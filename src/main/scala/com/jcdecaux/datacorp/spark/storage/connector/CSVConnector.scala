@@ -46,11 +46,19 @@ class CSVConnector(val spark: SparkSession,
     */
   override def read(): DataFrame = {
     log.debug(s"Reading csv file from $path")
-    this.spark.read
+
+    val df = this.spark.read
       .option("header", this.header)
       .option("inferSchema", this.inferSchema)
       .option("delimiter", this.delimiter)
+      .option("basePath", path)
       .csv(listFiles(): _*)
+
+    if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffix)) {
+      df.drop(userDefinedSuffix)
+    } else {
+      df
+    }
   }
 
   /**
@@ -58,8 +66,12 @@ class CSVConnector(val spark: SparkSession,
     */
   override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
     suffix match {
-      case Some(s) => this.writeCSV(df, s"${this.path}/$s", saveMode)
-      case _ => this.writeCSV(df, this.path, saveMode)
+      case Some(s) =>
+        checkPartitionValidity(true)
+        this.writeCSV(df, s"${this.path}/$userDefinedSuffix=$s", saveMode)
+      case _ =>
+        checkPartitionValidity(false)
+        this.writeCSV(df, this.path, saveMode)
     }
   }
 
@@ -70,13 +82,10 @@ class CSVConnector(val spark: SparkSession,
     log.debug(s"Write DataFrame to $path")
     df.write
       .mode(saveMode)
+      .partitionBy(_partition: _*)
       .option("header", this.header)
       .option("delimiter", this.delimiter)
       .csv(path)
   }
 
-  //  override def delete(): Unit = {
-  //    val f = new File(path)
-  //    deleteRecursively(f)
-  //  }
 }

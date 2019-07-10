@@ -62,4 +62,38 @@ class ParquetConnectorSuite extends FunSuite {
     assertThrows[java.io.FileNotFoundException](parquetConnector.read())
   }
 
+  test("test partition by") {
+    val dff: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(2, "p1", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L),
+      TestObject(3, "p2", "c3", 3L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val parquetConnector2 = new ParquetConnector(spark, path, table, SaveMode.Overwrite)
+      .partitionBy("partition1", "partition2")
+
+    // with partition, with suffix
+    parquetConnector2.write(dff.toDF, Some("1"))
+    parquetConnector2.write(dff.toDF, Some("2"))
+    parquetConnector2.dropUserDefinedSuffix = false
+
+    assertThrows[IllegalArgumentException](parquetConnector2.write(dff.toDF))
+
+    parquetConnector2.read().show()
+    assert(parquetConnector2.read().count() === 12)
+    assert(parquetConnector2.read().columns.length === 5)
+    parquetConnector2.delete()
+
+    // with partition without suffix
+    parquetConnector2.write(dff.toDF)
+    assert(parquetConnector2.read().count() === 6)
+    assert(parquetConnector2.read().columns.length === 4, "column suffix should not exists")
+    parquetConnector2.dropUserDefinedSuffix = true
+    assert(parquetConnector2.read().columns.length === 4, "column suffix should not exists")
+    parquetConnector2.delete()
+  }
+
 }

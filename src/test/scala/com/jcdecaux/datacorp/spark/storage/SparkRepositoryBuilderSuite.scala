@@ -94,7 +94,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     repo.save(testTable)
     assert(repo.findAll().count() === 3)
     deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
-
   }
 
   test("Parquet") {
@@ -111,10 +110,10 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
     val repo = repoBuilder.getOrCreate()
 
-    repo.save(testTable)
+    repo.save(testTable, Some("2"))
     repo.save(testTable, Some("x"))
     repo.save(testTable, Some("y"))
-
+    repo.findAll().show()
     assert(repo.findAll().count() === 9)
     repo.getConnector.asInstanceOf[ParquetConnector].delete()
 
