@@ -46,5 +46,5 @@ trait Repository[DataType] {
     * @param encoder : implicit encoder of Spark
     * @return
     */
-  def save(data: Dataset[DataType])(implicit encoder: Encoder[DataType]): this.type
+  def save(data: Dataset[DataType], suffix: Option[String])(implicit encoder: Encoder[DataType]): this.type
 }

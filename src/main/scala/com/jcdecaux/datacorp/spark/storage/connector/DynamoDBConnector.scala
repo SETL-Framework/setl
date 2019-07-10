@@ -30,7 +30,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 class DynamoDBConnector(val spark: SparkSession,
                         val region: String, // "eu-west-1"
                         val table: String,
-                        val saveMode: SaveMode) extends Connector with Logging {
+                        val saveMode: SaveMode) extends DBConnector with Logging {
 
   import com.audienceproject.spark.dynamodb.implicits._
 
@@ -50,15 +50,30 @@ class DynamoDBConnector(val spark: SparkSession,
 
   override val storage: Storage = Storage.DYNAMODB
 
+  private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
+    df.write
+      .mode(saveMode)
+      .option("region", region)
+      .dynamodb(tableName)
+  }
+
   override def read(): DataFrame = {
     log.debug(s"Reading DynamoDB table $table in $region")
     spark.read.option("region", region).dynamodb(table)
   }
 
-  override def write(t: DataFrame): Unit = {
-    t.write
-      .mode(saveMode)
-      .option("region", region)
-      .dynamodb(table)
+  override def write(t: DataFrame, suffix: Option[String] = None): Unit = {
+    suffix match {
+      case Some(s) => writeDynamoDB(t, s"$table/$s")
+      case _ => writeDynamoDB(t, table)
+    }
+  }
+
+  override def create(t: DataFrame, suffix: Option[String]): Unit = {
+    log.warn("Create is not supported in DynamoDBConnector")
+  }
+
+  override def delete(query: String): Unit = {
+    log.warn("Delete is not supported in DynamoDBConnector")
   }
 }

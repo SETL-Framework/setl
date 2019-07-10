@@ -52,7 +52,6 @@ class SparkRepositorySuite extends FunSuite {
     val connector = new CSVConnector(spark, path, "false", ";", "true", SaveMode.Overwrite)
     val condition = Condition("col1", "=", "a")
 
-
     val repo = new SparkRepository[MyObject].setConnector(connector)
 
     repo.save(ds)
@@ -69,6 +68,25 @@ class SparkRepositorySuite extends FunSuite {
 
     deleteRecursively(new File(path))
 
+  }
+
+  test("Test spark repository save with suffix") {
+    val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
+    val path: String = "src/test/resources/test_parquet_with_annotation"
+    val connector = new CSVConnector(spark, path, "false", ";", "true", SaveMode.Overwrite)
+
+    val repo = new SparkRepository[MyObject].setConnector(connector)
+
+    repo.save(ds, Some("1"))
+    repo.save(ds, Some("2"))
+    repo.save(ds, Some("3"))
+    repo.save(ds, Some("3/4/5"))
+
+    val df = repo.findAll()
+    assert(df.count() === 8)
+
+    df.show()
+    connector.delete()
   }
 
 }

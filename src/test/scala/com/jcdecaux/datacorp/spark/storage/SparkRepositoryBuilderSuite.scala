@@ -8,7 +8,7 @@ import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, 
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import com.jcdecaux.datacorp.spark.exception.UnknownException
-import com.jcdecaux.datacorp.spark.storage.connector.ExcelConnector
+import com.jcdecaux.datacorp.spark.storage.connector.{ExcelConnector, ParquetConnector}
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
 import com.typesafe.config.Config
 import org.apache.spark.sql.types._
@@ -112,8 +112,11 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     val repo = repoBuilder.getOrCreate()
 
     repo.save(testTable)
-    assert(repo.findAll().count() === 3)
-    deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
+    repo.save(testTable, Some("x"))
+    repo.save(testTable, Some("y"))
+
+    assert(repo.findAll().count() === 9)
+    repo.getConnector.asInstanceOf[ParquetConnector].delete()
 
   }
 
@@ -230,6 +233,4 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     df.show(false)
     assert(df.count() === 3)
   }
-
-
 }

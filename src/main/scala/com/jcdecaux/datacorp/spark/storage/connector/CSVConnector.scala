@@ -17,7 +17,7 @@ class CSVConnector(val spark: SparkSession,
                    val inferSchema: String,
                    val delimiter: String,
                    val header: String,
-                   val saveMode: SaveMode) extends Connector with Logging {
+                   val saveMode: SaveMode) extends FileConnector with Logging {
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
@@ -50,14 +50,17 @@ class CSVConnector(val spark: SparkSession,
       .option("header", this.header)
       .option("inferSchema", this.inferSchema)
       .option("delimiter", this.delimiter)
-      .csv(path)
+      .csv(listFiles(): _*)
   }
 
   /**
     * Write a [[DataFrame]] into the default path with the given save mode
     */
-  override def write(df: DataFrame): Unit = {
-    this.writeCSV(df, this.path, saveMode)
+  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
+    suffix match {
+      case Some(s) => this.writeCSV(df, s"${this.path}/$s", saveMode)
+      case _ => this.writeCSV(df, this.path, saveMode)
+    }
   }
 
   /**
@@ -71,4 +74,9 @@ class CSVConnector(val spark: SparkSession,
       .option("delimiter", this.delimiter)
       .csv(path)
   }
+
+  //  override def delete(): Unit = {
+  //    val f = new File(path)
+  //    deleteRecursively(f)
+  //  }
 }

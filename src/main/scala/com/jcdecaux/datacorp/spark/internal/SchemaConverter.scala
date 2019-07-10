@@ -201,8 +201,6 @@ private[spark] object SchemaConverter {
 
     var dataFrameWithKeys = dataFrame
 
-    println(keyColumns)
-
     if (keyColumns.nonEmpty) {
       keyColumns.foreach(row => {
         dataFrameWithKeys = dataFrameWithKeys.withColumn("_" + row._1 + compoundKeyName, functions.concat_ws(compoundKeySeparator, row._2: _*))

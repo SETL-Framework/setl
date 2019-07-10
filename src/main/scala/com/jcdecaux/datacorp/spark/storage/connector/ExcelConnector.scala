@@ -126,7 +126,7 @@ class ExcelConnector(val spark: SparkSession,
     reader.load(path)
   }
 
-  override def write(df: DataFrame): Unit = {
+  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
     writer = df
       .write
       .format("com.crealytics.spark.excel")
@@ -136,6 +136,7 @@ class ExcelConnector(val spark: SparkSession,
       .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
 
     if (sheetName.isDefined) writer.option("sheetName", sheetName.get)
+    if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
 
     saveMode match {
       case SaveMode.Append =>
@@ -147,4 +148,9 @@ class ExcelConnector(val spark: SparkSession,
 
     writer.save(path)
   }
+
+  //  override def delete(): Unit = {
+  //    val f = new File(path)
+  //    deleteRecursively(f)
+  //  }
 }

@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
-import com.jcdecaux.datacorp.spark.storage.connector.{Connector, EnrichConnector}
+import com.jcdecaux.datacorp.spark.storage.connector.{Connector, DBConnector}
 import org.apache.spark.sql.{Dataset, Encoder}
 
 import scala.reflect.ClassTag
@@ -78,9 +78,9 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
     * @param encoder : implicit encoder of Spark
     * @return
     */
-  override def save(data: Dataset[DataType])(implicit encoder: Encoder[DataType]): SparkRepository.this.type = {
+  override def save(data: Dataset[DataType], suffix: Option[String] = None)(implicit encoder: Encoder[DataType]): SparkRepository.this.type = {
     try {
-      connector.asInstanceOf[EnrichConnector].create(data.toDF())
+      connector.asInstanceOf[DBConnector].create(data.toDF(), suffix)
     } catch {
       case nosuchelement: NoSuchMethodException =>
         log.info("There is no create method. Save directly the dataset")
@@ -88,7 +88,7 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
         log.info("Current class has no create method. Save directly the dataset")
       case e: Throwable => throw e
     }
-    connector.write(SchemaConverter.toDF(data))
+    connector.write(SchemaConverter.toDF(data), suffix)
     this
   }
 }

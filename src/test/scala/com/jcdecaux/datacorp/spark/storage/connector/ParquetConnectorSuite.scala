@@ -1,16 +1,11 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
-import java.io.File
-
 import com.jcdecaux.datacorp.spark.config.Properties
-import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
 
 class ParquetConnectorSuite extends FunSuite {
-
-  import SparkRepositorySuite.deleteRecursively
 
   val spark: SparkSession = new SparkSessionBuilder().setEnv("dev").build().get()
   val path: String = "src/test/resources/test_parquet"
@@ -18,14 +13,15 @@ class ParquetConnectorSuite extends FunSuite {
 
   val parquetConnector = new ParquetConnector(spark, path, table, SaveMode.Overwrite)
 
+  import spark.implicits._
+
+  val testTable: Dataset[TestObject] = Seq(
+    TestObject(1, "p1", "c1", 1L),
+    TestObject(2, "p2", "c2", 2L),
+    TestObject(3, "p3", "c3", 3L)
+  ).toDS()
 
   test("parquet connector  IO ") {
-    import spark.implicits._
-    val testTable: Dataset[TestObject] = Seq(
-      TestObject(1, "p1", "c1", 1L),
-      TestObject(2, "p2", "c2", 2L),
-      TestObject(3, "p3", "c3", 3L)
-    ).toDS()
 
     testTable.toDF.show()
     parquetConnector.write(testTable.toDF())
@@ -34,18 +30,10 @@ class ParquetConnectorSuite extends FunSuite {
     val df = parquetConnector.read()
     df.show()
     assert(df.count() === 3)
-    deleteRecursively(new File(path))
-
+    parquetConnector.delete()
   }
 
   test("IO with auxiliary parquet connector constructor") {
-    import spark.implicits._
-
-    val testTable: Dataset[TestObject] = Seq(
-      TestObject(1, "p1", "c1", 1L),
-      TestObject(2, "p2", "c2", 2L),
-      TestObject(3, "p3", "c3", 3L)
-    ).toDS()
 
     val connector = new ParquetConnector(spark, Properties.parquetConfig)
 
@@ -55,6 +43,23 @@ class ParquetConnectorSuite extends FunSuite {
     val df = connector.read()
     df.show()
     assert(df.count() === 6)
-    deleteRecursively(new File("src/test/resources/test_config_parquet"))
+    connector.delete()
   }
+
+  test("Test Parquet Connector Suffix") {
+
+    parquetConnector.write(testTable.toDF(), Some("2"))
+    parquetConnector.write(testTable.toDF(), Some("1"))
+    parquetConnector.write(testTable.toDF(), Some("3"))
+
+    val df = parquetConnector.read()
+    df.show()
+    assert(df.count() == 9)
+    assert(df.filter($"partition1" === 1).count() === 3)
+    assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
+
+    parquetConnector.delete()
+    assertThrows[java.io.FileNotFoundException](parquetConnector.read())
+  }
+
 }

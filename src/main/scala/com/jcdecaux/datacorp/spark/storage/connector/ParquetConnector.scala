@@ -15,7 +15,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 class ParquetConnector(val spark: SparkSession,
                        val path: String,
                        val table: String,
-                       val saveMode: SaveMode) extends Connector with Logging {
+                       val saveMode: SaveMode) extends FileConnector with Logging {
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
@@ -40,7 +40,7 @@ class ParquetConnector(val spark: SparkSession,
     */
   override def read(): DataFrame = {
     log.debug(s"Reading csv file from $path")
-    this.spark.read.parquet(path)
+    this.spark.read.parquet(listFiles(): _*)
   }
 
   /**
@@ -48,11 +48,23 @@ class ParquetConnector(val spark: SparkSession,
     *
     * @param df dataframe to be written
     */
-  override def write(df: DataFrame): Unit = {
-    log.debug(s"Write DataFrame to $path")
+  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
+    suffix match {
+      case Some(s) => writeParquet(df, s"$path/$s", saveMode)
+      case _ => writeParquet(df, path, saveMode)
+    }
+  }
+
+  private[this] def writeParquet(df: DataFrame, absolutePath: String, mode: SaveMode): Unit = {
+    log.debug(s"Write DataFrame to $absolutePath")
     df.write
-      .mode(saveMode)
-      .option("path", path)
+      .mode(mode)
+      .option("path", absolutePath)
       .saveAsTable(table)
   }
+
+  //  override def delete(): Unit = {
+  //    val f = new File(path)
+  //    deleteRecursively(f)
+  //  }
 }

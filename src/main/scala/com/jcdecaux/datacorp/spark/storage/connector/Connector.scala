@@ -23,5 +23,5 @@ trait Connector {
 
   def read(): DataFrame
 
-  def write(t: DataFrame): Unit
+  def write(t: DataFrame, suffix: Option[String] = None): Unit
 }

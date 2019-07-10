@@ -19,7 +19,7 @@ class CassandraConnector(val keyspace: String,
                          val table: String,
                          val spark: SparkSession,
                          val partitionKeyColumns: Option[Seq[String]],
-                         val clusteringKeyColumns: Option[Seq[String]]) extends EnrichConnector with Logging {
+                         val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector with Logging {
 
   /**
     * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
@@ -104,8 +104,8 @@ class CassandraConnector(val keyspace: String,
     *
     * @param df DataFrame to be saved
     */
-  override def write(df: DataFrame): Unit = {
-    this.create(df)
+  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
+    this.create(df, suffix)
     this.writeCassandra(df, this.table, this.keyspace)
   }
 
@@ -114,7 +114,9 @@ class CassandraConnector(val keyspace: String,
     *
     * @param df DataFrame that will be used to create Cassandra table
     */
-  override def create(df: DataFrame): Unit = {
+  override def create(df: DataFrame, suffix: Option[String] = None): Unit = {
+    if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
+
     log.debug(s"Create cassandra table $keyspace.$table")
     log.debug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
     log.debug(s"Clustering keys: ${clusteringKeyColumns.getOrElse(Seq("None")).mkString(", ")}")

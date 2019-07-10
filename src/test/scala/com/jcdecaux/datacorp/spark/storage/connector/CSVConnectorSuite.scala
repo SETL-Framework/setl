@@ -1,9 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
-import java.io.File
-
 import com.jcdecaux.datacorp.spark.config.Properties
-import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
@@ -15,15 +12,15 @@ class CSVConnectorSuite extends FunSuite {
 
   val csvConnector = new CSVConnector(spark, path, "true", "|", "true", SaveMode.Append)
 
-  import SparkRepositorySuite.deleteRecursively
+  import spark.implicits._
+
+  val testTable: Dataset[TestObject] = Seq(
+    TestObject(1, "p1", "c1", 1L),
+    TestObject(2, "p2", "c2", 2L),
+    TestObject(3, "p3", "c3", 3L)
+  ).toDS()
 
   test("IO CSVConnector") {
-    import spark.implicits._
-    val testTable: Dataset[TestObject] = Seq(
-      TestObject(1, "p1", "c1", 1L),
-      TestObject(2, "p2", "c2", 2L),
-      TestObject(3, "p3", "c3", 3L)
-    ).toDS()
 
     testTable.toDF.show()
     csvConnector.write(testTable.toDF)
@@ -33,19 +30,10 @@ class CSVConnectorSuite extends FunSuite {
 
     df.show()
     assert(df.count() === 6)
-    deleteRecursively(new File(path))
-
+    csvConnector.delete()
   }
 
   test(s"IO with auxiliary CSVConnector constructor") {
-    import spark.implicits._
-
-    val testTable: Dataset[TestObject] = Seq(
-      TestObject(1, "p1", "c1", 1L),
-      TestObject(2, "p2", "c2", 2L),
-      TestObject(3, "p3", "c3", 3L)
-    ).toDS()
-
     val connector = new CSVConnector(spark, Properties.csvConfig)
 
     connector.write(testTable.toDF())
@@ -54,6 +42,23 @@ class CSVConnectorSuite extends FunSuite {
     val df = connector.read()
     df.show()
     assert(df.count() === 6)
-    deleteRecursively(new File(Properties.csvConfig.getString("path")))
+    connector.delete()
+  }
+
+  test("Test CSV Connector Suffix") {
+
+    csvConnector.write(testTable.toDF(), Some("2"))
+    csvConnector.write(testTable.toDF(), Some("2"))
+    csvConnector.write(testTable.toDF(), Some("1"))
+    csvConnector.write(testTable.toDF(), Some("3"))
+
+    val df = csvConnector.read()
+    df.show()
+    assert(df.count() == 12)
+    assert(df.filter($"partition1" === 1).count() === 4)
+    assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
+
+    csvConnector.delete()
+    assertThrows[java.io.FileNotFoundException](csvConnector.read())
   }
 }
