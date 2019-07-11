@@ -8,8 +8,8 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
+import org.apache.spark.sql._
 import org.apache.spark.sql.cassandra._
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
   * CassandraConnector establish the connection to a given cassandra table of a given keyspace
@@ -20,6 +20,9 @@ class CassandraConnector(val keyspace: String,
                          val spark: SparkSession,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector with Logging {
+
+  override var reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
+  override var writer: DataFrameWriter[Row] = _
 
   /**
     * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
@@ -44,7 +47,7 @@ class CassandraConnector(val keyspace: String,
     * Constructor with a [[com.typesafe.config.Config]] object
     *
     * @param spark  spark session
-    * @param config [[com.typesafe.config.Config]]
+    * @param config [[com.typesafe.config.Config]] typesafe Config object
     */
   def this(spark: SparkSession, config: Config) = this(
     keyspace = TypesafeConfigUtils.getAs[String](config, "keyspace").get,
@@ -65,23 +68,11 @@ class CassandraConnector(val keyspace: String,
   /**
     * Read a cassandra table
     *
-    * @param spark    spark session
-    * @param table    table name
-    * @param keyspace keyspace name
-    * @return
-    */
-  private[this] def readCassandra(spark: SparkSession, table: String, keyspace: String): DataFrame = {
-    log.debug(s"Read $keyspace.$table")
-    spark.read.cassandraFormat(table, keyspace).load()
-  }
-
-  /**
-    * Read a cassandra table
-    *
     * @return
     */
   override def read(): DataFrame = {
-    this.readCassandra(this.spark, this.table, this.keyspace)
+    log.debug(s"Read $keyspace.$table")
+    reader.load()
   }
 
   /**
@@ -92,10 +83,14 @@ class CassandraConnector(val keyspace: String,
     * @param keyspace keyspace name
     */
   private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
+
+    if (df.hashCode() != lastWriteHashCode) {
+      writer = df.write.mode(SaveMode.Append)
+    }
+
     log.debug(s"Write DataFrame to $keyspace.$table")
-    df.write
+    writer
       .cassandraFormat(table, keyspace)
-      .mode(SaveMode.Append)
       .save()
   }
 

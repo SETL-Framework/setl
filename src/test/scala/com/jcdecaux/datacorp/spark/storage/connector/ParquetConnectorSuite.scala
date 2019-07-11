@@ -11,7 +11,7 @@ class ParquetConnectorSuite extends FunSuite {
   val path: String = "src/test/resources/test_parquet"
   val table: String = "test_table"
 
-  val parquetConnector = new ParquetConnector(spark, path, table, SaveMode.Overwrite)
+  val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
 
   import spark.implicits._
 
@@ -72,7 +72,7 @@ class ParquetConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val parquetConnector2 = new ParquetConnector(spark, path, table, SaveMode.Overwrite)
+    val parquetConnector2 = new ParquetConnector(spark, path, SaveMode.Overwrite)
       .partitionBy("partition1", "partition2")
 
     // with partition, with suffix

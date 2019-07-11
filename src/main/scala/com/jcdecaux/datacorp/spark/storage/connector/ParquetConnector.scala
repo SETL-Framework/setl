@@ -6,7 +6,7 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql._
 
 /**
   * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
@@ -14,20 +14,24 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 @InterfaceStability.Evolving
 class ParquetConnector(val spark: SparkSession,
                        val path: String,
-                       val table: String,
+                       //val table: String,
                        val saveMode: SaveMode) extends FileConnector with Logging {
+
+
+  override var reader: DataFrameReader = this.spark.read.option("basePath", path)
+  override var writer: DataFrameWriter[Row] = _
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
     path = TypesafeConfigUtils.getAs[String](config, "path").get,
-    table = TypesafeConfigUtils.getAs[String](config, "table").get,
+    //table = TypesafeConfigUtils.getAs[String](config, "table").get,
     saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
   )
 
   def this(spark: SparkSession, conf: Conf) = this(
     spark = spark,
     path = conf.get("path").get,
-    table = conf.get("table").get,
+    //table = conf.get("table").get,
     saveMode = SaveMode.valueOf(conf.get("saveMode").get)
   )
 
@@ -40,10 +44,7 @@ class ParquetConnector(val spark: SparkSession,
     */
   override def read(): DataFrame = {
     log.debug(s"Reading csv file from $path")
-    val df = this.spark.read
-      .option("basePath", path)
-      .parquet(listFiles(): _*)
-
+    val df = reader.parquet(listFiles(): _*)
     if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffix)) {
       df.drop(userDefinedSuffix)
     } else {
@@ -61,20 +62,28 @@ class ParquetConnector(val spark: SparkSession,
     suffix match {
       case Some(s) =>
         checkPartitionValidity(true)
-        writeParquet(df, s"${this.path}/$userDefinedSuffix=$s", saveMode)
+        writeParquet(df, s"${this.path}/$userDefinedSuffix=$s")
       case _ =>
         checkPartitionValidity(false)
-        writeParquet(df, path, saveMode)
+        writeParquet(df, path)
     }
   }
 
-  private[this] def writeParquet(df: DataFrame, absolutePath: String, mode: SaveMode): Unit = {
-    log.debug(s"Write DataFrame to $absolutePath")
-    df.write
-      .mode(mode)
-      .partitionBy(_partition: _*)
-      .option("path", absolutePath)
-      .saveAsTable(table)
+  private[this] def writeParquet(df: DataFrame, path: String): Unit = {
+    log.debug(s"Write DataFrame to $path")
+    initWriter(df)
+    writer.parquet(path)
+    //.option("path", absolutePath)
+    // .saveAsTable(table)
+  }
+
+  @inline private[this] def initWriter(df: DataFrame): Unit = {
+    if (df.hashCode() != lastWriteHashCode) {
+      writer = df.write
+        .mode(saveMode)
+        .partitionBy(_partition: _*)
+      lastWriteHashCode = df.hashCode()
+    }
   }
 
 }

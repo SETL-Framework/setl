@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.connector
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter, Row}
 
 /**
   * A connector it a fundamental element to access a data persistence store.
@@ -19,7 +19,13 @@ import org.apache.spark.sql.DataFrame
 @InterfaceStability.Evolving
 trait Connector {
 
+  private[connector] var lastWriteHashCode: Int = -1432561
+
   val storage: Storage
+
+  var reader: DataFrameReader
+
+  var writer: DataFrameWriter[Row]
 
   def read(): DataFrame
 

@@ -46,8 +46,44 @@ class ExcelConnector(val spark: SparkSession,
                     ) extends Connector with Logging {
 
   override val storage: Storage = Storage.EXCEL
-  var reader: DataFrameReader = _
-  var writer: DataFrameWriter[Row] = _
+  override var reader: DataFrameReader = initReader()
+  override var writer: DataFrameWriter[Row] = _
+
+  private[this] def initReader(): DataFrameReader = {
+
+    val reader = spark
+      .read
+      .format("com.crealytics.spark.excel")
+      .option("useHeader", useHeader)
+      .option("dataAddress", dataAddress)
+      .option("treatEmptyValuesAsNulls", treatEmptyValuesAsNulls)
+      .option("inferSchema", inferSchema)
+      .option("addColorColumns", addColorColumns)
+      .option("timestampFormat", timestampFormat)
+      .option("excerptSize", excerptSize)
+
+    if (sheetName.isDefined) reader.option("sheetName", sheetName.get)
+    if (maxRowsInMemory.isDefined) reader.option("maxRowsInMemory", maxRowsInMemory.get)
+    if (workbookPassword.isDefined) reader.option("workbookPassword", workbookPassword.get)
+    if (schema.isDefined) reader.schema(schema.get)
+
+    reader
+  }
+
+  @inline private[this] def initWriter(df: DataFrame): Unit = {
+    if (df.hashCode() != lastWriteHashCode) {
+      writer = df
+        .write
+        .format("com.crealytics.spark.excel")
+        .option("useHeader", useHeader)
+        .option("dataAddress", dataAddress)
+        .option("timestampFormat", timestampFormat)
+        .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
+
+      if (sheetName.isDefined) writer.option("sheetName", sheetName.get)
+      lastWriteHashCode = df.hashCode()
+    }
+  }
 
   def this(spark: SparkSession, conf: Conf) = this(
     spark = spark,
@@ -107,35 +143,12 @@ class ExcelConnector(val spark: SparkSession,
   )
 
   override def read(): DataFrame = {
-    reader = spark
-      .read
-      .format("com.crealytics.spark.excel")
-      .option("useHeader", useHeader)
-      .option("dataAddress", dataAddress)
-      .option("treatEmptyValuesAsNulls", treatEmptyValuesAsNulls)
-      .option("inferSchema", inferSchema)
-      .option("addColorColumns", addColorColumns)
-      .option("timestampFormat", timestampFormat)
-      .option("excerptSize", excerptSize)
-
-    if (sheetName.isDefined) reader.option("sheetName", sheetName.get)
-    if (maxRowsInMemory.isDefined) reader.option("maxRowsInMemory", maxRowsInMemory.get)
-    if (workbookPassword.isDefined) reader.option("workbookPassword", workbookPassword.get)
-    if (schema.isDefined) reader.schema(schema.get)
-
     reader.load(path)
   }
 
   override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
-    writer = df
-      .write
-      .format("com.crealytics.spark.excel")
-      .option("useHeader", useHeader)
-      .option("dataAddress", dataAddress)
-      .option("timestampFormat", timestampFormat)
-      .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
+    initWriter(df)
 
-    if (sheetName.isDefined) writer.option("sheetName", sheetName.get)
     if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
 
     saveMode match {

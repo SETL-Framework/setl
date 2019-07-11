@@ -6,7 +6,7 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql._
 
 
 /**
@@ -34,6 +34,9 @@ class DynamoDBConnector(val spark: SparkSession,
 
   import com.audienceproject.spark.dynamodb.implicits._
 
+  override var reader: DataFrameReader = spark.read.option("region", region)
+  override var writer: DataFrameWriter[Row] = _
+
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
     region = TypesafeConfigUtils.getAs[String](config, "region").get,
@@ -48,18 +51,26 @@ class DynamoDBConnector(val spark: SparkSession,
     saveMode = SaveMode.valueOf(conf.get("region").get)
   )
 
+  @inline private[this] def initWriter(df: DataFrame): Unit = {
+    if (df.hashCode() != lastWriteHashCode) {
+      writer = df.write
+        .mode(saveMode)
+        .option("region", region)
+
+      lastWriteHashCode = df.hashCode()
+    }
+  }
+
   override val storage: Storage = Storage.DYNAMODB
 
   private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
-    df.write
-      .mode(saveMode)
-      .option("region", region)
-      .dynamodb(tableName)
+    initWriter(df)
+    writer.dynamodb(tableName)
   }
 
   override def read(): DataFrame = {
     log.debug(s"Reading DynamoDB table $table in $region")
-    spark.read.option("region", region).dynamodb(table)
+    reader.dynamodb(table)
   }
 
   override def write(t: DataFrame, suffix: Option[String] = None): Unit = {
