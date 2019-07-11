@@ -3,7 +3,6 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -15,10 +14,10 @@ import org.apache.spark.sql._
 class ParquetConnector(val spark: SparkSession,
                        val path: String,
                        //val table: String,
-                       val saveMode: SaveMode) extends FileConnector with Logging {
+                       val saveMode: SaveMode) extends FileConnector {
 
 
-  override var reader: DataFrameReader = this.spark.read.option("basePath", path)
+  override var reader: DataFrameReader = this.spark.read.option("basePath", basePath)
   override var writer: DataFrameWriter[Row] = _
 
   def this(spark: SparkSession, config: Config) = this(
@@ -43,7 +42,7 @@ class ParquetConnector(val spark: SparkSession,
     * @return DataFrame
     */
   override def read(): DataFrame = {
-    log.debug(s"Reading csv file from $path")
+    log.debug(s"Reading csv file from ${absolutePath.toString}")
     val df = reader.parquet(listFiles(): _*)
     if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffix)) {
       df.drop(userDefinedSuffix)
@@ -62,17 +61,17 @@ class ParquetConnector(val spark: SparkSession,
     suffix match {
       case Some(s) =>
         checkPartitionValidity(true)
-        writeParquet(df, s"${this.path}/$userDefinedSuffix=$s")
+        writeParquet(df, s"${this.absolutePath.toString}/$userDefinedSuffix=$s")
       case _ =>
         checkPartitionValidity(false)
-        writeParquet(df, path)
+        writeParquet(df, absolutePath.toString)
     }
   }
 
-  private[this] def writeParquet(df: DataFrame, path: String): Unit = {
-    log.debug(s"Write DataFrame to $path")
+  private[this] def writeParquet(df: DataFrame, filepath: String): Unit = {
+    log.debug(s"Write DataFrame to $filepath")
     initWriter(df)
-    writer.parquet(path)
+    writer.parquet(filepath)
     //.option("path", absolutePath)
     // .saveAsTable(table)
   }
@@ -81,7 +80,7 @@ class ParquetConnector(val spark: SparkSession,
     if (df.hashCode() != lastWriteHashCode) {
       writer = df.write
         .mode(saveMode)
-        .partitionBy(_partition: _*)
+        .partitionBy(partition: _*)
       lastWriteHashCode = df.hashCode()
     }
   }

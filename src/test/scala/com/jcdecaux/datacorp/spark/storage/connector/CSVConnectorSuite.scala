@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
+import java.io.File
+
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
@@ -19,6 +21,19 @@ class CSVConnectorSuite extends FunSuite {
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   ).toDS()
+
+  test("test CSV connector with different file path") {
+    val path1: String = new File("src/test/resources/test_csv").toURI.toString
+    val path2: String = new File("src/test/resources/test_csv").getPath
+
+    val csvConnector1 = new CSVConnector(spark, path1, "true", "|", "true", SaveMode.Append)
+    val csvConnector2 = new CSVConnector(spark, path2, "true", "|", "true", SaveMode.Append)
+
+    csvConnector1.write(testTable.toDF)
+    val df = csvConnector2.read()
+    assert(df.count() === 3)
+    csvConnector.delete()
+  }
 
   test("IO CSVConnector") {
 

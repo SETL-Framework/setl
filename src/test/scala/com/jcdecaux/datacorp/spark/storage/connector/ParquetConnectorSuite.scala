@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
+import java.io.File
+
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
@@ -8,7 +10,7 @@ import org.scalatest.FunSuite
 class ParquetConnectorSuite extends FunSuite {
 
   val spark: SparkSession = new SparkSessionBuilder().setEnv("dev").build().get()
-  val path: String = "src/test/resources/test_parquet"
+  val path: String = "src/test/resources/test parquet"
   val table: String = "test_table"
 
   val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
@@ -20,6 +22,19 @@ class ParquetConnectorSuite extends FunSuite {
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   ).toDS()
+
+  test("test Parquet connector with different file path") {
+    val path1: String = new File("src/test/resources/test parquet").toURI.toString
+    val path2: String = new File("src/test/resources/test parquet").getPath
+
+    val parquetConnector1 = new ParquetConnector(spark, path1, SaveMode.Overwrite)
+    val parquetConnector2 = new ParquetConnector(spark, path2, SaveMode.Overwrite)
+
+    parquetConnector1.write(testTable.toDF)
+    val df = parquetConnector2.read()
+    assert(df.count() === 3)
+    parquetConnector.delete()
+  }
 
   test("parquet connector  IO ") {
 

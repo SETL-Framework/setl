@@ -3,7 +3,6 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -43,7 +42,7 @@ class ExcelConnector(val spark: SparkSession,
                      var workbookPassword: Option[String] = None,
                      var schema: Option[StructType] = None,
                      var saveMode: SaveMode = SaveMode.Overwrite
-                    ) extends Connector with Logging {
+                    ) extends Connector {
 
   override val storage: Storage = Storage.EXCEL
   override var reader: DataFrameReader = initReader()

@@ -3,7 +3,6 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -17,7 +16,7 @@ class CSVConnector(val spark: SparkSession,
                    val inferSchema: String,
                    val delimiter: String,
                    val header: String,
-                   val saveMode: SaveMode) extends FileConnector with Logging {
+                   val saveMode: SaveMode) extends FileConnector {
 
   override var reader: DataFrameReader = initReader()
   override var writer: DataFrameWriter[Row] = _
@@ -47,14 +46,14 @@ class CSVConnector(val spark: SparkSession,
       .option("header", this.header)
       .option("inferSchema", this.inferSchema)
       .option("delimiter", this.delimiter)
-      .option("basePath", path)
+      .option("basePath", basePath)
   }
 
   @inline private[this] def initWriter(df: DataFrame): Unit = {
     if (df.hashCode() != lastWriteHashCode) {
       writer = df.write
         .mode(saveMode)
-        .partitionBy(_partition: _*)
+        .partitionBy(partition: _*)
         .option("header", this.header)
         .option("delimiter", this.delimiter)
 
@@ -68,7 +67,7 @@ class CSVConnector(val spark: SparkSession,
     * @return
     */
   override def read(): DataFrame = {
-    log.debug(s"Reading csv file from $path")
+    log.debug(s"Reading csv file from ${absolutePath.toString}")
 
     val df = reader.csv(listFiles(): _*)
 
@@ -89,20 +88,20 @@ class CSVConnector(val spark: SparkSession,
     suffix match {
       case Some(s) =>
         checkPartitionValidity(true)
-        this.writeCSV(df, s"${this.path}/$userDefinedSuffix=$s")
+        this.writeCSV(df, s"${this.absolutePath.toString}/$userDefinedSuffix=$s")
       case _ =>
         checkPartitionValidity(false)
-        this.writeCSV(df, this.path)
+        this.writeCSV(df, this.absolutePath.toString)
     }
   }
 
   /**
     * Write a [[DataFrame]] into the given path with the given save mode
     */
-  private[this] def writeCSV(df: DataFrame, path: String): Unit = {
-    log.debug(s"Write DataFrame to $path")
+  private[this] def writeCSV(df: DataFrame, filepath: String): Unit = {
+    log.debug(s"Write DataFrame to $filepath")
     initWriter(df)
-    writer.csv(path)
+    writer.csv(filepath)
   }
 
 }

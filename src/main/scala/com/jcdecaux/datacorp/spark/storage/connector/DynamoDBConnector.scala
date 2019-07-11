@@ -3,7 +3,6 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -30,7 +29,7 @@ import org.apache.spark.sql._
 class DynamoDBConnector(val spark: SparkSession,
                         val region: String, // "eu-west-1"
                         val table: String,
-                        val saveMode: SaveMode) extends DBConnector with Logging {
+                        val saveMode: SaveMode) extends DBConnector {
 
   import com.audienceproject.spark.dynamodb.implicits._
 

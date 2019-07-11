@@ -5,7 +5,6 @@ import com.datastax.spark.connector._
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -19,7 +18,7 @@ class CassandraConnector(val keyspace: String,
                          val table: String,
                          val spark: SparkSession,
                          val partitionKeyColumns: Option[Seq[String]],
-                         val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector with Logging {
+                         val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector {
 
   override var reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
   override var writer: DataFrameWriter[Row] = _
