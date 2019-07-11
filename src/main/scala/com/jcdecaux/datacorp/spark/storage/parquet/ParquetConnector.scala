@@ -18,9 +18,9 @@ trait ParquetConnector extends Logging {
     *
     * @return
     */
-  protected def readParquet(): DataFrame = {
+  protected def readParquet(suffix: String = ""): DataFrame = {
     log.debug(s"Reading Parquet file from $path")
-    this.spark.read.parquet(path)
+    this.spark.read.parquet(path + (if(!suffix.isEmpty) s"/$suffix" else ""))
   }
 
   /**

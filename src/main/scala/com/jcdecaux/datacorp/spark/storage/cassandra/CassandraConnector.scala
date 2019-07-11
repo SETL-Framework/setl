@@ -23,8 +23,8 @@ trait CassandraConnector extends Logging {
     *
     * @return
     */
-  protected def readCassandra(): DataFrame = {
-    this.readCassandra(this.spark, this.table, this.keyspace)
+  protected def readCassandra(suffix: String = ""): DataFrame = {
+    this.readCassandra(this.spark, this.table + (if(!suffix.isEmpty) s"$suffix" else ""), this.keyspace)
   }
 
   /**

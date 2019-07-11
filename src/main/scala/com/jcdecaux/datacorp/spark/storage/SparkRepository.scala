@@ -19,6 +19,10 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
 
   val storage: Storage
 
+  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findAll("")
+  }
+
   /**
     *
     * @param encoder
@@ -26,8 +30,12 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   @throws[IOException]("Cassandra table does not exist")
   @throws[AnalysisException]("Path does not exist")
-  def findAll()(implicit encoder: Encoder[T]): Dataset[T] = {
+  def findAll(suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
     read().as[T]
+  }
+
+  def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findBy(Set(filter))
   }
 
   /**
@@ -36,17 +44,21 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     * @param encoder
     * @return
     */
-  def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
+  def findBy(filter: Filter, suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
     this.findBy(Set(filter))
   }
 
-  /**
+  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findBy(filters, "")
+  }
+
+    /**
     *
     * @param filters
     * @param encoder
     * @return
     */
-  def findBy(filters: Set[Filter])(implicit encoder: Encoder[T]): Dataset[T] = {
+  def findBy(filters: Set[Filter], suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
     val df = read()
     if (filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
       df.filter(SqlExpressionUtils.build(filters))
@@ -63,27 +75,35 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     */
   @throws[IOException]("Cassandra table does not exist")
   @throws[AnalysisException]("Path does not exist")
-  private[spark] def read()(implicit encoder: Encoder[T]): DataFrame = {
+  private[spark] def read(suffix: String = "")(implicit encoder: Encoder[T]): DataFrame = {
     storage match {
       case Storage.CASSANDRA =>
-        this.readCassandra()
+        this.readCassandra(suffix)
       case Storage.PARQUET =>
-        this.readParquet()
+        this.readParquet(suffix)
       case Storage.CSV =>
-        this.readCSV()
+        this.readCSV(suffix)
       case _ =>
         throw new UnknownException.Storage("Unsupported storage " + storage.name() + " exception !")
     }
   }
 
   def findByCondition(condition: Condition)(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findByCondition(Set(condition), "")
+  }
+
+  def findByCondition(condition: Condition, suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
     this.findByCondition(Set(condition))
   }
 
   def findByCondition(conditions: Set[Condition])(implicit encoder: Encoder[T]): Dataset[T] = {
+    this.findByCondition(conditions, "")
+  }
+
+  def findByCondition(conditions: Set[Condition], suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
     import com.jcdecaux.datacorp.spark.util.FilterImplicits._
 
-    val df = read()
+    val df = read(suffix)
     if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
       df.filter(conditions.toSqlRequest)
         .as[T]
