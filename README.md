@@ -57,8 +57,8 @@ Let's create a csv file.
      val spark = new SparkSessionBuilder().setEnv("local").build().get()
      import spark.implicits._
   
-     case class MyObject(@ColumnName("col1") @CompoundKey("2") column1: String, 
-                         @CompoundKey("1") column2: String)
+     case class MyObject(@ColumnName("col1") @CompoundKey("partition", "2") column1: String, 
+                         @CompoundKey("partition", "1") column2: String)
                       
      val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
       // +-------+-------+
@@ -74,12 +74,12 @@ Let's create a csv file.
      repository.save(ds)
      // The column name will be changed automatically according to 
      // the annotation `colName` when you define the case class 
-     // +----+-------+-----+
-     // |col1|column2| _key|
-     // +----+-------+-----+
-     // |   a|      A|  A-a|
-     // |   b|      B|  B-b|
-     // +----+-------+-----+
+     // +----+-------+---------------+
+     // |col1|column2| _partition_key|
+     // +----+-------+---------------+
+     // |   a|      A|            A-a|
+     // |   b|      B|            B-b|
+     // +----+-------+---------------+
   
      val cond = Condition("col1", "=", "a")
   
