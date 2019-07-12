@@ -1,6 +1,6 @@
-## 0.3.0 (2019-7-10)
-- Removed `EnrichedConnector`
-- Removed V1 interfaces
+## 0.3.0-SNAPSHOT (2019-7-12)
+
+#### New Features
 - Added `Delivery` annotation
 - Added `DispatchManager` class. It will dispatch its deliverable object to setters (denoted by @Delivery) of a factory
 - Added `Deliverable` class, which contains a payload to be delivered
@@ -11,6 +11,13 @@
 - Added `FileConnector` and `DBConnector`
 - Added an optional argument `suffix` in `FileConnector` and `SparkRepository`
 - Added method `partitionBy` in `FileConnector` and `SparkRepository`
+
+#### Fixed Issue
+- Fixed issue of file path containing whitespace character(s) in the URI creation (52eee322aacd85e0b03a96435b07c4565e894934)
+
+#### Other changes
+- Removed `EnrichedConnector`
+- Removed V1 interfaces
 
 ## 0.2.8 (2019-07-09)
 - Added a second argument to CompoundKey to handle primary and sort keys
