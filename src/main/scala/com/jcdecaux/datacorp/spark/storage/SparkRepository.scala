@@ -31,7 +31,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
   @throws[IOException]("Cassandra table does not exist")
   @throws[AnalysisException]("Path does not exist")
   def findAll(suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
-    read().as[T]
+    read(suffix).as[T]
   }
 
   def findBy(filter: Filter)(implicit encoder: Encoder[T]): Dataset[T] = {
@@ -59,7 +59,7 @@ trait SparkRepository[T] extends Repository[T] with CassandraConnector with CSVC
     * @return
     */
   def findBy(filters: Set[Filter], suffix: String)(implicit encoder: Encoder[T]): Dataset[T] = {
-    val df = read()
+    val df = read(suffix)
     if (filters.nonEmpty && !SqlExpressionUtils.build(filters).isEmpty) {
       df.filter(SqlExpressionUtils.build(filters))
         .as[T]
