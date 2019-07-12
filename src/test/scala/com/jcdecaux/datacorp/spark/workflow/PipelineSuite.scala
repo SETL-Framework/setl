@@ -175,7 +175,7 @@ class PipelineSuite extends FunSuite {
   }
 
   test("Test Dataset pipeline") {
-    val spark = new SparkSessionBuilder("dev").setEnv("dev").getOrCreate()
+    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(

@@ -21,7 +21,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
   override def clearCache(): Unit = CassandraConnector.evictCache()
 
-  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
+  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("local").setCassandraHost("localhost").build().get()
 
   import spark.implicits._
 

@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark
 
 import com.jcdecaux.datacorp.spark.enums.AppEnv
+import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.transformation.Builder
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -27,11 +28,11 @@ import org.apache.spark.sql.SparkSession
 class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   var appName: String = "SparkApplication"
-  var appEnv: AppEnv = AppEnv.DEV
+  var appEnv: AppEnv = AppEnv.LOCAL
   var cassandraHost: String = _
   var config: SparkConf = new SparkConf()
   var initialization: Boolean = true
-  var sparkHost: String = "local[*]"
+  var defaultSparkHost: String = "local[*]"
   private[spark] var spark: SparkSession = _
 
   /**
@@ -55,7 +56,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
           if (cassandraHost != null) {
             this.config.set("spark.cassandra.connection.host", cassandraHost)
           } else {
-            throw new NoSuchElementException("Cassandra host not set")
+            throw new UnknownException("Cassandra host not set")
           }
         case "test" => log.warn("Testing usage")
         case _ => log.error(s"Skip unknown usage: $usage")
@@ -87,8 +88,8 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     log.debug("Set environment related properties")
     log.debug(s"Detect $appEnv environment")
     appEnv match {
-      case AppEnv.DEV =>
-        this.config.setMaster("local[*]")
+      case AppEnv.LOCAL =>
+        this.config.setMaster(defaultSparkHost)
       case _ =>
     }
 
@@ -114,8 +115,13 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def setEnv(env: String): this.type = {
-    log.debug(s"Set application environment to $env")
-    appEnv = AppEnv.valueOf(env.toUpperCase())
+    appEnv = try {
+      log.debug(s"Set application environment to $env")
+      AppEnv.valueOf(env.toUpperCase())
+    } catch {
+      case _: IllegalArgumentException =>
+        throw new UnknownException.Environment(s"Unknown environment $env")
+    }
     this
   }
 

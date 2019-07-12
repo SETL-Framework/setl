@@ -14,7 +14,7 @@ class SparkRepositorySuite extends FunSuite {
 
   import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursively
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("dev").build().get()
+  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_parquet"
   val table: String = "test_table"
 

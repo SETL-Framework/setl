@@ -84,7 +84,7 @@ class DispatchManagerSuite extends FunSuite {
   }
 
   test("Test with dataset") {
-    val spark = new SparkSessionBuilder("dev").setEnv("dev").getOrCreate()
+    val spark = new SparkSessionBuilder("dev").setEnv("local").getOrCreate()
 
     import spark.implicits._
 

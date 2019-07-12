@@ -10,7 +10,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with SparkTemplate with BeforeAndAfterAll {
 
   val keyspace = "test_space"
-  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("dev").setCassandraHost("localhost").build().get()
+  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("local").setCassandraHost("localhost").build().get()
 
   val cqlConnector = new CassandraConnector(
     keyspace = keyspace,

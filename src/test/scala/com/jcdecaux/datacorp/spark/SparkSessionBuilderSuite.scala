@@ -3,6 +3,7 @@ package com.jcdecaux.datacorp.spark
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
 import com.jcdecaux.datacorp.spark.enums.AppEnv
+import com.jcdecaux.datacorp.spark.exception.UnknownException
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.cassandra._
@@ -30,7 +31,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
   test("Default instantiation") {
     val sparkSessionBuilder = new SparkSessionBuilder()
 
-    assert(sparkSessionBuilder.appEnv === AppEnv.DEV)
+    assert(sparkSessionBuilder.appEnv === AppEnv.LOCAL)
     assert(sparkSessionBuilder.appName === "SparkApplication")
     assert(sparkSessionBuilder.cassandraHost === null)
     assert(sparkSessionBuilder.config.getClass === classOf[SparkConf])
@@ -45,7 +46,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
   test("Cassandra connection") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .setEnv("dev")
+      .setEnv("local")
       .setCassandraHost("localhost")
       .build()
       .get()
@@ -60,14 +61,17 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
       .setMaster("local[*]")
       .set("spark.cassandra.connection.host", "localhost")
 
-    //    println(sparkConf.get("spark.cassandra.connection.port"))
-
     val spark = new SparkSessionBuilder()
       .configure(sparkConf)
       .build()
       .get()
 
     assert(spark.read.cassandraFormat("countries", MockCassandra.keyspace).load().count() === 20)
+  }
+
+  test("SparkSessionBuilder exception thrown") {
+    assertThrows[UnknownException.Environment](new SparkSessionBuilder().setEnv("hahaha"))
+    assertThrows[UnknownException](new SparkSessionBuilder("cassandra").setEnv(AppEnv.PROD).getOrCreate())
   }
 
 

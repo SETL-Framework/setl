@@ -14,7 +14,7 @@ class ExcelConnectorSuite extends FunSuite {
 
   import SparkRepositorySuite.deleteRecursively
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("dev").build().get()
+  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_excel.xlsx"
 
   import spark.implicits._
@@ -97,7 +97,6 @@ class ExcelConnectorSuite extends FunSuite {
     df.show()
     assert(df.count() === 3)
     deleteRecursively(new File("src/test/resources/test_config_excel.xlsx"))
-
   }
 
 }

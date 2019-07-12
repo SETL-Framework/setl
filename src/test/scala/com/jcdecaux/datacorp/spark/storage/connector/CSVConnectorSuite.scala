@@ -9,7 +9,7 @@ import org.scalatest.FunSuite
 
 class CSVConnectorSuite extends FunSuite {
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("dev").build().get()
+  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_csv"
 
   val csvConnector = new CSVConnector(spark, path, "true", "|", "true", SaveMode.Append)

@@ -6,7 +6,7 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 class SchemaConverterSuite extends FunSuite {
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("dev").build().get()
+  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
   import spark.implicits._
 

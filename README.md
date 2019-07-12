@@ -54,7 +54,7 @@ Let's create a csv file.
   
      object Properties extends ConfigLoader
   
-     val spark = new SparkSessionBuilder().setEnv("dev").build().get()
+     val spark = new SparkSessionBuilder().setEnv("local").build().get()
      import spark.implicits._
   
      case class MyObject(@ColumnName("col1") @CompoundKey("2") column1: String, 
@@ -234,7 +234,7 @@ import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.transformation.Deliverable
 import com.jcdecaux.datacorp.spark.workflow.{Pipeline, Stage}
 
-val spark = new SparkSessionBuilder("dev").setEnv("dev").getOrCreate()
+val spark = new SparkSessionBuilder("dev").setEnv("local").getOrCreate()
 import spark.implicits._
 
 // Instantiate our classes
