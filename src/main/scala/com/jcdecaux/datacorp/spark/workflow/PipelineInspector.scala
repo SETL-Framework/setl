@@ -23,7 +23,7 @@ class PipelineInspector(val pipeline: Pipeline) extends Logging {
           // TODO the current output is a single string, without consumer information, so in the case where
           //  the delivery is for a specific consumer, the graph may be wrong
           val output = f.deliveryType().toString
-          Node(f.name, s.stageId, inputs, output)
+          Node(f.getCanonicalName, s.stageId, inputs, output)
       }))
       .toSet
   }
@@ -41,7 +41,7 @@ class PipelineInspector(val pipeline: Pipeline) extends Logging {
             factoriesOfStage
               .flatMap({
                 f =>
-                  val thisNode = findNode(f.name).get
+                  val thisNode = findNode(f.getCanonicalName).get
                   val payload = f.deliveryType().toString
                   val targetNodes = nodes.filter(_.input.contains(payload))
                   targetNodes.map(tn => Flow(payload, thisNode, tn, stage.stageId))

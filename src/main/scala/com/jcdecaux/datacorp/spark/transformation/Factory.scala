@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -14,44 +14,43 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam A the type of object that the factory is supposed to produce
   */
 @InterfaceStability.Evolving
-abstract class Factory[+A](implicit tag: ru.TypeTag[A]) extends Logging {
+abstract class Factory[A](implicit tag: ru.TypeTag[A]) extends Logging with Identifiable {
 
-  def name: String = this.getClass.getCanonicalName
   /**
     * Read data
-    *
-    * @return
     */
   def read(): this.type
 
   /**
     * Process data
-    *
-    * @return
     */
   def process(): this.type
 
   /**
     * Write data
-    *
-    * @return
     */
   def write(): this.type
 
   /**
     * Get the processed data
-    *
-    * @return
     */
   def get(): A
 
-  def deliver(): Deliverable[A] = {
-    new Deliverable[A](this.get()).setProducer(this.getClass)
-  }
+  /**
+    * Create a new Deliverable object
+    */
+  def deliver(): Deliverable[A] = new Deliverable[A](this.get()).setProducer(this.getClass)
 
+  /**
+    * Get the type of deliverable payload
+    *
+    * @return
+    */
   def deliveryType(): ru.Type = tag.tpe
 
-  def describe(): Unit = {
-    log.info(this.getClass)
-  }
+  /**
+    * Describe the
+    */
+  def describe(): Unit = log.info(s"${this.getClass} will produce a ${deliveryType()}")
+
 }

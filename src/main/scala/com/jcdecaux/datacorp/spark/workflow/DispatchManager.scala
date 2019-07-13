@@ -24,7 +24,7 @@ private[spark] class DispatchManager extends Logging {
   val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
   def setDelivery(v: Deliverable[_]): this.type = {
-    log.debug(s"Add new delivery of type: ${v.tagInfo}")
+    log.debug(s"Add new delivery of type: ${v.payloadType}")
     deliveries.append(v)
     this
   }
@@ -59,7 +59,7 @@ private[spark] class DispatchManager extends Logging {
     * @return
     */
   def getDeliveries(deliveryType: ru.Type): Array[Deliverable[_]] =
-    deliveries.filter(d => d.tagInfo == deliveryType).toArray
+    deliveries.filter(d => d.payloadType == deliveryType).toArray
 
   /**
     * Collect a [[Deliverable]] from a [[Factory]]

@@ -13,7 +13,7 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam T type of the payload
   */
 @InterfaceStability.Unstable
-class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
+class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
 
   var producer: Option[Class[_]] = None
 
@@ -23,7 +23,7 @@ class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     */
   val consumer: ArrayBuffer[Class[_]] = ArrayBuffer()
 
-  def tagInfo: ru.Type = tag.tpe
+  def payloadType: ru.Type = tag.tpe
 
   def get: T = payload
 
@@ -33,7 +33,7 @@ class Deliverable[+T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     * @param t a deliverable object
     * @return
     */
-  def ==(t: Deliverable[_]): Boolean = this.tagInfo.equals(t.tagInfo)
+  def ==(t: Deliverable[_]): Boolean = this.payloadType.equals(t.payloadType)
 
   def classInfo: Class[_] = payload.getClass
 
