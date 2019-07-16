@@ -57,6 +57,7 @@ abstract class FileConnector(val spark: SparkSession,
     * characters like whitespace "%20%", etc
     */
   private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
+    log.debug("Detect local file system")
     new Path(URLDecoder.decode(pathURI.toString, encoding))
   } else {
     new Path(pathURI)
@@ -73,7 +74,9 @@ abstract class FileConnector(val spark: SparkSession,
   }
 
   val schema: Option[StructType] = options.get("schema") match {
-    case Some(sm) => Option(StructType.fromDDL(sm))
+    case Some(sm) =>
+      log.debug("Detect user-defined schema")
+      Option(StructType.fromDDL(sm))
     case _ => None
   }
 
@@ -98,7 +101,9 @@ abstract class FileConnector(val spark: SparkSession,
   override var writer: DataFrameWriter[Row] = _
 
   private[connector] val filenamePattern: Option[Regex] = options.get("filenamePattern") match {
-    case Some(pattern) => Some(pattern.r)
+    case Some(pattern) =>
+      log.debug("Detect filename pattern")
+      Some(pattern.r)
     case _ => None
   }
 
@@ -121,6 +126,7 @@ abstract class FileConnector(val spark: SparkSession,
           filePaths += file.getPath.toString
       }
     }
+    log.debug(s"Find ${filePaths.length} files")
     filePaths.toArray
   }
 
@@ -160,6 +166,7 @@ abstract class FileConnector(val spark: SparkSession,
   }
 
   def partitionBy(columns: String*): this.type = {
+    log.debug(s"Data will be partitioned by ${columns.mkString(", ")}")
     partition.append(columns: _*)
     this
   }
