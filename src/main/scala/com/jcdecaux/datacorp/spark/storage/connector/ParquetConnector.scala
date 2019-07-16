@@ -22,17 +22,9 @@ class ParquetConnector(override val spark: SparkSession,
       "saveMode" -> saveMode.toString
     ))
 
-  def this(spark: SparkSession, config: Config) = this(
-    spark = spark,
-    path = TypesafeConfigUtils.getAs[String](config, "path").get,
-    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
-  )
+  def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
 
-  def this(spark: SparkSession, conf: Conf) = this(
-    spark = spark,
-    path = conf.get("path").get,
-    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
-  )
+  def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
 
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation

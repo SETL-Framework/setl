@@ -55,10 +55,10 @@ class CSVConnector(override val spark: SparkSession,
     suffix match {
       case Some(s) =>
         checkPartitionValidity(true)
-        this.writeCSV(df, s"${this.absolutePath.toString}/$userDefinedSuffix=$s")
+        writeCSV(df, s"${this.absolutePath.toString}/$userDefinedSuffix=$s")
       case _ =>
         checkPartitionValidity(false)
-        this.writeCSV(df, this.absolutePath.toString)
+        writeCSV(df, this.absolutePath.toString)
     }
   }
 

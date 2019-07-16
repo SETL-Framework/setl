@@ -5,8 +5,8 @@ import java.net.{URI, URLDecoder, URLEncoder}
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
-import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql._
+import org.apache.spark.sql.types.StructType
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -15,6 +15,7 @@ abstract class FileConnector(val spark: SparkSession,
                              val options: Map[String, String]) extends Connector {
 
   private[this] val encoding: String = "UTF-8"
+  private[this] val defaultSaveMode: String = "Overwrite"
 
   /**
     * Extra options that will be passed into DataFrameReader and Writer. Keys like "path" should be removed
@@ -27,6 +28,8 @@ abstract class FileConnector(val spark: SparkSession,
     * In the case of a directory, the correctness of Spark partition structure should be guaranteed by user.
     */
   val path: String = options("path")
+
+  val saveMode: SaveMode = SaveMode.valueOf(options.getOrElse("saveMode", defaultSaveMode))
 
   /**
     * Create a URI of the given file path.
@@ -67,8 +70,6 @@ abstract class FileConnector(val spark: SparkSession,
   } else {
     absolutePath.getParent.toString
   }
-
-  val saveMode: SaveMode = SaveMode.valueOf(options.getOrElse("saveMode", "Overwrite"))
 
   val schema: Option[StructType] = options.get("schema") match {
     case Some(sm) => Option(StructType.fromDDL(sm))
