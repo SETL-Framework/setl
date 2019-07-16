@@ -6,6 +6,11 @@ import com.typesafe.config.{Config, ConfigException}
 object TypesafeConfigUtils {
 
   def getAs[T](config: Config, path: String)(implicit getter: ConfigGetter[T]): Option[T] = getter.get(config, path)
+  
+  def getMap(config: Config): Map[String, String] = {
+    import scala.collection.JavaConverters._
+    config.entrySet().asScala.map(x => x.getKey -> x.getValue.unwrapped().toString).toMap
+  }
 
   private[spark] implicit val stringGetter: ConfigGetter[String] = new ConfigGetter[String] {
     override def get(config: Config, path: String): Option[String] = {

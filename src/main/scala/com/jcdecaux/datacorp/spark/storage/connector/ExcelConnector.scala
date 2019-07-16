@@ -45,7 +45,7 @@ class ExcelConnector(val spark: SparkSession,
                     ) extends Connector {
 
   override val storage: Storage = Storage.EXCEL
-  override var reader: DataFrameReader = initReader()
+  override val reader: DataFrameReader = initReader()
   override var writer: DataFrameWriter[Row] = _
 
   private[this] def initReader(): DataFrameReader = {

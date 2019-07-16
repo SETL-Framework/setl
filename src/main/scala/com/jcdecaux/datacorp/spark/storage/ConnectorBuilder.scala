@@ -1,10 +1,10 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import com.jcdecaux.datacorp.spark.Builder
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.storage.connector._
-import com.jcdecaux.datacorp.spark.transformation.Builder
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession

@@ -11,55 +11,22 @@ import org.apache.spark.sql._
   * CSVConnector contains functionality for transforming [[DataFrame]] into csv files
   */
 @InterfaceStability.Evolving
-class CSVConnector(val spark: SparkSession,
-                   val path: String,
-                   val inferSchema: String,
-                   val delimiter: String,
-                   val header: String,
-                   val saveMode: SaveMode) extends FileConnector {
-
-  override var reader: DataFrameReader = initReader()
-  override var writer: DataFrameWriter[Row] = _
-
-  def this(spark: SparkSession, config: Config) = this(
-    spark = spark,
-    path = TypesafeConfigUtils.getAs[String](config, "path").get,
-    inferSchema = TypesafeConfigUtils.getAs[String](config, "inferSchema").get,
-    delimiter = TypesafeConfigUtils.getAs[String](config, "delimiter").get,
-    header = TypesafeConfigUtils.getAs[String](config, "header").get,
-    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
-  )
-
-  def this(spark: SparkSession, conf: Conf) = this(
-    spark = spark,
-    path = conf.get("path").get,
-    inferSchema = conf.get("inferSchema").get,
-    delimiter = conf.get("delimiter").get,
-    header = conf.get("header").get,
-    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
-  )
+class CSVConnector(override val spark: SparkSession,
+                   override val options: Map[String, String]) extends FileConnector(spark, options) {
 
   override val storage: Storage = Storage.CSV
 
-  private[this] def initReader(): DataFrameReader = {
-    this.spark.read
-      .option("header", this.header)
-      .option("inferSchema", this.inferSchema)
-      .option("delimiter", this.delimiter)
-      .option("basePath", basePath)
-  }
+  def this(spark: SparkSession, path: String, inferSchema: String, delimiter: String, header: String, saveMode: SaveMode) =
+    this(spark, Map[String, String](
+      "path" -> path,
+      "inferSchema" -> inferSchema,
+      "header" -> header,
+      "saveMode" -> saveMode.toString
+    ))
 
-  @inline private[this] def initWriter(df: DataFrame): Unit = {
-    if (df.hashCode() != lastWriteHashCode) {
-      writer = df.write
-        .mode(saveMode)
-        .partitionBy(partition: _*)
-        .option("header", this.header)
-        .option("delimiter", this.delimiter)
+  def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
 
-      lastWriteHashCode = df.hashCode()
-    }
-  }
+  def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
 
   /**
     * Read a [[DataFrame]] from a csv file with the path defined during the instantiation.

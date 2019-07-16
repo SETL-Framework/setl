@@ -2,19 +2,19 @@ package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.hadoop.fs.Path
+import org.apache.spark.ml.Model
 
 /**
   * A MLTransformer is a basic transformer with a ML model and ML-related functionality.
   *
   * @tparam T Data type of the transformer
-  * @tparam M Type of the model
   */
 @InterfaceStability.Evolving
-trait MLTransformer[T, M] extends Transformer[T] {
+trait MLTransformer[T, M <: Model[_]] extends Transformer[T] {
 
   var model: M = _
   val modelPath: Path
-  var overrideModel: Boolean = false
+  var overwriteModel: Boolean = false
 
   /** Fit a model with the current data */
   def fit(): MLTransformer.this.type

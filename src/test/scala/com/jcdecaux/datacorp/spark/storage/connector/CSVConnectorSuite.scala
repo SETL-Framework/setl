@@ -4,7 +4,7 @@ import java.io.File
 
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 class CSVConnectorSuite extends FunSuite {
@@ -12,7 +12,15 @@ class CSVConnectorSuite extends FunSuite {
   val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_csv"
 
-  val csvConnector = new CSVConnector(spark, path, "true", "|", "true", SaveMode.Append)
+  val options: Map[String, String] = Map[String, String](
+    "path" -> path,
+    "inferSchema" -> "true",
+    "delimiter" -> "|",
+    "header" -> "true",
+    "saveMode" -> "Append"
+  )
+
+  val csvConnector = new CSVConnector(spark, options)
 
   import spark.implicits._
 
@@ -26,8 +34,20 @@ class CSVConnectorSuite extends FunSuite {
     val path1: String = new File("src/test/resources/test_csv").toURI.toString
     val path2: String = new File("src/test/resources/test_csv").getPath
 
-    val csvConnector1 = new CSVConnector(spark, path1, "true", "|", "true", SaveMode.Append)
-    val csvConnector2 = new CSVConnector(spark, path2, "true", "|", "true", SaveMode.Append)
+    val csvConnector1 = new CSVConnector(spark, Map[String, String](
+      "path" -> path1,
+      "inferSchema" -> "true",
+      "delimiter" -> "|",
+      "header" -> "true",
+      "saveMode" -> "Append"
+    ))
+    val csvConnector2 = new CSVConnector(spark, Map[String, String](
+      "path" -> path2,
+      "inferSchema" -> "true",
+      "delimiter" -> "|",
+      "header" -> "true",
+      "saveMode" -> "Append"
+    ))
 
     csvConnector1.write(testTable.toDF)
     val df = csvConnector2.read()
@@ -48,7 +68,7 @@ class CSVConnectorSuite extends FunSuite {
     csvConnector.delete()
   }
 
-  test(s"IO with auxiliary CSVConnector constructor") {
+  test("IO with auxiliary CSVConnector constructor") {
     val connector = new CSVConnector(spark, Properties.csvConfig)
 
     connector.write(testTable.toDF())
@@ -87,7 +107,13 @@ class CSVConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val csvConnector2 = new CSVConnector(spark, path, "true", "|", "true", SaveMode.Overwrite)
+    val csvConnector2 = new CSVConnector(spark, Map[String, String](
+      "path" -> path,
+      "inferSchema" -> "true",
+      "delimiter" -> "|",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    ))
       .partitionBy("partition1", "partition2")
 
     // with partition, with suffix

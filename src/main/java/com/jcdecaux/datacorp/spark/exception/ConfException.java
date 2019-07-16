@@ -1,12 +1,12 @@
 package com.jcdecaux.datacorp.spark.exception;
 
-public class SerializerException extends RuntimeException {
+public class ConfException extends RuntimeException {
 
-    public SerializerException(String errorMessage) {
+    public ConfException(String errorMessage) {
         super(errorMessage);
     }
 
-    public static class Format extends SerializerException {
+    public static class Format extends ConfException {
         /**
          * @param errorMessage
          */

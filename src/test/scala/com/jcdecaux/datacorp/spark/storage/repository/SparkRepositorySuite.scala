@@ -22,6 +22,12 @@ class SparkRepositorySuite extends FunSuite {
 
   import spark.implicits._
 
+  val options = Map[String, String](
+    "inferSchema" -> "false",
+    "delimiter" -> ";",
+    "header" -> "true"
+  )
+
   val testTable: Dataset[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
@@ -49,7 +55,13 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_anno"
-    val connector = new CSVConnector(spark, path, "false", ";", "true", SaveMode.Overwrite)
+    val connector = new CSVConnector(spark, Map[String, String](
+      "path" -> path,
+      "inferSchema" -> "false",
+      "delimiter" -> ";",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    ))
     val condition = Condition("col1", "=", "a")
 
     val repo = new SparkRepository[MyObject].setConnector(connector)
@@ -73,7 +85,13 @@ class SparkRepositorySuite extends FunSuite {
   test("Test spark repository save with suffix") {
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_annotation"
-    val connector = new CSVConnector(spark, path, "false", ";", "true", SaveMode.Overwrite)
+    val connector = new CSVConnector(spark, Map[String, String](
+      "path" -> path,
+      "inferSchema" -> "false",
+      "delimiter" -> ";",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    ))
 
     val repo = new SparkRepository[MyObject].setConnector(connector)
 

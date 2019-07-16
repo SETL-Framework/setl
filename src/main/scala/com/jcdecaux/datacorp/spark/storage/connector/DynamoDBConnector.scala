@@ -33,7 +33,7 @@ class DynamoDBConnector(val spark: SparkSession,
 
   import com.audienceproject.spark.dynamodb.implicits._
 
-  override var reader: DataFrameReader = spark.read.option("region", region)
+  override val reader: DataFrameReader = spark.read.option("region", region)
   override var writer: DataFrameWriter[Row] = _
 
   def this(spark: SparkSession, config: Config) = this(

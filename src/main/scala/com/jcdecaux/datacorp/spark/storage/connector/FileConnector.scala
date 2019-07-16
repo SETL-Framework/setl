@@ -5,22 +5,28 @@ import java.net.{URI, URLDecoder, URLEncoder}
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
-import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql._
 
 import scala.collection.mutable.ArrayBuffer
 
 @InterfaceStability.Evolving
-trait FileConnector extends Connector {
+abstract class FileConnector(val spark: SparkSession,
+                             val options: Map[String, String]) extends Connector {
+
+  private[this] val encoding: String = "UTF-8"
+
+  /**
+    * Extra options that will be passed into DataFrameReader and Writer. Keys like "path" should be removed
+    */
+  private[connector] val extraOptions: Map[String, String] = options - "path"
 
   /**
     * The path of file to be loaded.
     * It could be a file path or a directory (for CSV and Parquet).
     * In the case of a directory, the correctness of Spark partition structure should be guaranteed by user.
     */
-  val path: String
-  val saveMode: SaveMode
-
-  private[this] val encoding: String = "UTF-8"
+  val path: String = options("path")
 
   /**
     * Create a URI of the given file path.
@@ -36,14 +42,6 @@ trait FileConnector extends Connector {
     case e: Throwable => throw e
   }
 
-  private[connector] var withSuffix: Option[Boolean] = None
-
-  private[connector] var userDefinedSuffix: String = "_user_defined_suffix"
-
-  private[connector] var dropUserDefinedSuffix: Boolean = true
-
-  private[this] val _recursive: Boolean = true
-
   /**
     * Get the current filesystem based on the path URI
     */
@@ -55,10 +53,8 @@ trait FileConnector extends Connector {
     * characters like whitespace "%20%", etc
     */
   private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
-    log.debug("Find local filesystem")
     new Path(URLDecoder.decode(pathURI.toString, encoding))
   } else {
-    log.debug(s"Find ${fileSystem.getClass.toString}")
     new Path(pathURI)
   }
 
@@ -72,31 +68,36 @@ trait FileConnector extends Connector {
     absolutePath.getParent.toString
   }
 
+  val saveMode: SaveMode = SaveMode.valueOf(options.getOrElse("saveMode", "Overwrite"))
+
+  val schema: Option[StructType] = options.get("schema") match {
+    case Some(sm) => Option(StructType.fromDDL(sm))
+    case _ => None
+  }
+
+  private[this] val _recursive: Boolean = true
+
   /**
     * Partition columns when writing the data frame
     */
   private[connector] val partition: ArrayBuffer[String] = ArrayBuffer()
 
-  def partitionBy(columns: String*): this.type = {
-    partition.append(columns: _*)
-    this
-  }
+  private[connector] var withSuffix: Option[Boolean] = None
 
-  /**
-    * Delete the current file or directory
-    */
-  def delete(): Unit = {
-    fileSystem.delete(absolutePath, _recursive)
-    withSuffix = None
-  }
+  private[connector] var userDefinedSuffix: String = "_user_defined_suffix"
+
+  private[connector] var dropUserDefinedSuffix: Boolean = true
+
+  override val reader: DataFrameReader = this.spark.read.option("basePath", basePath).options(extraOptions)
+
+  override var writer: DataFrameWriter[Row] = _
 
   private[connector] def listFiles(): Array[String] = {
     val filePaths = ArrayBuffer[String]()
     val files = fileSystem.listFiles(absolutePath, true)
 
     while (files.hasNext) {
-      val file = files.next()
-      filePaths += file.getPath.toString
+      filePaths += files.next().getPath.toString
     }
     filePaths.toArray
   }
@@ -121,4 +122,30 @@ trait FileConnector extends Connector {
       }
     }
   }
+
+  @inline private[connector] def initWriter(df: DataFrame): Unit = {
+    if (df.hashCode() != lastWriteHashCode) {
+      writer = df.write
+        .mode(saveMode)
+        .options(extraOptions)
+        .partitionBy(partition: _*)
+
+      lastWriteHashCode = df.hashCode()
+    }
+  }
+
+  def partitionBy(columns: String*): this.type = {
+    partition.append(columns: _*)
+    this
+  }
+
+  /**
+    * Delete the current file or directory
+    */
+  def delete(): Unit = {
+    log.debug(s"Delete $absolutePath")
+    fileSystem.delete(absolutePath, _recursive)
+    withSuffix = None
+  }
+
 }

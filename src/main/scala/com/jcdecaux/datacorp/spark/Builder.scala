@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.transformation
+package com.jcdecaux.datacorp.spark
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.Logging

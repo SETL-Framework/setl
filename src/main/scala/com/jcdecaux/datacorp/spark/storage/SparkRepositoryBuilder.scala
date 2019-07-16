@@ -1,12 +1,12 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import com.jcdecaux.datacorp.spark.Builder
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.config.Conf.Serializer
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.storage.connector._
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
-import com.jcdecaux.datacorp.spark.transformation.Builder
 import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
@@ -177,11 +177,13 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
           case e: Throwable => throw e
         }
 
-      case _ => log.debug("No connector configuration was found, build with parameters")
+      case _ => log.debug("No com.typesafe connector configuration was found, build with parameters")
     }
 
     // Otherwise, build a connector according to the current configuration
-    new ConnectorBuilder(spark.get, conf).build().get()
+    new ConnectorBuilder(spark.get, conf)
+      .build()
+      .get()
 
   }
 

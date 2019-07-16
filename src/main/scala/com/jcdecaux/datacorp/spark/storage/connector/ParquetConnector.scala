@@ -11,30 +11,28 @@ import org.apache.spark.sql._
   * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
   */
 @InterfaceStability.Evolving
-class ParquetConnector(val spark: SparkSession,
-                       val path: String,
-                       //val table: String,
-                       val saveMode: SaveMode) extends FileConnector {
+class ParquetConnector(override val spark: SparkSession,
+                       override val options: Map[String, String]) extends FileConnector(spark, options) {
 
+  override val storage: Storage = Storage.PARQUET
 
-  override var reader: DataFrameReader = this.spark.read.option("basePath", basePath)
-  override var writer: DataFrameWriter[Row] = _
+  def this(spark: SparkSession, path: String, saveMode: SaveMode) =
+    this(spark, Map[String, String](
+      "path" -> path,
+      "saveMode" -> saveMode.toString
+    ))
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
     path = TypesafeConfigUtils.getAs[String](config, "path").get,
-    //table = TypesafeConfigUtils.getAs[String](config, "table").get,
     saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
   )
 
   def this(spark: SparkSession, conf: Conf) = this(
     spark = spark,
     path = conf.get("path").get,
-    //table = conf.get("table").get,
     saveMode = SaveMode.valueOf(conf.get("saveMode").get)
   )
-
-  override val storage: Storage = Storage.PARQUET
 
   /**
     * Read a [[DataFrame]] from a parquet file with the path defined during the instantiation
@@ -72,17 +70,5 @@ class ParquetConnector(val spark: SparkSession,
     log.debug(s"Write DataFrame to $filepath")
     initWriter(df)
     writer.parquet(filepath)
-    //.option("path", absolutePath)
-    // .saveAsTable(table)
   }
-
-  @inline private[this] def initWriter(df: DataFrame): Unit = {
-    if (df.hashCode() != lastWriteHashCode) {
-      writer = df.write
-        .mode(saveMode)
-        .partitionBy(partition: _*)
-      lastWriteHashCode = df.hashCode()
-    }
-  }
-
 }

@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.spark.sql.DataFrame
 
 @InterfaceStability.Evolving
-trait DBConnector extends Connector {
+abstract class DBConnector extends Connector {
   def create(t: DataFrame, suffix: Option[String] = None): Unit
 
   def delete(query: String): Unit

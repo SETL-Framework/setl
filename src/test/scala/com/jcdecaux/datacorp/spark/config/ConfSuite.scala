@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.config
 
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.exception.SerializerException
+import com.jcdecaux.datacorp.spark.exception.ConfException
 import org.scalatest.FunSuite
 
 class ConfSuite extends FunSuite {
@@ -66,7 +66,7 @@ class ConfSuite extends FunSuite {
     assert(conf.getAs[Array[Boolean]]("booleanArray").get === Array(true, false, true))
 
     assert(conf.getAs[Storage]("storage").get === Storage.CASSANDRA)
-    assertThrows[SerializerException.Format](conf.getAs[Storage]("wrong_storage"))
+    assertThrows[ConfException.Format](conf.getAs[Storage]("wrong_storage"))
     assert(conf.get("none") === None)
   }
 
@@ -79,8 +79,8 @@ class ConfSuite extends FunSuite {
   }
 
   test("Test wrong type => throw exception") {
-    assertThrows[SerializerException.Format](conf.getAs[Array[Boolean]]("longArray"))
-    assertThrows[SerializerException.Format](conf.getAs[Array[Float]]("string"))
-    assertThrows[SerializerException.Format](conf.getAs[Array[Boolean]]("stringArray"))
+    assertThrows[ConfException.Format](conf.getAs[Array[Boolean]]("longArray"))
+    assertThrows[ConfException.Format](conf.getAs[Array[Float]]("string"))
+    assertThrows[ConfException.Format](conf.getAs[Array[Boolean]]("stringArray"))
   }
 }

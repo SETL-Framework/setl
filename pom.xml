@@ -66,6 +66,12 @@
             <scope>${dependencies.scope}</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+        <dependency>
             <groupId>com.datastax.spark</groupId>
             <artifactId>spark-cassandra-connector_${scala.compat.version}</artifactId>
             <version>2.4.0</version>

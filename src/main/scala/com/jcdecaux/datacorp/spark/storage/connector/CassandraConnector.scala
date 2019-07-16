@@ -20,7 +20,7 @@ class CassandraConnector(val keyspace: String,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector {
 
-  override var reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
+  override val reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
   override var writer: DataFrameWriter[Row] = _
 
   /**
