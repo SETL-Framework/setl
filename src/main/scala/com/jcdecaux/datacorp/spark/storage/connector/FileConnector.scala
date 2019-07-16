@@ -107,18 +107,18 @@ abstract class FileConnector(val spark: SparkSession,
     val files = fileSystem.listFiles(absolutePath, true)
 
     while (files.hasNext) {
+      val file = files.next()
 
       filenamePattern match {
         case Some(regex) =>
           // If the regex pattern is defined
-          files.next().getPath.getName match {
-            case regex(_*) =>
-              filePaths += files.next().getPath.toString
+          file.getPath.getName match {
+            case regex(_*) => filePaths += file.getPath.toString
             case _ =>
           }
         case _ =>
           // if regex not defined, append file path to the output
-          filePaths += files.next().getPath.toString
+          filePaths += file.getPath.toString
       }
     }
     filePaths.toArray
