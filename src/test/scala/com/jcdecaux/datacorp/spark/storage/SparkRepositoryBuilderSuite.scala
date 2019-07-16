@@ -50,7 +50,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
   }
 
-  test("cassandra") {
+  test("SparkRepository cassandra") {
 
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -76,7 +76,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     assert(repo.findBy(conditions).head() === repo.findBy(Condition("partition1", "=", Some("1"), ValueType.NUMBER)).head())
   }
 
-  test("CSV") {
+  test("SparkRepository CSV") {
 
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -96,7 +96,33 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
   }
 
-  test("Parquet") {
+  test("SparkRepository JSON access") {
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.JSON)
+    //    case class TestObject(partition1: Int, partition2: String, clustering1: String, value: Long)
+
+    repoBuilder.setSpark(spark)
+    repoBuilder.setPath("src/test/resources/test_json")
+    repoBuilder.setInferSchema(false)
+    repoBuilder.setSchema(StructType(Array(
+      StructField("partition1", IntegerType),
+      StructField("partition2", StringType),
+      StructField("clustering1", StringType),
+      StructField("value", LongType)
+    )))
+
+    val repo = repoBuilder.build().get()
+    repo.save(testTable)
+    assert(repo.findAll().count() === 3)
+    deleteRecursively(new File(repoBuilder.getAs[String]("path").get))
+  }
+
+  test("SparkRepository Parquet") {
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -150,7 +176,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
   }
 
-  test("Customized connector") {
+  test("SparkRepository Customized connector") {
     val path: String = "src/test/resources/test_excel.xlsx"
 
     val testTable: Dataset[TestObject2] = Seq(
@@ -192,7 +218,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     deleteRecursively(new File(path))
   }
 
-  test("Build with connector configuration") {
+  test("SparkRepository Build with connector configuration") {
     sparkRepositoryBuilderWithConfigTest(Properties.csvConfigRepoBuilder)
     deleteRecursively(new File(Properties.csvConfigRepoBuilder.getString("path")))
 
@@ -207,7 +233,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
   }
 
-  test("throw exceptions") {
+  test("SparkRepository throw exceptions") {
     // NullPointerException should be thrown if spark session is not set
     assertThrows[NullPointerException](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
 

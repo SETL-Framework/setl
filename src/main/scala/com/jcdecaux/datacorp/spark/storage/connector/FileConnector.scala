@@ -89,7 +89,10 @@ abstract class FileConnector(val spark: SparkSession,
 
   private[connector] var dropUserDefinedSuffix: Boolean = true
 
-  override val reader: DataFrameReader = this.spark.read.option("basePath", basePath).options(extraOptions)
+  override val reader: DataFrameReader = schema match {
+    case Some(sm) => initReader().schema(sm)
+    case _ => initReader()
+  }
 
   override var writer: DataFrameWriter[Row] = _
 
@@ -123,6 +126,9 @@ abstract class FileConnector(val spark: SparkSession,
       }
     }
   }
+
+  @inline private[connector] def initReader(): DataFrameReader =
+    this.spark.read.option("basePath", basePath).options(extraOptions)
 
   @inline private[connector] def initWriter(df: DataFrame): Unit = {
     if (df.hashCode() != lastWriteHashCode) {

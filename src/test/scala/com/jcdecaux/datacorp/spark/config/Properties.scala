@@ -21,6 +21,9 @@ object Properties extends ConfigLoader {
   val excelConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.excel")
   val cassandraConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.cassandra")
   val csvConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.csv")
+  val jsonConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.json")
+
+
   val wrongCsvConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.wrong_csv")
   val wrongCsvConfigConnectorBuilder2: Config = this.getConfig("connectorBuilder.wrong_csv2")
   val parquetConfigConnectorBuilder: Config = this.getConfig("connectorBuilder.parquet")

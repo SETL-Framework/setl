@@ -8,6 +8,7 @@ import com.jcdecaux.datacorp.spark.config.{Conf, Properties}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.{ConfException, UnknownException}
 import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursively
+import com.jcdecaux.datacorp.spark.storage.connector.JSONConnector
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
@@ -86,6 +87,19 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
     df.show()
     assert(df.count() === 3)
     deleteRecursively(new File(Properties.excelConfigConnectorBuilder.getString("path")))
+  }
+
+  test("build JSONConnector") {
+    val connector = new ConnectorBuilder(spark, Properties.jsonConfigConnectorBuilder).build().get()
+
+    testTable.toDF.show()
+    connector.write(testTable.toDF)
+
+    val df = connector.read()
+
+    df.show()
+    assert(df.count() === 3)
+    connector.asInstanceOf[JSONConnector].delete()
   }
 
   test("wrong builder configuration") {

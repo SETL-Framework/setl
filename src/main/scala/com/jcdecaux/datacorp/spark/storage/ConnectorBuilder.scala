@@ -44,8 +44,8 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     *
     * the `Conf` object must have a key `storage` and the parameters corresponding to the storage
     *
-    * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]]
-    * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]]
+    * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]] configuration
+    * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] a connector object
     */
   private[this] def buildConnectorWithConf(conf: Conf): Connector = {
     conf.getAs[Storage]("storage") match {
@@ -74,6 +74,10 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
       case Some(Storage.DYNAMODB) =>
         log.debug("Find dynamodb storage")
         new DynamoDBConnector(spark, conf)
+
+      case Some(Storage.JSON) =>
+        log.debug("Find dynamodb storage")
+        new JSONConnector(spark, conf)
 
       case _ =>
         throw new UnknownException.Storage("Unknown storage type")
@@ -110,6 +114,10 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
       case Some(Storage.DYNAMODB) =>
         log.debug("Find dynamodb storage")
         new DynamoDBConnector(spark, config)
+
+      case Some(Storage.JSON) =>
+        log.debug("Find dynamodb storage")
+        new JSONConnector(spark, config)
 
       case _ =>
         throw new UnknownException.Storage("Unknown storage type")
