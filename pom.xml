@@ -22,8 +22,6 @@
         <scala.compat.version>2.11</scala.compat.version>
         <spark.version>2.4.3</spark.version>
         <spark.compat.version>2.4</spark.compat.version>
-        <!--        <spark.version>2.2.1</spark.version>-->
-        <!--        <spark.compat.version>2.2</spark.compat.version>-->
         <dependencies.scope>provided</dependencies.scope>
         <app.environment>dev</app.environment>
     </properties>

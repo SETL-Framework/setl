@@ -11,6 +11,13 @@
 - Added `FileConnector` and `DBConnector`
 - Added an optional argument `suffix` in `FileConnector` and `SparkRepository`
 - Added method `partitionBy` in `FileConnector` and `SparkRepository`
+- Added possibility to filter by name pattern when a FileConnector is trying to read a directory. 
+  To do this, add `filenamePattern` into the configuration file
+- Added possibility to create a `Conf` object from Map. 
+  ```scala
+  Conf(Map("a" -> "A"))
+  ```
+- Improved Hadoop and S3 compatibility of connectors
 
 #### Fixed Issue
 - Fixed issue of file path containing whitespace character(s) in the URI creation (52eee322aacd85e0b03a96435b07c4565e894934)

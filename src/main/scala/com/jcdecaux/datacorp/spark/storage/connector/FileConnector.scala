@@ -9,6 +9,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.types.StructType
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
 abstract class FileConnector(val spark: SparkSession,
@@ -20,7 +21,7 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Extra options that will be passed into DataFrameReader and Writer. Keys like "path" should be removed
     */
-  private[connector] val extraOptions: Map[String, String] = options - "path"
+  private[connector] val extraOptions: Map[String, String] = options - "path" - "filenamePattern"
 
   /**
     * The path of file to be loaded.
@@ -96,12 +97,29 @@ abstract class FileConnector(val spark: SparkSession,
 
   override var writer: DataFrameWriter[Row] = _
 
+  private[connector] val filenamePattern: Option[Regex] = options.get("filenamePattern") match {
+    case Some(pattern) => Some(pattern.r)
+    case _ => None
+  }
+
   private[connector] def listFiles(): Array[String] = {
     val filePaths = ArrayBuffer[String]()
     val files = fileSystem.listFiles(absolutePath, true)
 
     while (files.hasNext) {
-      filePaths += files.next().getPath.toString
+
+      filenamePattern match {
+        case Some(regex) =>
+          // If the regex pattern is defined
+          files.next().getPath.getName match {
+            case regex(_*) =>
+              filePaths += files.next().getPath.toString
+            case _ =>
+          }
+        case _ =>
+          // if regex not defined, append file path to the output
+          filePaths += files.next().getPath.toString
+      }
     }
     filePaths.toArray
   }
