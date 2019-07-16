@@ -20,6 +20,11 @@ class Conf extends Serializable {
     this
   }
 
+  def set(options: Map[String, String]): this.type = {
+    options.foreach(x => this.set(x._1, x._2))
+    this
+  }
+
   def +=(conf: Conf): this.type = {
     settings.putAll(conf.settings)
     this
@@ -65,6 +70,10 @@ class Conf extends Serializable {
 }
 
 object Conf {
+
+  def apply(options: Map[String, String]): Conf = fromMap(options)
+
+  def fromMap(options: Map[String, String]): Conf = new Conf().set(options)
 
   trait Serializer[T] {
 

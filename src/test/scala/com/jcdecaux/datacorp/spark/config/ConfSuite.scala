@@ -49,6 +49,15 @@ class ConfSuite extends FunSuite {
     assert(conf.getAs[Test]("mytest").get === myTest)
   }
 
+  test("Construct from map") {
+    val map = Conf.fromMap(Map("a" -> "A", "b" -> "B"))
+    val map2 = Conf(Map("a" -> "A", "b" -> "B"))
+    assert(map.get("a").get === "A")
+    assert(map.get("b").get === "B")
+    assert(map2.get("a").get === "A")
+    assert(map2.get("b").get === "B")
+  }
+
   test("Get existing Conf") {
     assert(conf.getAs[String]("string").get === "mystring")
     assert(conf.getAs[Int]("int").get === 1234)
