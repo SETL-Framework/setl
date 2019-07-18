@@ -17,6 +17,7 @@ abstract class FileConnector(val spark: SparkSession,
 
   private[this] val encoding: String = "UTF-8"
   private[this] val defaultSaveMode: String = "Overwrite"
+  private[this] val hadoopConfiguration: Configuration = spark.sparkContext.hadoopConfiguration
 
   /**
     * Extra options that will be passed into DataFrameReader and Writer. Keys like "path" should be removed
@@ -49,7 +50,29 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Get the current filesystem based on the path URI
     */
-  private[this] val fileSystem: FileSystem = FileSystem.get(pathURI, new Configuration())
+  private[connector] val fileSystem: FileSystem = {
+    options.get("fs.s3a.aws.credentials.provider") match {
+      case Some(v) => hadoopConfiguration.set("fs.s3a.aws.credentials.provider", v)
+      case _ =>
+    }
+
+    options.get("fs.s3a.access.key") match {
+      case Some(v) => hadoopConfiguration.set("fs.s3a.access.key", v)
+      case _ =>
+    }
+
+    options.get("fs.s3a.secret.key") match {
+      case Some(v) => hadoopConfiguration.set("fs.s3a.secret.key", v)
+      case _ =>
+    }
+
+    options.get("fs.s3a.session.token") match {
+      case Some(v) => hadoopConfiguration.set("fs.s3a.session.token", v)
+      case _ =>
+    }
+
+    FileSystem.get(pathURI, hadoopConfiguration)
+  }
 
   /**
     * Absolute path of the given path string according to the current filesystem.
@@ -67,10 +90,16 @@ abstract class FileConnector(val spark: SparkSession,
     * Get the basePath of the current path. If the value path is a file path, then its basePath will be
     * it's parent's path. Otherwise it will be the current path itself.
     */
-  private[connector] val basePath: String = if (fileSystem.isDirectory(absolutePath)) {
-    absolutePath.toString
-  } else {
-    absolutePath.getParent.toString
+  private[connector] val baseDirectory: String = {
+    if (fileSystem.exists(absolutePath)) {
+      if (fileSystem.getFileStatus(absolutePath).isDirectory) {
+        absolutePath.toString
+      } else {
+        absolutePath.getParent.toString
+      }
+    } else {
+      absolutePath.getParent.toString
+    }
   }
 
   val schema: Option[StructType] = options.get("schema") match {
@@ -108,7 +137,11 @@ abstract class FileConnector(val spark: SparkSession,
   }
 
   private[connector] def listFiles(): Array[String] = {
-    val filePaths = ArrayBuffer[String]()
+    listPaths().map(_.toString)
+  }
+
+  private[connector] def listPaths(): Array[Path] = {
+    val filePaths = ArrayBuffer[Path]()
     val files = fileSystem.listFiles(absolutePath, true)
 
     while (files.hasNext) {
@@ -118,12 +151,12 @@ abstract class FileConnector(val spark: SparkSession,
         case Some(regex) =>
           // If the regex pattern is defined
           file.getPath.getName match {
-            case regex(_*) => filePaths += file.getPath.toString
+            case regex(_*) => filePaths += file.getPath
             case _ =>
           }
         case _ =>
           // if regex not defined, append file path to the output
-          filePaths += file.getPath.toString
+          filePaths += file.getPath
       }
     }
     log.debug(s"Find ${filePaths.length} files")
@@ -151,8 +184,9 @@ abstract class FileConnector(val spark: SparkSession,
     }
   }
 
-  @inline private[connector] def initReader(): DataFrameReader =
-    this.spark.read.option("basePath", basePath).options(extraOptions)
+  @inline private[connector] def initReader(): DataFrameReader = {
+    this.spark.read.option("basePath", baseDirectory).options(extraOptions)
+  }
 
   @inline private[connector] def initWriter(df: DataFrame): Unit = {
     if (df.hashCode() != lastWriteHashCode) {
@@ -178,6 +212,15 @@ abstract class FileConnector(val spark: SparkSession,
     log.debug(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
     withSuffix = None
+  }
+
+  /**
+    * Get the sum of file size
+    *
+    * @return size in byte
+    */
+  def getSize: Long = {
+    listPaths().map(path => fileSystem.getFileStatus(path).getLen).sum
   }
 
 }

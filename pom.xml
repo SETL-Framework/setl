@@ -69,6 +69,22 @@
             <version>${spark.version}</version>
             <scope>${dependencies.scope}</scope>
         </dependency>
+
+        <!-- HADOOP AWS SUPPORT -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.2.0</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>3.2.0</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+
+        <!-- CONNECTORS -->
         <dependency>
             <groupId>com.datastax.spark</groupId>
             <artifactId>spark-cassandra-connector_${scala.compat.version}</artifactId>
@@ -81,9 +97,11 @@
         </dependency>
         <dependency>
             <groupId>com.audienceproject</groupId>
-            <artifactId>spark-dynamodb_2.11</artifactId>
+            <artifactId>spark-dynamodb_${scala.compat.version}</artifactId>
             <version>0.4.0</version>
         </dependency>
+
+        <!-- TYPESAFE CONFIG -->
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
