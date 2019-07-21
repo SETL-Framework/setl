@@ -1,6 +1,6 @@
 package com.jcdecaux.datacorp.spark.exception;
 
-public class ConfException extends RuntimeException {
+public class ConfException extends BaseException {
 
     public ConfException(String errorMessage) {
         super(errorMessage);

@@ -3,7 +3,7 @@ package com.jcdecaux.datacorp.spark.exception;
 /**
  * UnknownException
  */
-public class UnknownException extends RuntimeException {
+public class UnknownException extends BaseException {
 
     public UnknownException(String errorMessage) {
         super(errorMessage);
