@@ -51,11 +51,11 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     conf.getAs[Storage]("storage") match {
 
       case Some(Storage.CASSANDRA) =>
-        log.debug("Detect CASSANDRA storage")
+        log.debug("Create CASSANDRA connector")
         new CassandraConnector(spark, conf)
 
       case Some(Storage.EXCEL) =>
-        log.debug("Detect EXCEL storage")
+        log.debug("Create EXCEL connector")
 
         if (conf.getAs[Boolean]("inferSchema").get & conf.getAs[String]("schema").isEmpty) {
           log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
@@ -64,19 +64,19 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
         new ExcelConnector(spark, conf)
 
       case Some(Storage.CSV) =>
-        log.debug("Detect CSV storage")
+        log.debug("Create CSV connector")
         new CSVConnector(spark, conf)
 
       case Some(Storage.PARQUET) =>
-        log.debug("Detect PARQUET storage")
+        log.debug("Create PARQUET connector")
         new ParquetConnector(spark, conf)
 
       case Some(Storage.DYNAMODB) =>
-        log.debug("Detect DYNAMODB storage")
+        log.debug("Create DYNAMODB connector")
         new DynamoDBConnector(spark, conf)
 
       case Some(Storage.JSON) =>
-        log.debug("Detect JSON storage")
+        log.debug("Create JSON connector")
         new JSONConnector(spark, conf)
 
       case _ =>
@@ -96,27 +96,27 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     TypesafeConfigUtils.getAs[Storage](config, "storage") match {
 
       case Some(Storage.CASSANDRA) =>
-        log.debug("Detect CASSANDRA storage")
+        log.debug("Create CASSANDRA connector")
         new CassandraConnector(spark, config)
 
       case Some(Storage.EXCEL) =>
-        log.debug("Detect EXCEL storage")
+        log.debug("Create EXCEL connector")
         new ExcelConnector(spark, config)
 
       case Some(Storage.CSV) =>
-        log.debug("Detect CSV storage")
+        log.debug("Create CSV connector")
         new CSVConnector(spark, config)
 
       case Some(Storage.PARQUET) =>
-        log.debug("Detect PARQUET storage")
+        log.debug("Create PARQUET connector")
         new ParquetConnector(spark, config)
 
       case Some(Storage.DYNAMODB) =>
-        log.debug("Detect DYNAMODB storage")
+        log.debug("Create DYNAMODB connector")
         new DynamoDBConnector(spark, config)
 
       case Some(Storage.JSON) =>
-        log.debug("Detect JSON storage")
+        log.debug("Create JSON connector")
         new JSONConnector(spark, config)
 
       case _ =>
