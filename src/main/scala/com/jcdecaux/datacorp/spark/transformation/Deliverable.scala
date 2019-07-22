@@ -16,6 +16,10 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Unstable
 class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identifiable {
 
+  private var empty: Boolean = false
+
+  private[spark] def isEmpty: Boolean = empty
+
   var producer: Class[_] = classOf[Object]
 
   /**
@@ -80,4 +84,13 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
     println(s" To: ${consumer.map(_.toString).mkString(", ")}")
   }
 
+}
+
+object Deliverable {
+
+  def empty(): Deliverable[Option[Nothing]] = {
+    val emptyDelivery = new Deliverable[Option[Nothing]](None)
+    emptyDelivery.empty = true
+    emptyDelivery
+  }
 }

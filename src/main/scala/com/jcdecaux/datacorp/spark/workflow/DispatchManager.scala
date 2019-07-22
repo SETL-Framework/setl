@@ -97,28 +97,38 @@ private[spark] class DispatchManager extends Logging {
     */
   private[workflow] def dispatch(factory: Factory[_]): this.type = {
 
-    DeliverySetterMetadata.builder().setClass(factory.getClass)
+    DeliverySetterMetadata.builder()
+      .setClass(factory.getClass)
       .getOrCreate()
       .foreach({
         deliveryInput =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
-          val args = deliveryInput.argTypes.map({
-            argsType =>
-              log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryInput.methodName}")
+          val args = deliveryInput.argTypes
+            .map({
+              argsType =>
+                log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryInput.methodName}")
 
-              getDelivery(
-                deliveryType = argsType,
-                consumer = factory.getClass,
-                producer = deliveryInput.producer
-              ) match {
-                case Some(delivery) => delivery
-                case _ => throw new NoSuchElementException(s"Can not find type $argsType from DispatchManager")
-              }
-          })
+                getDelivery(
+                  deliveryType = argsType,
+                  consumer = factory.getClass,
+                  producer = deliveryInput.producer
+                ) match {
+                  case Some(delivery) => delivery
+                  case _ =>
+                    if (!deliveryInput.optional) {
+                      throw new NoSuchElementException(s"Can not find type $argsType from DispatchManager")
+                    } else {
+                      Deliverable.empty()
+                    }
+                }
+            })
 
-          // Invoke the method with its name and arguments
-          val setterMethod = factory.getClass.getMethod(deliveryInput.methodName, args.map(_.classInfo): _*)
-          setterMethod.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
+          if (args.exists(_.isEmpty)) {
+            log.warn(s"No deliverable was found for optional input ${deliveryInput.methodName}")
+          } else {
+            val setterMethod = factory.getClass.getMethod(deliveryInput.methodName, args.map(_.classInfo): _*)
+            setterMethod.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
+          }
       })
 
     this

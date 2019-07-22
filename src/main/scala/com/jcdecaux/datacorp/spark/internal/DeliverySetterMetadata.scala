@@ -4,11 +4,26 @@ import com.jcdecaux.datacorp.spark.annotation.Delivery
 
 import scala.reflect.runtime
 
-private[spark] class DeliverySetterMetadata(val methodName: String,
-                                            val argTypes: List[runtime.universe.Type],
-                                            val producer: Class[_],
-                                            val optional: Boolean) {
+/**
+  * DeliverySetterMetadata contains information of the @Delivery annotated method, including the name,
+  * argument types, the producer and optional
+  *
+  * @param methodName name of the method
+  * @param argTypes   type of each argument
+  * @param producer   the producer class for the given data
+  * @param optional   true if optional
+  */
+private[spark] case class DeliverySetterMetadata(methodName: String,
+                                                 argTypes: List[runtime.universe.Type],
+                                                 producer: Class[_],
+                                                 optional: Boolean) {
 
+  /**
+    * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
+    * [[FactoryInput]] for each of argument of setter method
+    *
+    * @return
+    */
   def getFactoryInputs: List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer))
 
 }
@@ -16,7 +31,7 @@ private[spark] class DeliverySetterMetadata(val methodName: String,
 private[spark] object DeliverySetterMetadata {
 
   /**
-    * Get metadata of methods having [[com.jcdecaux.datacorp.spark.annotation.Delivery]] annotation for a given class
+    * Build a DeliverySetterMetadata from a given class
     */
   class Builder extends com.jcdecaux.datacorp.spark.Builder[Iterable[DeliverySetterMetadata]] {
 
@@ -54,7 +69,7 @@ private[spark] object DeliverySetterMetadata {
             val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
             val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
 
-            new DeliverySetterMetadata(
+            DeliverySetterMetadata(
               methodName = mth.name.toString,
               argTypes = mth.typeSignature.paramLists.head.map(_.typeSignature),
               producer = producerMethod.invoke(annotation).asInstanceOf[Class[_]],
@@ -73,7 +88,7 @@ private[spark] object DeliverySetterMetadata {
             /*
              * If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
              */
-            new DeliverySetterMetadata(
+            DeliverySetterMetadata(
               methodName = mth.name.toString.trim + "_$eq",
               argTypes = List(mth.typeSignature),
               producer = producerMethod.invoke(annotation).asInstanceOf[Class[_]],

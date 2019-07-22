@@ -118,4 +118,66 @@ class DispatchManagerSuite extends FunSuite {
     assert(myFactory2.output.collect().count(_.x === "a") === 0)
 
   }
+
+
+  class P1
+
+  class P2
+
+  class Test extends Factory[String] {
+
+    @Delivery(producer = classOf[P1], optional = true)
+    var v1: String = _
+    @Delivery(producer = classOf[P2], optional = true)
+    var v2: String = _
+
+    var output: String = _
+
+    /**
+      * Read data
+      */
+    override def read(): this.type = {
+      if (v1 == null) v1 = "he"
+      if (v2 == null) v2 = "ha"
+      this
+    }
+
+    /**
+      * Process data
+      */
+    override def process(): this.type = {
+      output = v1 + v2
+      this
+    }
+
+    /**
+      * Write data
+      */
+    override def write(): this.type = this
+
+    /**
+      * Get the processed data
+      */
+    override def get(): String = output
+  }
+
+  test("Test optional input") {
+
+    val test = new Test
+    val dispatchManager = new DispatchManager
+
+    dispatchManager.dispatch(test)
+
+    assert(test.v1 === null)
+    assert(test.v2 === null)
+
+    dispatchManager.setDelivery(new Deliverable[String]("hehehe").setProducer(classOf[P1]))
+    dispatchManager.setDelivery(new Deliverable[String]("hahaha").setProducer(classOf[P2]))
+    dispatchManager.dispatch(test)
+
+    assert(test.v1 === "hehehe")
+    assert(test.v2 === "hahaha")
+    assert(test.read().process().get() === "hehehehahaha")
+
+  }
 }
