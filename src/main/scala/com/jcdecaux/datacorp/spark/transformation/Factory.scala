@@ -16,6 +16,8 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 abstract class Factory[A](implicit tag: ru.TypeTag[A]) extends Logging with Identifiable {
 
+  var consumers: List[Class[_]] = List()
+
   /**
     * Read data
     */
@@ -39,7 +41,7 @@ abstract class Factory[A](implicit tag: ru.TypeTag[A]) extends Logging with Iden
   /**
     * Create a new Deliverable object
     */
-  def deliver(): Deliverable[A] = new Deliverable[A](this.get()).setProducer(this.getClass)
+  def getDelivery: Deliverable[A] = new Deliverable[A](this.get()).setProducer(this.getClass).setConsumers(consumers: _*)
 
   /**
     * Get the type of deliverable payload

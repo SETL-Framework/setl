@@ -1,30 +1,31 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.internal.{DeliverySetterMetadata, FactoryOutput, Logging}
 
 @InterfaceStability.Evolving
 private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging {
 
-  case class Input(name: String, producer: Class[_])
-
   var nodes: Set[Node] = _
   var flows: Set[Flow] = _
 
-  def findNode(id: String): Option[Node] = nodes.find(_.name == id)
+  def findNode(classInfo: Class[_]): Option[Node] = nodes.find(_.classInfo == classInfo)
 
   def createNodes(): Set[Node] = {
     pipeline.stages
       .flatMap(s => s.factories.map({
         f =>
-          val inputs = DispatchManager.getDeliveryAnnotatedMethod(f)
-            .flatMap(_._2.map(_.toString)) // convert all the Types to String
-            .toArray
+          val inputs = DeliverySetterMetadata.builder()
+            .setClass(f.getClass)
+            .getOrCreate()
+            .flatMap(_.getFactoryInputs) // convert all the Types to String
+            .toList
 
-          // TODO the current output is a single string, without consumer information, so in the case where
-          //  the delivery is for a specific consumer, the graph may be wrong
-          val output = f.deliveryType().toString
-          Node(f.getCanonicalName, s.stageId, inputs, output)
+          val output = FactoryOutput(
+            outputType = f.deliveryType(),
+            consumer = f.consumers
+          )
+          Node(f.getClass, s.stageId, inputs, output)
       }))
       .toSet
   }
@@ -42,10 +43,12 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
             factoriesOfStage
               .flatMap({
                 f =>
-                  val thisNode = findNode(f.getCanonicalName).get
+                  val thisNode = findNode(f.getClass).get
                   val payload = f.deliveryType().toString
-                  val targetNodes = nodes.filter(_.input.contains(payload))
+                  val targetNodes = nodes.filter(n => thisNode.targetNode(n))
+
                   targetNodes.map(tn => Flow(payload, thisNode, tn, stage.stageId))
+
               })
               .toSet
           }
@@ -64,7 +67,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
 
     println("----------   Nodes Summary  ----------")
     if (nodes.nonEmpty) {
-      nodes.foreach(_.describe())
+      nodes.toList.sortBy(_.stage).foreach(_.describe())
     } else {
       println("None")
       println("--------------------------------------")
@@ -72,7 +75,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
 
     println("----------   Flows Summary  ----------")
     if (flows.nonEmpty) {
-      flows.foreach(_.describe())
+      flows.toList.sortBy(_.stage).foreach(_.describe())
     } else {
       println("None")
       println("--------------------------------------")

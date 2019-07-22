@@ -62,6 +62,18 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
     this
   }
 
+  def setConsumers(consumer: Class[_]*): this.type = {
+    consumer.foreach(setConsumer)
+    this
+  }
+
+  def setProducer(producer: Option[Class[_]]): this.type = {
+    producer match {
+      case Some(p) => setProducer(p)
+      case _ => this
+    }
+  }
+
   def describe(): Unit = {
     println(s"Deliverable: $payloadType")
     println(s" From: ${producer.toString}")

@@ -44,7 +44,7 @@ class Stage extends Logging {
   def run(): this.type = {
     deliveries = factories
       .par
-      .map(_.read().process().write().deliver())
+      .map(_.read().process().write().getDelivery)
       .toArray
     this
   }

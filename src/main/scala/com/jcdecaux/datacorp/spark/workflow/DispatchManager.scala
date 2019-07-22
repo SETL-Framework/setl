@@ -1,8 +1,8 @@
 package com.jcdecaux.datacorp.spark.workflow
 
-import com.jcdecaux.datacorp.spark.annotation.{Delivery, InterfaceStability}
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.internal.{DeliverySetterMetadata, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -21,8 +21,6 @@ import scala.reflect.runtime.{universe => ru}
   */
 @InterfaceStability.Evolving
 private[spark] class DispatchManager extends Logging {
-
-  import DispatchManager._
 
   private[this] val deliveryRegister: scala.collection.mutable.HashSet[String] = scala.collection.mutable.HashSet()
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
@@ -47,8 +45,6 @@ private[spark] class DispatchManager extends Logging {
   private[this] def getDelivery(deliveryType: ru.Type, consumer: Class[_], producer: Class[_]): Option[Deliverable[_]] = {
 
     val availableDeliverable = findDeliverableByType(deliveryType)
-
-    availableDeliverable.foreach(_.describe())
 
     availableDeliverable.length match {
       case 0 =>
@@ -90,7 +86,7 @@ private[spark] class DispatchManager extends Logging {
     * @param factory a factory object
     * @return
     */
-  private[workflow] def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.deliver())
+  private[workflow] def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.getDelivery)
 
   /**
     * Dispatch the right deliverable object to the corresponding methods
@@ -101,18 +97,19 @@ private[spark] class DispatchManager extends Logging {
     */
   private[workflow] def dispatch(factory: Factory[_]): this.type = {
 
-    getDeliveryAnnotatedMethod(factory)
+    DeliverySetterMetadata.builder().setClass(factory.getClass)
+      .getOrCreate()
       .foreach({
-        deliveryMethod =>
+        deliveryInput =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
-          val args = deliveryMethod._2.map({
+          val args = deliveryInput.argTypes.map({
             argsType =>
-              log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryMethod._1}")
+              log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryInput.methodName}")
 
               getDelivery(
                 deliveryType = argsType,
                 consumer = factory.getClass,
-                producer = deliveryMethod._3
+                producer = deliveryInput.producer
               ) match {
                 case Some(delivery) => delivery
                 case _ => throw new NoSuchElementException(s"Can not find type $argsType from DispatchManager")
@@ -120,67 +117,11 @@ private[spark] class DispatchManager extends Logging {
           })
 
           // Invoke the method with its name and arguments
-          val setterMethod = factory.getClass.getMethod(deliveryMethod._1, args.map(_.classInfo): _*)
+          val setterMethod = factory.getClass.getMethod(deliveryInput.methodName, args.map(_.classInfo): _*)
           setterMethod.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
       })
 
     this
   }
 
-}
-
-object DispatchManager extends Logging {
-  /**
-    * Get the name and arguments type of methods having [[com.jcdecaux.datacorp.spark.annotation.Delivery]] annotation.
-    *
-    * @param obj an object
-    * @tparam T type of factory
-    * @return an iterable of tuple3: method name, arg list and producer class
-    */
-  private[workflow] def getDeliveryAnnotatedMethod[T](obj: T): Iterable[(String, List[ru.Type], Class[_])] = {
-    log.debug(s"Fetch methods of ${obj.getClass} having Delivery annotation")
-
-    // Black magic XD
-    val classSymbol = ru.runtimeMirror(getClass.getClassLoader).classSymbol(obj.getClass)
-    val methodsWithDeliveryAnnotation = classSymbol.info.decls.filter({
-      x => x.annotations.exists(y => y.tree.tpe =:= ru.typeOf[Delivery])
-    })
-
-    if (methodsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
-
-    methodsWithDeliveryAnnotation.map({
-      mth =>
-
-        if (mth.isMethod) {
-          log.debug(s"Find @Delivery annotated method ${obj.getClass.getCanonicalName}.${mth.name}")
-
-          val annotation = obj.getClass.getDeclaredMethods
-            .find(_.getName == mth.name.toString).get
-            .getAnnotation(classOf[Delivery])
-
-          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-
-          (
-            mth.name.toString,
-            mth.typeSignature.paramLists.head.map(_.typeSignature),
-            producerMethod.invoke(annotation).asInstanceOf[Class[_]]
-          )
-        } else {
-          log.debug(s"Find @Delivery annotated variable ${obj.getClass.getCanonicalName}.${mth.name}")
-
-          val annotation = obj.getClass.getDeclaredField(mth.name.toString.trim).getAnnotation(classOf[Delivery])
-          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-
-          /*
-           * If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-           */
-          (
-            mth.name.toString.trim + "_$eq",
-            List(mth.typeSignature),
-            producerMethod.invoke(annotation).asInstanceOf[Class[_]]
-          )
-        }
-
-    })
-  }
 }
