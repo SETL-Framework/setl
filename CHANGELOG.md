@@ -4,7 +4,7 @@
 - Added `Delivery` annotation to handle inputs of a Factory
   ```scala
   class Foo {
-    @Delivery(producer = classOf[Factory1])
+    @Delivery(producer = classOf[Factory1], optional = true)
     var input1: String = _
   
     @Delivery(producer = classOf[Factory2])
