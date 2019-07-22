@@ -1,24 +1,23 @@
 package com.jcdecaux.datacorp.spark.storage
 
+import com.jcdecaux.datacorp.spark.Builder
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
-import com.jcdecaux.datacorp.spark.factory.Builder
-import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.storage.v2.connector._
+import com.jcdecaux.datacorp.spark.storage.connector._
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 
 /**
-  * ConnectorBuilder will build a [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]] object with the given
+  * ConnectorBuilder will build a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] object with the given
   * configuration.
   *
   * @param spark  spark session
   * @param config optional, a [[com.typesafe.config.Config]] object
   * @param conf   optional, a [[com.jcdecaux.datacorp.spark.config.Conf]] object
   */
-class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val conf: Option[Conf]) extends Builder[Connector] with Logging {
+class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val conf: Option[Conf]) extends Builder[Connector] {
 
   def this(spark: SparkSession, config: Config) = this(spark, Some(config), None)
 
@@ -45,18 +44,18 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     *
     * the `Conf` object must have a key `storage` and the parameters corresponding to the storage
     *
-    * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]]
-    * @return [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]]
+    * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]] configuration
+    * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] a connector object
     */
   private[this] def buildConnectorWithConf(conf: Conf): Connector = {
     conf.getAs[Storage]("storage") match {
 
       case Some(Storage.CASSANDRA) =>
-        log.debug("Find cassandra storage")
+        log.debug("Create CASSANDRA connector")
         new CassandraConnector(spark, conf)
 
       case Some(Storage.EXCEL) =>
-        log.debug("Find excel storage")
+        log.debug("Create EXCEL connector")
 
         if (conf.getAs[Boolean]("inferSchema").get & conf.getAs[String]("schema").isEmpty) {
           log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
@@ -65,16 +64,20 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
         new ExcelConnector(spark, conf)
 
       case Some(Storage.CSV) =>
-        log.debug("Find csv storage")
+        log.debug("Create CSV connector")
         new CSVConnector(spark, conf)
 
       case Some(Storage.PARQUET) =>
-        log.debug("Find parquet storage")
+        log.debug("Create PARQUET connector")
         new ParquetConnector(spark, conf)
 
       case Some(Storage.DYNAMODB) =>
-        log.debug("Find dynamodb storage")
+        log.debug("Create DYNAMODB connector")
         new DynamoDBConnector(spark, conf)
+
+      case Some(Storage.JSON) =>
+        log.debug("Create JSON connector")
+        new JSONConnector(spark, conf)
 
       case _ =>
         throw new UnknownException.Storage("Unknown storage type")
@@ -82,35 +85,39 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
   }
 
   /**
-    * Build a connector from a [[Config]] object.
+    * Build a connector from a [[com.typesafe.config.Config]] object.
     *
     * the `Config` object must have a key `storage` and the parameters corresponding to the storage
     *
-    * @param config [[com.typesafe.config.Config]]
-    * @return [[com.jcdecaux.datacorp.spark.storage.v2.connector.Connector]]
+    * @param config a [[com.typesafe.config.Config]] object
+    * @return a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]]
     */
   private[this] def buildConnectorWithConfig(config: Config): Connector = {
     TypesafeConfigUtils.getAs[Storage](config, "storage") match {
 
       case Some(Storage.CASSANDRA) =>
-        log.debug("Find cassandra storage")
+        log.debug("Create CASSANDRA connector")
         new CassandraConnector(spark, config)
 
       case Some(Storage.EXCEL) =>
-        log.debug("Find excel storage")
+        log.debug("Create EXCEL connector")
         new ExcelConnector(spark, config)
 
       case Some(Storage.CSV) =>
-        log.debug("Find csv storage")
+        log.debug("Create CSV connector")
         new CSVConnector(spark, config)
 
       case Some(Storage.PARQUET) =>
-        log.debug("Find parquet storage")
+        log.debug("Create PARQUET connector")
         new ParquetConnector(spark, config)
 
       case Some(Storage.DYNAMODB) =>
-        log.debug("Find dynamodb storage")
+        log.debug("Create DYNAMODB connector")
         new DynamoDBConnector(spark, config)
+
+      case Some(Storage.JSON) =>
+        log.debug("Create JSON connector")
+        new JSONConnector(spark, config)
 
       case _ =>
         throw new UnknownException.Storage("Unknown storage type")

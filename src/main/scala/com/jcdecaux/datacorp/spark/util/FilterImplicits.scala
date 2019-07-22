@@ -2,52 +2,14 @@ package com.jcdecaux.datacorp.spark.util
 
 import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.internal.Logging
-import com.jcdecaux.datacorp.spark.storage.{Condition, Filter}
+import com.jcdecaux.datacorp.spark.storage.Condition
 
 object FilterImplicits extends Logging {
-
-  implicit class FiltersToRequest(filters: Set[Filter]) {
-
-    /**
-      * Convert a [[Set]] of [[com.jcdecaux.datacorp.spark.storage.Filter]] objects to a spark SQL query string
-      *
-      * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
-      *                                  an illegal argument exception will be thrown
-      * @return String
-      */
-    @throws[IllegalArgumentException]
-    def toSqlRequest: String = {
-      val query = filters
-        .filter(row => row.value.isDefined)
-        .map(_.toSqlRequest)
-        .mkString(" AND ")
-
-      log.debug(s"Query: $query")
-      query
-    }
-  }
-
-  implicit class FilterToRequest(filter: Filter) {
-
-    /**
-      * Convert a [[com.jcdecaux.datacorp.spark.storage.Filter]] object to a spark SQL query string
-      *
-      * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
-      *                                  an illegal argument exception will be thrown
-      * @return String
-      */
-    @throws[IllegalArgumentException]
-    def toSqlRequest: String = {
-      val query: String = filter.toCondition.toSqlRequest
-      log.debug(s"Query: $query")
-      query
-    }
-  }
 
   implicit class ConditionsToRequest(conditions: Set[Condition]) {
 
     /**
-      * Convert a [[Set]] of [[com.jcdecaux.datacorp.spark.storage.Filter]] objects to a spark SQL query string
+      * Convert a [[Set]] of [[com.jcdecaux.datacorp.spark.storage.Condition]] objects to a spark SQL query string
       *
       * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
       *                                  an illegal argument exception will be thrown
@@ -68,7 +30,7 @@ object FilterImplicits extends Logging {
   implicit class ConditionToRequest(condition: Condition) {
 
     /**
-      * Convert a [[com.jcdecaux.datacorp.spark.storage.Filter]] object to a spark SQL query string
+      * Convert a [[com.jcdecaux.datacorp.spark.storage.Condition]] object to a spark SQL query string
       *
       * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
       *                                  an illegal argument exception will be thrown

@@ -1,6 +1,41 @@
-## 0.2.8-snapshot (2019-07-09)
-- Add a second argument to CompoundKey to handle primary and sort keys
-- Adding a suffix option to repository save function
+## 0.3.0-SNAPSHOT (2019-7-22)
+
+#### New Features
+- Added `Delivery` annotation to handle inputs of a Factory
+  ```scala
+  class Foo {
+    @Delivery(producer = classOf[Factory1], optional = true)
+    var input1: String = _
+  
+    @Delivery(producer = classOf[Factory2])
+    var input2: String = _
+  }
+  ```
+- Added an optional argument `suffix` in `FileConnector` and `SparkRepository`
+- Added method `partitionBy` in `FileConnector` and `SparkRepository`
+- Added possibility to filter by name pattern when a FileConnector is trying to read a directory. 
+  To do this, add `filenamePattern` into the configuration file
+- Added possibility to create a `Conf` object from Map. 
+  ```scala
+  Conf(Map("a" -> "A"))
+  ```
+- Improved Hadoop and S3 compatibility of connectors
+
+#### Developper Features
+- Added `DispatchManager` class. It will dispatch its deliverable object to setters (denoted by @Delivery) of a factory
+- Added `Deliverable` class, which contains a payload to be delivered
+- Added `PipelineInspector` to describe a pipeline
+- Added `FileConnector` and `DBConnector`
+
+#### Fixed Issue
+- Fixed issue of file path containing whitespace character(s) in the URI creation (52eee322aacd85e0b03a96435b07c4565e894934)
+
+#### Other changes
+- Removed `EnrichedConnector`
+- Removed V1 interfaces
+
+## 0.2.8 (2019-07-09)
+- Added a second argument to CompoundKey to handle primary and sort keys
 
 ## 0.2.7 (2019-06-21)
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 

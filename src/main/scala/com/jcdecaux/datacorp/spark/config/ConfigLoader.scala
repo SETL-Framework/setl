@@ -23,5 +23,7 @@ class ConfigLoader {
 
   def get(key: String): String = config.getString(key)
 
-  def getObject(key: String): Config = config.getObject(key).toConfig
+  def getObject(key: String): ConfigObject = config.getObject(key)
+
+  def getConfig(key: String): Config = config.getConfig(key)
 }

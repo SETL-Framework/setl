@@ -9,5 +9,6 @@ public enum Storage {
     PARQUET,
     CASSANDRA,
     DYNAMODB,
+    JSON,
     OTHER
 }

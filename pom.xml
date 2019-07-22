@@ -12,7 +12,7 @@
     <description>dc-spark-sdk</description>
 
     <properties>
-        <revision>0.2.8</revision>
+        <revision>0.3.0</revision>
         <changelist>-SNAPSHOT</changelist>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -22,8 +22,6 @@
         <scala.compat.version>2.11</scala.compat.version>
         <spark.version>2.4.3</spark.version>
         <spark.compat.version>2.4</spark.compat.version>
-        <!--        <spark.version>2.2.1</spark.version>-->
-        <!--        <spark.compat.version>2.2</spark.compat.version>-->
         <dependencies.scope>provided</dependencies.scope>
         <app.environment>dev</app.environment>
     </properties>
@@ -66,6 +64,28 @@
             <scope>${dependencies.scope}</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+
+        <!-- HADOOP AWS SUPPORT -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.2.0</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>3.2.0</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+
+        <!-- CONNECTORS -->
+        <dependency>
             <groupId>com.datastax.spark</groupId>
             <artifactId>spark-cassandra-connector_${scala.compat.version}</artifactId>
             <version>2.4.0</version>
@@ -77,9 +97,11 @@
         </dependency>
         <dependency>
             <groupId>com.audienceproject</groupId>
-            <artifactId>spark-dynamodb_2.11</artifactId>
+            <artifactId>spark-dynamodb_${scala.compat.version}</artifactId>
             <version>0.4.0</version>
         </dependency>
+
+        <!-- TYPESAFE CONFIG -->
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
@@ -173,9 +195,51 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>scala compile</id>
                         <goals>
                             <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala test compile</id>
+                        <goals>
                             <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>attach-scaladocs</id>
+                        <goals>
+                            <goal>doc-jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>add-source</id>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <outputDirectory>target</outputDirectory>
+                    <attach>true</attach>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>

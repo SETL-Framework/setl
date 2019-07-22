@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
-import com.jcdecaux.datacorp.spark.exception.SerializerException
+import com.jcdecaux.datacorp.spark.exception.ConfException
 
 import scala.reflect.runtime.universe._
 
@@ -19,6 +19,18 @@ class Conf extends Serializable {
     settings.put(key, value)
     this
   }
+
+  def set(options: Map[String, String]): this.type = {
+    options.foreach(x => this.set(x._1, x._2))
+    this
+  }
+
+  def +=(conf: Conf): this.type = {
+    settings.putAll(conf.settings)
+    this
+  }
+
+  def has(key: String): Boolean = if (settings.containsKey(key)) true else false
 
   /**
     * Get a configuration under the string format
@@ -36,7 +48,7 @@ class Conf extends Serializable {
     * @tparam T define the type of output
     * @return
     */
-  @throws[SerializerException]
+  @throws[ConfException]
   def getAs[T](key: String)(implicit converter: Serializer[T]): Option[T] = {
     getOption(key) match {
       case Some(thing) => converter.deserialize(thing)
@@ -50,13 +62,22 @@ class Conf extends Serializable {
 
   private[this] def getOption(key: String): Option[String] = Option(settings.get(key))
 
+  def toMap: Map[String, String] = {
+    import scala.collection.JavaConverters._
+    settings.asScala.toMap
+  }
+
 }
 
 object Conf {
 
+  def apply(options: Map[String, String]): Conf = fromMap(options)
+
+  def fromMap(options: Map[String, String]): Conf = new Conf().set(options)
+
   trait Serializer[T] {
 
-    @throws[SerializerException]
+    @throws[ConfException]
     def deserialize(v: String): Option[T]
 
     def serialize(v: T): String = v.toString
@@ -172,8 +193,8 @@ object Conf {
     try {
       f(v)
     } catch {
-      case _: IllegalArgumentException => throw new SerializerException.Format(s"Can't convert $v to $classOfT")
-      case _: NumberFormatException => throw new SerializerException.Format(s"Can't convert $v to $classOfT")
+      case _: IllegalArgumentException => throw new ConfException.Format(s"Can't convert $v to $classOfT")
+      case _: NumberFormatException => throw new ConfException.Format(s"Can't convert $v to $classOfT")
       case e: Throwable => throw e
     }
   }

@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.ValueType
 
 /**
-  * Condition is used by [[com.jcdecaux.datacorp.spark.storage.v2.repository.Repository]] to find data
+  * Condition is used by [[com.jcdecaux.datacorp.spark.storage.repository.Repository]] to find data
   *
   * @param key       key of the field
   * @param operator  e.g. ">", "<", ">=", "<=", "="

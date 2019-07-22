@@ -156,7 +156,7 @@ object SchemaConverter {
   }
 
   /**
-    * Drop any column called <code>_key</code>
+    * Drop any column that starts with "<i>_</i>" and ends with "<i>_key</i>"
     *
     * @param dataFrame
     * @return
@@ -169,7 +169,8 @@ object SchemaConverter {
   /**
     * {{{
     *   import com.jcdecaux.datacorp.spark.annotations.CombinedKey
-    *   case class MyObject(@CombinedKey("2") column1: String, @CombinedKey("1") column2: String)
+    *   case class MyObject(@CombinedKey("primary", "2") column1: String,
+    *                       @CombinedKey("primary", "1") column2: String)
     *
     *   from
     *   +-------+-------+
@@ -180,12 +181,12 @@ object SchemaConverter {
     *   +-------+-------+
     *
     *   create
-    *   +-------+-------+-------+
-    *   |column1|column2|   _key|
-    *   +-------+-------+-------+
-    *   |      a|      A|    A-a|
-    *   |      b|      B|    B-b|
-    *   +-------+-------+-------+
+    *   +-------+-------+------------+
+    *   |column1|column2|_primary_key|
+    *   +-------+-------+------------+
+    *   |      a|      A|         A-a|
+    *   |      b|      B|         B-b|
+    *   +-------+-------+------------+
     * }}}
     *
     * @param structType
@@ -200,8 +201,6 @@ object SchemaConverter {
         .map(n => functions.col(n.name))))
 
     var dataFrameWithKeys = dataFrame
-
-    println(keyColumns)
 
     if (keyColumns.nonEmpty) {
       keyColumns.foreach(row => {
