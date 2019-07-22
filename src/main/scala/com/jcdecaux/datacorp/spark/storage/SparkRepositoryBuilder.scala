@@ -113,7 +113,20 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
 
   def setInferSchema(boo: Boolean): this.type = set("inferSchema", boo)
 
-  def setSchema(schema: StructType): this.type = set("schema", schema.toDDL)
+  def setSchema(schema: StructType): this.type = {
+
+    // For spark version < 2.4, there was no method toDDL in StructType.
+    val structDDL = try {
+      val method = schema.getClass.getDeclaredMethod("toDDL")
+      method.invoke(schema).toString
+    } catch {
+      case _: java.lang.NoSuchMethodException =>
+        schema.map(sf => s"${sf.name} ${sf.dataType.sql}").mkString(", ")
+      case e: Throwable => throw e
+    }
+    
+    set("schema", structDDL)
+  }
 
   def setDelimiter(delimiter: String): this.type = set("delimiter", delimiter)
 
