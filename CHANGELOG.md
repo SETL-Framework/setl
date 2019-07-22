@@ -1,4 +1,4 @@
-## 0.3.0-SNAPSHOT (2019-7-12)
+## 0.3.0-SNAPSHOT (2019-7-22)
 
 #### New Features
 - Added `Delivery` annotation
@@ -18,6 +18,17 @@
   Conf(Map("a" -> "A"))
   ```
 - Improved Hadoop and S3 compatibility of connectors
+- Added field `producer` into annotation `Delivery` to handle the case where a factory can have multiple inputs
+of the same type produced by different factories
+  ```scala
+  class MyExample {
+    @Delivery(producer = classOf[Factory1])
+    var input1: String = _
+  
+    @Delivery(producer = classOf[Factory2])
+    var input2: String = _
+  }
+  ```
 
 #### Fixed Issue
 - Fixed issue of file path containing whitespace character(s) in the URI creation (52eee322aacd85e0b03a96435b07c4565e894934)
