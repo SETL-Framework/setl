@@ -10,11 +10,11 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 class Pipeline extends Logging {
 
-  var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
-  val dispatchManagers: DispatchManager = new DispatchManager
-  var pipelineInspector: PipelineInspector = _
-
+  private[workflow] val dispatchManagers: DispatchManager = new DispatchManager
   private[workflow] var stageCounter: Int = 0
+
+  var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
+  var pipelineInspector: PipelineInspector = _
 
   def setInput(v: Deliverable[_]): this.type = {
     dispatchManagers.setDelivery(v)

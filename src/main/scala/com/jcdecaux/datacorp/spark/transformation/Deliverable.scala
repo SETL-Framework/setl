@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+import com.jcdecaux.datacorp.spark.internal.Identifiable
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -13,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam T type of the payload
   */
 @InterfaceStability.Unstable
-class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
+class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identifiable {
 
   var producer: Class[_] = classOf[Object]
 

@@ -1,14 +1,16 @@
 ## 0.3.0-SNAPSHOT (2019-7-22)
 
 #### New Features
-- Added `Delivery` annotation
-- Added `DispatchManager` class. It will dispatch its deliverable object to setters (denoted by @Delivery) of a factory
-- Added `Deliverable` class, which contains a payload to be delivered
-- Added `workflow.Pipeline`
-- Added `workflow.stage`
-- Added `transformation.Factory[T]`
-- Added `PipelineInspector` to describe a pipeline
-- Added `FileConnector` and `DBConnector`
+- Added `Delivery` annotation to handle inputs of a Factory
+  ```scala
+  class Foo {
+    @Delivery(producer = classOf[Factory1])
+    var input1: String = _
+  
+    @Delivery(producer = classOf[Factory2])
+    var input2: String = _
+  }
+  ```
 - Added an optional argument `suffix` in `FileConnector` and `SparkRepository`
 - Added method `partitionBy` in `FileConnector` and `SparkRepository`
 - Added possibility to filter by name pattern when a FileConnector is trying to read a directory. 
@@ -18,17 +20,12 @@
   Conf(Map("a" -> "A"))
   ```
 - Improved Hadoop and S3 compatibility of connectors
-- Added field `producer` into annotation `Delivery` to handle the case where a factory can have multiple inputs
-of the same type produced by different factories
-  ```scala
-  class MyExample {
-    @Delivery(producer = classOf[Factory1])
-    var input1: String = _
-  
-    @Delivery(producer = classOf[Factory2])
-    var input2: String = _
-  }
-  ```
+
+#### Developper Features
+- Added `DispatchManager` class. It will dispatch its deliverable object to setters (denoted by @Delivery) of a factory
+- Added `Deliverable` class, which contains a payload to be delivered
+- Added `PipelineInspector` to describe a pipeline
+- Added `FileConnector` and `DBConnector`
 
 #### Fixed Issue
 - Fixed issue of file path containing whitespace character(s) in the URI creation (52eee322aacd85e0b03a96435b07c4565e894934)

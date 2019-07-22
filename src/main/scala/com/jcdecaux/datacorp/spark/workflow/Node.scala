@@ -1,10 +1,8 @@
 package com.jcdecaux.datacorp.spark.workflow
 
-case class Node(name: String, stage: Int, input: Array[String], output: String) {
+private[workflow] case class Node(name: String, stage: Int, input: Array[String], output: String) {
 
-  def getName: String = {
-    name.split("\\.").last
-  }
+  def getName: String = name.split("\\.").last
 
   def describe(): Unit = {
     println(s"Node   : $getName")

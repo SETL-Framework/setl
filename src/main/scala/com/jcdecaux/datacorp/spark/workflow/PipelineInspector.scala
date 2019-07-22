@@ -4,7 +4,9 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.Logging
 
 @InterfaceStability.Evolving
-class PipelineInspector(val pipeline: Pipeline) extends Logging {
+private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging {
+
+  case class Input(name: String, producer: Class[_])
 
   var nodes: Set[Node] = _
   var flows: Set[Flow] = _
@@ -15,8 +17,7 @@ class PipelineInspector(val pipeline: Pipeline) extends Logging {
     pipeline.stages
       .flatMap(s => s.factories.map({
         f =>
-          val inputs = DispatchManager
-            .getDeliveryAnnotatedMethod(f)
+          val inputs = DispatchManager.getDeliveryAnnotatedMethod(f)
             .flatMap(_._2.map(_.toString)) // convert all the Types to String
             .toArray
 

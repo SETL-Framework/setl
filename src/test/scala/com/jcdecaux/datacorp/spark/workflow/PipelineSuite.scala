@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
+import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
@@ -242,6 +243,16 @@ class PipelineSuite extends FunSuite {
     assert(pipeline.pipelineInspector.nodes.find(_.getName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.flows.size === 3)
 
+
+  }
+
+  test("Pipeline exceptions") {
+
+    val f1 = new ProductFactory
+    val pipeline = new Pipeline
+
+    val stage0 = new Stage().addFactory(f1)
+
     val pipeline2 = new Pipeline()
       .setInput(new Deliverable[String]("wrong_id_of_product1"))
       .setInput[String]("wrong_id_of_product2", classOf[Object], classOf[String])
@@ -249,6 +260,13 @@ class PipelineSuite extends FunSuite {
       .addStage(stage0)
 
     assertThrows[NoSuchElementException](pipeline2.run())
+
+    val delivery = new Deliverable[String]("test")
+
+    val pipeline3 = new Pipeline().setInput(delivery)
+
+    assertThrows[AlreadyExistsException](pipeline3.setInput(delivery))
+
 
   }
 

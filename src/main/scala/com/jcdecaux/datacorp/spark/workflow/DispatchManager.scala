@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.{Delivery, InterfaceStability}
+import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
@@ -23,11 +24,17 @@ private[spark] class DispatchManager extends Logging {
 
   import DispatchManager._
 
-  val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
+  private[this] val deliveryRegister: scala.collection.mutable.HashSet[String] = scala.collection.mutable.HashSet()
+  private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
-  def setDelivery(v: Deliverable[_]): this.type = {
+  private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery of type: ${v.payloadType}")
-    deliveries.append(v)
+
+    if (deliveryRegister.add(v.getUUID)) {
+      deliveries.append(v)
+    } else {
+      throw new AlreadyExistsException(s"The current deliverable ${v.getUUID} already exists")
+    }
     this
   }
 
@@ -37,7 +44,7 @@ private[spark] class DispatchManager extends Logging {
     * @param deliveryType runtime type
     * @return
     */
-  def getDelivery(deliveryType: ru.Type, consumer: Class[_], producer: Class[_]): Option[Deliverable[_]] = {
+  private[this] def getDelivery(deliveryType: ru.Type, consumer: Class[_], producer: Class[_]): Option[Deliverable[_]] = {
 
     val availableDeliverable = findDeliverableByType(deliveryType)
 
@@ -75,7 +82,7 @@ private[spark] class DispatchManager extends Logging {
     * @param deliveryType type of data
     * @return
     */
-  def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = deliveries.filter(_ == deliveryType).toArray
+  private[workflow] def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = deliveries.filter(_ == deliveryType).toArray
 
   /**
     * Collect a [[Deliverable]] from a [[Factory]]
@@ -83,7 +90,7 @@ private[spark] class DispatchManager extends Logging {
     * @param factory a factory object
     * @return
     */
-  def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.deliver())
+  private[workflow] def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.deliver())
 
   /**
     * Dispatch the right deliverable object to the corresponding methods
@@ -92,7 +99,7 @@ private[spark] class DispatchManager extends Logging {
     * @param factory target factory
     * @return
     */
-  def dispatch(factory: Factory[_]): this.type = {
+  private[workflow] def dispatch(factory: Factory[_]): this.type = {
 
     getDeliveryAnnotatedMethod(factory)
       .foreach({
@@ -130,7 +137,7 @@ object DispatchManager extends Logging {
     * @tparam T type of factory
     * @return an iterable of tuple3: method name, arg list and producer class
     */
-  private[spark] def getDeliveryAnnotatedMethod[T](obj: T): Iterable[(String, List[ru.Type], Class[_])] = {
+  private[workflow] def getDeliveryAnnotatedMethod[T](obj: T): Iterable[(String, List[ru.Type], Class[_])] = {
     log.debug(s"Fetch methods of ${obj.getClass} having Delivery annotation")
 
     // Black magic XD

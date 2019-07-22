@@ -11,13 +11,13 @@ class Stage extends Logging {
 
   private[this] var _end: Boolean = true
 
-  private[spark] def end: Boolean = _end
+  private[workflow] def end: Boolean = _end
 
-  private[spark] def end_=(value: Boolean): Unit = {
+  private[workflow] def end_=(value: Boolean): Unit = {
     _end = value
   }
 
-  def start: Boolean = if (stageId == 0) true else false
+  private[workflow] def start: Boolean = if (stageId == 0) true else false
 
   private[workflow] var stageId: Int = _
 
