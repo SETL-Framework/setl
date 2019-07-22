@@ -140,6 +140,35 @@ class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
   }
 }
 
+class DatasetFactory3(spark: SparkSession) extends Factory[Dataset[Product2]] {
+
+  @Delivery
+  var p1: Product1 = _
+
+  @Delivery(producer = classOf[DatasetFactory2])
+  var ds: Dataset[Product2] = _
+
+  @Delivery
+  var ds2: Dataset[Product2] = _
+
+  var output: Dataset[Product2] = _
+
+  override def read(): DatasetFactory3.this.type = this
+
+  override def process(): DatasetFactory3.this.type = {
+    output = ds.union(ds2)
+    this
+  }
+
+  override def write(): DatasetFactory3.this.type = {
+    this
+  }
+
+  override def get(): Dataset[Product2] = {
+    output
+  }
+}
+
 class PipelineSuite extends FunSuite {
 
   test("Test pipeline") {
@@ -194,7 +223,7 @@ class PipelineSuite extends FunSuite {
 
     pipeline
       .setInput(new Deliverable[String]("wrong_id_of_product1"))
-      .setInput[String]("id_of_product1", f1)
+      .setInput[String]("id_of_product1", f1.getClass)
       .setInput(ds2)
       .addStage(stage0)
       .addStage(stage1)
@@ -215,10 +244,56 @@ class PipelineSuite extends FunSuite {
 
     val pipeline2 = new Pipeline()
       .setInput(new Deliverable[String]("wrong_id_of_product1"))
+      .setInput[String]("wrong_id_of_product2", classOf[Object], classOf[String])
       .setInput[String]("id_of_product1")
       .addStage(stage0)
 
     assertThrows[NoSuchElementException](pipeline2.run())
 
+  }
+
+  test("Test pipeline with two inputs of the same type") {
+
+    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    import spark.implicits._
+
+    val ds2: Dataset[Product2] = Seq(
+      Product2("id_of_product1", "c2"),
+      Product2("pd1", "c2")
+    ).toDS
+
+    val productFactory = new ProductFactory
+    val dsFactory = new DatasetFactory(spark)
+    val dsFactory2 = new DatasetFactory2(spark)
+    val dsFactory3 = new DatasetFactory3(spark)
+    val pipeline = new Pipeline
+
+    val stage0 = new Stage().addFactory(productFactory)
+    val stage1 = new Stage().addFactory(dsFactory)
+    val stage2 = new Stage().addFactory(dsFactory2)
+    val stage3 = new Stage().addFactory(dsFactory3)
+
+    pipeline
+      .setInput(new Deliverable[String]("wrong_id_of_product1"))
+      .setInput[String]("id_of_product1", productFactory.getClass)
+      .setInput(ds2)
+      .addStage(stage0)
+      .addStage(stage1)
+      .addStage(stage2)
+      .addStage(stage3)
+      .describe()
+      .run()
+
+    dsFactory3.get().show()
+    assert(dsFactory3.get().count() === 4)
+    assert(dsFactory3.get().filter($"x" === "pd1").count() === 2)
+    assert(dsFactory3.get().filter($"x" === "id_of_product1").count() === 2)
+    assert(dsFactory3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+
+    // Check inspector
+    assert(pipeline.pipelineInspector.nodes.size === 4)
+    assert(pipeline.pipelineInspector.nodes.find(_.getName === "DatasetFactory2").get.input.length === 3)
+    assert(pipeline.pipelineInspector.nodes.find(_.getName === "DatasetFactory3").get.input.length === 3)
+    assert(pipeline.pipelineInspector.flows.size === 5)
   }
 }

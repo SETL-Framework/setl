@@ -32,13 +32,20 @@ class Pipeline extends Logging {
     setInput(deliverable)
   }
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Any): this.type = setInput(v, Some(consumer.getClass))
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_], consumers: Class[_]*): this.type = {
+    val deliverable = new Deliverable[T](v)
+
+    deliverable.setConsumer(consumer)
+    consumers.foreach(c => deliverable.setConsumer(c))
+
+    setInput(deliverable)
+  }
 
   def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
 
   def setInput[T: ru.TypeTag](v: T): this.type = setInput(v, None)
 
-  def getOutput(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.getDeliveries(t)
+  def getOutput(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.findDeliverableByType(t)
 
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 

@@ -15,7 +15,7 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Unstable
 class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
 
-  var producer: Option[Class[_]] = None
+  var producer: Class[_] = classOf[Object]
 
   /**
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
@@ -33,7 +33,9 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     * @param t a deliverable object
     * @return
     */
-  def ==(t: Deliverable[_]): Boolean = this.payloadType.equals(t.payloadType)
+  def ==(t: Deliverable[_]): Boolean = this.==(t.payloadType)
+
+  def ==(t: ru.Type): Boolean = this.payloadType.equals(t)
 
   def classInfo: Class[_] = payload.getClass
 
@@ -44,7 +46,7 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
     * @return
     */
   def setProducer(t: Class[_]): this.type = {
-    producer = Some(t)
+    producer = t
     this
   }
 
@@ -57,6 +59,12 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) {
   def setConsumer(t: Class[_]): this.type = {
     consumer.append(t)
     this
+  }
+
+  def describe(): Unit = {
+    println(s"Deliverable: $payloadType")
+    println(s" From: ${producer.toString}")
+    println(s" To: ${consumer.map(_.toString).mkString(", ")}")
   }
 
 }

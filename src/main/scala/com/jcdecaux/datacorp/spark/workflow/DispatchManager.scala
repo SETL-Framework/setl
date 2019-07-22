@@ -12,8 +12,10 @@ import scala.reflect.runtime.{universe => ru}
   *
   * It can:
   * <ul>
-  * <li>collect a [[Deliverable]] from a [[Factory]]</li>
-  * <li>find the right [[Deliverable]] from its pool and send it to a [[Factory]]</li>
+  * <li>collect a [[com.jcdecaux.datacorp.spark.transformation.Deliverable]]
+  * from a [[com.jcdecaux.datacorp.spark.transformation.Factory]]</li>
+  * <li>find the right [[com.jcdecaux.datacorp.spark.transformation.Deliverable]]
+  * from its pool and send it to a [[com.jcdecaux.datacorp.spark.transformation.Factory]]</li>
   * </ul>
   */
 @InterfaceStability.Evolving
@@ -35,20 +37,35 @@ private[spark] class DispatchManager extends Logging {
     * @param deliveryType runtime type
     * @return
     */
-  def getDelivery(deliveryType: ru.Type, consumer: Class[_]): Option[Deliverable[_]] = {
+  def getDelivery(deliveryType: ru.Type, consumer: Class[_], producer: Class[_]): Option[Deliverable[_]] = {
 
-    val availableDeliverables = getDeliveries(deliveryType)
+    val availableDeliverable = findDeliverableByType(deliveryType)
 
-    availableDeliverables.length match {
+    availableDeliverable.foreach(_.describe())
+
+    availableDeliverable.length match {
       case 0 =>
         log.warn("No deliverable available")
         None
       case 1 =>
-        log.debug("Deliverable received")
-        Some(availableDeliverables.head)
+        log.debug("Find Deliverable")
+        Some(availableDeliverable.head)
       case _ =>
-        log.info("Multiple Deliverable with same type were received. Try matching by consumer")
-        availableDeliverables.filter(_.consumer.nonEmpty).find(_.consumer.contains(consumer))
+        log.info("Multiple Deliverable with same type were received. Try matching by producer")
+        val matchedByProducer = availableDeliverable.filter(_.producer == producer)
+
+        matchedByProducer.length match {
+          case 0 =>
+            log.warn("No deliverable available")
+            None
+          case 1 =>
+            log.debug("Find Deliverable")
+            Some(matchedByProducer.head)
+          case _ =>
+            log.info("Multiple Deliverable with same type and same producer were received. Try matching by consumer")
+            matchedByProducer.filter(_.consumer.nonEmpty).find(_.consumer.contains(consumer))
+
+        }
     }
   }
 
@@ -58,8 +75,7 @@ private[spark] class DispatchManager extends Logging {
     * @param deliveryType type of data
     * @return
     */
-  def getDeliveries(deliveryType: ru.Type): Array[Deliverable[_]] =
-    deliveries.filter(d => d.payloadType == deliveryType).toArray
+  def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = deliveries.filter(_ == deliveryType).toArray
 
   /**
     * Collect a [[Deliverable]] from a [[Factory]]
@@ -80,21 +96,25 @@ private[spark] class DispatchManager extends Logging {
 
     getDeliveryAnnotatedMethod(factory)
       .foreach({
-        methodName =>
+        deliveryMethod =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
-          val args = methodName._2.map({
+          val args = deliveryMethod._2.map({
             argsType =>
-              log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${methodName._1}")
+              log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryMethod._1}")
 
-              getDelivery(argsType, factory.getClass) match {
-                case Some(thing) => thing
-                case _ => throw new NoSuchElementException(s"Can not find type $argsType from dispatch manager")
+              getDelivery(
+                deliveryType = argsType,
+                consumer = factory.getClass,
+                producer = deliveryMethod._3
+              ) match {
+                case Some(delivery) => delivery
+                case _ => throw new NoSuchElementException(s"Can not find type $argsType from DispatchManager")
               }
           })
 
           // Invoke the method with its name and arguments
-          def method = factory.getClass.getMethod(methodName._1, args.map(_.classInfo): _*)
-          method.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
+          val setterMethod = factory.getClass.getMethod(deliveryMethod._1, args.map(_.classInfo): _*)
+          setterMethod.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
       })
 
     this
@@ -108,9 +128,9 @@ object DispatchManager extends Logging {
     *
     * @param obj an object
     * @tparam T type of factory
-    * @return a Map of method name -> list of arguments type
+    * @return an iterable of tuple3: method name, arg list and producer class
     */
-  private[spark] def getDeliveryAnnotatedMethod[T](obj: T): Map[String, List[ru.Type]] = {
+  private[spark] def getDeliveryAnnotatedMethod[T](obj: T): Iterable[(String, List[ru.Type], Class[_])] = {
     log.debug(s"Fetch methods of ${obj.getClass} having Delivery annotation")
 
     // Black magic XD
@@ -123,21 +143,37 @@ object DispatchManager extends Logging {
 
     methodsWithDeliveryAnnotation.map({
       mth =>
+
         if (mth.isMethod) {
           log.debug(s"Find @Delivery annotated method ${obj.getClass.getCanonicalName}.${mth.name}")
-          (mth.name.toString, mth.typeSignature.paramLists.head.map(_.typeSignature))
-        } else {
-          log.debug(s"Find @Delivery annotated value ${obj.getClass.getCanonicalName}.${mth.name}")
 
-          // val newMethod = classSymbol.info.decls.find(_.name.toString == mth.name.toString.trim + "_$eq").get
-          // (newMethod.name.toString, newMethod.typeSignature.paramLists.head.map(_.typeSignature))
+          val annotation = obj.getClass.getDeclaredMethods
+            .find(_.getName == mth.name.toString).get
+            .getAnnotation(classOf[Delivery])
+
+          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
+
+          (
+            mth.name.toString,
+            mth.typeSignature.paramLists.head.map(_.typeSignature),
+            producerMethod.invoke(annotation).asInstanceOf[Class[_]]
+          )
+        } else {
+          log.debug(s"Find @Delivery annotated variable ${obj.getClass.getCanonicalName}.${mth.name}")
+
+          val annotation = obj.getClass.getDeclaredField(mth.name.toString.trim).getAnnotation(classOf[Delivery])
+          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
 
           /*
            * If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
            */
-          (mth.name.toString.trim + "_$eq", List(mth.typeSignature))
+          (
+            mth.name.toString.trim + "_$eq",
+            List(mth.typeSignature),
+            producerMethod.invoke(annotation).asInstanceOf[Class[_]]
+          )
         }
 
-    }).toMap
+    })
   }
 }
