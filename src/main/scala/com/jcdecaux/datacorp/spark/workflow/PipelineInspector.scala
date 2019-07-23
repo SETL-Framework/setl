@@ -48,7 +48,6 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
                   val targetNodes = nodes.filter(n => thisNode.targetNode(n))
 
                   targetNodes.map(tn => Flow(payload, thisNode, tn, stage.stageId))
-
               })
               .toSet
           }
