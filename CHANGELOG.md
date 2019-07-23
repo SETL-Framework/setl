@@ -1,4 +1,4 @@
-## 0.3.0-SNAPSHOT (2019-7-22)
+## 0.3.0 (2019-7-22)
 
 #### New Features
 - Added `Delivery` annotation to handle inputs of a Factory

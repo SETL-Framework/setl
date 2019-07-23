@@ -1,4 +1,4 @@
-# DataCorp Spark SDK
+# DataCorp Spark Framework
 This project provides a general-proposed framework for data transformation application.
 
 ## Use
