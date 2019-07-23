@@ -4,7 +4,10 @@ import com.jcdecaux.datacorp.spark.internal.{FactoryInput, FactoryOutput, Identi
 
 import scala.reflect.runtime
 
-private[workflow] case class Node(classInfo: Class[_], stage: Int, input: List[FactoryInput], output: FactoryOutput) extends Identifiable with Logging {
+private[workflow] case class Node(classInfo: Class[_],
+                                  stage: Int,
+                                  input: List[FactoryInput],
+                                  output: FactoryOutput) extends Identifiable with Logging {
 
   def getPrettyName: String = classInfo.getCanonicalName.split("\\.").last
 
@@ -31,9 +34,9 @@ private[workflow] case class Node(classInfo: Class[_], stage: Int, input: List[F
     val validStage = if (this.stage >= next.stage) false else true
     var validTarget: Boolean = false
 
-    val inputOfNextNodeContainingOutputTypeOfThisNode = next.findInputByType(this.output.outputType)
+    val filteredInputs = next.findInputByType(this.output.outputType)
 
-    inputOfNextNodeContainingOutputTypeOfThisNode.length match {
+    filteredInputs.length match {
 
       case 0 =>
       case 1 => // Found only one matching type
@@ -46,8 +49,8 @@ private[workflow] case class Node(classInfo: Class[_], stage: Int, input: List[F
           true
         }
 
-        val exactProducerMatch = inputOfNextNodeContainingOutputTypeOfThisNode.exists(_.producer == this.classInfo)
-        val nonExplicitlyDefinedProducers = inputOfNextNodeContainingOutputTypeOfThisNode.filter(_.producer == classOf[Object])
+        val exactProducerMatch = filteredInputs.exists(_.producer == this.classInfo)
+        val nonExplicitlyDefinedProducers = filteredInputs.filter(_.producer == classOf[Object])
 
         if (!exactProducerMatch && nonExplicitlyDefinedProducers.length > 1) {
           log.error(s"Multiple inputs in ${next.getPrettyName} are of type ${this.output.outputType.toString}. " +
