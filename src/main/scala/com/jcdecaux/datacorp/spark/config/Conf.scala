@@ -5,11 +5,12 @@ import java.util.concurrent.ConcurrentHashMap
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.ConfException
+import com.jcdecaux.datacorp.spark.internal.Configurable
 
 import scala.reflect.runtime.universe._
 
 @InterfaceStability.Evolving
-class Conf extends Serializable {
+class Conf extends Serializable with Configurable {
 
   import Conf.Serializer
 
