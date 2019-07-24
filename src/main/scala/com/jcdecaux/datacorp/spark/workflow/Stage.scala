@@ -11,8 +11,14 @@ import scala.collection.parallel.mutable.ParArray
 class Stage extends Logging {
 
   private[this] var _end: Boolean = true
+
   private[this] var _parallel: Boolean = true
+
   private[this] var _stageId: Int = _
+
+  val factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
+
+  var deliveries: Array[Deliverable[_]] = _
 
   private[workflow] def end: Boolean = _end
 
@@ -23,6 +29,7 @@ class Stage extends Logging {
   private[workflow] def start: Boolean = if (stageId == 0) true else false
 
   private[workflow] def stageId: Int = _stageId
+
   private[workflow] def setStageId(id: Int): this.type = {
     _stageId = id
     this
@@ -33,10 +40,6 @@ class Stage extends Logging {
   def parallel_=(boo: Boolean): Unit = {
     _parallel = boo
   }
-
-  val factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
-
-  var deliveries: Array[Deliverable[_]] = _
 
   def addFactory[T <: Factory[_]](factory: T): this.type = {
     factories += factory
