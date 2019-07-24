@@ -5,6 +5,7 @@ import com.jcdecaux.datacorp.spark.internal.{FactoryInput, FactoryOutput, Identi
 import scala.reflect.runtime
 
 private[workflow] case class Node(classInfo: Class[_],
+                                  classUUID: String,
                                   stage: Int,
                                   input: List[FactoryInput],
                                   output: FactoryOutput) extends Identifiable with Logging {

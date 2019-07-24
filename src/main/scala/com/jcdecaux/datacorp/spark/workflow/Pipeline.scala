@@ -13,8 +13,8 @@ class Pipeline extends Logging {
   private[workflow] val dispatchManagers: DispatchManager = new DispatchManager
   private[workflow] var stageCounter: Int = 0
 
-  var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
-  var pipelineInspector: PipelineInspector = _
+  val stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
+  val pipelineInspector: PipelineInspector = new PipelineInspector(this)
 
   def setInput(v: Deliverable[_]): this.type = {
     dispatchManagers.setDelivery(v)
@@ -66,11 +66,13 @@ class Pipeline extends Logging {
   }
 
   def describe(): this.type = {
-    pipelineInspector = new PipelineInspector(this).inspect().describe()
+    inspectPipeline()
+    pipelineInspector.describe()
     this
   }
 
   def run(): this.type = {
+    inspectPipeline()
     stages
       .foreach({
         stage =>
@@ -90,6 +92,8 @@ class Pipeline extends Logging {
 
     this
   }
+
+  private[this] def inspectPipeline(): Unit = if (!pipelineInspector.inspected) pipelineInspector.inspect()
 
 
 }

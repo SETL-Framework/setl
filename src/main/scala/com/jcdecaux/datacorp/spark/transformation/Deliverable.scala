@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.Identifiable
+import com.jcdecaux.datacorp.spark.workflow.External
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -20,7 +21,7 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
 
   private[spark] def isEmpty: Boolean = empty
 
-  var producer: Class[_] = classOf[Object]
+  var producer: Class[_] = classOf[External]
 
   /**
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same

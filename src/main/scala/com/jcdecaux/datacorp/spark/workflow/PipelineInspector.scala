@@ -9,9 +9,11 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   var nodes: Set[Node] = _
   var flows: Set[Flow] = _
 
+  def inspected: Boolean = if (nodes == null || flows == null) false else true
+
   def findNode(classInfo: Class[_]): Option[Node] = nodes.find(_.classInfo == classInfo)
 
-  def createNodes(): Set[Node] = {
+  private[this] def createNodes(): Set[Node] = {
     pipeline.stages
       .flatMap(s => s.factories.map({
         f =>
@@ -25,12 +27,13 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
             outputType = f.deliveryType(),
             consumer = f.consumers
           )
-          Node(f.getClass, s.stageId, inputs, output)
+
+          Node(f.getClass, f.getUUID, s.stageId, inputs, output)
       }))
       .toSet
   }
 
-  def createFlows(): Set[Flow] = {
+  private[this] def createInternalFlows(): Set[Flow] = {
     pipeline
       .stages
       .flatMap({
@@ -44,15 +47,34 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
               .flatMap({
                 f =>
                   val thisNode = findNode(f.getClass).get
-                  val payload = f.deliveryType().toString
+                  val payloadType = f.deliveryType()
                   val targetNodes = nodes.filter(n => thisNode.targetNode(n))
 
-                  targetNodes.map(tn => Flow(payload, thisNode, tn, stage.stageId))
+                  targetNodes.map(tn => Flow(payloadType, thisNode, tn, stage.stageId))
               })
               .toSet
           }
       })
       .toSet
+  }
+
+  private[this] def createExternalFlows(internalFlows: Set[Flow]): Set[Flow] = {
+    require(nodes != null)
+
+    nodes
+      .flatMap {
+        thisNode =>
+          thisNode.input
+            .filter(_.producer == classOf[External])
+            .map(nd => Flow(nd.inputType, External, thisNode, thisNode.stage))
+            .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
+      }
+  }
+
+  private[this] def createFlows(): Set[Flow] = {
+    val internalFlows = createInternalFlows()
+    val externalFlows = createExternalFlows(internalFlows)
+    internalFlows ++ externalFlows
   }
 
   def inspect(): this.type = {

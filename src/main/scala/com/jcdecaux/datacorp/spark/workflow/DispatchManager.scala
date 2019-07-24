@@ -26,7 +26,7 @@ private[spark] class DispatchManager extends Logging {
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
   private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
-    log.debug(s"Add new delivery of type: ${v.payloadType}")
+    log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer}")
 
     if (deliveryRegister.add(v.getUUID)) {
       deliveries.append(v)

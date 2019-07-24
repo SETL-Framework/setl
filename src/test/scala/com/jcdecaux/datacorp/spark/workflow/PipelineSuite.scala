@@ -200,7 +200,7 @@ class PipelineSuite extends FunSuite {
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 4)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "Container2Factory").get.input.length === 2)
-    assert(pipeline.pipelineInspector.flows.size === 3)
+    assert(pipeline.pipelineInspector.flows.size === 4)
 
   }
 
@@ -241,7 +241,7 @@ class PipelineSuite extends FunSuite {
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
-    assert(pipeline.pipelineInspector.flows.size === 3)
+    assert(pipeline.pipelineInspector.flows.size === 5)
 
 
   }
@@ -312,6 +312,6 @@ class PipelineSuite extends FunSuite {
     assert(pipeline.pipelineInspector.nodes.size === 4)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory3").get.input.length === 3)
-    assert(pipeline.pipelineInspector.flows.size === 5)
+    assert(pipeline.pipelineInspector.flows.size === 7)
   }
 }
