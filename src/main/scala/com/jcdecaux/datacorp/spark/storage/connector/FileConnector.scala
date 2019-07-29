@@ -80,9 +80,10 @@ abstract class FileConnector(val spark: SparkSession,
     * characters like whitespace "%20%", etc
     */
   private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
-    log.debug("Detect local file system")
+    log.debug(s"Detect local file system: ${pathURI.toString}")
     new Path(URLDecoder.decode(pathURI.toString, encoding))
   } else {
+    log.debug(s"Detect distributed filesystem: ${pathURI.toString}")
     new Path(pathURI)
   }
 

@@ -108,13 +108,6 @@
             <version>1.3.2</version>
         </dependency>
 
-        <!-- LIVY -->
-        <dependency>
-            <groupId>org.apache.livy</groupId>
-            <artifactId>livy-client-http</artifactId>
-            <version>0.6.0-incubating</version>
-        </dependency>
-
         <!-- Test -->
         <dependency>
             <groupId>org.scalatest</groupId>
