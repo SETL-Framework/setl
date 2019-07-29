@@ -1,7 +1,7 @@
 ## 0.3.1 (2019-07-24)
 - Added sequential mode in class `Stage`. Use can turn in on by setting `parallel` to *true*.
-- Added `LivyJobBuilder`
 - Added external data flow description in pipeline description
+- Added method `beforeAll` into `ConfigLoader`
 
 ## 0.3.0 (2019-07-22)
 

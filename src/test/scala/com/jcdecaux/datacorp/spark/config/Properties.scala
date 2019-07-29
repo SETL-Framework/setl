@@ -4,6 +4,10 @@ import com.typesafe.config.Config
 
 object Properties extends ConfigLoader {
 
+  override def beforeAll(): Unit = {
+    System.setProperty("myvalue", "test-my-value")
+  }
+
   val excelConfig: Config = this.getConfig("test.excel")
   val cassandraConfig: Config = this.getConfig("test.cassandra")
 

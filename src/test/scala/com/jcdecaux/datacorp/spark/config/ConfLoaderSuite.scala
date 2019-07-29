@@ -5,6 +5,11 @@ import org.scalatest.FunSuite
 
 class ConfLoaderSuite extends FunSuite {
 
+  test("ConfigLoader beforeAll") {
+    assert(Properties.get("myValue") === "test-my-value")
+    assert(Properties.get("test.myValue2") === "test-my-value-loaded")
+  }
+
   test("Cassandra config") {
     assert(TypesafeConfigUtils.getAs[String](Properties.cassandraConfig, "storage").get === "CASSANDRA")
     assert(TypesafeConfigUtils.getAs[String](Properties.cassandraConfig, "keyspace").get === "test_space")
