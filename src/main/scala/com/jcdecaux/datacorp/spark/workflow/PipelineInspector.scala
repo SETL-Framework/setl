@@ -6,6 +6,12 @@ import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetad
 
 import scala.collection.mutable
 
+/**
+  * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a DAG with
+  * nodes (factories) and flows (data transfer flows)
+  *
+  * @param pipeline an instantiated pipeline
+  */
 @InterfaceStability.Evolving
 private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging {
 
@@ -13,43 +19,54 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   var flows: Set[Flow] = _
   private[workflow] var setters: mutable.HashSet[FactoryDeliveryMetadata] = mutable.HashSet()
 
+  /**
+    * Return true if the input pipeline is already inspected. False otherwise
+    *
+    * @return boolean
+    */
   def inspected: Boolean = if (nodes == null || flows == null) false else true
 
+  /**
+    * Find all the setter methods of the given Factory
+    *
+    * @param factory an instantiated Factory
+    * @return a list of [[com.jcdecaux.datacorp.spark.transformation.FactoryDeliveryMetadata]]
+    */
   def findSetters(factory: Factory[_]): List[FactoryDeliveryMetadata] = {
     require(inspected)
     setters.filter(s => s.factoryUUID == factory.getUUID).toList
   }
 
-  def findNode(classInfo: Class[_]): Option[Node] = nodes.find(_.classInfo == classInfo)
+  /**
+    * Find the corresponding node of a factory in the pool
+    *
+    * @param factory a Factory object
+    * @return an option of Node
+    */
+  def findNode(factory: Factory[_]): Option[Node] = nodes.find(_.factoryUUID == factory.getUUID)
 
   private[this] def createNodes(): Set[Node] = {
     pipeline.stages
-      .flatMap(s => s.factories.map({
-        f =>
-          val setter = FactoryDeliveryMetadata.builder()
-            .setFactory(f)
-            .getOrCreate()
+      .flatMap {
+        stage =>
+          stage.factories.map {
+            fac =>
+              val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
+              setters ++= setter
 
-          setters ++= setter
+              val inputs = setter.flatMap(_.getFactoryInputs).toList
+              val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers)
 
-          val inputs = setter
-            .flatMap(_.getFactoryInputs) // convert all the Types to String
-            .toList
-
-          val output = FactoryOutput(
-            runtimeType = f.deliveryType(),
-            consumer = f.consumers
-          )
-
-          Node(f.getClass, f.getUUID, s.stageId, inputs, output)
-      }))
+              Node(fac.getClass, fac.getUUID, stage.stageId, inputs, output)
+          }
+      }
       .toSet
   }
 
   private[this] def createInternalFlows(): Set[Flow] = {
     pipeline
       .stages
-      .flatMap({
+      .flatMap {
         stage =>
           val factoriesOfStage = stage.factories
 
@@ -57,17 +74,17 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
             Set[Flow]()
           } else {
             factoriesOfStage
-              .flatMap({
+              .flatMap {
                 f =>
-                  val thisNode = findNode(f.getClass).get
+                  val thisNode = findNode(f).get
                   val payloadType = f.deliveryType()
                   val targetNodes = nodes.filter(n => thisNode.targetNode(n))
 
                   targetNodes.map(tn => Flow(payloadType, thisNode, tn, stage.stageId))
-              })
+              }
               .toSet
           }
-      })
+      }
       .toSet
   }
 

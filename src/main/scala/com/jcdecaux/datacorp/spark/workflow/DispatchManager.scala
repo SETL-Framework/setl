@@ -110,7 +110,7 @@ private[spark] class DispatchManager extends Logging {
         deliveryInput =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
           val args = deliveryInput.argTypes
-            .map({
+            .map {
               argsType =>
                 log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryInput.methodName}")
 
@@ -127,7 +127,7 @@ private[spark] class DispatchManager extends Logging {
                       Deliverable.empty()
                     }
                 }
-            })
+            }
 
           if (args.exists(_.isEmpty)) {
             log.warn(s"No deliverable was found for optional input ${deliveryInput.methodName}")
