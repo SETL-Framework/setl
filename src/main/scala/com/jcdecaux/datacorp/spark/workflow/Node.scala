@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
-import com.jcdecaux.datacorp.spark.internal.{FactoryInput, FactoryOutput, Identifiable, Logging}
+import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
+import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
 
 import scala.reflect.runtime
 
@@ -10,18 +11,24 @@ private[workflow] case class Node(classInfo: Class[_],
                                   input: List[FactoryInput],
                                   output: FactoryOutput) extends Identifiable with Logging {
 
-  def getPrettyName: String = classInfo.getCanonicalName.split("\\.").last
-
   def listInputProducers: List[Class[_]] = this.input.map(_.producer)
 
-  def findInputByType(t: runtime.universe.Type): List[FactoryInput] = input.filter(_.inputType == t)
+  def findInputByType(t: runtime.universe.Type): List[FactoryInput] = input.filter(_.runtimeType == t)
 
   def describe(): Unit = {
     println(s"Node   : $getPrettyName")
     println(s"Stage  : $stage")
-    input.foreach(i => println(s"Input  : ${i.inputType.toString}"))
-    println(s"Output : ${output.outputType.toString}") //
+    input.foreach(i => println(s"Input  : ${cleanTypeName(i.runtimeType)}"))
+    println(s"Output : ${cleanTypeName(output.runtimeType)}") //
     println("--------------------------------------")
+  }
+
+  private[workflow] def getPrettyName: String = prettyNameOf(classInfo.getCanonicalName)
+
+  private[workflow] def prettyNameOf(t: String): String = t.split("\\.").last
+
+  private[workflow] def cleanTypeName(t: runtime.universe.Type): String = {
+    t.toString.split("\\[").map(prettyNameOf).mkString("[")
   }
 
   /**
@@ -35,7 +42,7 @@ private[workflow] case class Node(classInfo: Class[_],
     val validStage = if (this.stage >= next.stage) false else true
     var validTarget: Boolean = false
 
-    val filteredInputs = next.findInputByType(this.output.outputType)
+    val filteredInputs = next.findInputByType(this.output.runtimeType)
 
     filteredInputs.length match {
 
@@ -54,7 +61,7 @@ private[workflow] case class Node(classInfo: Class[_],
         val nonExplicitlyDefinedProducers = filteredInputs.filter(_.producer == classOf[Object])
 
         if (!exactProducerMatch && nonExplicitlyDefinedProducers.length > 1) {
-          log.error(s"Multiple inputs in ${next.getPrettyName} are of type ${this.output.outputType.toString}. " +
+          log.error(s"Multiple inputs in ${next.getPrettyName} are of type ${this.output.runtimeType.toString}. " +
             s"You may declare the producer information in Delivery annotation, otherwise this may cause " +
             s"unexpected pipeline result.")
 

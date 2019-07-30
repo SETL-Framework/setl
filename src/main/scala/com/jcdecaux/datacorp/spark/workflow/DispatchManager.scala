@@ -2,8 +2,8 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.{DeliverySetterMetadata, Logging}
-import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
+import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -88,6 +88,15 @@ private[spark] class DispatchManager extends Logging {
     */
   private[workflow] def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.getDelivery)
 
+  private[workflow] def dispatch(factory: Factory[_]): this.type = {
+    val setters = FactoryDeliveryMetadata
+      .builder()
+      .setFactory(factory)
+      .getOrCreate()
+
+    dispatch(factory, setters)
+  }
+
   /**
     * Dispatch the right deliverable object to the corresponding methods
     * (denoted by the @Delivery annotation) of a factory
@@ -95,11 +104,8 @@ private[spark] class DispatchManager extends Logging {
     * @param factory target factory
     * @return
     */
-  private[workflow] def dispatch(factory: Factory[_]): this.type = {
-
-    DeliverySetterMetadata.builder()
-      .setClass(factory.getClass)
-      .getOrCreate()
+  private[workflow] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
+    setters
       .foreach({
         deliveryInput =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
@@ -130,7 +136,6 @@ private[spark] class DispatchManager extends Logging {
             setterMethod.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
           }
       })
-
     this
   }
 

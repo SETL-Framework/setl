@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Identifiable
+import com.jcdecaux.datacorp.spark.internal.{HasType, Identifiable}
 import com.jcdecaux.datacorp.spark.workflow.External
 
 import scala.collection.mutable.ArrayBuffer
@@ -15,7 +15,7 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam T type of the payload
   */
 @InterfaceStability.Unstable
-class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identifiable {
+class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identifiable with HasType {
 
   private var empty: Boolean = false
 
@@ -29,7 +29,9 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
     */
   val consumer: ArrayBuffer[Class[_]] = ArrayBuffer()
 
-  def payloadType: ru.Type = tag.tpe
+  override val runtimeType: ru.Type = tag.tpe
+
+  def payloadType: ru.Type = runtimeType
 
   def get: T = payload
 

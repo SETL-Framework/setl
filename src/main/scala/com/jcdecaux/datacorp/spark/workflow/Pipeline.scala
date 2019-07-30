@@ -74,7 +74,7 @@ class Pipeline extends Logging {
   def run(): this.type = {
     inspectPipeline()
     stages
-      .foreach({
+      .foreach {
         stage =>
 
           // Describe current stage
@@ -82,13 +82,16 @@ class Pipeline extends Logging {
 
           // Dispatch input if stageID doesn't equal 0
           if (dispatchManagers.deliveries.nonEmpty) {
-            stage.factories.foreach(dispatchManagers.dispatch)
+            stage.factories
+              .foreach {
+                factory => dispatchManagers.dispatch(factory, pipelineInspector.findSetters(factory))
+              }
           }
 
           // run the stage
           stage.run()
           stage.factories.foreach(dispatchManagers.collectDeliverable)
-      })
+      }
 
     this
   }
