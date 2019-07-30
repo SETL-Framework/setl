@@ -42,7 +42,9 @@ private[spark] class DispatchManager extends Logging {
     * @param deliveryType runtime type
     * @return
     */
-  private[this] def getDelivery(deliveryType: ru.Type, consumer: Class[_], producer: Class[_]): Option[Deliverable[_]] = {
+  private[this] def getDelivery(deliveryType: ru.Type,
+                                consumer: Class[_ <: Factory[_]],
+                                producer: Class[_ <: Factory[_]]): Option[Deliverable[_]] = {
 
     val availableDeliverable = findDeliverableByType(deliveryType)
 
@@ -107,22 +109,22 @@ private[spark] class DispatchManager extends Logging {
   private[workflow] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
     setters
       .foreach({
-        deliveryInput =>
+        setterMethod =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
-          val args = deliveryInput.argTypes
+          val args = setterMethod.argTypes
             .map {
-              argsType =>
-                log.debug(s"Dispatch $argsType by calling ${factory.getClass.getCanonicalName}.${deliveryInput.methodName}")
+              argType =>
+                log.debug(s"Dispatch $argType by calling ${factory.getClass.getCanonicalName}.${setterMethod.name}")
 
                 getDelivery(
-                  deliveryType = argsType,
+                  deliveryType = argType,
                   consumer = factory.getClass,
-                  producer = deliveryInput.producer
+                  producer = setterMethod.producer
                 ) match {
                   case Some(delivery) => delivery
                   case _ =>
-                    if (!deliveryInput.optional) {
-                      throw new NoSuchElementException(s"Can not find type $argsType from DispatchManager")
+                    if (!setterMethod.optional) {
+                      throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
                     } else {
                       Deliverable.empty()
                     }
@@ -130,10 +132,10 @@ private[spark] class DispatchManager extends Logging {
             }
 
           if (args.exists(_.isEmpty)) {
-            log.warn(s"No deliverable was found for optional input ${deliveryInput.methodName}")
+            log.warn(s"No deliverable was found for optional input ${setterMethod.name}")
           } else {
-            val setterMethod = factory.getClass.getMethod(deliveryInput.methodName, args.map(_.classInfo): _*)
-            setterMethod.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
+            val factorySetter = factory.getClass.getMethod(setterMethod.name, args.map(_.classInfo): _*)
+            factorySetter.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
           }
       })
     this

@@ -78,7 +78,9 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
                 f =>
                   val thisNode = findNode(f).get
                   val payloadType = f.deliveryType()
-                  val targetNodes = nodes.filter(n => thisNode.targetNode(n))
+                  val targetNodes = nodes
+                    .filter(n => n.stage > thisNode.stage)
+                    .filter(n => thisNode.targetNode(n))
 
                   targetNodes.map(tn => Flow(payloadType, thisNode, tn, stage.stageId))
               }

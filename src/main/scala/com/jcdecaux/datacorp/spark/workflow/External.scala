@@ -1,5 +1,4 @@
 package com.jcdecaux.datacorp.spark.workflow
-
 /**
   * External data source
   */

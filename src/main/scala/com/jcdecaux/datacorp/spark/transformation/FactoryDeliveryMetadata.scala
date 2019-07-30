@@ -8,16 +8,17 @@ import scala.reflect.runtime
   * DeliverySetterMetadata contains information of the @Delivery annotated method, including the name,
   * argument types, the producer and optional
   *
-  * @param methodName name of the method
-  * @param argTypes   type of each argument
-  * @param producer   the producer class for the given data
-  * @param optional   true if optional
+  * @param factoryUUID UUID of factory
+  * @param name        name of the method
+  * @param argTypes    type of each argument
+  * @param producer    the producer class for the given data
+  * @param optional    true if optional
   */
 @InterfaceStability.Evolving
 private[spark] case class FactoryDeliveryMetadata(factoryUUID: String,
-                                                  methodName: String,
+                                                  name: String,
                                                   argTypes: List[runtime.universe.Type],
-                                                  producer: Class[_],
+                                                  producer: Class[_ <: Factory[_]],
                                                   optional: Boolean) {
 
   /**
@@ -75,9 +76,9 @@ private[spark] object FactoryDeliveryMetadata {
 
             FactoryDeliveryMetadata(
               factoryUUID = factoryUUID,
-              methodName = mth.name.toString,
+              name = mth.name.toString,
               argTypes = mth.typeSignature.paramLists.head.map(_.typeSignature),
-              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_]],
+              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
               optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean]
             )
           } else {
@@ -95,9 +96,9 @@ private[spark] object FactoryDeliveryMetadata {
              */
             FactoryDeliveryMetadata(
               factoryUUID = factoryUUID,
-              methodName = mth.name.toString.trim + "_$eq",
+              name = mth.name.toString.trim + "_$eq",
               argTypes = List(mth.typeSignature),
-              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_]],
+              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
               optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean]
             )
           }
