@@ -69,7 +69,7 @@ Let's create a csv file.
       // +-------+-------+  
 
      val repository = new SparkRepositoryBuilder[MyObject](Properties.getConfig("csv"))
-       .setSpark(spark).build().get()
+       .setSpark(spark).getOrCreate()
     
      repository.save(ds)
      // The column name will be changed automatically according to 

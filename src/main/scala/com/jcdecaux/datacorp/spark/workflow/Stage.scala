@@ -3,6 +3,7 @@ package com.jcdecaux.datacorp.spark.workflow
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
+import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
@@ -41,7 +42,22 @@ class Stage extends Logging {
     _parallel = boo
   }
 
-  def addFactory[T <: Factory[_]](factory: T): this.type = {
+  def addFactory(factory: Class[_ <: Factory[_]])(implicit spark: SparkSession): this.type = {
+
+    val primaryConstructor = factory.getConstructors.head
+
+    val newFactory = if (primaryConstructor.getParameterCount == 0) {
+      primaryConstructor.newInstance()
+    } else if (primaryConstructor.getParameterCount == 1 && primaryConstructor.getParameterTypes.head == classOf[SparkSession]) {
+      primaryConstructor.newInstance(spark)
+    } else {
+      throw new IllegalArgumentException("Can not instantiate a Factory class with primary constructor other than SparkSession")
+    }
+
+    addFactory(newFactory.asInstanceOf[Factory[_]])
+  }
+
+  def addFactory(factory: Factory[_]): this.type = {
     factories += factory
     this
   }

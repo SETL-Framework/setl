@@ -246,6 +246,39 @@ class PipelineSuite extends FunSuite {
 
   }
 
+  test("Test Pipeline creation with default primary constructor") {
+    implicit val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    import spark.implicits._
+
+    val ds2: Dataset[Product2] = Seq(
+      Product2("id_of_product1", "c2"),
+      Product2("pd1", "c2")
+    ).toDS
+
+    val pipeline = new Pipeline
+
+    pipeline
+      .setInput(new Deliverable[String]("wrong_id_of_product1"))
+      .setInput[String]("id_of_product1", classOf[ProductFactory])
+      .setInput(ds2)
+      .addStage(classOf[ProductFactory])
+      .addStage(classOf[DatasetFactory])
+      .addStage(classOf[DatasetFactory2])
+      .describe()
+      .run()
+
+    pipeline.get().asInstanceOf[Dataset[Product2]].show()
+    assert(pipeline.get().asInstanceOf[Dataset[Product2]].count() === 2)
+    assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
+    assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
+    assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+
+    // Check inspector
+    assert(pipeline.pipelineInspector.nodes.size === 3)
+    assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
+    assert(pipeline.pipelineInspector.flows.size === 5)
+  }
+
   test("Pipeline exceptions") {
 
     val f1 = new ProductFactory

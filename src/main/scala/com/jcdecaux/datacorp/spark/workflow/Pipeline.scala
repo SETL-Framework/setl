@@ -3,6 +3,7 @@ package com.jcdecaux.datacorp.spark.workflow
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
+import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -48,6 +49,10 @@ class Pipeline extends Logging {
   def getOutput(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.findDeliverableByType(t)
 
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
+
+  def addStage(factory: Class[_ <: Factory[_]])(implicit spark: SparkSession): this.type = {
+    addStage(new Stage().addFactory(factory))
+  }
 
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage $stageCounter")
@@ -98,5 +103,8 @@ class Pipeline extends Logging {
 
   private[this] def inspectPipeline(): Unit = if (!pipelineInspector.inspected) pipelineInspector.inspect()
 
+  def get(): Any = {
+    stages.last.factories.last.get()
+  }
 
 }
