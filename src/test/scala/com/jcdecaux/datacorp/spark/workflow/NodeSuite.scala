@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
 import org.scalatest.FunSuite
 
@@ -195,18 +196,19 @@ class NodeSuite extends FunSuite {
       output = FactoryOutput(runtime.universe.typeOf[List[String]], List(classOf[Product23]))
     )
 
-    assert(node1.targetNode(node2) === false, "Multiple input in node2 have save type and producer ==> should return false")
     assert(node1.targetNode(node21) === true)
     assert(node1.targetNode(node21WithWrongType) === false, "The Int input in the second node doesn't have the right producer")
 
     assert(node1WithConsumer.targetNode(node21) === true)
     assert(node1WithConsumer.targetNode(node21WithWrongType) === false)
-    assert(node1WithConsumer.targetNode(node2) === false)
     assert(node1WithConsumer.targetNode(node21WithWrongProducer) === false)
 
     assert(node1.targetNode(node22) === true)
     assert(node1WithConsumer.targetNode(node22) === true)
     assert(node1WithWrongConsumer.targetNode(node22) === false)
+
+    assertThrows[InvalidDeliveryException](node1.targetNode(node2))
+    assertThrows[InvalidDeliveryException](node1WithConsumer.targetNode(node2))
 
   }
 

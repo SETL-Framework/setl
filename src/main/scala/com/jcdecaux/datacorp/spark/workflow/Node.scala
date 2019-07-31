@@ -1,5 +1,6 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
 
@@ -107,11 +108,9 @@ private[workflow] case class Node(factoryClass: Class[_],
     val nonExplicitlyDefinedProducers = matchedInputs.filter(_.producer == classOf[External])
 
     if (!exactProducerMatch && nonExplicitlyDefinedProducers.length > 1) {
-      log.error(s"Multiple inputs in ${nextNode.getPrettyName} are of type ${this.output.runtimeType.toString}. " +
-        s"You may have to declare the producer information in Delivery annotation, otherwise this may cause " +
-        s"unexpected pipeline result.")
-
-      nonExplicitlyDefinedProducers.foreach { n => log.error(n) }
+      throw new InvalidDeliveryException(s"Multiple inputs in ${nextNode.getPrettyName} are " +
+        s"of type ${this.output.runtimeType.toString}. You may have to explicitly declare their producer " +
+        s"in the Delivery annotation, otherwise this may cause unexpected pipeline result.")
     }
 
     validProducer = exactProducerMatch || nonExplicitlyDefinedProducers.length == 1
