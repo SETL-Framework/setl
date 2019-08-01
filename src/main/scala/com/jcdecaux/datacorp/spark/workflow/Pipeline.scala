@@ -36,10 +36,7 @@ class Pipeline extends Logging {
 
   def setInput[T: ru.TypeTag](v: T, consumer: Class[_], consumers: Class[_]*): this.type = {
     val deliverable = new Deliverable[T](v)
-
-    deliverable.setConsumer(consumer)
-    consumers.foreach(c => deliverable.setConsumer(c))
-
+    (consumer +: consumers).foreach(c => deliverable.setConsumer(c))
     setInput(deliverable)
   }
 
