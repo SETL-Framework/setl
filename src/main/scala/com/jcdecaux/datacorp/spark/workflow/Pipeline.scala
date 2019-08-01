@@ -32,6 +32,8 @@ class Pipeline extends Logging {
     setInput(deliverable)
   }
 
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
+
   def setInput[T: ru.TypeTag](v: T, consumer: Class[_], consumers: Class[_]*): this.type = {
     val deliverable = new Deliverable[T](v)
 
@@ -40,8 +42,6 @@ class Pipeline extends Logging {
 
     setInput(deliverable)
   }
-
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
 
   def setInput[T: ru.TypeTag](v: T): this.type = setInput(v, None)
 
