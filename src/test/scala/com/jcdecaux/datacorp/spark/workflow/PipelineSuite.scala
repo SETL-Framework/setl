@@ -247,7 +247,7 @@ class PipelineSuite extends FunSuite {
   }
 
   test("Test Pipeline creation with default primary constructor") {
-    implicit val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(
@@ -262,8 +262,8 @@ class PipelineSuite extends FunSuite {
       .setInput[String]("id_of_product1", classOf[ProductFactory])
       .setInput(ds2)
       .addStage(classOf[ProductFactory])
-      .addStage(classOf[DatasetFactory])
-      .addStage(classOf[DatasetFactory2])
+      .addStage(classOf[DatasetFactory], spark)
+      .addStage(classOf[DatasetFactory2], spark)
       .describe()
       .run()
 
@@ -271,12 +271,20 @@ class PipelineSuite extends FunSuite {
     assert(pipeline.get().asInstanceOf[Dataset[Product2]].count() === 2)
     assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
     assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
-    assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+    assert(
+      pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
+        Product2("id_of_product1", "c2")
+    )
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.flows.size === 5)
+
+    assertThrows[IllegalArgumentException](
+      pipeline.addStage(classOf[DatasetFactory], spark, "sqdfsd"),
+      "IllegalArgumentException should be thrown as the number of constructor argument is wrong"
+    )
   }
 
   test("Pipeline exceptions") {

@@ -3,7 +3,6 @@ package com.jcdecaux.datacorp.spark.workflow
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.Logging
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
-import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -50,8 +49,9 @@ class Pipeline extends Logging {
 
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
-  def addStage(factory: Class[_ <: Factory[_]])(implicit spark: SparkSession): this.type = {
-    addStage(new Stage().addFactory(factory))
+  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
+  def addStage(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
+    addStage(new Stage().addFactory(factory, constructorArgs: _*))
   }
 
   def addStage(stage: Stage): this.type = {
