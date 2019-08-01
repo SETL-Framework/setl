@@ -14,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam A the type of object that the factory is supposed to produce
   */
 @InterfaceStability.Evolving
-abstract class Factory[A](implicit tag: ru.TypeTag[A]) extends Logging with Identifiable {
+abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable {
 
   var consumers: List[Class[_]] = List()
 
@@ -48,7 +48,7 @@ abstract class Factory[A](implicit tag: ru.TypeTag[A]) extends Logging with Iden
     *
     * @return
     */
-  def deliveryType(): ru.Type = tag.tpe
+  def deliveryType(): ru.Type = ru.typeTag[A].tpe
 
   /**
     * Describe the

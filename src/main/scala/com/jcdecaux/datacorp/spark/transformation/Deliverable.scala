@@ -11,11 +11,10 @@ import scala.reflect.runtime.{universe => ru}
   * A deliverable is a container of an object that will be transferred by a [[com.jcdecaux.datacorp.spark.workflow.DispatchManager]].
   *
   * @param payload data that will be transferred
-  * @param tag     type tag of the class T
   * @tparam T type of the payload
   */
 @InterfaceStability.Unstable
-class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identifiable with HasType {
+class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false
 
@@ -29,7 +28,7 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
     */
   val consumer: ArrayBuffer[Class[_]] = ArrayBuffer()
 
-  override val runtimeType: ru.Type = tag.tpe
+  override val runtimeType: ru.Type = ru.typeTag[T].tpe
 
   def payloadType: ru.Type = runtimeType
 
@@ -41,7 +40,7 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
     * @param t a deliverable object
     * @return
     */
-  def ==(t: Deliverable[_]): Boolean = this.==(t.payloadType)
+  def ==(t: Deliverable[_]): Boolean = this.payloadType == t.payloadType
 
   def ==(t: ru.Type): Boolean = this.payloadType.equals(t)
 
