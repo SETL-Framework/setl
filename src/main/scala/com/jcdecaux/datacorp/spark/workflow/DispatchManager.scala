@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import java.util.UUID
+
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
 import com.jcdecaux.datacorp.spark.internal.Logging
@@ -22,7 +24,7 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 private[spark] class DispatchManager extends Logging {
 
-  private[this] val deliveryRegister: scala.collection.mutable.HashSet[String] = scala.collection.mutable.HashSet()
+  private[this] val deliveryRegister: scala.collection.mutable.HashSet[UUID] = scala.collection.mutable.HashSet()
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
   private[workflow] def setDelivery(v: Deliverable[_]): this.type = {

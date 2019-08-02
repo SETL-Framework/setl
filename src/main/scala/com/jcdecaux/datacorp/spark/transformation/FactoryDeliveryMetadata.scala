@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
+import java.util.UUID
+
 import com.jcdecaux.datacorp.spark.annotation.{Delivery, InterfaceStability}
 
 import scala.reflect.runtime
@@ -15,7 +17,7 @@ import scala.reflect.runtime
   * @param optional    true if optional
   */
 @InterfaceStability.Evolving
-private[spark] case class FactoryDeliveryMetadata(factoryUUID: String,
+private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
                                                   name: String,
                                                   argTypes: List[runtime.universe.Type],
                                                   producer: Class[_ <: Factory[_]],
@@ -39,7 +41,7 @@ private[spark] object FactoryDeliveryMetadata {
   class Builder extends com.jcdecaux.datacorp.spark.Builder[Iterable[FactoryDeliveryMetadata]] {
 
     var cls: Class[_ <: Factory[_]] = _
-    var factoryUUID: String = _
+    var factoryUUID: UUID = _
     var metadata: Iterable[FactoryDeliveryMetadata] = _
 
     def setFactory(factory: Factory[_]): this.type = {

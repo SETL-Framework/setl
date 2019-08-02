@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import java.util.UUID
+
 import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
 import org.scalatest.FunSuite
@@ -8,10 +10,14 @@ import scala.reflect.runtime
 
 class NodeSuite extends FunSuite {
 
+  val uuid1: UUID = UUID.randomUUID()
+  val uuid2: UUID = UUID.randomUUID()
+  val uuid3: UUID = UUID.randomUUID()
+
   test("Test Node.targetNode with classInfo") {
     val nodeStage0 = Node(
       factoryClass = classOf[Product1],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List(classOf[Product2]))
@@ -19,7 +25,7 @@ class NodeSuite extends FunSuite {
 
     val nodeStage1 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], producer = classOf[Product1]),
@@ -30,7 +36,7 @@ class NodeSuite extends FunSuite {
 
     val nodeStage1WithWrongClassInfo = Node(
       factoryClass = classOf[Product23],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], producer = classOf[Product1]),
@@ -47,7 +53,7 @@ class NodeSuite extends FunSuite {
 
     val nodeStage0 = Node(
       factoryClass = classOf[Product1],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List())
@@ -55,7 +61,7 @@ class NodeSuite extends FunSuite {
 
     val nodeStage1 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[Product1]),
@@ -66,7 +72,7 @@ class NodeSuite extends FunSuite {
 
     val sameNodeStage0 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 0,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[Product1]),
@@ -82,7 +88,7 @@ class NodeSuite extends FunSuite {
   test("Test Node.targetNode with UUID") {
     val node1 = Node(
       factoryClass = classOf[Product1],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List())
@@ -90,7 +96,7 @@ class NodeSuite extends FunSuite {
 
     val node2 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], producer = classOf[Product1]),
@@ -101,7 +107,7 @@ class NodeSuite extends FunSuite {
 
     val node3 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], producer = classOf[Product1]),
@@ -119,7 +125,7 @@ class NodeSuite extends FunSuite {
 
     val node1 = Node(
       factoryClass = classOf[Product1],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List())
@@ -127,7 +133,7 @@ class NodeSuite extends FunSuite {
 
     val node1WithConsumer = Node(
       factoryClass = classOf[Product1],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List(classOf[Product2]))
@@ -135,7 +141,7 @@ class NodeSuite extends FunSuite {
 
     val node1WithWrongConsumer = Node(
       factoryClass = classOf[Product1],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List(classOf[Container[Product2]]))
@@ -143,7 +149,7 @@ class NodeSuite extends FunSuite {
 
     val node2 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], producer = classOf[External]),
@@ -154,7 +160,7 @@ class NodeSuite extends FunSuite {
 
     val node21 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[External]),
@@ -165,7 +171,7 @@ class NodeSuite extends FunSuite {
 
     val node21WithWrongType = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Float], classOf[External]),
@@ -176,7 +182,7 @@ class NodeSuite extends FunSuite {
 
     val node21WithWrongProducer = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[Container[Product1]]),
@@ -187,7 +193,7 @@ class NodeSuite extends FunSuite {
 
     val node22 = Node(
       factoryClass = classOf[Product2],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[Product1]),
@@ -215,7 +221,7 @@ class NodeSuite extends FunSuite {
   test("Test Node class erasure") {
     val node1 = Node(
       factoryClass = classOf[Container[Product1]],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List())
@@ -223,7 +229,7 @@ class NodeSuite extends FunSuite {
 
     val node11 = Node(
       factoryClass = classOf[Container[Product1]],
-      factoryUUID = "123",
+      factoryUUID = uuid1,
       stage = 0,
       input = List(FactoryInput(runtime.universe.typeOf[String], classOf[External])),
       output = FactoryOutput(runtime.universe.typeOf[Int], List(classOf[Container[Product2]]))
@@ -231,7 +237,7 @@ class NodeSuite extends FunSuite {
 
     val node2 = Node(
       factoryClass = classOf[Container[Product2]],
-      factoryUUID = "123456",
+      factoryUUID = uuid2,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[Container[Product1]]),
@@ -242,7 +248,7 @@ class NodeSuite extends FunSuite {
 
     val node3 = Node(
       factoryClass = classOf[Container[Product23]],
-      factoryUUID = "1234567",
+      factoryUUID = uuid3,
       stage = 1,
       input = List(
         FactoryInput(runtime.universe.typeOf[Int], classOf[Container[Product1]]),

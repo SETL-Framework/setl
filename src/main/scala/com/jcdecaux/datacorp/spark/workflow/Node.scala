@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import java.util.UUID
+
 import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
@@ -16,7 +18,7 @@ import scala.reflect.runtime
   * @param output       output of node
   */
 private[workflow] case class Node(factoryClass: Class[_],
-                                  factoryUUID: String,
+                                  factoryUUID: UUID,
                                   stage: Int,
                                   input: List[FactoryInput],
                                   output: FactoryOutput) extends Identifiable with Logging {
