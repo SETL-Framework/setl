@@ -1,17 +1,15 @@
 package com.jcdecaux.datacorp.spark.workflow
 
-import java.util.UUID
-
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
+import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
 
 @InterfaceStability.Evolving
-class Stage extends Logging {
+class Stage extends Logging with Identifiable with HasUUIDRegistry {
 
   private[this] var _end: Boolean = true
 
@@ -58,8 +56,14 @@ class Stage extends Logging {
     addFactory(newFactory.asInstanceOf[Factory[_]])
   }
 
+  @throws[AlreadyExistsException]
   def addFactory(factory: Factory[_]): this.type = {
-    factories += factory
+    if (registerNewItem(factory)) {
+      factories += factory
+    } else {
+      throw new AlreadyExistsException(s"The current factory ${factory.getCanonicalName} (${factory.getUUID.toString})" +
+        s"already exists")
+    }
     this
   }
 

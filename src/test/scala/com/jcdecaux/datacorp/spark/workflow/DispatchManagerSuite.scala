@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
+import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.Dataset
 import org.scalatest.FunSuite
@@ -178,6 +179,14 @@ class DispatchManagerSuite extends FunSuite {
     assert(test.v1 === "hehehe")
     assert(test.v2 === "hahaha")
     assert(test.read().process().get() === "hehehehahaha")
+
+  }
+
+  test("Throw exception") {
+
+    val dispatchManager = new DispatchManager
+    val del = new Deliverable[String]("hehehe")
+    assertThrows[AlreadyExistsException](dispatchManager.setDelivery(del).setDelivery(del))
 
   }
 }

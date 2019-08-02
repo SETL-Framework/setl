@@ -1,10 +1,8 @@
 package com.jcdecaux.datacorp.spark.workflow
 
-import java.util.UUID
-
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
 
 import scala.collection.mutable.ArrayBuffer
@@ -22,15 +20,14 @@ import scala.reflect.runtime.{universe => ru}
   * </ul>
   */
 @InterfaceStability.Evolving
-private[spark] class DispatchManager extends Logging {
+private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
 
-  private[this] val deliveryRegister: scala.collection.mutable.HashSet[UUID] = scala.collection.mutable.HashSet()
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
   private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer}")
 
-    if (deliveryRegister.add(v.getUUID)) {
+    if (registerNewItem(v)) {
       deliveries.append(v)
     } else {
       throw new AlreadyExistsException(s"The current deliverable ${v.getUUID} already exists")

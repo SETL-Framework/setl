@@ -1,14 +1,15 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
+import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 @InterfaceStability.Evolving
-class Pipeline extends Logging {
+class Pipeline extends Logging with HasUUIDRegistry {
 
   private[workflow] val dispatchManagers: DispatchManager = new DispatchManager
   private[workflow] var stageCounter: Int = 0
@@ -53,9 +54,15 @@ class Pipeline extends Logging {
 
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage $stageCounter")
-    markEndStage()
-    stages += stage.setStageId(stageCounter)
-    stageCounter += 1
+
+    if (registerNewItem(stage)) {
+      markEndStage()
+      stages += stage.setStageId(stageCounter)
+      stageCounter += 1
+    } else {
+      throw new AlreadyExistsException("Stage already exists")
+    }
+
     this
   }
 
