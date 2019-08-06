@@ -219,45 +219,42 @@ object SchemaConverter {
     */
   def analyseSchema[T <: Product : ClassTag : ru.TypeTag]: StructType = {
 
-    val runtimeMirror = ru.runtimeMirror(getClass.getClassLoader)
+    val classSymbol: ru.ClassSymbol = ru.symbolOf[T].asClass
+    val paramListOfPrimaryConstructor = classSymbol.primaryConstructor.typeSignature.paramLists.head
 
-    val classObj = scala.reflect.classTag[T].runtimeClass
-    val classSymbol = runtimeMirror.classSymbol(classObj)
+    val sparkFields: List[StructField] = paramListOfPrimaryConstructor.map {
+      field =>
+        val sparkType = ScalaReflection.schemaFor(field.typeSignature).dataType
 
-    val sparkFields = classSymbol.primaryConstructor.typeSignature.paramLists.head.map(field => {
-      val sparkType = ScalaReflection.schemaFor(field.typeSignature).dataType
+        // Black magic from here:
+        // https://stackoverflow.com/questions/23046958/accessing-an-annotation-value-in-scala
+        val annotations = field.annotations.collect {
 
-      // Black magic from here:
-      // https://stackoverflow.com/questions/23046958/accessing-an-annotation-value-in-scala
-      val annotations = field.annotations.collect({
+          // Case where the field has annotation 'ColumnName'
+          case columnName: ru.AnnotationApi if columnName.tree.tpe =:= ru.typeOf[ColumnName] =>
+            val value = columnName.tree.children.tail.collectFirst {
+              case ru.Literal(ru.Constant(name)) => name.toString
+            }
 
-        // Case where the field has annotation 'ColumnName'
-        case columnName: ru.AnnotationApi if columnName.tree.tpe =:= ru.typeOf[ColumnName] =>
-          val value = columnName.tree.children.tail.collectFirst({
-            case ru.Literal(ru.Constant(name: String)) => name
-          })
+            (ColumnName.toString(), Array(value.get))
 
-          (ColumnName.toString(), Array(value.get))
+          // Case where the field has annotation `CompoundKey`
+          case compoundKey: ru.AnnotationApi if compoundKey.tree.tpe =:= ru.typeOf[CompoundKey] =>
 
-        // Case where the field has annotation `CompoundKey`
-        case compoundKey: ru.AnnotationApi if compoundKey.tree.tpe =:= ru.typeOf[CompoundKey] =>
+            val attributes = Some(compoundKey.tree.children.tail.collect {
+              case ru.Literal(ru.Constant(attribute)) => attribute.toString
+            })
 
-          val attributes = Some(compoundKey.tree.children.tail.collect({
-            case ru.Literal(ru.Constant(attribute: String)) => attribute
-          }))
+            (CompoundKey.toString(), attributes.get.toArray)
 
-          (CompoundKey.toString(), attributes.get.toArray)
+        }.toMap
 
-      }).toMap
+        val metadataBuilder = new MetadataBuilder()
 
-      val metadataBuilder = new MetadataBuilder()
+        annotations.foreach(annoData => metadataBuilder.putStringArray(annoData._1, annoData._2))
 
-      annotations.foreach({
-        annotationData => metadataBuilder.putStringArray(annotationData._1, annotationData._2)
-      })
-
-      StructField(field.name.toString, sparkType, nullable = true, metadataBuilder.build())
-    })
+        StructField(field.name.toString, sparkType, nullable = true, metadataBuilder.build())
+    }
 
     StructType(sparkFields)
   }
