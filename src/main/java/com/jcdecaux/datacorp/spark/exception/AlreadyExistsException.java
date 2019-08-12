@@ -1,6 +1,6 @@
 package com.jcdecaux.datacorp.spark.exception;
 
-public class AlreadyExistsException extends RuntimeException {
+public class AlreadyExistsException extends BaseException {
     public AlreadyExistsException() {
     }
 
