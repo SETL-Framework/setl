@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
+import com.jcdecaux.datacorp.spark.exception.{AlreadyExistsException, InvalidDeliveryException}
 import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
 
@@ -24,6 +24,16 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
 
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
+  /**
+    * Add a new Deliverable object into DispatchManager's delivery pool. <br>
+    *
+    * <b>Attention:</b> Dispatch manager only guarantee that each deliverable object has different UUID.
+    * In other word, use cannot call twice <code>setDelivery</code> with the same argument. However, it doesn't
+    * check if multiple deliverables have the same data type with the same producer and the same consumer
+    *
+    * @param v : Deliverable
+    * @return this DispatchManager
+    */
   private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer}")
 
@@ -41,6 +51,7 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
     * @param deliveryType runtime type
     * @return
     */
+  @throws[InvalidDeliveryException]("find multiple matched deliveries")
   private[this] def getDelivery(deliveryType: ru.Type,
                                 consumer: Class[_ <: Factory[_]],
                                 producer: Class[_ <: Factory[_]]): Option[Deliverable[_]] = {
@@ -67,8 +78,20 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
             Some(matchedByProducer.head)
           case _ =>
             log.info("Multiple Deliverable with same type and same producer were received. Try matching by consumer")
-            matchedByProducer.filter(_.consumer.nonEmpty).find(_.consumer.contains(consumer))
+            val matchedByConsumer = matchedByProducer
+              .filter(_.consumer.nonEmpty)
+              .filter(_.consumer.contains(consumer))
 
+            matchedByConsumer.length match {
+              case 0 =>
+                log.warn("No deliverable available")
+                None
+              case 1 =>
+                log.debug("Find Deliverable")
+                Some(matchedByConsumer.head)
+              case _ =>
+                throw new InvalidDeliveryException("Find multiple deliveries having the same producer and consumer")
+            }
         }
     }
   }
@@ -79,7 +102,9 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
     * @param deliveryType type of data
     * @return
     */
-  private[workflow] def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = deliveries.filter(_ == deliveryType).toArray
+  private[workflow] def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = {
+    deliveries.filter(_.hasSamePayloadType(deliveryType)).toArray
+  }
 
   /**
     * Collect a [[Deliverable]] from a [[Factory]]
@@ -105,30 +130,31 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
     * @param factory target factory
     * @return
     */
+  @throws[NoSuchElementException]("Cannot find any matched delivery")
+  @throws[InvalidDeliveryException]("Find multiple matched deliveries")
   private[workflow] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
     setters
-      .foreach({
+      .foreach {
         setterMethod =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
-          val args = setterMethod.argTypes
-            .map {
-              argType =>
-                log.debug(s"Dispatch $argType by calling ${factory.getClass.getCanonicalName}.${setterMethod.name}")
+          val args = setterMethod.argTypes.map {
+            argType =>
+              log.debug(s"Dispatch $argType by calling ${factory.getClass.getCanonicalName}.${setterMethod.name}")
 
-                getDelivery(
-                  deliveryType = argType,
-                  consumer = factory.getClass,
-                  producer = setterMethod.producer
-                ) match {
-                  case Some(delivery) => delivery
-                  case _ =>
-                    if (!setterMethod.optional) {
-                      throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
-                    } else {
-                      Deliverable.empty()
-                    }
-                }
-            }
+              getDelivery(
+                deliveryType = argType,
+                consumer = factory.getClass,
+                producer = setterMethod.producer
+              ) match {
+                case Some(delivery) => delivery
+                case _ =>
+                  if (!setterMethod.optional) {
+                    throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
+                  } else {
+                    Deliverable.empty()
+                  }
+              }
+          }
 
           if (args.exists(_.isEmpty)) {
             log.warn(s"No deliverable was found for optional input ${setterMethod.name}")
@@ -136,7 +162,7 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
             val factorySetter = factory.getClass.getMethod(setterMethod.name, args.map(_.classInfo): _*)
             factorySetter.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
           }
-      })
+      }
     this
   }
 

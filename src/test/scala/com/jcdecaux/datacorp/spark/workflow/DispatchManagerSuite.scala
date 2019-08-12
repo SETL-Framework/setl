@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
-import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
+import com.jcdecaux.datacorp.spark.exception.{AlreadyExistsException, InvalidDeliveryException}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.Dataset
 import org.scalatest.FunSuite
@@ -162,7 +162,7 @@ class DispatchManagerSuite extends FunSuite {
     override def get(): String = output
   }
 
-  test("Test optional input") {
+  test("Test DispatchManager optional input") {
 
     val test = new Test
     val dispatchManager = new DispatchManager
@@ -182,11 +182,54 @@ class DispatchManagerSuite extends FunSuite {
 
   }
 
-  test("Throw exception") {
+  test("DispatchManager should throw AlreadyExistsException exception " +
+    "while trying setting two identical deliveries") {
 
     val dispatchManager = new DispatchManager
     val del = new Deliverable[String]("hehehe")
     assertThrows[AlreadyExistsException](dispatchManager.setDelivery(del).setDelivery(del))
 
+  }
+
+  class Factory1 extends Factory[String] {
+    override def read(): Factory1.this.type = this
+
+    override def process(): Factory1.this.type = this
+
+    override def write(): Factory1.this.type = this
+
+    override def get(): String = "factory 1"
+  }
+
+  class Factory2 extends Factory[String] {
+
+    @Delivery(producer = classOf[Factory1])
+    var input1: String = _
+    @Delivery(producer = classOf[Factory1])
+    var input2: String = _
+
+    override def read(): Factory2.this.type = this
+
+    override def process(): Factory2.this.type = this
+
+    override def write(): Factory2.this.type = this
+
+    override def get(): String = "factory 2"
+  }
+
+  test("DispatchManager should throw InvalidDeliveryException when there are multiple " +
+    "matched deliveries") {
+
+    val dispatchManager = new DispatchManager
+    val del1 = new Deliverable[String]("hehe1").setProducer(classOf[Factory1]).setConsumer(classOf[Factory2])
+    val del2 = new Deliverable[String]("hehe2").setProducer(classOf[Factory1]).setConsumer(classOf[Factory2])
+
+    dispatchManager
+      .setDelivery(del1)
+      .setDelivery(del2)
+
+    val factory2 = new Factory2
+
+    assertThrows[InvalidDeliveryException](dispatchManager.dispatch(factory2))
   }
 }

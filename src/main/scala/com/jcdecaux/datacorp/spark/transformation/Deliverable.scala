@@ -37,12 +37,18 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
   /**
     * Compare the type of two deliverable
     *
-    * @param t a deliverable object
+    * @param deliverable a deliverable object
     * @return
     */
-  def ==(t: Deliverable[_]): Boolean = this.payloadType == t.payloadType
+  def hasSamePayloadType(deliverable: Deliverable[_]): Boolean = this.payloadType == deliverable.payloadType
 
-  def ==(t: ru.Type): Boolean = this.payloadType.equals(t)
+  def hasSamePayloadType(deliverable: ru.Type): Boolean = this.payloadType.equals(deliverable)
+
+  def hasSameContent(deliverable: Deliverable[_]): Boolean = {
+    this.hasSamePayloadType(deliverable) &&
+      this.consumer.intersect(deliverable.consumer).nonEmpty &&
+      this.producer == deliverable.producer
+  }
 
   def classInfo: Class[_] = payload.getClass
 
