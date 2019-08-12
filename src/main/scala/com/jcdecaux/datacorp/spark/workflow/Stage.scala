@@ -1,15 +1,25 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
+import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.parallel.mutable.ParArray
 
 @InterfaceStability.Evolving
-class Stage extends Logging {
+class Stage extends Logging with Identifiable with HasUUIDRegistry {
 
   private[this] var _end: Boolean = true
+
+  private[this] var _parallel: Boolean = true
+
+  private[this] var _stageId: Int = _
+
+  val factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
+
+  var deliveries: Array[Deliverable[_]] = _
 
   private[workflow] def end: Boolean = _end
 
@@ -19,19 +29,41 @@ class Stage extends Logging {
 
   private[workflow] def start: Boolean = if (stageId == 0) true else false
 
-  private[workflow] var stageId: Int = _
+  private[workflow] def stageId: Int = _stageId
 
   private[workflow] def setStageId(id: Int): this.type = {
-    stageId = id
+    _stageId = id
     this
   }
 
-  val factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
+  def parallel: Boolean = _parallel
 
-  var deliveries: Array[Deliverable[_]] = _
+  def parallel_=(boo: Boolean): Unit = {
+    _parallel = boo
+  }
 
-  def addFactory[T <: Factory[_]](factory: T): this.type = {
-    factories += factory
+  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
+  def addFactory(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
+
+    val primaryConstructor = factory.getConstructors.head
+
+    val newFactory = if (primaryConstructor.getParameterCount == 0) {
+      primaryConstructor.newInstance()
+    } else {
+      primaryConstructor.newInstance(constructorArgs: _*)
+    }
+
+    addFactory(newFactory.asInstanceOf[Factory[_]])
+  }
+
+  @throws[AlreadyExistsException]
+  def addFactory(factory: Factory[_]): this.type = {
+    if (registerNewItem(factory)) {
+      factories += factory
+    } else {
+      throw new AlreadyExistsException(s"The current factory ${factory.getCanonicalName} (${factory.getUUID.toString})" +
+        s"already exists")
+    }
     this
   }
 
@@ -42,11 +74,23 @@ class Stage extends Logging {
   }
 
   def run(): this.type = {
-    deliveries = factories
-      .par
-      .map(_.read().process().write().getDelivery)
-      .toArray
+    deliveries = parallelFactories match {
+      case Left(par) =>
+        log.debug(s"Stage $stageId will be run in parallel mode")
+        par.map(_.read().process().write().getDelivery).toArray
+      case Right(nonpar) =>
+        log.debug(s"Stage $stageId will be run in sequential mode")
+        nonpar.map(_.read().process().write().getDelivery)
+    }
     this
+  }
+
+  private[this] def parallelFactories: Either[ParArray[Factory[_]], Array[Factory[_]]] = {
+    if (_parallel) {
+      Left(factories.par)
+    } else {
+      Right(factories.toArray)
+    }
   }
 
 }

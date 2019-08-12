@@ -1,4 +1,12 @@
-## 0.3.0 (2019-7-22)
+## 0.3.1 (2019-07-24)
+- Added sequential mode in class `Stage`. Use can turn in on by setting `parallel` to *true*.
+- Added external data flow description in pipeline description
+- Added method `beforeAll` into `ConfigLoader`
+- Added new method `addStage` and `addFactory` that take a class object as input. The instantiation will be handled 
+  by the stage. The Factory class must have an empty primary constructor or a primary constructor with only a SparkSession 
+  object.
+
+## 0.3.0 (2019-07-22)
 
 #### New Features
 - Added `Delivery` annotation to handle inputs of a Factory

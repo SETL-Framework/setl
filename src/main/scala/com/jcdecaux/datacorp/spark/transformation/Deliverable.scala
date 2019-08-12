@@ -1,7 +1,8 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Identifiable
+import com.jcdecaux.datacorp.spark.internal.{HasType, Identifiable}
+import com.jcdecaux.datacorp.spark.workflow.External
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -10,17 +11,16 @@ import scala.reflect.runtime.{universe => ru}
   * A deliverable is a container of an object that will be transferred by a [[com.jcdecaux.datacorp.spark.workflow.DispatchManager]].
   *
   * @param payload data that will be transferred
-  * @param tag     type tag of the class T
   * @tparam T type of the payload
   */
 @InterfaceStability.Unstable
-class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identifiable {
+class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false
 
   private[spark] def isEmpty: Boolean = empty
 
-  var producer: Class[_] = classOf[Object]
+  var producer: Class[_] = classOf[External]
 
   /**
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
@@ -28,19 +28,27 @@ class Deliverable[T](val payload: T)(implicit tag: ru.TypeTag[T]) extends Identi
     */
   val consumer: ArrayBuffer[Class[_]] = ArrayBuffer()
 
-  def payloadType: ru.Type = tag.tpe
+  override val runtimeType: ru.Type = ru.typeTag[T].tpe
+
+  def payloadType: ru.Type = runtimeType
 
   def get: T = payload
 
   /**
     * Compare the type of two deliverable
     *
-    * @param t a deliverable object
+    * @param deliverable a deliverable object
     * @return
     */
-  def ==(t: Deliverable[_]): Boolean = this.==(t.payloadType)
+  def hasSamePayloadType(deliverable: Deliverable[_]): Boolean = this.payloadType == deliverable.payloadType
 
-  def ==(t: ru.Type): Boolean = this.payloadType.equals(t)
+  def hasSamePayloadType(deliverable: ru.Type): Boolean = this.payloadType.equals(deliverable)
+
+  def hasSameContent(deliverable: Deliverable[_]): Boolean = {
+    this.hasSamePayloadType(deliverable) &&
+      this.consumer.intersect(deliverable.consumer).nonEmpty &&
+      this.producer == deliverable.producer
+  }
 
   def classInfo: Class[_] = payload.getClass
 

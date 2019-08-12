@@ -1,20 +1,21 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
+import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 @InterfaceStability.Evolving
-class Pipeline extends Logging {
+class Pipeline extends Logging with HasUUIDRegistry {
 
   private[workflow] val dispatchManagers: DispatchManager = new DispatchManager
   private[workflow] var stageCounter: Int = 0
 
-  var stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
-  var pipelineInspector: PipelineInspector = _
+  val stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
+  val pipelineInspector: PipelineInspector = new PipelineInspector(this)
 
   def setInput(v: Deliverable[_]): this.type = {
     dispatchManagers.setDelivery(v)
@@ -32,16 +33,13 @@ class Pipeline extends Logging {
     setInput(deliverable)
   }
 
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
+
   def setInput[T: ru.TypeTag](v: T, consumer: Class[_], consumers: Class[_]*): this.type = {
     val deliverable = new Deliverable[T](v)
-
-    deliverable.setConsumer(consumer)
-    consumers.foreach(c => deliverable.setConsumer(c))
-
+    (consumer +: consumers).foreach(c => deliverable.setConsumer(c))
     setInput(deliverable)
   }
-
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
 
   def setInput[T: ru.TypeTag](v: T): this.type = setInput(v, None)
 
@@ -49,11 +47,22 @@ class Pipeline extends Logging {
 
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
+  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
+  def addStage(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
+    addStage(new Stage().addFactory(factory, constructorArgs: _*))
+  }
+
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage $stageCounter")
-    markEndStage()
-    stages += stage.setStageId(stageCounter)
-    stageCounter += 1
+
+    if (registerNewItem(stage)) {
+      markEndStage()
+      stages += stage.setStageId(stageCounter)
+      stageCounter += 1
+    } else {
+      throw new AlreadyExistsException("Stage already exists")
+    }
+
     this
   }
 
@@ -66,13 +75,15 @@ class Pipeline extends Logging {
   }
 
   def describe(): this.type = {
-    pipelineInspector = new PipelineInspector(this).inspect().describe()
+    inspectPipeline()
+    pipelineInspector.describe()
     this
   }
 
   def run(): this.type = {
+    inspectPipeline()
     stages
-      .foreach({
+      .foreach {
         stage =>
 
           // Describe current stage
@@ -80,15 +91,24 @@ class Pipeline extends Logging {
 
           // Dispatch input if stageID doesn't equal 0
           if (dispatchManagers.deliveries.nonEmpty) {
-            stage.factories.foreach(dispatchManagers.dispatch)
+            stage.factories
+              .foreach {
+                factory => dispatchManagers.dispatch(factory, pipelineInspector.findSetters(factory))
+              }
           }
 
           // run the stage
           stage.run()
           stage.factories.foreach(dispatchManagers.collectDeliverable)
-      })
+      }
 
     this
+  }
+
+  private[this] def inspectPipeline(): Unit = if (!pipelineInspector.inspected) pipelineInspector.inspect()
+
+  def get(): Any = {
+    stages.last.factories.last.get()
   }
 
 

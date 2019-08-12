@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.annotation;
 
 import com.jcdecaux.datacorp.spark.transformation.Deliverable;
 import com.jcdecaux.datacorp.spark.workflow.DispatchManager;
+import com.jcdecaux.datacorp.spark.workflow.External;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,7 +23,7 @@ public @interface Delivery {
     /**
      * Producer of the current delivery that will be use by DispatchManager in order to find the corresponding delivery
      */
-    Class<?> producer() default java.lang.Object.class;
+    Class<?> producer() default External.class;
 
     /**
      * Indicates whether the current Delivery is optional or not

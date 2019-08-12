@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.internal
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
-import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
+import com.jcdecaux.datacorp.spark.internal.TestClasses.{MyObject, TestCompoundKey}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
@@ -55,6 +55,3 @@ class SchemaConverterSuite extends FunSuite {
 
 }
 
-case class MyObject(@ColumnName("col1") column1: String, column2: String)
-
-case class TestCompoundKey(@CompoundKey("primary", "1") a: String, @CompoundKey("primary", "2") b: Int, @CompoundKey("sort", "1") c: String)

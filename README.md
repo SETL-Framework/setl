@@ -8,7 +8,7 @@ This project provides a general-proposed framework for data transformation appli
 <dependency>
   <groupId>com.jcdecaux.datacorp</groupId>
   <artifactId>dc-spark-sdk_${spark.compat.version}</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 </dependency>
 ```
 
@@ -69,7 +69,7 @@ Let's create a csv file.
       // +-------+-------+  
 
      val repository = new SparkRepositoryBuilder[MyObject](Properties.getConfig("csv"))
-       .setSpark(spark).build().get()
+       .setSpark(spark).getOrCreate()
     
      repository.save(ds)
      // The column name will be changed automatically according to 
