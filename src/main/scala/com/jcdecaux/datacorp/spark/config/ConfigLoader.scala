@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.config
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.AppEnv
+import com.jcdecaux.datacorp.spark.internal.Logging
 import com.typesafe.config._
 
 
@@ -9,7 +10,7 @@ import com.typesafe.config._
   * ConfigLoader is used to load configurations by using typesafe.com's config library
   */
 @InterfaceStability.Evolving
-abstract class ConfigLoader {
+abstract class ConfigLoader extends Logging {
   val appName: String = "APP"
   val appEnvs: Array[String] = AppEnv.values().map(_.toString.toLowerCase())
   val fallBackConf: String = "application.conf"
@@ -21,6 +22,7 @@ abstract class ConfigLoader {
   lazy val config: Config = {
 
     beforeAll()
+    log.debug("After beforeAll")
 
     if (appEnvs.contains(envNameVariable)) {
       ConfigFactory.load(s"${envNameVariable}.conf")
