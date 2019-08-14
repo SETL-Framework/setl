@@ -3,8 +3,7 @@
 - Added external data flow description in pipeline description
 - Added method `beforeAll` into `ConfigLoader`
 - Added new method `addStage` and `addFactory` that take a class object as input. The instantiation will be handled 
-  by the stage. The Factory class must have an empty primary constructor or a primary constructor with only a SparkSession 
-  object.
+  by the stage.
 
 ## 0.3.0 (2019-07-22)
 
