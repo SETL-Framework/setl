@@ -14,6 +14,7 @@ abstract class ConfigLoader extends Logging {
   val appName: String = "APP"
   val appEnvs: Array[String] = AppEnv.values().map(_.toString.toLowerCase())
   val fallBackConf: String = "application.conf"
+  val clearCaches: Boolean = true
 
   def envNameVariable: String = System.getenv(s"${appName}_ENV")
 
@@ -21,16 +22,26 @@ abstract class ConfigLoader extends Logging {
 
   lazy val config: Config = {
 
+    log.debug("Before execution of beforeAll")
     beforeAll()
-    log.debug("After beforeAll")
+    log.debug("After execution of beforeAll")
+
+    if (clearCaches) {
+      log.debug("Clear ConfigFactory caches")
+      ConfigFactory.invalidateCaches()
+    }
 
     if (appEnvs.contains(envNameVariable)) {
-      ConfigFactory.load(s"${envNameVariable}.conf")
+      log.debug(s"find $envNameVariable in system environmental variables")
+      ConfigFactory.load(s"$envNameVariable.conf")
     } else if (appEnvs.contains(envNameProperty)) {
-      ConfigFactory.load(s"${envNameProperty}.conf")
+      log.debug(s"find $envNameProperty in jvm properties")
+      ConfigFactory.load(s"$envNameProperty.conf")
     } else {
-      ConfigFactory.load()
-    }.withFallback(ConfigFactory.load(fallBackConf))
+      log.debug(s"No env setting was found in neither system environmental variables nor jvm properties." +
+        s"fallback configuration $fallBackConf will be loaded.")
+      ConfigFactory.load(fallBackConf)
+    }
 
   }
 
