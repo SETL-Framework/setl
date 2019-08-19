@@ -39,18 +39,6 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
   }
 
   /**
-    * Find data by giving a single condition
-    *
-    * @param condition a [[Condition]]
-    * @param encoder   : implicit encoder of Spark
-    * @return
-    */
-  override def findBy(condition: Condition)(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
-    this.findBy(Set(condition))
-
-  }
-
-  /**
     * Find data by giving a set of conditions
     *
     * @param conditions Set of [[com.jcdecaux.datacorp.spark.storage.Condition]]
