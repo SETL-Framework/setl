@@ -9,7 +9,7 @@ import com.jcdecaux.datacorp.spark.internal.Logging
   * @tparam A the type of object that the builder is supposed to produce
   */
 @InterfaceStability.Evolving
-trait Builder[A] extends Logging {
+trait Builder[+A] extends Logging {
 
   /**
     * Build an object
