@@ -295,7 +295,7 @@
                 </executions>
                 <configuration>
                     <serverId>nexus</serverId>
-                    <nexusUrl>http://nexus.jcdecaux.com/</nexusUrl>
+                    <nexusUrl>https://nexus.jcdecaux.com/</nexusUrl>
                     <skipStaging>true</skipStaging>
                 </configuration>
             </plugin>
@@ -333,11 +333,11 @@
     <distributionManagement>
         <snapshotRepository>
             <id>nexus-datacorp-snapshots</id>
-            <url>http://nexus.jcdecaux.com/repository/snapshots-DATACORP/</url>
+            <url>https://nexus.jcdecaux.com/repository/snapshots-DATACORP/</url>
         </snapshotRepository>
         <repository>
             <id>nexus-datacorp-releases</id>
-            <url>http://nexus.jcdecaux.com/repository/releases-DATACORP/</url>
+            <url>https://nexus.jcdecaux.com/repository/releases-DATACORP/</url>
         </repository>
     </distributionManagement>
 </project>
