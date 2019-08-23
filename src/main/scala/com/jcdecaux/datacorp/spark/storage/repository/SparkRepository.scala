@@ -5,15 +5,15 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.{Connector, DBConnector, FileConnector}
-import org.apache.spark.sql.{Dataset, Encoder}
+import org.apache.spark.sql.{Dataset, Encoder, Encoders}
 
-import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
 @InterfaceStability.Evolving
-class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Repository[DataType] with Logging {
+class SparkRepository[DataType <: Product : TypeTag] extends Repository[DataType] with Logging {
 
   private[this] var connector: Connector = _
+  private[this] implicit val dataEncoder: Encoder[DataType] = Encoders.product[DataType]
 
   def getStorage: Storage = connector.storage
 
@@ -42,10 +42,9 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
     * Find data by giving a set of conditions
     *
     * @param conditions Set of [[com.jcdecaux.datacorp.spark.storage.Condition]]
-    * @param encoder    implicit encoder of Spark
     * @return
     */
-  override def findBy(conditions: Set[Condition])(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
+  override def findBy(conditions: Set[Condition]): Dataset[DataType] = {
     import com.jcdecaux.datacorp.spark.util.FilterImplicits._
 
     val data = if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
@@ -54,16 +53,15 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
       connector.read()
     }
 
-    SchemaConverter.fromDF[DataType](data)
+    SchemaConverter.fromDF[DataType](dataFrame = data)
   }
 
   /**
     * Retrieve all data
     *
-    * @param encoder : implicit encoder of Spark
     * @return
     */
-  override def findAll()(implicit encoder: Encoder[DataType]): Dataset[DataType] = {
+  override def findAll(): Dataset[DataType] = {
     SchemaConverter.fromDF[DataType](connector.read())
   }
 
@@ -71,10 +69,9 @@ class SparkRepository[DataType <: Product : ClassTag : TypeTag] extends Reposito
     * Save a [[Dataset]] into a data persistence store
     *
     * @param data    data to be saved
-    * @param encoder : implicit encoder of Spark
     * @return
     */
-  override def save(data: Dataset[DataType], suffix: Option[String] = None)(implicit encoder: Encoder[DataType]): SparkRepository.this.type = {
+  override def save(data: Dataset[DataType], suffix: Option[String] = None): SparkRepository.this.type = {
 
     connector match {
       case c: DBConnector => c.create(data.toDF(), suffix)

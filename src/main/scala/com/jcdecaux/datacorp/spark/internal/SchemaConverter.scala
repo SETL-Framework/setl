@@ -5,7 +5,6 @@ import org.apache.spark.sql.catalyst.ScalaReflection
 import org.apache.spark.sql.types.{MetadataBuilder, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder, functions}
 
-import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 
 /**
@@ -54,7 +53,7 @@ object SchemaConverter {
     * @tparam T type of dataset
     * @return
     */
-  def fromDF[T <: Product : ClassTag : ru.TypeTag](dataFrame: DataFrame)(implicit encoder: Encoder[T]): Dataset[T] = {
+  def fromDF[T <: Product : ru.TypeTag](dataFrame: DataFrame)(implicit encoder: Encoder[T]): Dataset[T] = {
     val structType = analyseSchema[T]
 
     dataFrame
@@ -70,7 +69,7 @@ object SchemaConverter {
     * @tparam T type of dataset
     * @return
     */
-  def toDF[T <: Product : ClassTag : ru.TypeTag](dataset: Dataset[T]): DataFrame = {
+  def toDF[T <: Product : ru.TypeTag](dataset: Dataset[T]): DataFrame = {
     val structType = analyseSchema[T]
 
     dataset
@@ -217,7 +216,7 @@ object SchemaConverter {
     * @tparam T
     * @return
     */
-  def analyseSchema[T <: Product : ClassTag : ru.TypeTag]: StructType = {
+  def analyseSchema[T <: Product : ru.TypeTag]: StructType = {
 
     val classSymbol: ru.ClassSymbol = ru.symbolOf[T].asClass
     val paramListOfPrimaryConstructor = classSymbol.primaryConstructor.typeSignature.paramLists.head
