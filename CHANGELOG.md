@@ -1,9 +1,10 @@
-## 0.3.1 (2019-07-24)
+## 0.3.1 (2019-08-23)
 - Added sequential mode in class `Stage`. Use can turn in on by setting `parallel` to *true*.
 - Added external data flow description in pipeline description
 - Added method `beforeAll` into `ConfigLoader`
 - Added new method `addStage` and `addFactory` that take a class object as input. The instantiation will be handled 
   by the stage.
+- Removed implicit argument encoder from all methods of Repository trait
 
 ## 0.3.0 (2019-07-22)
 
