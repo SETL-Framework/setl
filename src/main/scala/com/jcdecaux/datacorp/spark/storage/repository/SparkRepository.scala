@@ -5,15 +5,16 @@ import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.{Connector, DBConnector, FileConnector}
-import org.apache.spark.sql.{Dataset, Encoder, Encoders}
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
+import org.apache.spark.sql.{Dataset, Encoder}
 
 import scala.reflect.runtime.universe.TypeTag
 
 @InterfaceStability.Evolving
-class SparkRepository[DataType <: Product : TypeTag] extends Repository[DataType] with Logging {
+class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Logging {
 
   private[this] var connector: Connector = _
-  private[this] implicit val dataEncoder: Encoder[DataType] = Encoders.product[DataType]
+  private[this] implicit val dataEncoder: Encoder[DataType] = ExpressionEncoder[DataType]
 
   def getStorage: Storage = connector.storage
 

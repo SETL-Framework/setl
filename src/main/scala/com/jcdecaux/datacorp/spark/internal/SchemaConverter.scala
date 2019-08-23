@@ -53,7 +53,7 @@ object SchemaConverter {
     * @tparam T type of dataset
     * @return
     */
-  def fromDF[T <: Product : ru.TypeTag](dataFrame: DataFrame)(implicit encoder: Encoder[T]): Dataset[T] = {
+  def fromDF[T: ru.TypeTag](dataFrame: DataFrame)(implicit encoder: Encoder[T]): Dataset[T] = {
     val structType = analyseSchema[T]
 
     dataFrame
@@ -69,7 +69,7 @@ object SchemaConverter {
     * @tparam T type of dataset
     * @return
     */
-  def toDF[T <: Product : ru.TypeTag](dataset: Dataset[T]): DataFrame = {
+  def toDF[T: ru.TypeTag](dataset: Dataset[T]): DataFrame = {
     val structType = analyseSchema[T]
 
     dataset
@@ -216,7 +216,7 @@ object SchemaConverter {
     * @tparam T
     * @return
     */
-  def analyseSchema[T <: Product : ru.TypeTag]: StructType = {
+  def analyseSchema[T: ru.TypeTag]: StructType = {
 
     val classSymbol: ru.ClassSymbol = ru.symbolOf[T].asClass
     val paramListOfPrimaryConstructor = classSymbol.primaryConstructor.typeSignature.paramLists.head

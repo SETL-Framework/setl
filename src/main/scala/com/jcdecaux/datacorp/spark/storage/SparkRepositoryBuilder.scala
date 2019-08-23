@@ -11,7 +11,6 @@ import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
-import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
 /**
@@ -22,9 +21,9 @@ import scala.reflect.runtime.universe.TypeTag
   * @param config  a [[com.typesafe.config.Config]] object
   * @tparam DataType type of data
   */
-class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark: Option[SparkSession],
-                                                                       var storage: Option[Storage],
-                                                                       var config: Option[Config])
+class SparkRepositoryBuilder[DataType: TypeTag](var spark: Option[SparkSession],
+                                                var storage: Option[Storage],
+                                                var config: Option[Config])
   extends Builder[SparkRepository[DataType]] {
 
   import Conf.Serializer._
@@ -124,7 +123,7 @@ class SparkRepositoryBuilder[DataType <: Product : ClassTag : TypeTag](var spark
         schema.map(sf => s"${sf.name} ${sf.dataType.sql}").mkString(", ")
       case e: Throwable => throw e
     }
-    
+
     set("schema", structDDL)
   }
 
