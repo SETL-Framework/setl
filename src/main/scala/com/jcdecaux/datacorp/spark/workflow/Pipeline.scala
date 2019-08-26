@@ -43,8 +43,6 @@ class Pipeline extends Logging with HasUUIDRegistry {
 
   def setInput[T: ru.TypeTag](v: T): this.type = setInput(v, None)
 
-  def getOutput(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.findDeliverableByType(t)
-
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
@@ -56,7 +54,7 @@ class Pipeline extends Logging with HasUUIDRegistry {
     log.debug(s"Add stage $stageCounter")
 
     if (registerNewItem(stage)) {
-      markEndStage()
+      resetEndStage()
       stages += stage.setStageId(stageCounter)
       stageCounter += 1
     } else {
@@ -68,10 +66,11 @@ class Pipeline extends Logging with HasUUIDRegistry {
 
   def getStage(id: Int): Stage = stages(id)
 
-  private[this] def markEndStage(): Unit = {
-    if (stages.nonEmpty) {
-      stages.last.end = false
-    }
+  /**
+    * Mark the last stage as a NON-end stage
+    */
+  private[this] def resetEndStage(): Unit = {
+    if (stages.nonEmpty) stages.last.end = false
   }
 
   def describe(): this.type = {
@@ -105,11 +104,48 @@ class Pipeline extends Logging with HasUUIDRegistry {
     this
   }
 
-  private[this] def inspectPipeline(): Unit = if (!pipelineInspector.inspected) pipelineInspector.inspect()
+  /**
+    * Inspect the current pipeline if it has not been inspected
+    */
+  private[this] def inspectPipeline(): Unit = if (!pipelineInspector.inspected) forceInspectPipeline()
 
-  def get(): Any = {
+  /**
+    * Inspect the current pipeline
+    */
+  private[this] def forceInspectPipeline(): Unit = pipelineInspector.inspect()
+
+
+  /**
+    * Get the output of the last factory of the last stage
+    *
+    * @return an object. it has to be convert to the according type manually.
+    */
+  def getLastOutput(): Any = {
     stages.last.factories.last.get()
   }
+
+  /**
+    * Get the output of a specific Factory
+    *
+    * @param cls class of the Factory
+    * @return
+    */
+  def getOutput[A](cls: Class[_ <: Factory[_]]): A = {
+    val factory = stages.flatMap(s => s.factories).find(f => f.getClass == cls)
+
+    factory match {
+      case Some(x) => x.get().asInstanceOf[A]
+      case _ => throw new NoSuchElementException(s"There isn't any class ${cls.getCanonicalName}")
+    }
+  }
+
+  /**
+    * Get the Deliverable of the given runtime Type
+    *
+    * @param t runtime type of the Deliverable's payload
+    * @return
+    */
+  def getDeliverable(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.findDeliverableByType(t)
 
 
 }

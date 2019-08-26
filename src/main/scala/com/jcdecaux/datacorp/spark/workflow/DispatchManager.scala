@@ -97,7 +97,7 @@ private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
   }
 
   /**
-    * Get all the [[Deliverable]] of the given type
+    * Get all the [[Deliverable]] by matching their payload's type with the given type
     *
     * @param deliveryType type of data
     * @return

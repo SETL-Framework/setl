@@ -5,6 +5,7 @@
 - Added new method `addStage` and `addFactory` that take a class object as input. The instantiation will be handled 
   by the stage.
 - Removed implicit argument encoder from all methods of Repository trait
+- Added new get method to **Pipeline**: `get[A](cls: Class[_ <: Factory[_]): A`. 
 
 ## 0.3.0 (2019-07-22)
 

@@ -9,9 +9,7 @@ import org.scalatest.FunSuite
 
 import scala.reflect.runtime.{universe => ru}
 
-
 class ProductFactory extends Factory[Product1] {
-
   @Delivery
   var id: String = _
   var output: Product1 = _
@@ -28,9 +26,7 @@ class ProductFactory extends Factory[Product1] {
   override def get(): Product1 = output
 }
 
-
 class Product2Factory extends Factory[Product2] {
-
   var output: Product2 = _
 
   override def read(): this.type = this
@@ -45,9 +41,7 @@ class Product2Factory extends Factory[Product2] {
   override def get(): Product2 = output
 }
 
-
 class ContainerFactory extends Factory[Container[Product1]] {
-
   @Delivery
   var product1: Product1 = _
   var output: Container[Product1] = _
@@ -64,9 +58,7 @@ class ContainerFactory extends Factory[Container[Product1]] {
   override def get(): Container[Product1] = output
 }
 
-
 class Container2Factory extends Factory[Container2[Product2]] {
-
   @Delivery
   var p1: Product1 = _
   var p2: Product2 = _
@@ -96,7 +88,6 @@ class DatasetFactory(spark: SparkSession) extends Factory[Dataset[Product1]] {
 
   @Delivery
   var p1: Product1 = _
-
   var output: Dataset[Product1] = _
 
   override def read(): DatasetFactory.this.type = this
@@ -112,16 +103,12 @@ class DatasetFactory(spark: SparkSession) extends Factory[Dataset[Product1]] {
 }
 
 class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
-
   @Delivery
   var p1: Product1 = _
-
   @Delivery
   var ds: Dataset[Product1] = _
-
   @Delivery
   var ds2: Dataset[Product2] = _
-
   var output: Dataset[Product2] = _
 
   override def read(): DatasetFactory2.this.type = this
@@ -132,26 +119,19 @@ class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
     this
   }
 
-  override def write(): DatasetFactory2.this.type = {
-    this
-  }
+  override def write(): DatasetFactory2.this.type = this
 
-  override def get(): Dataset[Product2] = {
-    output
-  }
+  override def get(): Dataset[Product2] = output
 }
 
 class DatasetFactory3(spark: SparkSession) extends Factory[Dataset[Product2]] {
 
   @Delivery
   var p1: Product1 = _
-
   @Delivery(producer = classOf[DatasetFactory2])
   var ds: Dataset[Product2] = _
-
   @Delivery
   var ds2: Dataset[Product2] = _
-
   var output: Dataset[Product2] = _
 
   override def read(): DatasetFactory3.this.type = this
@@ -161,15 +141,14 @@ class DatasetFactory3(spark: SparkSession) extends Factory[Dataset[Product2]] {
     this
   }
 
-  override def write(): DatasetFactory3.this.type = {
-    this
-  }
+  override def write(): DatasetFactory3.this.type = this
 
-  override def get(): Dataset[Product2] = {
-    output
-  }
+  override def get(): Dataset[Product2] = output
 }
 
+//////////////////////
+// TESTS START HERE //
+//////////////////////
 class PipelineSuite extends FunSuite {
 
   test("Test pipeline") {
@@ -195,7 +174,7 @@ class PipelineSuite extends FunSuite {
 
     //    pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
     assert(pipeline.dispatchManagers.deliveries.length === 5)
-    assert(pipeline.getOutput(ru.typeOf[Container2[Product2]]).head.get == Container2(Product2("a", "b")))
+    assert(pipeline.getDeliverable(ru.typeOf[Container2[Product2]]).head.get == Container2(Product2("a", "b")))
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 4)
@@ -242,8 +221,48 @@ class PipelineSuite extends FunSuite {
     assert(pipeline.pipelineInspector.nodes.size === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.flows.size === 5)
+  }
 
+  test("Test get methods of Pipeline") {
+    val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    import spark.implicits._
 
+    val ds2: Dataset[Product2] = Seq(
+      Product2("id_of_product1", "c2"),
+      Product2("pd1", "c2")
+    ).toDS
+
+    val pipeline = new Pipeline
+
+    pipeline
+      .setInput(new Deliverable[String]("wrong_id_of_product1"))
+      .setInput[String]("id_of_product1", classOf[ProductFactory])
+      .setInput(ds2)
+      .addStage(classOf[ProductFactory])
+      .addStage(classOf[DatasetFactory], spark)
+      .addStage(classOf[DatasetFactory2], spark)
+      .describe()
+      .run()
+
+    pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].show()
+
+    // Test get() method
+    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].count() === 2)
+    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
+    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
+    assert(
+      pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
+        Product2("id_of_product1", "c2")
+    )
+
+    // Test get[A](cls) method
+    assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).count() === 2)
+    assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).filter($"x" === "id_of_product1").count() === 1)
+    assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).filter($"x" === "pd1").count() === 1)
+    assert(
+      pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2])
+        .filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2")
+    )
   }
 
   test("Test Pipeline creation with default primary constructor") {
@@ -267,20 +286,32 @@ class PipelineSuite extends FunSuite {
       .describe()
       .run()
 
-    pipeline.get().asInstanceOf[Dataset[Product2]].show()
-    assert(pipeline.get().asInstanceOf[Dataset[Product2]].count() === 2)
-    assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
-    assert(pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
+    pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].show()
+
+    // Test get()
+    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].count() === 2)
+    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
+    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
     assert(
-      pipeline.get().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
+      pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
         Product2("id_of_product1", "c2")
     )
 
-    // Check inspector
+    // Test get[A](cls)
+    assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).count() === 2)
+    assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).filter($"x" === "id_of_product1").count() === 1)
+    assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).filter($"x" === "pd1").count() === 1)
+    assert(
+      pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2])
+        .filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2")
+    )
+
+    // Test inspector
     assert(pipeline.pipelineInspector.nodes.size === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.flows.size === 5)
 
+    // Test throwing exception
     assertThrows[IllegalArgumentException](
       pipeline.addStage(classOf[DatasetFactory], spark, "sqdfsd"),
       "IllegalArgumentException should be thrown as the number of constructor argument is wrong"
@@ -307,8 +338,6 @@ class PipelineSuite extends FunSuite {
     val pipeline3 = new Pipeline().setInput(delivery)
 
     assertThrows[AlreadyExistsException](pipeline3.setInput(delivery))
-
-
   }
 
   test("Test pipeline with two inputs of the same type") {
