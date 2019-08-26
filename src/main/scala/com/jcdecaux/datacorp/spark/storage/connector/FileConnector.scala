@@ -189,14 +189,33 @@ abstract class FileConnector(val spark: SparkSession,
     this.spark.read.option("basePath", baseDirectory).options(extraOptions)
   }
 
+  /**
+    * Initialize a DataFrame writer. A new writer will be initiate only if the hashcode
+    * of input DataFrame is different than the last written DataFrame.
+    *
+    * @param df input DataFrame
+    */
   @inline private[connector] def initWriter(df: DataFrame): Unit = {
+
+    // Check if the writer is already initialized by comparing hashcode
     if (df.hashCode() != lastWriteHashCode) {
-      writer = df.write
+      // Save the current DataFrame's hashcode
+      lastWriteHashCode = df.hashCode()
+
+      val _df = schema match {
+        case Some(sm) => // If schema is defined, reorder df's columns
+          log.debug("Detect schema, reorder columns before writing")
+          val cols = sm.map(_.name)
+          df.select(cols.map(functions.col): _*)
+
+        case _ => df // Otherwise, do nothing
+      }
+
+      writer = _df.write
         .mode(saveMode)
         .options(extraOptions)
         .partitionBy(partition: _*)
 
-      lastWriteHashCode = df.hashCode()
     }
   }
 
