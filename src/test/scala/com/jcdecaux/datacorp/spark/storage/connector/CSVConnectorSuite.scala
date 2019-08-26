@@ -137,4 +137,26 @@ class CSVConnectorSuite extends FunSuite {
     csvConnector2.delete()
 
   }
+
+  test("Test csv connctor with Schema") {
+    val dff: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(2, "p1", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L),
+      TestObject(3, "p2", "c3", 3L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS
+
+    val csvConnectorWithSchema = new CSVConnector(spark, Properties.getConfig("connector.csvWithSchema"))
+    val csvConnectorWithSchema2 = new CSVConnector(spark, Properties.getConfig("connector.csvWithSchema2"))
+
+    csvConnectorWithSchema.write(dff.toDF)
+    assert(csvConnectorWithSchema.read().columns === Array("partition2", "clustering1", "partition1", "value"))
+    csvConnectorWithSchema.delete()
+
+    csvConnectorWithSchema2.write(dff.toDF)
+    assert(csvConnectorWithSchema2.read().columns === Array("partition2", "value", "clustering1", "partition1"))
+    csvConnectorWithSchema2.delete()
+  }
 }
