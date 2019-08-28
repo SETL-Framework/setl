@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.transformation
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
+import com.jcdecaux.datacorp.spark.internal.{HasDescription, Identifiable, Logging}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -14,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
   * @tparam A the type of object that the factory is supposed to produce
   */
 @InterfaceStability.Evolving
-abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable {
+abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with HasDescription {
 
   var consumers: List[Class[_]] = List()
 
@@ -53,6 +53,9 @@ abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable {
   /**
     * Describe the
     */
-  def describe(): Unit = log.info(s"${this.getClass} will produce a ${deliveryType()}")
+  override def describe(): this.type = {
+    log.info(s"$getPrettyName will produce a ${getPrettyName(deliveryType())}")
+    this
+  }
 
 }

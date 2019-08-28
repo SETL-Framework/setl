@@ -2,14 +2,14 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
+import com.jcdecaux.datacorp.spark.internal.{HasDescription, HasUUIDRegistry, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 @InterfaceStability.Evolving
-class Pipeline extends Logging with HasUUIDRegistry {
+class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
 
   private[workflow] val dispatchManagers: DispatchManager = new DispatchManager
   private[workflow] var stageCounter: Int = 0
@@ -73,7 +73,7 @@ class Pipeline extends Logging with HasUUIDRegistry {
     if (stages.nonEmpty) stages.last.end = false
   }
 
-  def describe(): this.type = {
+  override def describe(): this.type = {
     inspectPipeline()
     pipelineInspector.describe()
     this
@@ -84,14 +84,12 @@ class Pipeline extends Logging with HasUUIDRegistry {
     stages
       .foreach {
         stage =>
-
           // Describe current stage
           stage.describe()
 
           // Dispatch input if stageID doesn't equal 0
           if (dispatchManagers.deliveries.nonEmpty) {
-            stage.factories
-              .foreach {
+            stage.factories.foreach {
                 factory => dispatchManagers.dispatch(factory, pipelineInspector.findSetters(factory))
               }
           }

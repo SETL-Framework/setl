@@ -3,7 +3,7 @@ package com.jcdecaux.datacorp.spark.workflow
 import java.util.UUID
 
 import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
-import com.jcdecaux.datacorp.spark.internal.{Identifiable, Logging}
+import com.jcdecaux.datacorp.spark.internal.{HasDescription, Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
 
 import scala.reflect.runtime
@@ -21,26 +21,21 @@ private[workflow] case class Node(factoryClass: Class[_],
                                   factoryUUID: UUID,
                                   stage: Int,
                                   input: List[FactoryInput],
-                                  output: FactoryOutput) extends Identifiable with Logging {
+                                  output: FactoryOutput) extends Identifiable with Logging with HasDescription {
+
+  override def getPrettyName: String = getPrettyName(factoryClass)
 
   def listInputProducers: List[Class[_]] = this.input.map(_.producer)
 
   def findInputByType(t: runtime.universe.Type): List[FactoryInput] = input.filter(_.runtimeType == t)
 
-  def describe(): Unit = {
+  override def describe(): this.type = {
     println(s"Node   : $getPrettyName")
     println(s"Stage  : $stage")
-    input.foreach(i => println(s"Input  : ${cleanTypeName(i.runtimeType)}"))
-    println(s"Output : ${cleanTypeName(output.runtimeType)}") //
+    input.foreach(i => println(s"Input  : ${getPrettyName(i.runtimeType)}"))
+    println(s"Output : ${getPrettyName(output.runtimeType)}") //
     println("--------------------------------------")
-  }
-
-  private[workflow] def getPrettyName: String = prettyNameOf(factoryClass.getCanonicalName)
-
-  private[workflow] def prettyNameOf(t: String): String = t.split("\\.").last
-
-  private[workflow] def cleanTypeName(t: runtime.universe.Type): String = {
-    t.toString.split("\\[").map(prettyNameOf).mkString("[")
+    this
   }
 
   /**

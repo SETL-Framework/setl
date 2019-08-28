@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
+import com.jcdecaux.datacorp.spark.internal.HasDescription
+
 import scala.reflect.runtime
 
 /**
@@ -10,12 +12,15 @@ import scala.reflect.runtime
   * @param to      destination node of the transfer
   * @param stage   stage where the transfer occurs
   */
-private[workflow] case class Flow(payload: runtime.universe.Type, from: Node, to: Node, stage: Int) {
-  def describe(): Unit = {
+private[workflow] case class Flow(payload: runtime.universe.Type,
+                                  from: Node,
+                                  to: Node, stage: Int) extends HasDescription {
+  override def describe(): this.type = {
     println("Flow")
     println(s"Stage     : $stage")
     println(s"Direction : ${from.getPrettyName} ==> ${to.getPrettyName}")
-    println(s"PayLoad   : $payload")
+    println(s"PayLoad   : ${getPrettyName(payload)}")
     println("--------------------------------------")
+    this
   }
 }

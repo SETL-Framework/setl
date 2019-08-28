@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.internal.Logging
+import com.jcdecaux.datacorp.spark.internal.{HasDescription, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
 
 import scala.collection.mutable
@@ -13,7 +13,7 @@ import scala.collection.mutable
   * @param pipeline an instantiated pipeline
   */
 @InterfaceStability.Evolving
-private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging {
+private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging with HasDescription {
 
   var nodes: Set[Node] = _
   var flows: Set[Flow] = _
@@ -115,25 +115,22 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
     this
   }
 
-  def describe(): this.type = {
+  override def describe(): this.type = {
     println("========== Pipeline Summary ==========\n")
 
     println("----------   Nodes Summary  ----------")
     if (nodes.nonEmpty) {
       nodes.toList.sortBy(_.stage).foreach(_.describe())
     } else {
-      println("None")
-      println("--------------------------------------")
+      println("None\n--------------------------------------\n")
     }
 
     println("----------   Flows Summary  ----------")
     if (flows.nonEmpty) {
       flows.toList.sortBy(_.stage).foreach(_.describe())
     } else {
-      println("None")
-      println("--------------------------------------")
+      println("None\n--------------------------------------\n")
     }
-
     this
   }
 }

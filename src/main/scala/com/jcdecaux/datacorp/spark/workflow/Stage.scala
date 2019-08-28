@@ -2,14 +2,14 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Identifiable, Logging}
+import com.jcdecaux.datacorp.spark.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
 
 @InterfaceStability.Evolving
-class Stage extends Logging with Identifiable with HasUUIDRegistry {
+class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescription {
 
   private[this] var _end: Boolean = true
 
@@ -67,7 +67,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry {
     this
   }
 
-  def describe(): this.type = {
+  override def describe(): this.type = {
     log.info(s"Stage $stageId contains ${factories.length} factories")
     factories.foreach(_.describe())
     this
