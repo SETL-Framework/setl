@@ -6,6 +6,8 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.ConfException
 import com.jcdecaux.datacorp.spark.internal.Configurable
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
+import com.typesafe.config.Config
 
 import scala.reflect.runtime.universe._
 
@@ -42,6 +44,14 @@ class Conf extends Serializable with Configurable {
   def get(key: String): Option[String] = getAs[String](key)
 
   /**
+    * Get a configuration under the string format
+    *
+    * @param key Key of the configuration
+    * @return
+    */
+  def get(key: String, defaultValue: String): String = getAs[String](key).getOrElse(defaultValue)
+
+  /**
     * Get a configuration and convert to the given type, return None if it's not set
     *
     * @param key       Key of the configuration
@@ -56,6 +66,15 @@ class Conf extends Serializable with Configurable {
       case _ => None
     }
   }
+
+  /**
+    * Get a configuration and convert to the given type, return a default value if it's not set
+    *
+    * @param key Key of the configuration
+    * @tparam T define the type of output
+    * @return
+    */
+  def getAs[T: Serializer](key: String, defaultValue: T): T = this.getAs[T](key).getOrElse(defaultValue)
 
   def set[T](key: String, value: T)(implicit converter: Serializer[T]): this.type = {
     set(key, converter.serialize(value))
@@ -74,7 +93,11 @@ object Conf {
 
   def apply(options: Map[String, String]): Conf = fromMap(options)
 
+  def apply(options: Config): Conf = fromConfig(options)
+
   def fromMap(options: Map[String, String]): Conf = new Conf().set(options)
+
+  def fromConfig(options: Config): Conf = fromMap(TypesafeConfigUtils.getMap(options))
 
   trait Serializer[T] {
 

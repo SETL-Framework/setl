@@ -3,6 +3,7 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import java.net.{URI, URLDecoder, URLEncoder}
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+import com.jcdecaux.datacorp.spark.config.ConnectorConf
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -13,25 +14,32 @@ import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
 abstract class FileConnector(val spark: SparkSession,
-                             val options: Map[String, String]) extends Connector {
+                             val options: ConnectorConf) extends Connector {
 
-  private[this] val encoding: String = "UTF-8"
-  private[this] val defaultSaveMode: String = "Overwrite"
+  // Note: this constructor was added to keep the backward compatibility
+  def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
+
   private[this] val hadoopConfiguration: Configuration = spark.sparkContext.hadoopConfiguration
 
-  /**
-    * Extra options that will be passed into DataFrameReader and Writer. Keys like "path" should be removed
-    */
-  private[connector] val extraOptions: Map[String, String] = options - "path" - "filenamePattern"
+  val schema: Option[StructType] = options.getSchema match {
+    case Some(sm) =>
+      log.debug("Detect user-defined schema")
+      Option(StructType.fromDDL(sm))
+    case _ => None
+  }
+
+  private[this] val _recursive: Boolean = true
 
   /**
-    * The path of file to be loaded.
-    * It could be a file path or a directory (for CSV and Parquet).
-    * In the case of a directory, the correctness of Spark partition structure should be guaranteed by user.
+    * Partition columns when writing the data frame
     */
-  val path: String = options("path")
+  private[connector] val partition: ArrayBuffer[String] = ArrayBuffer()
 
-  val saveMode: SaveMode = SaveMode.valueOf(options.getOrElse("saveMode", defaultSaveMode))
+  private[connector] var withSuffix: Option[Boolean] = None
+
+  private[connector] var userDefinedSuffix: String = "_user_defined_suffix"
+
+  private[connector] var dropUserDefinedSuffix: Boolean = true
 
   /**
     * Create a URI of the given file path.
@@ -39,11 +47,11 @@ abstract class FileConnector(val spark: SparkSession,
     * try to firstly encode the string and then create a URI
     */
   private[connector] val pathURI: URI = try {
-    URI.create(path)
+    URI.create(options.getPath)
   } catch {
     case _: IllegalArgumentException =>
       log.warn("Can't create URI from path. Try encoding it")
-      URI.create(URLEncoder.encode(path, encoding))
+      URI.create(URLEncoder.encode(options.getPath, options.getEncoding))
     case e: Throwable => throw e
   }
 
@@ -51,22 +59,22 @@ abstract class FileConnector(val spark: SparkSession,
     * Get the current filesystem based on the path URI
     */
   private[connector] val fileSystem: FileSystem = {
-    options.get("fs.s3a.aws.credentials.provider") match {
+    options.getS3CredentialsProvider match {
       case Some(v) => hadoopConfiguration.set("fs.s3a.aws.credentials.provider", v)
       case _ =>
     }
 
-    options.get("fs.s3a.access.key") match {
+    options.getS3AccessKey match {
       case Some(v) => hadoopConfiguration.set("fs.s3a.access.key", v)
       case _ =>
     }
 
-    options.get("fs.s3a.secret.key") match {
+    options.getS3SecretKey match {
       case Some(v) => hadoopConfiguration.set("fs.s3a.secret.key", v)
       case _ =>
     }
 
-    options.get("fs.s3a.session.token") match {
+    options.getS3SessionToken match {
       case Some(v) => hadoopConfiguration.set("fs.s3a.session.token", v)
       case _ =>
     }
@@ -81,7 +89,7 @@ abstract class FileConnector(val spark: SparkSession,
     */
   private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
     log.debug(s"Detect local file system: ${pathURI.toString}")
-    new Path(URLDecoder.decode(pathURI.toString, encoding))
+    new Path(URLDecoder.decode(pathURI.toString, options.getEncoding))
   } else {
     log.debug(s"Detect distributed filesystem: ${pathURI.toString}")
     new Path(pathURI)
@@ -103,26 +111,6 @@ abstract class FileConnector(val spark: SparkSession,
     }
   }
 
-  val schema: Option[StructType] = options.get("schema") match {
-    case Some(sm) =>
-      log.debug("Detect user-defined schema")
-      Option(StructType.fromDDL(sm))
-    case _ => None
-  }
-
-  private[this] val _recursive: Boolean = true
-
-  /**
-    * Partition columns when writing the data frame
-    */
-  private[connector] val partition: ArrayBuffer[String] = ArrayBuffer()
-
-  private[connector] var withSuffix: Option[Boolean] = None
-
-  private[connector] var userDefinedSuffix: String = "_user_defined_suffix"
-
-  private[connector] var dropUserDefinedSuffix: Boolean = true
-
   override val reader: DataFrameReader = schema match {
     case Some(sm) => initReader().schema(sm)
     case _ => initReader()
@@ -130,7 +118,7 @@ abstract class FileConnector(val spark: SparkSession,
 
   override var writer: DataFrameWriter[Row] = _
 
-  private[connector] val filenamePattern: Option[Regex] = options.get("filenamePattern") match {
+  private[connector] val filenamePattern: Option[Regex] = options.getFilenamePattern match {
     case Some(pattern) =>
       log.debug("Detect filename pattern")
       Some(pattern.r)
@@ -186,7 +174,7 @@ abstract class FileConnector(val spark: SparkSession,
   }
 
   @inline private[connector] def initReader(): DataFrameReader = {
-    this.spark.read.option("basePath", baseDirectory).options(extraOptions)
+    this.spark.read.option("basePath", baseDirectory).options(options.getDataFrameReaderOptions)
   }
 
   /**
@@ -212,8 +200,8 @@ abstract class FileConnector(val spark: SparkSession,
       }
 
       writer = _df.write
-        .mode(saveMode)
-        .options(extraOptions)
+        .mode(options.getSaveMode)
+        .options(options.getDataFrameWriterOptions)
         .partitionBy(partition: _*)
 
     }
@@ -243,4 +231,46 @@ abstract class FileConnector(val spark: SparkSession,
     listPaths().map(path => fileSystem.getFileStatus(path).getLen).sum
   }
 
+  /**
+    * Write a [[DataFrame]] into the given path with the given save mode
+    */
+  def _write(df: DataFrame, filepath: String): Unit = {
+    log.debug(s"Write DataFrame to $filepath")
+    initWriter(df)
+    writer.format(options.getStorage.toString.toLowerCase()).save(filepath)
+  }
+
+  /**
+    * Write a [[DataFrame]] into file
+    *
+    * @param df     dataframe to be written
+    * @param suffix optional, String, write the df in a sub-directory of the defined path
+    */
+  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
+    suffix match {
+      case Some(s) =>
+        checkPartitionValidity(true)
+        _write(df, s"${this.absolutePath.toString}/$userDefinedSuffix=$s")
+      case _ =>
+        checkPartitionValidity(false)
+        _write(df, this.absolutePath.toString)
+    }
+  }
+
+  /**
+    * Read a [[DataFrame]] from a file with the path defined during the instantiation.
+    *
+    * @return
+    */
+  override def read(): DataFrame = {
+    log.debug(s"Reading ${options.getStorage.toString} file from ${absolutePath.toString}")
+
+    val df = reader.format(options.getStorage.toString.toLowerCase()).load(listFiles(): _*)
+
+    if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffix)) {
+      df.drop(userDefinedSuffix)
+    } else {
+      df
+    }
+  }
 }
