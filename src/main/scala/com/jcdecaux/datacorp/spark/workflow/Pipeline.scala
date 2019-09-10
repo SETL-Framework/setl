@@ -33,7 +33,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
     setInput(deliverable)
   }
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput(v, Some(consumer))
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput[T](v, Some(consumer))
 
   def setInput[T: ru.TypeTag](v: T, consumer: Class[_], consumers: Class[_]*): this.type = {
     val deliverable = new Deliverable[T](v)
@@ -41,7 +41,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
     setInput(deliverable)
   }
 
-  def setInput[T: ru.TypeTag](v: T): this.type = setInput(v, None)
+  def setInput[T: ru.TypeTag](v: T): this.type = setInput[T](v, None)
 
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
