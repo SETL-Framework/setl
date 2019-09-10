@@ -97,9 +97,10 @@
         </dependency>
         <dependency>
             <groupId>com.audienceproject</groupId>
-            <artifactId>spark-dynamodb_${scala.compat.version}</artifactId>
-            <version>0.4.1</version>
+            <artifactId>spark-dynamodb</artifactId>
+            <version>0.4.2</version>
         </dependency>
+
 
         <!-- TYPESAFE CONFIG -->
         <dependency>
@@ -329,6 +330,17 @@
             </properties>
         </profile>
     </profiles>
+
+    <repositories>
+        <repository>
+            <id>nexus-datacorp-snapshots</id>
+            <url>https://nexus.jcdecaux.com/repository/snapshots-DATACORP/</url>
+        </repository>
+        <repository>
+            <id>nexus-datacorp-releases</id>
+            <url>https://nexus.jcdecaux.com/repository/releases-DATACORP/</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <snapshotRepository>
