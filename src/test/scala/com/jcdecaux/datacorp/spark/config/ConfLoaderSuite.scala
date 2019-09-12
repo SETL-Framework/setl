@@ -19,4 +19,15 @@ class ConfLoaderSuite extends FunSuite {
     assert(TypesafeConfigUtils.getList(Properties.cassandraConfig, "doesntExist") === None)
   }
 
+  test("ConfigLoader Throw exception") {
+
+    val x = new ConfigLoader {
+      override def beforeAll(): Unit = {
+        System.setProperty("app.environment", "test")
+        System.setProperty("myvalue", "test-my-value")
+      }
+    }
+    assertThrows[IllegalArgumentException](x.config, "There is no file called test.conf. Exception should be thrown")
+  }
+
 }
