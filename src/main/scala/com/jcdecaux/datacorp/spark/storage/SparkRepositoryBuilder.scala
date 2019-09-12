@@ -11,7 +11,7 @@ import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.{universe => ru}
 
 /**
   * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
@@ -21,9 +21,9 @@ import scala.reflect.runtime.universe.TypeTag
   * @param config  a [[com.typesafe.config.Config]] object
   * @tparam DataType type of data
   */
-class SparkRepositoryBuilder[DataType: TypeTag](var spark: Option[SparkSession],
-                                                var storage: Option[Storage],
-                                                var config: Option[Config])
+class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSession],
+                                                   var storage: Option[Storage],
+                                                   var config: Option[Config])
   extends Builder[SparkRepository[DataType]] {
 
   import Conf.Serializer._
@@ -157,8 +157,9 @@ class SparkRepositoryBuilder[DataType: TypeTag](var spark: Option[SparkSession],
     * @return
     */
   override def build(): SparkRepositoryBuilder.this.type = {
+    log.debug(s"Build SparkRepository[${ru.typeOf[DataType]}]")
     if (connector == null) {
-      log.info("No user-defined connector, create one according to the storage type")
+      log.debug(s"No user-defined connector, a new ${getAs[String]("storage")} connector will be created")
       connector = createConnector()
     }
     sparkRepository = new com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType].setConnector(connector)
