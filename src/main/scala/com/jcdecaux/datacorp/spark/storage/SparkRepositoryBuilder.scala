@@ -159,7 +159,6 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSessio
   override def build(): SparkRepositoryBuilder.this.type = {
     log.debug(s"Build SparkRepository[${ru.typeOf[DataType]}]")
     if (connector == null) {
-      log.debug(s"No user-defined connector, a new ${getAs[String]("storage")} connector will be created")
       connector = createConnector()
     }
     sparkRepository = new com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType].setConnector(connector)
