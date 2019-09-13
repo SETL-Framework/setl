@@ -1,9 +1,11 @@
 package com.jcdecaux.datacorp.spark.internal
 
 import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
+import com.jcdecaux.datacorp.spark.exception.InvalidSchemaException
 import org.apache.spark.sql.catalyst.ScalaReflection
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types.{MetadataBuilder, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, Dataset, Encoder, functions}
+import org.apache.spark.sql.{DataFrame, Dataset, functions}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -46,20 +48,45 @@ object SchemaConverter {
   private[this] val compoundKeySeparator: String = "-"
 
   /**
-    * Convert a dataframe to dataset according to the annotations
+    * Convert a DataFrame to Dataset according to the annotations
     *
     * @param dataFrame input df
-    * @param encoder   implicit encoder of type T
     * @tparam T type of dataset
     * @return
     */
-  def fromDF[T: ru.TypeTag](dataFrame: DataFrame)(implicit encoder: Encoder[T]): Dataset[T] = {
+  @throws[InvalidSchemaException]
+  def fromDF[T: ru.TypeTag](dataFrame: DataFrame): Dataset[T] = {
+    val encoder = ExpressionEncoder[T]
     val structType = analyseSchema[T]
 
-    dataFrame
-      .transform(handleCompoundKeyFromDF())
-      .transform(handleColumnNameFromDF(structType))
-      .as[T]
+    val dfColumns = dataFrame.columns
+    val columnsToAdd = structType
+      .filter {
+        field =>
+          val dfContainsFieldName = dfColumns.contains(field.name)
+          val dfContainsFieldAlias = if (field.metadata.contains(ColumnName.toString())) {
+            dfColumns.contains(field.metadata.getStringArray(ColumnName.toString()).head)
+          } else {
+            false
+          }
+          (!dfContainsFieldName) && (!dfContainsFieldAlias)
+      }
+
+    // If there is any non-nullable missing column, throw an InvalidSchemaException
+    if (!columnsToAdd.forall(_.nullable)) {
+      throw new InvalidSchemaException(
+        s"Non nullable column(s) [${columnsToAdd.filter(!_.nullable).map(_.name).mkString(",")}] is not present")
+    }
+
+    val df = dataFrame
+      .transform(dropCompoundKeyColumns())
+      .transform(replaceDFColNameByFieldName(structType))
+
+    // Add null column for each element of columnsToAdd into df
+    columnsToAdd
+      .foldLeft(df)((df, field) => df.withColumn(field.name, functions.lit(null).cast(field.dataType)))
+      .select(encoder.schema.map(x => functions.col(x.name)): _*) // re-order columns
+      .as[T](encoder)
   }
 
   /**
@@ -74,8 +101,8 @@ object SchemaConverter {
 
     dataset
       .toDF()
-      .transform(handleCompoundKeyToDF(structType))
-      .transform(handleColumnNameToDF(structType))
+      .transform(addCompoundKeyColumns(structType))
+      .transform(replaceFieldNameByColumnName(structType))
   }
 
   /**
@@ -85,6 +112,14 @@ object SchemaConverter {
     *    case class MyObject(@ColumnName("col1") column1: String, column2: String)
     *
     *    convert
+    *    +----+-------+
+    *    |col1|column2|
+    *    +----+-------+
+    *    |   a|      A|
+    *    |   b|      B|
+    *    +----+-------+
+    *
+    *    to
     *    +-------+-------+
     *    |column1|column2|
     *    +-------+-------+
@@ -92,20 +127,13 @@ object SchemaConverter {
     *    |      b|      B|
     *    +-------+-------+
     *
-    *    to
-    *    +----+-------+
-    *    |col1|column2|
-    *    +----+-------+
-    *    |   a|      A|
-    *    |   b|      B|
-    *    +----+-------+
     * }}}
     *
     * @param structType
     * @param dataFrame
     * @return
     */
-  def handleColumnNameFromDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+  def replaceDFColNameByFieldName(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
       .map(x => x.metadata.getStringArray(ColumnName.toString())(0) -> x.name)
@@ -143,7 +171,7 @@ object SchemaConverter {
     * @param dataFrame
     * @return
     */
-  def handleColumnNameToDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+  def replaceFieldNameByColumnName(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
       .map(x => x.name -> x.metadata.getStringArray(ColumnName.toString())(0))
@@ -160,7 +188,7 @@ object SchemaConverter {
     * @param dataFrame
     * @return
     */
-  def handleCompoundKeyFromDF()(dataFrame: DataFrame): DataFrame = {
+  def dropCompoundKeyColumns()(dataFrame: DataFrame): DataFrame = {
     // TODO do it safely
     dataFrame.drop(dataFrame.columns.filter(col => col.startsWith("_") && col.endsWith(compoundKeyName)): _*)
   }
@@ -192,22 +220,19 @@ object SchemaConverter {
     * @param dataFrame
     * @return
     */
-  private[this] def handleCompoundKeyToDF(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+  private[this] def addCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val keyColumns = structType
       .filter(_.metadata.contains(CompoundKey.toString()))
       .groupBy(_.metadata.getStringArray(CompoundKey.toString())(0))
       .map(row => (row._1, row._2.sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
         .map(n => functions.col(n.name))))
 
-    var dataFrameWithKeys = dataFrame
-
-    if (keyColumns.nonEmpty) {
-      keyColumns.foreach(row => {
-        dataFrameWithKeys = dataFrameWithKeys.withColumn("_" + row._1 + compoundKeyName, functions.concat_ws(compoundKeySeparator, row._2: _*))
-      })
-    }
-
-    dataFrameWithKeys
+    // For each element in keyColumns, add a new column to the input dataFrame
+    keyColumns
+      .foldLeft(dataFrame) {
+        (df, col) =>
+          df.withColumn(s"_${col._1}$compoundKeyName", functions.concat_ws(compoundKeySeparator, col._2: _*))
+      }
   }
 
   /**
@@ -223,7 +248,10 @@ object SchemaConverter {
 
     val sparkFields: List[StructField] = paramListOfPrimaryConstructor.map {
       field =>
-        val sparkType = ScalaReflection.schemaFor(field.typeSignature).dataType
+
+        val schema = ScalaReflection.schemaFor(field.typeSignature)
+        val sparkType = schema.dataType
+        var nullable = schema.nullable
 
         // Black magic from here:
         // https://stackoverflow.com/questions/23046958/accessing-an-annotation-value-in-scala
@@ -244,6 +272,9 @@ object SchemaConverter {
               case ru.Literal(ru.Constant(attribute)) => attribute.toString
             })
 
+            // All compound key column should not be nullable
+            nullable = false
+
             (CompoundKey.toString(), attributes.get.toArray)
 
         }.toMap
@@ -252,7 +283,7 @@ object SchemaConverter {
 
         annotations.foreach(annoData => metadataBuilder.putStringArray(annoData._1, annoData._2))
 
-        StructField(field.name.toString, sparkType, nullable = true, metadataBuilder.build())
+        StructField(field.name.toString, sparkType, nullable, metadataBuilder.build())
     }
 
     StructType(sparkFields)

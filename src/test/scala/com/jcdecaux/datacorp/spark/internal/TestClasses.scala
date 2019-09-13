@@ -56,5 +56,6 @@ object TestClasses {
 
   case class TestCompoundKey(@CompoundKey("primary", "1") a: String, @CompoundKey("primary", "2") b: Int, @CompoundKey("sort", "1") c: String)
 
+  case class TestNullableColumn(@CompoundKey("primary", "1") col1: String, col2: String, col3: Option[Int], col4: Double)
 
 }

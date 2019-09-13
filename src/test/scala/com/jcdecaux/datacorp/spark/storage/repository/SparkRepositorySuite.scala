@@ -79,7 +79,6 @@ class SparkRepositorySuite extends FunSuite {
     assert(filteredData.count() === 1)
 
     deleteRecursively(new File(path))
-
   }
 
   test("Test spark repository save with suffix") {
