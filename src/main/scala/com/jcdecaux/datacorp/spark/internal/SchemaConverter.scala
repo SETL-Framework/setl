@@ -75,7 +75,7 @@ object SchemaConverter {
     // If there is any non-nullable missing column, throw an InvalidSchemaException
     if (!columnsToAdd.forall(_.nullable)) {
       throw new InvalidSchemaException(
-        s"Non nullable column(s) [${columnsToAdd.filter(!_.nullable).map(_.name).mkString(",")}] is not present")
+        s"Find missing non-nullable column(s) [${columnsToAdd.filter(!_.nullable).map(_.name).mkString(",")}]")
     }
 
     val df = dataFrame
