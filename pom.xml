@@ -98,7 +98,7 @@
         <dependency>
             <groupId>com.audienceproject</groupId>
             <artifactId>spark-dynamodb</artifactId>
-            <version>0.4.2</version>
+            <version>0.4.4</version>
         </dependency>
 
 

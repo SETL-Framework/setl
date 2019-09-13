@@ -20,20 +20,29 @@ import org.apache.spark.sql._
   *   }
   * }}}
   *
-  * @param spark    spark session
-  * @param region   region of AWS
-  * @param table    table name
-  * @param saveMode save mode
+  * @param spark      spark session
+  * @param region     region of AWS
+  * @param table      table name
+  * @param saveMode   save mode
+  * @param throughput the desired read/write throughput to use
   */
 @InterfaceStability.Evolving
 class DynamoDBConnector(val spark: SparkSession,
                         val region: String, // "eu-west-1"
                         val table: String,
-                        val saveMode: SaveMode) extends DBConnector {
+                        val saveMode: SaveMode,
+                        val throughput: String = "10000"
+                       ) extends DBConnector {
 
   import com.audienceproject.spark.dynamodb.implicits._
 
-  override val reader: DataFrameReader = spark.read.option("region", region)
+  override val reader: DataFrameReader = {
+    log.debug(s"DynamoDB connector read throughput $throughput")
+    spark.read
+      .option("region", region)
+      .option("throughput", throughput)
+  }
+
   override var writer: DataFrameWriter[Row] = _
 
   def this(spark: SparkSession, config: Config) = this(
@@ -52,9 +61,11 @@ class DynamoDBConnector(val spark: SparkSession,
 
   @inline private[this] def initWriter(df: DataFrame): Unit = {
     if (df.hashCode() != lastWriteHashCode) {
+      log.debug(s"DynamoDB connector write throughput $throughput")
       writer = df.write
         .mode(saveMode)
         .option("region", region)
+        .option("throughput", throughput)
 
       lastWriteHashCode = df.hashCode()
     }

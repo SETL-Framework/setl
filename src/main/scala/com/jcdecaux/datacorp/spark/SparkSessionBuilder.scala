@@ -31,7 +31,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   var cassandraHost: String = _
   var config: SparkConf = new SparkConf()
   var initialization: Boolean = true
-  var defaultSparkHost: String = "local[*]"
+  var defaultSparkHost: String = "local"
   private[spark] var spark: SparkSession = _
 
   /**
