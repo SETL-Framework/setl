@@ -81,7 +81,7 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("Test CSV Connector Suffix") {
-
+    csvConnector.resetSuffix(true)
     csvConnector.write(testTable.toDF(), Some("2"))
     csvConnector.write(testTable.toDF(), Some("2"))
     csvConnector.write(testTable.toDF(), Some("1"))
@@ -97,7 +97,7 @@ class CSVConnectorSuite extends FunSuite {
     assertThrows[java.io.FileNotFoundException](csvConnector.read())
   }
 
-  test("test partition by") {
+  test("CSVConnector should partition data") {
     val dff: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -107,21 +107,20 @@ class CSVConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val csvConnector2 = new CSVConnector(spark, Map[String, String](
-      "path" -> path,
-      "inferSchema" -> "true",
-      "delimiter" -> "|",
-      "header" -> "true",
-      "saveMode" -> "Overwrite"
-    ))
-      .partitionBy("partition1", "partition2")
+    val csvConnector2 = new CSVConnector(
+      spark,
+      Map[String, String](
+        "path" -> path,
+        "inferSchema" -> "true",
+        "delimiter" -> "|",
+        "header" -> "true",
+        "saveMode" -> "Overwrite")
+    ).partitionBy("partition1", "partition2")
 
     // with partition, with suffix
     csvConnector2.write(dff.toDF, Some("1"))
     csvConnector2.write(dff.toDF, Some("2"))
     csvConnector2.dropUserDefinedSuffix = false
-
-    assertThrows[IllegalArgumentException](csvConnector2.write(dff.toDF))
 
     csvConnector2.read().show()
     assert(csvConnector2.read().count() === 12)
@@ -129,6 +128,7 @@ class CSVConnectorSuite extends FunSuite {
     csvConnector2.delete()
 
     // with partition without suffix
+    csvConnector2.resetSuffix(true)
     csvConnector2.write(dff.toDF)
     assert(csvConnector2.read().count() === 6)
     assert(csvConnector2.read().columns.length === 4, "column suffix should not exists")
@@ -136,6 +136,45 @@ class CSVConnectorSuite extends FunSuite {
     assert(csvConnector2.read().columns.length === 4, "column suffix should not exists")
     csvConnector2.delete()
 
+  }
+
+  test("CSV Connector should handle user defined suffix") {
+
+    val dff: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(2, "p1", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L),
+      TestObject(3, "p2", "c3", 3L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val df2: Dataset[TestObject] = Seq(
+      TestObject(11, "p1", "c1", 1L),
+      TestObject(12, "p2", "c2", 2L),
+      TestObject(12, "p1", "c2", 2L),
+      TestObject(13, "p3", "c3", 3L),
+      TestObject(13, "p2", "c3", 3L),
+      TestObject(13, "p3", "c3", 3L)
+    ).toDS()
+
+    val csvConnector2 = new CSVConnector(
+      spark,
+      Map[String, String](
+        "path" -> path,
+        "inferSchema" -> "true",
+        "delimiter" -> "|",
+        "header" -> "true",
+        "saveMode" -> "Overwrite")
+    )
+
+    // without partition, with suffix
+    csvConnector2.write(dff.toDF, Some("1"))
+    csvConnector2.write(df2.toDF, None)
+    csvConnector2.dropUserDefinedSuffix = false
+    csvConnector2.read().show()
+    assert(csvConnector2.read().count() === 12)
+    csvConnector2.delete()
   }
 
   test("Test csv connctor with Schema") {

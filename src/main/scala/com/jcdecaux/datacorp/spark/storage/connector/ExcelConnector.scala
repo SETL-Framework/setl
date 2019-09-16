@@ -145,7 +145,7 @@ class ExcelConnector(val spark: SparkSession,
     reader.load(path)
   }
 
-  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
+  override def write(df: DataFrame, suffix: Option[String]): Unit = {
     initWriter(df)
 
     if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
@@ -161,8 +161,5 @@ class ExcelConnector(val spark: SparkSession,
     writer.save(path)
   }
 
-  //  override def delete(): Unit = {
-  //    val f = new File(path)
-  //    deleteRecursively(f)
-  //  }
+  override def write(t: DataFrame): Unit = this.write(t, None)
 }

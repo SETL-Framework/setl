@@ -83,11 +83,9 @@ class DynamoDBConnector(val spark: SparkSession,
     reader.dynamodb(table)
   }
 
-  override def write(t: DataFrame, suffix: Option[String] = None): Unit = {
-    suffix match {
-      case Some(s) => writeDynamoDB(t, s"$table/$s")
-      case _ => writeDynamoDB(t, table)
-    }
+  override def write(t: DataFrame, suffix: Option[String]): Unit = {
+    log.warn("Suffix will be ignore in DynamoDBConnector")
+    write(t)
   }
 
   override def create(t: DataFrame, suffix: Option[String]): Unit = {
@@ -96,5 +94,13 @@ class DynamoDBConnector(val spark: SparkSession,
 
   override def delete(query: String): Unit = {
     log.warn("Delete is not supported in DynamoDBConnector")
+  }
+
+  override def create(t: DataFrame): Unit = {
+    log.warn("Create is not supported in DynamoDBConnector")
+  }
+
+  override def write(t: DataFrame): Unit = {
+    writeDynamoDB(t, table)
   }
 }

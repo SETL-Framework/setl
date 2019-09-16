@@ -98,9 +98,9 @@ class CassandraConnector(val keyspace: String,
     *
     * @param df DataFrame to be saved
     */
-  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
-    this.create(df, suffix)
-    this.writeCassandra(df, this.table, this.keyspace)
+  override def write(df: DataFrame, suffix: Option[String]): Unit = {
+    log.warn("Suffix will be ignore in CassandraConnector")
+    write(df)
   }
 
   /**
@@ -108,17 +108,26 @@ class CassandraConnector(val keyspace: String,
     *
     * @param df DataFrame that will be used to create Cassandra table
     */
-  override def create(df: DataFrame, suffix: Option[String] = None): Unit = {
-    if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
+  override def create(df: DataFrame, suffix: Option[String]): Unit = {
+    log.warn("Suffix will be ignore in CassandraConnector")
+    create(df)
+  }
 
+
+  override def create(df: DataFrame): Unit = {
     log.debug(s"Create cassandra table $keyspace.$table")
     log.debug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
     log.debug(s"Clustering keys: ${clusteringKeyColumns.getOrElse(Seq("None")).mkString(", ")}")
     try {
       df.createCassandraTable(keyspace, table, partitionKeyColumns, clusteringKeyColumns)
     } catch {
-      case _: AlreadyExistsException => log.warn(s"Table $keyspace.$table already exist, append data to it")
+      case _: AlreadyExistsException => log.warn(s"Table $keyspace.$table already exist")
     }
+  }
+
+  override def write(df: DataFrame): Unit = {
+    this.create(df)
+    this.writeCassandra(df, this.table, this.keyspace)
   }
 
   /**

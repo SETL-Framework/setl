@@ -20,7 +20,11 @@ import org.apache.spark.sql._
 @InterfaceStability.Evolving
 trait Connector extends Logging {
 
-  private[connector] var lastWriteHashCode: Int = -1432561
+  /**
+    * The hashcode of the last written DataFrame. It will be used to determine if the DataFrameWriter
+    * is needed to be re-initialized.
+    */
+  private[connector] var lastWriteHashCode: Int = 0
 
   val spark: SparkSession
 
@@ -32,5 +36,8 @@ trait Connector extends Logging {
 
   def read(): DataFrame
 
-  def write(t: DataFrame, suffix: Option[String] = None): Unit
+  @deprecated("This method will be removed in v0.4. Use `write(t: DataFrame)` instead.")
+  def write(t: DataFrame, suffix: Option[String]): Unit
+
+  def write(t: DataFrame): Unit
 }

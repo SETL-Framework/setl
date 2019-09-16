@@ -33,11 +33,16 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Partition columns when writing the data frame
     */
-  private[connector] val partition: ArrayBuffer[String] = ArrayBuffer()
+  private[this] val partition: ArrayBuffer[String] = ArrayBuffer()
 
-  private[connector] var withSuffix: Option[Boolean] = None
+  private[connector] var writeCount: Long = 0
 
-  private[connector] var userDefinedSuffix: String = "_user_defined_suffix"
+  private[connector] var userDefinedSuffixKey: String = "_user_defined_suffix"
+
+  // use a ThreadLocal object to keep it thread safe
+  private[this] val userDefinedSuffixValue: ThreadLocal[Option[String]] = new ThreadLocal[Option[String]]() {
+    override def initialValue(): Option[String] = None
+  }
 
   private[connector] var dropUserDefinedSuffix: Boolean = true
 
@@ -46,7 +51,7 @@ abstract class FileConnector(val spark: SparkSession,
     * If there are special characters in the string of path (like whitespace), then we
     * try to firstly encode the string and then create a URI
     */
-  private[connector] val pathURI: URI = try {
+  private[this] val pathURI: URI = try {
     URI.create(options.getPath)
   } catch {
     case _: IllegalArgumentException =>
@@ -58,7 +63,7 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Get the current filesystem based on the path URI
     */
-  private[connector] val fileSystem: FileSystem = {
+  private[this] val fileSystem: FileSystem = {
     options.getS3CredentialsProvider match {
       case Some(v) => hadoopConfiguration.set("fs.s3a.aws.credentials.provider", v)
       case _ =>
@@ -87,7 +92,7 @@ abstract class FileConnector(val spark: SparkSession,
     * If the filesystem is a local system, then we try to decode the path string to remove encoded
     * characters like whitespace "%20%", etc
     */
-  private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
+  private[this] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
     log.debug(s"Detect local file system: ${pathURI.toString}")
     new Path(URLDecoder.decode(pathURI.toString, options.getEncoding))
   } else {
@@ -99,7 +104,7 @@ abstract class FileConnector(val spark: SparkSession,
     * Get the basePath of the current path. If the value path is a file path, then its basePath will be
     * it's parent's path. Otherwise it will be the current path itself.
     */
-  private[connector] val baseDirectory: String = {
+  private[this] val baseDirectory: String = {
     if (fileSystem.exists(absolutePath)) {
       if (fileSystem.getFileStatus(absolutePath).isDirectory) {
         absolutePath.toString
@@ -118,7 +123,7 @@ abstract class FileConnector(val spark: SparkSession,
 
   override var writer: DataFrameWriter[Row] = _
 
-  private[connector] val filenamePattern: Option[Regex] = options.getFilenamePattern match {
+  private[this] val filenamePattern: Option[Regex] = options.getFilenamePattern match {
     case Some(pattern) =>
       log.debug("Detect filename pattern")
       Some(pattern.r)
@@ -129,13 +134,12 @@ abstract class FileConnector(val spark: SparkSession,
     listPaths().map(_.toString)
   }
 
-  private[connector] def listPaths(): Array[Path] = {
+  private[this] def listPaths(): Array[Path] = {
     val filePaths = ArrayBuffer[Path]()
     val files = fileSystem.listFiles(absolutePath, true)
 
     while (files.hasNext) {
       val file = files.next()
-
       filenamePattern match {
         case Some(regex) =>
           // If the regex pattern is defined
@@ -159,21 +163,52 @@ abstract class FileConnector(val spark: SparkSession,
     * This method will detect, in the case of a partitioned table, if user
     * try to use both suffix write and non-suffix write
     *
-    * @param suffix boolean
+    * @param suffix an option of suffix in string format
     */
-  private[connector] def checkPartitionValidity(suffix: Boolean): Unit = {
-    if (partition.nonEmpty) {
-      withSuffix match {
-        case Some(boo) =>
-          if (boo != suffix)
-            throw new IllegalArgumentException("Current version doesn't support mixing " +
-              "suffix with non-suffix when the data table is partitioned")
-        case _ => withSuffix = Some(suffix)
+  def setSuffix(suffix: Option[String]): this.type = {
+
+    val _suffix =
+
+      if (writeCount == 0) {
+        suffix
+      } else {
+        // Only check validity when write count bigger than 0
+        // If non-suffix data have already been written, then it's not possible to add any suffix
+        if (this.userDefinedSuffixValue.get().isEmpty && suffix.isDefined) {
+          throw new IllegalArgumentException(s"Current version of ${this.getClass.toString.split("\\.").last} " +
+            s"doesn't support adding an user defined suffix into already-saved non-suffix data")
+        }
+
+        // If with-suffix data have been written, then instead of set suffix to None, we set it to default
+        if (this.userDefinedSuffixValue.get().isDefined && suffix.isEmpty) {
+          log.info("Can't remove user defined suffix (UDS) when another UDS has already been saved. Replace it by the default UDS")
+          Some("default")
+        } else {
+          suffix
+        }
       }
-    }
+
+    this.userDefinedSuffixValue.set(_suffix)
+    this
   }
 
-  @inline private[connector] def initReader(): DataFrameReader = {
+  /**
+    * Reset suffix to None
+    *
+    * @param force set to true to ignore the validity check of suffix value
+    */
+  def resetSuffix(force: Boolean = false): this.type = {
+    if (force) {
+      log.warn("Reset suffix may cause unexpected behavior of FileConnector")
+      this.userDefinedSuffixValue.set(None)
+      this.writeCount = 0
+    } else {
+      setSuffix(None)
+    }
+    this
+  }
+
+  @inline private[this] def initReader(): DataFrameReader = {
     this.spark.read.option("basePath", baseDirectory).options(options.getDataFrameReaderOptions)
   }
 
@@ -183,7 +218,7 @@ abstract class FileConnector(val spark: SparkSession,
     *
     * @param df input DataFrame
     */
-  @inline private[connector] def initWriter(df: DataFrame): Unit = {
+  @inline private[this] def initWriter(df: DataFrame): Unit = {
 
     // Check if the writer is already initialized by comparing hashcode
     if (df.hashCode() != lastWriteHashCode) {
@@ -219,7 +254,6 @@ abstract class FileConnector(val spark: SparkSession,
   def delete(): Unit = {
     log.debug(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
-    withSuffix = None
   }
 
   /**
@@ -234,10 +268,12 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Write a [[DataFrame]] into the given path with the given save mode
     */
-  def _write(df: DataFrame, filepath: String): Unit = {
+  private[this] def _write(df: DataFrame, filepath: String): Unit = {
     log.debug(s"Write DataFrame to $filepath")
     initWriter(df)
-    writer.format(options.getStorage.toString.toLowerCase()).save(filepath)
+    writer.format(storage.toString.toLowerCase()).save(filepath)
+    if (this.writeCount >= Long.MaxValue) throw new UnsupportedOperationException("Write count exceeds the max value")
+    this.writeCount += 1
   }
 
   /**
@@ -246,15 +282,16 @@ abstract class FileConnector(val spark: SparkSession,
     * @param df     dataframe to be written
     * @param suffix optional, String, write the df in a sub-directory of the defined path
     */
-  override def write(df: DataFrame, suffix: Option[String] = None): Unit = {
-    suffix match {
-      case Some(s) =>
-        checkPartitionValidity(true)
-        _write(df, s"${this.absolutePath.toString}/$userDefinedSuffix=$s")
-      case _ =>
-        checkPartitionValidity(false)
-        _write(df, this.absolutePath.toString)
-    }
+  override def write(df: DataFrame, suffix: Option[String]): Unit = {
+    setSuffix(suffix)
+    this.write(df)
+  }
+
+  override def write(t: DataFrame): Unit = _write(t, outputPath)
+
+  private[this] def outputPath: String = userDefinedSuffixValue.get() match {
+    case Some(suffix) => s"${this.absolutePath.toString}/$userDefinedSuffixKey=$suffix"
+    case _ => this.absolutePath.toString
   }
 
   /**
@@ -267,8 +304,8 @@ abstract class FileConnector(val spark: SparkSession,
 
     val df = reader.format(options.getStorage.toString.toLowerCase()).load(listFiles(): _*)
 
-    if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffix)) {
-      df.drop(userDefinedSuffix)
+    if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffixKey)) {
+      df.drop(userDefinedSuffixKey)
     } else {
       df
     }

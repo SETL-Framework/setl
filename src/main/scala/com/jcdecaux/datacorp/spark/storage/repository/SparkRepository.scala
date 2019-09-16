@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.repository
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter}
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.{Connector, DBConnector, FileConnector}
@@ -75,10 +76,17 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
   override def save(data: Dataset[DataType], suffix: Option[String] = None): SparkRepository.this.type = {
 
     connector match {
-      case c: DBConnector => c.create(data.toDF(), suffix)
-      case _ => log.info("Current class has no create method. Save directly the dataset")
+      case db: DBConnector => db.create(data.toDF())
+      case file: FileConnector => file.setSuffix(suffix)
+      case _: Connector =>
+      case _ => throw new UnknownException.Storage(s"Unknown connector ${connector.getClass.toString}")
     }
-    connector.write(SchemaConverter.toDF(data), suffix)
+
+    //    connector match {
+    //      case c: DBConnector => c.create(data.toDF(), suffix)
+    //      case _ => log.info("Current class has no create method. Save directly the dataset")
+    //    }
+    connector.write(SchemaConverter.toDF(data))
     this
   }
 }

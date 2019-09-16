@@ -95,14 +95,13 @@ class JSONConnectorSuite extends FunSuite {
     connector.write(dff.toDF, Some("2"))
     connector.dropUserDefinedSuffix = false
 
-    assertThrows[IllegalArgumentException](connector.write(dff.toDF))
-
     connector.read().show()
     assert(connector.read().count() === 12)
     assert(connector.read().columns.length === 5)
     connector.delete()
 
     // with partition without suffix
+    connector.resetSuffix(true)
     connector.write(dff.toDF)
     assert(connector.read().count() === 6)
     assert(connector.read().columns.length === 4, "column suffix should not exists")
