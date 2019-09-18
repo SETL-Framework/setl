@@ -106,6 +106,29 @@ class SparkRepositorySuite extends FunSuite {
     connector.delete()
   }
 
+  test("SparkRepository should handle column name changed by annotation") {
+
+    val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
+    val path: String = "src/test/resources/test_spark_repository_colname_change"
+    val connector = new CSVConnector(spark, Map[String, String](
+      "path" -> path,
+      "inferSchema" -> "false",
+      "delimiter" -> ";",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    ))
+    val condition = Condition("col1", "=", "a")
+    val condition2 = Condition("column1", "=", "a")
+    val repo = new SparkRepository[MyObject].setConnector(connector)
+    repo.save(ds)
+
+    val finded1 = repo.findBy(condition).collect()
+    val finded2 = repo.findBy(condition2).collect()
+
+    assert(finded1 === finded2)
+    connector.delete()
+  }
+
 }
 
 case class MyObject(@CompoundKey("sort", "2") @ColumnName("col1") column1: String, @CompoundKey("sort", "1") column2: String)
