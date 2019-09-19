@@ -2,7 +2,8 @@ package com.jcdecaux.datacorp.spark.internal
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.exception.InvalidSchemaException
-import com.jcdecaux.datacorp.spark.internal.TestClasses.{MyObject, TestCompoundKey, TestNullableColumn}
+import com.jcdecaux.datacorp.spark.internal.TestClasses._
+import org.apache.spark.sql.types.BinaryType
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
@@ -85,6 +86,38 @@ class SchemaConverterSuite extends FunSuite {
 
     assertThrows[InvalidSchemaException](SchemaConverter.fromDF[TestNullableColumn](df))
     assertThrows[InvalidSchemaException](SchemaConverter.fromDF[TestNullableColumn](df2))
+  }
+
+  test("SchemaConverter should be able to Compress column") {
+    val ics = Seq(
+      InnerClass("i1", "你好谢谢再见你好谢谢再见你好谢谢再见"),
+      InnerClass("i11", "165498465DDDFKLJKSDOIJ__çezé*/-+")
+    )
+
+    val test = spark.createDataset(
+      Seq(
+        TestCompression("col1", "col2", ics, Seq("a", "b", "c")),
+        TestCompression("col1", "col2", ics, Seq("a", "b", "c")),
+        TestCompression("col1", "col2", ics, Seq("a", "b", "c"))
+      )
+    )
+
+    val schema = StructAnalyser.analyseSchema[TestCompression]
+    val compressed = SchemaConverter.compressColumn(schema)(test.toDF())
+    assert(compressed.schema.find(_.name == "col3").get.dataType === BinaryType)
+    assert(compressed.schema.find(_.name == "col4").get.dataType === BinaryType)
+
+    val decompressed = SchemaConverter.decompressColumn(schema)(compressed).as[TestCompression]
+    assert(test.head === decompressed.head)
+
+    val compressed2 = SchemaConverter.toDF(test)
+    compressed2.printSchema()
+    assert(compressed2.schema.find(_.name == "col3").get.dataType === BinaryType)
+    assert(compressed2.schema.find(_.name == "col4").get.dataType === BinaryType)
+
+    val decompressed2 = SchemaConverter.fromDF[TestCompression](compressed2)
+    decompressed2.show()
+    assert(test.head === decompressed2.head)
   }
 
 }

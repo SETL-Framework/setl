@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage
 
-import com.jcdecaux.datacorp.spark.annotation.ColumnName
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, Compress}
+import com.jcdecaux.datacorp.spark.internal.TestClasses.InnerClass
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{Dataset, Encoder}
 
@@ -9,6 +10,12 @@ package object repository {
   case class RepoAdapterTesterA(col1: String, col2: String)
 
   case class RepoAdapterTesterB(@ColumnName("column1") col1: String, col2: String, col3: String)
+
+  case class TestCompressionRepository(col1: String,
+                                       col2: String,
+                                       @Compress col3: Seq[InnerClass],
+                                       @Compress col4: Seq[String]) {
+  }
 
   object ImplicitConverter {
 

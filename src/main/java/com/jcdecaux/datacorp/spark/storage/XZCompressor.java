@@ -16,7 +16,7 @@ public class XZCompressor implements Compressor {
             return null;
         }
         ByteArrayOutputStream xzOutput = new ByteArrayOutputStream();
-        XZOutputStream xzStream = new XZOutputStream(xzOutput, new LZMA2Options(LZMA2Options.PRESET_MAX));
+        XZOutputStream xzStream = new XZOutputStream(xzOutput, new LZMA2Options(LZMA2Options.PRESET_DEFAULT));
         xzStream.write(input.getBytes());
         xzStream.close();
         return xzOutput.toByteArray();

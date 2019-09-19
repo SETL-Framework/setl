@@ -53,7 +53,7 @@ object StructAnalyser {
 
           case compress: ru.AnnotationApi if compress.tree.tpe =:= ru.typeOf[Compress] =>
             val compressor = columnToBeCompressed.find(_._1 == index).get._2.getCanonicalName
-            ("Compress", Array(compressor))
+            (classOf[Compress].getCanonicalName, Array(compressor))
 
         }.toMap
 

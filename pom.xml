@@ -267,7 +267,8 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <argLine>-Duser.timezone=${project.timezone}</argLine>
+                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding}
+                    </argLine>
                     <parallel>false</parallel>
                 </configuration>
                 <executions>

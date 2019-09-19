@@ -1,9 +1,25 @@
 package com.jcdecaux.datacorp.spark.internal
 
-import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Delivery}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress, Delivery}
+import com.jcdecaux.datacorp.spark.storage.Compressor
 import com.jcdecaux.datacorp.spark.transformation.Factory
 
 object TestClasses {
+
+  case class InnerClass(innerCol1: String, innerCol2: String)
+
+  case class TestCompression(@ColumnName("dqsf") col1: String,
+                             @CompoundKey("test", "1") col2: String,
+                             @Compress col3: Seq[InnerClass],
+                             @Compress col4: Seq[String]) {
+  }
+
+  case class TestStructAnalyser(@ColumnName("alias1") col1: String,
+                                @CompoundKey("test", "1") col2: String,
+                                @CompoundKey("test", "2") col22: String,
+                                @Compress col3: Seq[InnerClass],
+                                @Compress(compressor = classOf[Compressor]) col4: Seq[String]) {
+  }
 
   class Producer1
 
