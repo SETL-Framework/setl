@@ -1,6 +1,6 @@
 package com.jcdecaux.datacorp.spark.storage.repository
 
-import com.jcdecaux.datacorp.spark.annotation.{ColumnName, InterfaceStability}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, Compress, InterfaceStability}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter, StructAnalyser}
@@ -105,10 +105,17 @@ object SparkRepository {
   private[repository] def handleConditions(conditions: Set[Condition], schema: StructType): Set[Condition] = {
 
     val columnWithAlias = schema.filter(_.metadata.contains(ColumnName.toString()))
+    val binaryColumns = schema.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
 
     conditions
       .map {
         cond =>
+
+          if (binaryColumns.map(_.name).contains(cond.key)) {
+            // TODO the following code doesn't handle the alais
+            throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
+          }
+
           // if the current query column has an alias, we recreate a new condition and replace
           // the current key by the column name alias
           columnWithAlias.find(_.name == cond.key) match {
