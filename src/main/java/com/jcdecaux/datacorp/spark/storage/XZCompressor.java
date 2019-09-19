@@ -29,9 +29,9 @@ public class XZCompressor implements Compressor {
         }
         XZInputStream xzInputStream = new XZInputStream(new ByteArrayInputStream(bytes));
         byte firstByte = (byte) xzInputStream.read();
-        byte[] buffer = new byte[xzInputStream.available()];
+        byte[] buffer = new byte[xzInputStream.available() + 1];
         buffer[0] = firstByte;
-        xzInputStream.read(buffer, 1, buffer.length - 2);
+        xzInputStream.read(buffer, 1, buffer.length - 1);
         xzInputStream.close();
         return new String(buffer);
     }
