@@ -2,8 +2,8 @@ package com.jcdecaux.datacorp.spark.storage.repository
 
 import java.io.File
 
-import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
 import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.internal.TestClasses.InnerClass
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.{CSVConnector, ParquetConnector}
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
@@ -129,6 +129,51 @@ class SparkRepositorySuite extends FunSuite {
     connector.delete()
   }
 
+  test("SparkRepository should compress columns with Compress annotation") {
+
+    val ics = Seq(
+      InnerClass("i1", "你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见"),
+      InnerClass("i11", "165498465DDDFKLJKSDOIJ__çezé*/-+165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé165498465DDDFKLJKSDOIJ__çezé")
+    )
+
+    val test = spark.createDataset(
+      Seq(
+        TestCompressionRepository("col1_1", "col2", ics, Seq("谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见", "b", "c谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见")),
+        TestCompressionRepository("col1_2", "col2", ics, Seq("a", "谢再见你好谢谢再见你好谢谢qsdfqsdfqsdfqsdfqsdf sqdfsdqf qs 再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见", "c")),
+        TestCompressionRepository("col1_3", "col2", ics, Seq("谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见a", "b", "c"))
+      )
+    )
+
+    val path: String = "src/test/resources/test_spark_repository_compression"
+    val connector = new ParquetConnector(spark, Map[String, String](
+      "path" -> path,
+      "table" -> "test_repo_compression",
+      "saveMode" -> "Append"
+    ))
+
+    val repo = new SparkRepository[TestCompressionRepository].setConnector(connector)
+
+    // Write non compressed data
+    connector.write(test.toDF())
+    val sizeUncompressed = connector.getSize
+    connector.delete()
+
+    // Write compressed data
+    repo.save(test)
+    val sizeCompressed = connector.getSize
+
+    println(s"size before compression: $sizeUncompressed")
+    println(s"size after compression: $sizeCompressed")
+    assert(sizeCompressed <= sizeUncompressed)
+
+    val loadedData = repo.findAll()
+    loadedData.show()
+    assert(loadedData.head === test.head)
+    assert(test.filter(_.col1 == "col1_3").head === repo.findBy(Condition("col1", "=", "col1_3")).head)
+
+    // Exception will be thrown when we try to filter a binary column
+    assertThrows[IllegalArgumentException](repo.findBy(Condition("col4", "=", "test")))
+    connector.delete()
+  }
 }
 
-case class MyObject(@CompoundKey("sort", "2") @ColumnName("col1") column1: String, @CompoundKey("sort", "1") column2: String)

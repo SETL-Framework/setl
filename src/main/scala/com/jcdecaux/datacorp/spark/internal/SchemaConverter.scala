@@ -1,10 +1,11 @@
 package com.jcdecaux.datacorp.spark.internal
 
-import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress}
 import com.jcdecaux.datacorp.spark.exception.InvalidSchemaException
+import com.jcdecaux.datacorp.spark.storage.Compressor
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{DataFrame, Dataset, functions}
+import org.apache.spark.sql.{Column, DataFrame, Dataset, functions}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -43,8 +44,16 @@ import scala.reflect.runtime.{universe => ru}
   */
 object SchemaConverter {
 
-  private[this] val compoundKeyName: String = "_key"
+  private[this] val compoundKeySuffix: String = "_key"
+  private[this] val compoundKeyPrefix: String = "_"
   private[this] val compoundKeySeparator: String = "-"
+
+  private[this] val compoundKeyName: String => String =
+    (compoundKeyId: String) => s"$compoundKeyPrefix$compoundKeyId$compoundKeySuffix"
+
+  private[this] val compoundKeyColumn: Seq[Column] => Column =
+    (columns: Seq[Column]) => functions.concat_ws(compoundKeySeparator, columns: _*)
+
 
   /**
     * Convert a DataFrame to Dataset according to the annotations
@@ -78,8 +87,9 @@ object SchemaConverter {
     }
 
     val df = dataFrame
-      .transform(dropCompoundKeyColumns())
+      .transform(dropCompoundKeyColumns(structType))
       .transform(replaceDFColNameByFieldName(structType))
+      .transform(decompressColumn(structType))
 
     // Add null column for each element of columnsToAdd into df
     columnsToAdd
@@ -101,6 +111,7 @@ object SchemaConverter {
     dataset
       .toDF()
       .transform(addCompoundKeyColumns(structType))
+      .transform(compressColumn(structType))
       .transform(replaceFieldNameByColumnName(structType))
   }
 
@@ -182,14 +193,19 @@ object SchemaConverter {
   }
 
   /**
-    * Drop any column that starts with "<i>_</i>" and ends with "<i>_key</i>"
+    * Drop all compound key columns
     *
-    * @param dataFrame
     * @return
     */
-  def dropCompoundKeyColumns()(dataFrame: DataFrame): DataFrame = {
-    // TODO do it safely
-    dataFrame.drop(dataFrame.columns.filter(col => col.startsWith("_") && col.endsWith(compoundKeyName)): _*)
+  def dropCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+
+    val columnsToDrop = structType
+      .filter(_.metadata.contains(CompoundKey.toString()))
+      .map(_.metadata.getStringArray(CompoundKey.toString())(0))
+      .toSet
+
+    columnsToDrop
+      .foldLeft(dataFrame)((df, col) => df.drop(compoundKeyName(col)))
   }
 
   /**
@@ -223,14 +239,49 @@ object SchemaConverter {
     val keyColumns = structType
       .filter(_.metadata.contains(CompoundKey.toString()))
       .groupBy(_.metadata.getStringArray(CompoundKey.toString())(0))
-      .map(row => (row._1, row._2.sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
-        .map(n => functions.col(n.name))))
+      .map {
+        row =>
+          val sortedCols = row._2
+            .sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
+            .map(n => functions.col(n.name))
+          (row._1, sortedCols)
+      }
 
     // For each element in keyColumns, add a new column to the input dataFrame
     keyColumns
+      .foldLeft(dataFrame)(
+        (df, col) => df.withColumn(compoundKeyName(col._1), compoundKeyColumn(col._2))
+      )
+  }
+
+  def compressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+
+    val columnToCompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
+
+    columnToCompress
       .foldLeft(dataFrame) {
-        (df, col) =>
-          df.withColumn(s"_${col._1}$compoundKeyName", functions.concat_ws(compoundKeySeparator, col._2: _*))
+        (df, sf) =>
+          val compressorName = sf.metadata.getStringArray(classOf[Compress].getCanonicalName).head
+          val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
+          val compress: String => Array[Byte] = (input: String) => compressor.compress(input)
+          val compressUDF = functions.udf(compress)
+          df.withColumn(sf.name, compressUDF(functions.to_json(functions.col(sf.name))))
+      }
+  }
+
+  def decompressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+
+    val columnToDecompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
+
+    columnToDecompress
+      .foldLeft(dataFrame) {
+        (df, sf) => {
+          val compressorName = sf.metadata.getStringArray(classOf[Compress].getCanonicalName).head
+          val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
+          val decompress: Array[Byte] => String = (input: Array[Byte]) => compressor.decompress(input)
+          val decompressUDF = functions.udf(decompress)
+          df.withColumn(sf.name, functions.from_json(decompressUDF(functions.col(sf.name)), sf.dataType))
+        }
       }
   }
 }
