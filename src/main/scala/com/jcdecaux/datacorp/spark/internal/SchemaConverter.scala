@@ -4,7 +4,7 @@ import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey}
 import com.jcdecaux.datacorp.spark.exception.InvalidSchemaException
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{DataFrame, Dataset, functions}
+import org.apache.spark.sql.{Column, DataFrame, Dataset, functions}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -43,8 +43,16 @@ import scala.reflect.runtime.{universe => ru}
   */
 object SchemaConverter {
 
-  private[this] val compoundKeyName: String = "_key"
+  private[this] val compoundKeySuffix: String = "_key"
+  private[this] val compoundKeyPrefix: String = "_"
   private[this] val compoundKeySeparator: String = "-"
+
+  private[this] val compoundKeyName: String => String =
+    (compoundKeyId: String) => s"$compoundKeyPrefix$compoundKeyId$compoundKeySuffix"
+
+  private[this] val compoundKeyColumn: Seq[Column] => Column =
+    (columns: Seq[Column]) => functions.concat_ws(compoundKeySeparator, columns: _*)
+
 
   /**
     * Convert a DataFrame to Dataset according to the annotations
@@ -78,7 +86,7 @@ object SchemaConverter {
     }
 
     val df = dataFrame
-      .transform(dropCompoundKeyColumns())
+      .transform(dropCompoundKeyColumns(structType))
       .transform(replaceDFColNameByFieldName(structType))
 
     // Add null column for each element of columnsToAdd into df
@@ -184,12 +192,20 @@ object SchemaConverter {
   /**
     * Drop any column that starts with "<i>_</i>" and ends with "<i>_key</i>"
     *
-    * @param dataFrame
     * @return
     */
-  def dropCompoundKeyColumns()(dataFrame: DataFrame): DataFrame = {
+  def dropCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+
+    val columnsToDrop = structType
+      .filter(_.metadata.contains(CompoundKey.toString()))
+      .map(_.metadata.getStringArray(CompoundKey.toString())(0))
+      .toSet
+
+    columnsToDrop
+      .foldLeft(dataFrame)((df, col) => df.drop(compoundKeyName(col)))
+
     // TODO do it safely
-    dataFrame.drop(dataFrame.columns.filter(col => col.startsWith("_") && col.endsWith(compoundKeyName)): _*)
+    //    dataFrame.drop(dataFrame.columns.filter(col => col.startsWith("_") && col.endsWith(compoundKeySuffix)): _*)
   }
 
   /**
@@ -223,14 +239,23 @@ object SchemaConverter {
     val keyColumns = structType
       .filter(_.metadata.contains(CompoundKey.toString()))
       .groupBy(_.metadata.getStringArray(CompoundKey.toString())(0))
-      .map(row => (row._1, row._2.sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
-        .map(n => functions.col(n.name))))
+      .map {
+        row =>
+          val sortedCols = row._2
+            .sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
+            .map(n => functions.col(n.name))
+          (row._1, sortedCols)
+      }
 
     // For each element in keyColumns, add a new column to the input dataFrame
     keyColumns
-      .foldLeft(dataFrame) {
-        (df, col) =>
-          df.withColumn(s"_${col._1}$compoundKeyName", functions.concat_ws(compoundKeySeparator, col._2: _*))
-      }
+      .foldLeft(dataFrame)(
+        (df, col) => df.withColumn(compoundKeyName(col._1), compoundKeyColumn(col._2))
+      )
   }
+
+  //  private[this] def compressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
+  //
+  //  }
+
 }
