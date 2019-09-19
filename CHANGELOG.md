@@ -1,4 +1,7 @@
 ## 0.3.2 (2019-09-18)
+- Added **@Compress** annotation. **SparkRepository** will compress all columns having this annotation by
+using a **Compressor** (the default compressor is **XZCompressor**)
+- Added class **Compressor** and implemented **XZCompressor**
 - Added **SparkRepositoryAdapter[A, B]**. It will allow a **SparkRepository[A]** to write/read a data store of type
  **B** by using an implicit **DatasetConverter[A, B]**
 - Added trait **Converter[A, B]** that handles the conversion between an object of type A and an object of type **B**
