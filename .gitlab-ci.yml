@@ -33,7 +33,6 @@ deploy:snapshot:
     - test
   only:
     - master
-  when: manual
 
 deploy:release:
   stage: deploy
