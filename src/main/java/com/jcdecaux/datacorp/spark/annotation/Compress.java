@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  * </p>
  *
  * <p>
- * By default, the compression algorithm is LZMA with the default compression level (=6). You can define other compressor
+ * By default, the compression algorithm is XZ with the default compression level (=6). You can define other compressor
  * by implementing <code>com.jcdecaux.datacorp.storage.Compressor</code> interface.
  * </p>
  */

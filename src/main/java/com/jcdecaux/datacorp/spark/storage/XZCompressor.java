@@ -7,6 +7,7 @@ import org.tukaani.xz.XZOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class XZCompressor implements Compressor {
 
@@ -17,7 +18,7 @@ public class XZCompressor implements Compressor {
         }
         ByteArrayOutputStream xzOutput = new ByteArrayOutputStream();
         XZOutputStream xzStream = new XZOutputStream(xzOutput, new LZMA2Options(LZMA2Options.PRESET_DEFAULT));
-        xzStream.write(input.getBytes());
+        xzStream.write(input.getBytes(StandardCharsets.UTF_8));
         xzStream.close();
         return xzOutput.toByteArray();
     }
