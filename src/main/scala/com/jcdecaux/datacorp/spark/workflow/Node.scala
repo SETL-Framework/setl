@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.internal.{HasDescription, Identifiable, Logging}
-import com.jcdecaux.datacorp.spark.transformation.{FactoryInput, FactoryOutput}
+import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryInput, FactoryOutput}
 
 import scala.reflect.runtime
 
@@ -14,16 +14,18 @@ import scala.reflect.runtime
   * @param factoryClass class of the represented Factory
   * @param factoryUUID  UUID of the represented Factory
   * @param stage        stage where the node is located in the DAG
-  * @param input        input of node
+  * @param setters      setter's metadata
   * @param output       output of node
   */
-private[workflow] case class Node(factoryClass: Class[_],
+private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
                                   factoryUUID: UUID,
                                   stage: Int,
-                                  input: List[FactoryInput],
+                                  setters: List[FactoryDeliveryMetadata],
                                   output: FactoryOutput) extends Identifiable with Logging with HasDescription {
 
   override def getPrettyName: String = getPrettyName(factoryClass)
+
+  def input: List[FactoryInput] = setters.flatMap(s => s.getFactoryInputs)
 
   def listInputProducers: List[Class[_]] = this.input.map(_.producer)
 

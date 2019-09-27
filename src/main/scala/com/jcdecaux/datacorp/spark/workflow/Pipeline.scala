@@ -14,14 +14,14 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
 
-  private[workflow] val dispatchManagers: DeliverableDispatcher = new DeliverableDispatcher
+  private[workflow] var deliverableDispatcher: DeliverableDispatcher = new DeliverableDispatcher
   private[workflow] var stageCounter: Int = 0
 
   val stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   val pipelineInspector: PipelineInspector = new PipelineInspector(this)
 
   def setInput(v: Deliverable[_]): this.type = {
-    dispatchManagers.setDelivery(v)
+    deliverableDispatcher.setDelivery(v)
     this
   }
 
@@ -91,15 +91,15 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
           stage.describe()
 
           // Dispatch input if stageID doesn't equal 0
-          if (dispatchManagers.deliveries.nonEmpty) {
+          if (deliverableDispatcher.deliveries.nonEmpty) {
             stage.factories.foreach {
-                factory => dispatchManagers.dispatch(factory, pipelineInspector.findSetters(factory))
+              factory => deliverableDispatcher.dispatch(factory, pipelineInspector.findSetters(factory))
               }
           }
 
           // run the stage
           stage.run()
-          stage.factories.foreach(dispatchManagers.collectDeliverable)
+          stage.factories.foreach(deliverableDispatcher.collectDeliverable)
       }
 
     this
@@ -146,7 +146,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
     * @param t runtime type of the Deliverable's payload
     * @return
     */
-  def getDeliverable(t: ru.Type): Array[Deliverable[_]] = dispatchManagers.findDeliverableByType(t)
+  def getDeliverable(t: ru.Type): Array[Deliverable[_]] = deliverableDispatcher.findDeliverableByType(t)
 
 
 }

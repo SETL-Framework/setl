@@ -4,8 +4,6 @@ import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.{HasDescription, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
 
-import scala.collection.mutable
-
 /**
   * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a DAG with
   * nodes (factories) and flows (data transfer flows)
@@ -17,7 +15,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
 
   private[workflow] var nodes: Set[Node] = _
   private[workflow] var flows: Set[Flow] = _
-  private[workflow] var setters: mutable.HashSet[FactoryDeliveryMetadata] = mutable.HashSet()
+  //  private[workflow] var setters: mutable.HashSet[FactoryDeliveryMetadata] = mutable.HashSet()
 
   def dag: DAG = DAG(nodes, flows)
 
@@ -36,7 +34,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
     */
   def findSetters(factory: Factory[_]): List[FactoryDeliveryMetadata] = {
     require(inspected)
-    setters.filter(s => s.factoryUUID == factory.getUUID).toList
+    nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
   }
 
   /**
@@ -54,12 +52,9 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
           stage.factories.map {
             fac =>
               val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
-              setters ++= setter
-
-              val inputs = setter.flatMap(_.getFactoryInputs).toList
               val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers)
 
-              Node(fac.getClass, fac.getUUID, stage.stageId, inputs, output)
+              Node(fac.getClass, fac.getUUID, stage.stageId, setter.toList, output)
           }
       }
       .toSet

@@ -5,4 +5,4 @@ import com.jcdecaux.datacorp.spark.internal.HasType
 import scala.reflect.runtime
 
 private[spark] case class FactoryOutput(override val runtimeType: runtime.universe.Type,
-                                        consumer: List[Class[_]]) extends HasType
+                                        consumer: List[Class[_ <: Factory[_]]]) extends HasType

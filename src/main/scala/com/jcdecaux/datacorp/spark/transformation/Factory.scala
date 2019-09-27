@@ -16,7 +16,7 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with HasDescription {
 
-  var consumers: List[Class[_]] = List()
+  var consumers: List[Class[_ <: Factory[_]]] = List()
 
   /**
     * Read data
