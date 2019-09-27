@@ -5,8 +5,8 @@ import com.jcdecaux.datacorp.spark.internal.{HasDescription, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
 
 /**
-  * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a DAG with
-  * nodes (factories) and flows (data transfer flows)
+  * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a
+  * Directed Acyclic Graph (DAG) with nodes (factories) and flows (data transfer flows)
   *
   * @param pipeline an instantiated pipeline
   */
@@ -17,7 +17,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   private[workflow] var flows: Set[Flow] = _
 
   /**
-    * Get a Direct Acyclic Graph from the given pipeline.
+    * Get a Directed Acyclic Graph from the given pipeline.
     *
     * @return a DAG object if the pipeline is already inspected, otherwise null
     */
