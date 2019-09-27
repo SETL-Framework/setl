@@ -19,6 +19,12 @@ package object repository {
                                        @Compress col4: Seq[String]) {
   }
 
+  case class TestCompressionRepositoryGZIP(col1: String,
+                                           col2: String,
+                                           @Compress(compressor = classOf[GZIPCompressor]) col3: Seq[InnerClass],
+                                           @Compress(compressor = classOf[GZIPCompressor]) col4: Seq[String]) {
+  }
+
   object ImplicitConverter {
 
     implicit val a2b: DatasetConverter[RepoAdapterTesterA, RepoAdapterTesterB] = new DatasetConverter[RepoAdapterTesterA, RepoAdapterTesterB] {
