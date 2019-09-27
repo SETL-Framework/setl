@@ -92,9 +92,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
 
           // Dispatch input if stageID doesn't equal 0
           if (deliverableDispatcher.deliveries.nonEmpty) {
-            stage.factories.foreach {
-              factory => deliverableDispatcher.dispatch(factory, pipelineInspector.findSetters(factory))
-              }
+            stage.factories.foreach(deliverableDispatcher.dispatch)
           }
 
           // run the stage
@@ -113,7 +111,10 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
   /**
     * Inspect the current pipeline
     */
-  private[this] def forceInspectPipeline(): Unit = pipelineInspector.inspect()
+  private[this] def forceInspectPipeline(): Unit = {
+    pipelineInspector.inspect()
+    deliverableDispatcher.setDataFlowGraph(pipelineInspector.getDataFlowGraph)
+  }
 
 
   /**

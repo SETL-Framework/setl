@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * DeliverableDispatcher will handle the data dispatch between different stages.
+  * DeliverableDispatcher use a Directed Acyclic Graph (DAG) to handle the data dispatch between different stages.
   *
   * It can:
   * <ul>
@@ -23,6 +23,12 @@ import scala.reflect.runtime.{universe => ru}
 private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
 
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
+  private[this] var graph: DAG = _
+
+  def setDataFlowGraph(graph: DAG): this.type = {
+    this.graph = graph
+    this
+  }
 
   /**
     * Add a new Deliverable object into DeliverableDispatcher's delivery pool. <br>
@@ -114,12 +120,28 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     */
   private[workflow] def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.getDelivery)
 
-  private[workflow] def dispatch(factory: Factory[_]): this.type = {
+  /**
+    * Used only for testing
+    */
+  private[workflow] def _dispatch(factory: Factory[_]): this.type = {
     val setters = FactoryDeliveryMetadata
       .builder()
       .setFactory(factory)
       .getOrCreate()
 
+    dispatch(factory, setters)
+  }
+
+  /**
+    * For the given factory, find its setters from the DAG and dispatch deliveries
+    *
+    * @param factory a Factory[A] object
+    * @return
+    */
+  @throws[NoSuchElementException]("Cannot find any matched delivery")
+  @throws[InvalidDeliveryException]("Find multiple matched deliveries")
+  private[workflow] def dispatch(factory: Factory[_]): this.type = {
+    val setters = this.graph.findSetters(factory)
     dispatch(factory, setters)
   }
 
@@ -130,9 +152,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @param factory target factory
     * @return
     */
-  @throws[NoSuchElementException]("Cannot find any matched delivery")
-  @throws[InvalidDeliveryException]("Find multiple matched deliveries")
-  private[workflow] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
+  private[this] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
     setters
       .foreach {
         setterMethod =>

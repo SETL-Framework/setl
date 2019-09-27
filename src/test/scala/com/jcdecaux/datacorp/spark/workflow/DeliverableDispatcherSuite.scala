@@ -77,7 +77,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     deliveryManager.setDelivery(new Deliverable(CP2))
     deliveryManager.setDelivery(new Deliverable(C2P2))
 
-    deliveryManager.dispatch(myFactory)
+    deliveryManager._dispatch(myFactory)
 
     assert(myFactory.input == C2P)
     assert(myFactory.output == CP2)
@@ -108,7 +108,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     deliveryManager.setDelivery(new Deliverable(dsP2))
     deliveryManager.setDelivery(new Deliverable(dsC1))
 
-    deliveryManager.dispatch(myFactory2)
+    deliveryManager._dispatch(myFactory2)
 
     assert(myFactory2.input.count() === 2)
     assert(myFactory2.input.collect().count(_.x === "a") === 1)
@@ -167,14 +167,14 @@ class DeliverableDispatcherSuite extends FunSuite {
     val test = new Test
     val dispatchManager = new DeliverableDispatcher
 
-    dispatchManager.dispatch(test)
+    dispatchManager._dispatch(test)
 
     assert(test.v1 === null)
     assert(test.v2 === null)
 
     dispatchManager.setDelivery(new Deliverable[String]("hehehe").setProducer(classOf[P1]))
     dispatchManager.setDelivery(new Deliverable[String]("hahaha").setProducer(classOf[P2]))
-    dispatchManager.dispatch(test)
+    dispatchManager._dispatch(test)
 
     assert(test.v1 === "hehehe")
     assert(test.v2 === "hahaha")
@@ -230,6 +230,6 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     val factory2 = new Factory2
 
-    assertThrows[InvalidDeliveryException](dispatchManager.dispatch(factory2))
+    assertThrows[InvalidDeliveryException](dispatchManager._dispatch(factory2))
   }
 }

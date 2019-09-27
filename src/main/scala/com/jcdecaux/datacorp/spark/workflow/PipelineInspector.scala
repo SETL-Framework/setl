@@ -15,9 +15,17 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
 
   private[workflow] var nodes: Set[Node] = _
   private[workflow] var flows: Set[Flow] = _
-  //  private[workflow] var setters: mutable.HashSet[FactoryDeliveryMetadata] = mutable.HashSet()
 
-  def dag: DAG = DAG(nodes, flows)
+  /**
+    * Get a Direct Acyclic Graph from the given pipeline.
+    *
+    * @return a DAG object if the pipeline is already inspected, otherwise null
+    */
+  def getDataFlowGraph: DAG = {
+    require(nodes != null)
+    require(flows != null)
+    DAG(nodes, flows)
+  }
 
   /**
     * Return true if the input pipeline is already inspected. False otherwise
@@ -25,17 +33,6 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
     * @return boolean
     */
   def inspected: Boolean = if (nodes == null || flows == null) false else true
-
-  /**
-    * Find all the setter methods of the given Factory
-    *
-    * @param factory an instantiated Factory
-    * @return a list of [[com.jcdecaux.datacorp.spark.transformation.FactoryDeliveryMetadata]]
-    */
-  def findSetters(factory: Factory[_]): List[FactoryDeliveryMetadata] = {
-    require(inspected)
-    nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
-  }
 
   /**
     * Find the corresponding node of a factory in the pool
@@ -106,6 +103,11 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
     internalFlows ++ externalFlows
   }
 
+  /**
+    * Inspect the pipeline and generate the corresponding flows and nodes
+    *
+    * @return
+    */
   def inspect(): this.type = {
     nodes = createNodes()
     flows = createFlows()
@@ -114,7 +116,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
 
   override def describe(): this.type = {
     println("========== Pipeline Summary ==========\n")
-    dag.describe()
+    getDataFlowGraph.describe()
     this
   }
 }
