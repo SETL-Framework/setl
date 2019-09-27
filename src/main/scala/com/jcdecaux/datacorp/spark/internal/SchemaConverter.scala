@@ -254,6 +254,13 @@ object SchemaConverter {
       )
   }
 
+  /**
+    * For column having the annotation @Compress(compressor), compress the column with the given compressor
+    *
+    * @param structType structType containing the meta-information of the source DataFrame
+    * @param dataFrame  DataFrame to be compressed
+    * @return a new DataFrame with compressed column(s)
+    */
   def compressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
     val columnToCompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
@@ -269,6 +276,13 @@ object SchemaConverter {
       }
   }
 
+  /**
+    * Decompress a DataFrame having compressed column(s)
+    *
+    * @param structType structType containing the meta-information of the target DataFrame
+    * @param dataFrame  DataFrame to be decompressed
+    * @return a DataFrame with column(s) decompressed
+    */
   def decompressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
     val columnToDecompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))

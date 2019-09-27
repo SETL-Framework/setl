@@ -384,4 +384,9 @@ class PipelineSuite extends FunSuite {
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory3").get.input.length === 3)
     assert(pipeline.pipelineInspector.flows.size === 7)
   }
+
+  test("Pipeline should be able to describe with empty flow and node") {
+    val pipeline = new Pipeline
+    pipeline.describe()
+  }
 }

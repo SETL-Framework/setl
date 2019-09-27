@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * DispatchManager will handle the data dispatch between different stages.
+  * DeliverableDispatcher will handle the data dispatch between different stages.
   *
   * It can:
   * <ul>
@@ -20,19 +20,19 @@ import scala.reflect.runtime.{universe => ru}
   * </ul>
   */
 @InterfaceStability.Evolving
-private[spark] class DispatchManager extends Logging with HasUUIDRegistry {
+private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
 
   private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
 
   /**
-    * Add a new Deliverable object into DispatchManager's delivery pool. <br>
+    * Add a new Deliverable object into DeliverableDispatcher's delivery pool. <br>
     *
-    * <b>Attention:</b> Dispatch manager only guarantee that each deliverable object has different UUID.
+    * <b>Attention:</b> DeliverableDispatcher only guarantee that each deliverable object has different UUID.
     * In other word, use cannot call twice <code>setDelivery</code> with the same argument. However, it doesn't
     * check if multiple deliverables have the same data type with the same producer and the same consumer
     *
     * @param v : Deliverable
-    * @return this DispatchManager
+    * @return this DeliverableDispatcher
     */
   private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer}")

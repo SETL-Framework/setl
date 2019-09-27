@@ -12,10 +12,10 @@ import scala.reflect.runtime.{universe => ru}
 object StructAnalyser {
 
   /**
-    * analyse Schema and define the structure file that have annotation key
+    * Analyse the metadata of the generic type T. Fetch information for its annotated fields.
     *
-    * @tparam T
-    * @return
+    * @tparam T Type that we'd like to analyse
+    * @return a StructType object containing information of each field.
     */
   def analyseSchema[T: ru.TypeTag]: StructType = {
 
@@ -40,7 +40,7 @@ object StructAnalyser {
             val value = columnName.tree.children.tail.collectFirst {
               case ru.Literal(ru.Constant(name)) => name.toString
             }
-            (ColumnName.toString(), Array(value.get))
+            (ColumnName.toString(), Array(value.get)) // (ColumnName, ["alias"])
 
           // Case where the field has annotation `CompoundKey`
           case compoundKey: ru.AnnotationApi if compoundKey.tree.tpe =:= ru.typeOf[CompoundKey] =>
@@ -49,11 +49,11 @@ object StructAnalyser {
             })
             // All compound key column should not be nullable
             nullable = false
-            (CompoundKey.toString(), attributes.get.toArray)
+            (CompoundKey.toString(), attributes.get.toArray) // (ColumnName, ["id", "position"])
 
           case compress: ru.AnnotationApi if compress.tree.tpe =:= ru.typeOf[Compress] =>
             val compressor = columnToBeCompressed.find(_._1 == index).get._2.getCanonicalName
-            (classOf[Compress].getCanonicalName, Array(compressor))
+            (classOf[Compress].getCanonicalName, Array(compressor)) // (com.jcdecaux.datacorp.spark.xxxx, ["compressor_canonical_name"])
 
         }.toMap
 

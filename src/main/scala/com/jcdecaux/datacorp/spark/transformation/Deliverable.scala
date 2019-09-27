@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * A deliverable is a container of an object that will be transferred by a [[com.jcdecaux.datacorp.spark.workflow.DispatchManager]].
+  * A deliverable is a container of an object that will be transferred by a [[com.jcdecaux.datacorp.spark.workflow.DeliverableDispatcher]].
   *
   * @param payload data that will be transferred
   * @tparam T type of the payload

@@ -59,7 +59,7 @@ class MyFactory2 extends Factory[Dataset[Product23]] with Serializable {
   override def get(): Dataset[Product23] = output
 }
 
-class DispatchManagerSuite extends FunSuite {
+class DeliverableDispatcherSuite extends FunSuite {
 
   test("Test delivery manager with container and product") {
 
@@ -70,7 +70,7 @@ class DispatchManagerSuite extends FunSuite {
 
     val myFactory = new MyFactory
 
-    val deliveryManager = new DispatchManager
+    val deliveryManager = new DeliverableDispatcher
 
     deliveryManager.setDelivery(new Deliverable(CP))
     deliveryManager.setDelivery(new Deliverable(C2P))
@@ -102,7 +102,7 @@ class DispatchManagerSuite extends FunSuite {
     ).toDS()
 
     val myFactory2 = new MyFactory2
-    val deliveryManager = new DispatchManager
+    val deliveryManager = new DeliverableDispatcher
 
     deliveryManager.setDelivery(new Deliverable(dsP1))
     deliveryManager.setDelivery(new Deliverable(dsP2))
@@ -165,7 +165,7 @@ class DispatchManagerSuite extends FunSuite {
   test("Test DispatchManager optional input") {
 
     val test = new Test
-    val dispatchManager = new DispatchManager
+    val dispatchManager = new DeliverableDispatcher
 
     dispatchManager.dispatch(test)
 
@@ -185,7 +185,7 @@ class DispatchManagerSuite extends FunSuite {
   test("DispatchManager should throw AlreadyExistsException exception " +
     "while trying setting two identical deliveries") {
 
-    val dispatchManager = new DispatchManager
+    val dispatchManager = new DeliverableDispatcher
     val del = new Deliverable[String]("hehehe")
     assertThrows[AlreadyExistsException](dispatchManager.setDelivery(del).setDelivery(del))
 
@@ -220,7 +220,7 @@ class DispatchManagerSuite extends FunSuite {
   test("DispatchManager should throw InvalidDeliveryException when there are multiple " +
     "matched deliveries") {
 
-    val dispatchManager = new DispatchManager
+    val dispatchManager = new DeliverableDispatcher
     val del1 = new Deliverable[String]("hehe1").setProducer(classOf[Factory1]).setConsumer(classOf[Factory2])
     val del2 = new Deliverable[String]("hehe2").setProducer(classOf[Factory1]).setConsumer(classOf[Factory2])
 

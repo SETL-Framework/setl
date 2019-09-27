@@ -8,10 +8,13 @@ import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
+/**
+  * Pipeline is a complete data transformation workflow.
+  */
 @InterfaceStability.Evolving
 class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
 
-  private[workflow] val dispatchManagers: DispatchManager = new DispatchManager
+  private[workflow] val dispatchManagers: DeliverableDispatcher = new DeliverableDispatcher
   private[workflow] var stageCounter: Int = 0
 
   val stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()

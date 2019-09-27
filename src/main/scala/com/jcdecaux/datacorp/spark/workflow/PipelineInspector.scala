@@ -15,9 +15,11 @@ import scala.collection.mutable
 @InterfaceStability.Evolving
 private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging with HasDescription {
 
-  var nodes: Set[Node] = _
-  var flows: Set[Flow] = _
+  private[workflow] var nodes: Set[Node] = _
+  private[workflow] var flows: Set[Flow] = _
   private[workflow] var setters: mutable.HashSet[FactoryDeliveryMetadata] = mutable.HashSet()
+
+  def dag: DAG = DAG(nodes, flows)
 
   /**
     * Return true if the input pipeline is already inspected. False otherwise
@@ -117,20 +119,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
 
   override def describe(): this.type = {
     println("========== Pipeline Summary ==========\n")
-
-    println("----------   Nodes Summary  ----------")
-    if (nodes.nonEmpty) {
-      nodes.toList.sortBy(_.stage).foreach(_.describe())
-    } else {
-      println("None\n--------------------------------------\n")
-    }
-
-    println("----------   Flows Summary  ----------")
-    if (flows.nonEmpty) {
-      flows.toList.sortBy(_.stage).foreach(_.describe())
-    } else {
-      println("None\n--------------------------------------\n")
-    }
+    dag.describe()
     this
   }
 }
