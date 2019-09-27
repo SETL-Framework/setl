@@ -90,7 +90,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                 log.debug("Find Deliverable")
                 Some(matchedByConsumer.head)
               case _ =>
-                throw new InvalidDeliveryException("Find multiple deliveries having the same producer and consumer")
+                throw new InvalidDeliveryException("Find multiple deliveries having the same type, producer and consumer")
             }
         }
     }
