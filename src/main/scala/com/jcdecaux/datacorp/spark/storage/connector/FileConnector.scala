@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
 import java.net.{URI, URLDecoder, URLEncoder}
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.ConnectorConf
@@ -37,6 +37,13 @@ abstract class FileConnector(val spark: SparkSession,
   private[this] val partition: ArrayBuffer[String] = ArrayBuffer()
 
   private[connector] var writeCount: AtomicLong = new AtomicLong(0L)
+
+  /**
+    * 0: suffix not initialized yet
+    * 1: with suffix
+    * 2: without suffix
+    */
+  private[connector] var suffixLock: AtomicInteger = new AtomicInteger(0)
 
   private[connector] var userDefinedSuffixKey: String = "_user_defined_suffix"
 
@@ -155,6 +162,62 @@ abstract class FileConnector(val spark: SparkSession,
     filePaths.toArray
   }
 
+  @throws[RuntimeException]
+  private[this] def waitForSuffixLock(): Unit = {
+    var cnt = 0
+    while (suffixLock.get() == 0 && cnt <= 20) {
+      // if suffixLock is not yet initialized, then wait
+      log.info("Suffix is not yet initialized, wait 100ms")
+      Thread.sleep(100)
+      cnt += 1
+    }
+
+    if (cnt > 10 && suffixLock.get() == 0) {
+      throw new RuntimeException("Cannot initialize suffix lock")
+    }
+  }
+
+  private[this] def validateSuffix(suffix: Option[String]): Option[String] = {
+    if (writeCount.get() == 0) {
+      if (suffixLock.get() == 0) {
+        suffix match {
+          case Some(_) => suffixLock.set(1)
+          case None => suffixLock.set(2)
+        }
+      }
+      suffix
+
+    } else {
+      waitForSuffixLock()
+      if (suffixLock.get() == 1) {
+        // If suffix is set
+        suffix match {
+          case Some(_) => suffix
+          case _ =>
+            log.info("Can't remove user defined suffix (UDS) when another " +
+              "UDS has already been saved. Replace it with 'default'")
+            Some("default")
+        }
+
+      } else if (suffixLock.get() == 2) {
+        // If there is no suffix
+        suffix match {
+          case Some(s) =>
+            throw new IllegalArgumentException(s"Can't set suffix ${s}. " +
+              s"Current version of ${this.getClass.getSimpleName} " +
+              s"doesn't support adding an user defined suffix into already-saved non-suffix data")
+
+          case _ =>
+            log.debug("Set suffix None to non-suffix data")
+            suffix
+        }
+
+      } else {
+        throw new RuntimeException(s"Wrong suffix lock value: ${suffixLock.get()}")
+      }
+    }
+  }
+
   /**
     * The current version of FileConnector doesn't support a mix of suffix
     * and non-suffix write when the DataFrame is partitioned.
@@ -165,38 +228,8 @@ abstract class FileConnector(val spark: SparkSession,
     * @param suffix an option of suffix in string format
     */
   def setSuffix(suffix: Option[String]): this.type = {
-
-    //    val _suffix =
-    //
-    //      if (writeCount.get() == 0) {
-    //        suffix
-    //      } else {
-    //        if (this.userDefinedSuffixValue.get().isDefined) {
-    //
-    //          suffix match {
-    //            case Some(_) => suffix
-    //            case _ =>
-    //              log.info("Can't remove user defined suffix (UDS) when another " +
-    //                "UDS has already been saved. Replace it with 'default'")
-    //              Some("default")
-    //          }
-    //
-    //        } else {
-    //
-    //          suffix match {
-    //            case Some(s) =>
-    //              throw new IllegalArgumentException(s"Can't set suffix ${s}. " +
-    //                s"Current version of ${this.getClass.getSimpleName} " +
-    //                s"doesn't support adding an user defined suffix into already-saved non-suffix data")
-    //
-    //            case _ =>
-    //              log.debug("Set suffix None to non-suffix data")
-    //              suffix
-    //          }
-    //        }
-    //      }
-
-    this.userDefinedSuffixValue.set(suffix)
+    val _suffix = validateSuffix(suffix)
+    this.userDefinedSuffixValue.set(_suffix)
     this
   }
 
@@ -210,6 +243,7 @@ abstract class FileConnector(val spark: SparkSession,
       log.warn("Reset suffix may cause unexpected behavior of FileConnector")
       this.userDefinedSuffixValue.set(None)
       this.writeCount.set(0L)
+      this.suffixLock.set(0)
     } else {
       setSuffix(None)
     }
@@ -261,6 +295,7 @@ abstract class FileConnector(val spark: SparkSession,
   def delete(): Unit = {
     log.debug(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
+    resetSuffix(true)
   }
 
   /**
@@ -275,7 +310,7 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Write a [[DataFrame]] into the given path with the given save mode
     */
-  private[this] def _write(df: DataFrame, filepath: String): Unit = {
+  private[connector] def writeToPath(df: DataFrame, filepath: String): Unit = {
     log.debug(s"Write DataFrame to $filepath")
     incrementWriteCounter()
     writer(df).format(storage.toString.toLowerCase()).save(filepath)
@@ -298,9 +333,9 @@ abstract class FileConnector(val spark: SparkSession,
     this.write(df)
   }
 
-  override def write(t: DataFrame): Unit = _write(t, outputPath)
+  override def write(t: DataFrame): Unit = writeToPath(t, outputPath)
 
-  private[this] def outputPath: String = userDefinedSuffixValue.get() match {
+  private[connector] def outputPath: String = userDefinedSuffixValue.get() match {
     case Some(suffix) => s"${this.absolutePath.toString}/$userDefinedSuffixKey=$suffix"
     case _ => this.absolutePath.toString
   }

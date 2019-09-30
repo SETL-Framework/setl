@@ -173,8 +173,7 @@ class CSVConnectorSuite extends FunSuite {
     csvConnector2.write(df2.toDF, None)
     csvConnector2.dropUserDefinedSuffix = false
     csvConnector2.read().show()
-    assert(csvConnector2.read().count() === 6)
-    //    assert(csvConnector2.read().count() === 12)  // TODO with suffix check it should be 12. redo this
+    assert(csvConnector2.read().count() === 12)
     csvConnector2.delete()
   }
 
