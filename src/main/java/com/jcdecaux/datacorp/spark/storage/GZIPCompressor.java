@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * XZCompressor implement {@link Compressor}'s interface with the GZIP compression algorithm
+ */
 public class GZIPCompressor implements Compressor {
 
     @Override

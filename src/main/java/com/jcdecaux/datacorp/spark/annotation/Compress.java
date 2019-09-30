@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.annotation;
 
+import com.jcdecaux.datacorp.spark.internal.SchemaConverter;
+import com.jcdecaux.datacorp.spark.internal.StructAnalyser;
 import com.jcdecaux.datacorp.spark.storage.Compressor;
 import com.jcdecaux.datacorp.spark.storage.XZCompressor;
 
@@ -10,9 +12,9 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * The annotation Compress will indicate <code>StructAnalyser</code> to register the metadata of the corresponding fields
- * into the output <code>StructType</code>. Then all annotated columns will be compressed by <code>SchemaConverter</code>
- * during the save process in <code>SparkRepository</code>
+ * The annotation Compress indicates {@link StructAnalyser} to save the metadata of corresponding fields
+ * into the output StructType object. All annotated columns will be compressed by {@link SchemaConverter}
+ * during the saving process in SparkRepository
  * </p>
  *
  * <p>

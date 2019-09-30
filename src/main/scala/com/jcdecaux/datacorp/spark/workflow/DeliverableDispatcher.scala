@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * DeliverableDispatcher use a Directed Acyclic Graph (DAG) to handle the data dispatch between different stages.
+  * DeliverableDispatcher use a Directed Acyclic Graph (DAG) to transfer data between different stages.
   *
   * It can:
   * <ul>

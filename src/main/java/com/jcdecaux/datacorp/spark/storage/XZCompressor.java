@@ -9,6 +9,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * XZCompressor implement {@link Compressor}'s interface with the XZ compression algorithm
+ */
 public class XZCompressor implements Compressor {
 
     @Override
