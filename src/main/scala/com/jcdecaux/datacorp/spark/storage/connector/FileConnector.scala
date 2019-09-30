@@ -166,37 +166,37 @@ abstract class FileConnector(val spark: SparkSession,
     */
   def setSuffix(suffix: Option[String]): this.type = {
 
-    val _suffix =
+    //    val _suffix =
+    //
+    //      if (writeCount.get() == 0) {
+    //        suffix
+    //      } else {
+    //        if (this.userDefinedSuffixValue.get().isDefined) {
+    //
+    //          suffix match {
+    //            case Some(_) => suffix
+    //            case _ =>
+    //              log.info("Can't remove user defined suffix (UDS) when another " +
+    //                "UDS has already been saved. Replace it with 'default'")
+    //              Some("default")
+    //          }
+    //
+    //        } else {
+    //
+    //          suffix match {
+    //            case Some(s) =>
+    //              throw new IllegalArgumentException(s"Can't set suffix ${s}. " +
+    //                s"Current version of ${this.getClass.getSimpleName} " +
+    //                s"doesn't support adding an user defined suffix into already-saved non-suffix data")
+    //
+    //            case _ =>
+    //              log.debug("Set suffix None to non-suffix data")
+    //              suffix
+    //          }
+    //        }
+    //      }
 
-      if (writeCount.get() == 0) {
-        suffix
-      } else {
-        if (this.userDefinedSuffixValue.get().isDefined) {
-
-          suffix match {
-            case Some(_) => suffix
-            case _ =>
-              log.info("Can't remove user defined suffix (UDS) when another " +
-                "UDS has already been saved. Replace it with 'default'")
-              Some("default")
-          }
-
-        } else {
-
-          suffix match {
-            case Some(s) =>
-              throw new IllegalArgumentException(s"Can't set suffix ${s}. " +
-                s"Current version of ${this.getClass.getSimpleName} " +
-                s"doesn't support adding an user defined suffix into already-saved non-suffix data")
-
-            case _ =>
-              log.debug("Set suffix None to non-suffix data")
-              suffix
-          }
-        }
-      }
-
-    this.userDefinedSuffixValue.set(_suffix)
+    this.userDefinedSuffixValue.set(suffix)
     this
   }
 
