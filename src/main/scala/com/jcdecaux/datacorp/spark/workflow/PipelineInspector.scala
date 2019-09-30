@@ -92,7 +92,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
         thisNode =>
           thisNode.input
             .filter(_.producer == classOf[External])
-            .map(nodeInput => Flow(nodeInput.runtimeType, External, thisNode, thisNode.stage))
+            .map(nodeInput => Flow(nodeInput.runtimeType, External.NODE, thisNode, thisNode.stage))
             .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
       }
   }
