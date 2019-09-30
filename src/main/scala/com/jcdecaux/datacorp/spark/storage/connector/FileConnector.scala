@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
 import java.net.{URI, URLDecoder, URLEncoder}
+import java.util.concurrent.atomic.AtomicLong
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.ConnectorConf
@@ -35,7 +36,7 @@ abstract class FileConnector(val spark: SparkSession,
     */
   private[this] val partition: ArrayBuffer[String] = ArrayBuffer()
 
-  private[connector] var writeCount: Long = 0
+  private[connector] var writeCount: AtomicLong = new AtomicLong(0L)
 
   private[connector] var userDefinedSuffixKey: String = "_user_defined_suffix"
 
@@ -121,8 +122,6 @@ abstract class FileConnector(val spark: SparkSession,
     case _ => initReader()
   }
 
-  override var writer: DataFrameWriter[Row] = _
-
   private[this] val filenamePattern: Option[Regex] = options.getFilenamePattern match {
     case Some(pattern) =>
       log.debug("Detect filename pattern")
@@ -169,22 +168,31 @@ abstract class FileConnector(val spark: SparkSession,
 
     val _suffix =
 
-      if (writeCount == 0) {
+      if (writeCount.get() == 0) {
         suffix
       } else {
-        // Only check validity when write count bigger than 0
-        // If non-suffix data have already been written, then it's not possible to add any suffix
-        if (this.userDefinedSuffixValue.get().isEmpty && suffix.isDefined) {
-          throw new IllegalArgumentException(s"Current version of ${this.getClass.toString.split("\\.").last} " +
-            s"doesn't support adding an user defined suffix into already-saved non-suffix data")
-        }
+        if (this.userDefinedSuffixValue.get().isDefined) {
 
-        // If with-suffix data have been written, then instead of set suffix to None, we set it to default
-        if (this.userDefinedSuffixValue.get().isDefined && suffix.isEmpty) {
-          log.info("Can't remove user defined suffix (UDS) when another UDS has already been saved. Replace it by the default UDS")
-          Some("default")
+          suffix match {
+            case Some(_) => suffix
+            case _ =>
+              log.info("Can't remove user defined suffix (UDS) when another " +
+                "UDS has already been saved. Replace it with 'default'")
+              Some("default")
+          }
+
         } else {
-          suffix
+
+          suffix match {
+            case Some(s) =>
+              throw new IllegalArgumentException(s"Can't set suffix ${s}. " +
+                s"Current version of ${this.getClass.getSimpleName} " +
+                s"doesn't support adding an user defined suffix into already-saved non-suffix data")
+
+            case _ =>
+              log.debug("Set suffix None to non-suffix data")
+              suffix
+          }
         }
       }
 
@@ -201,7 +209,7 @@ abstract class FileConnector(val spark: SparkSession,
     if (force) {
       log.warn("Reset suffix may cause unexpected behavior of FileConnector")
       this.userDefinedSuffixValue.set(None)
-      this.writeCount = 0
+      this.writeCount.set(0L)
     } else {
       setSuffix(None)
     }
@@ -215,31 +223,30 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Initialize a DataFrame writer. A new writer will be initiate only if the hashcode
     * of input DataFrame is different than the last written DataFrame.
-    *
-    * @param df input DataFrame
     */
-  @inline private[this] def initWriter(df: DataFrame): Unit = {
+  @inline override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
+    val _df = schema match {
+      case Some(sm) => // If schema is defined, reorder df's columns
+        log.debug("Detect schema, reorder columns before writing")
+        val schemaColumns = sm.map(_.name)
 
-    // Check if the writer is already initialized by comparing hashcode
-    if (df.hashCode() != lastWriteHashCode) {
-      // Save the current DataFrame's hashcode
-      lastWriteHashCode = df.hashCode()
+        //        val generatedColumns = df.columns
+        //          .filterNot(schemaColumns.contains)
+        //            .filter{
+        //              name =>
+        //                val elem = name.split(SchemaConverter.compoundKeySeparator)
+        //                elem.head == SchemaConverter.compoundKeyPrefix && elem.last == SchemaConverter.compoundKeySuffix
+        //            }
 
-      val _df = schema match {
-        case Some(sm) => // If schema is defined, reorder df's columns
-          log.debug("Detect schema, reorder columns before writing")
-          val cols = sm.map(_.name)
-          df.select(cols.map(functions.col): _*)
+        df.select(schemaColumns.map(functions.col): _*)
 
-        case _ => df // Otherwise, do nothing
-      }
-
-      writer = _df.write
-        .mode(options.getSaveMode)
-        .options(options.getDataFrameWriterOptions)
-        .partitionBy(partition: _*)
-
+      case _ => df // Otherwise, do nothing
     }
+
+    _df.write
+      .mode(options.getSaveMode)
+      .options(options.getDataFrameWriterOptions)
+      .partitionBy(partition: _*)
   }
 
   def partitionBy(columns: String*): this.type = {
@@ -270,10 +277,14 @@ abstract class FileConnector(val spark: SparkSession,
     */
   private[this] def _write(df: DataFrame, filepath: String): Unit = {
     log.debug(s"Write DataFrame to $filepath")
-    initWriter(df)
-    writer.format(storage.toString.toLowerCase()).save(filepath)
-    if (this.writeCount >= Long.MaxValue) throw new UnsupportedOperationException("Write count exceeds the max value")
-    this.writeCount += 1
+    incrementWriteCounter()
+    writer(df).format(storage.toString.toLowerCase()).save(filepath)
+
+  }
+
+  private[this] def incrementWriteCounter(): Unit = {
+    if (this.writeCount.get() >= Long.MaxValue) throw new UnsupportedOperationException("Write count exceeds the max value")
+    this.writeCount.getAndAdd(1L)
   }
 
   /**

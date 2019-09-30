@@ -20,19 +20,13 @@ import org.apache.spark.sql._
 @InterfaceStability.Evolving
 trait Connector extends Logging {
 
-  /**
-    * The hashcode of the last written DataFrame. It will be used to determine if the DataFrameWriter
-    * is needed to be re-initialized.
-    */
-  private[connector] var lastWriteHashCode: Int = 0
-
   val spark: SparkSession
 
   val storage: Storage
 
   val reader: DataFrameReader
 
-  var writer: DataFrameWriter[Row]
+  val writer: DataFrame => DataFrameWriter[Row]
 
   def read(): DataFrame
 

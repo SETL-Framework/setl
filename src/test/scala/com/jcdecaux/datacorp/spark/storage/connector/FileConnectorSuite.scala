@@ -38,13 +38,13 @@ class FileConnectorSuite extends FunSuite {
   test("FileConnector should throw exception with we try add suffix to an already-saved non-suffix directory") {
     import spark.implicits._
     val connector: FileConnector =
-      new FileConnector(spark, Map[String, String]("path" -> path, "filenamePattern" -> "(test).*")) {
+      new FileConnector(spark, Map[String, String]("path" -> (path + "suffix_handling"), "filenamePattern" -> "(test).*")) {
         override val storage: Storage = Storage.OTHER
 
         override def read(): DataFrame = null
 
         override def write(t: DataFrame): Unit = {
-          this.writeCount += 1
+          this.writeCount.getAndAdd(1)
         }
       }
 
@@ -63,31 +63,46 @@ class FileConnectorSuite extends FunSuite {
     assertThrows[IllegalArgumentException](connector.setSuffix(Some("test")))
   }
 
-  //  test("FileConnector should handle different path format") {
-  //    import spark.implicits._
-  //
-  //    val connector: FileConnector = new FileConnector(spark, Map[String, String](
-  //      "path" -> "src/test/resources/test csv qsdfq=:53=",
-  //      "inferSchema" -> "true",
-  //      "header" -> "true",
-  //      "saveMode" -> SaveMode.Overwrite.toString,
-  //      "storage" -> "CSV"
-  //    )) {
-  //      override val storage: Storage = Storage.CSV
-  //    }
-  //
-  //    val dff: Dataset[TestObject] = Seq(
-  //      TestObject(1, "p1", "c1", 1L),
-  //      TestObject(2, "p2", "c2", 2L),
-  //      TestObject(2, "p1", "c2", 2L),
-  //      TestObject(3, "p3", "c3", 3L),
-  //      TestObject(3, "p2", "c3", 3L),
-  //      TestObject(3, "p3", "c3", 3L)
-  //    ).toDS()
-  //
-  //    connector.write(dff.toDF)
-  //    assertThrows[URISyntaxException](connector.read().show())
-  //
-  //  }
+  test("FileConnector should handle parallel write") {
+    import spark.implicits._
+
+    val connector: FileConnector = new FileConnector(spark, Map[String, String](
+      "path" -> "src/test/resources/test_csv_parallel",
+      "inferSchema" -> "true",
+      "header" -> "false",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    val dff: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(2, "p1", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L),
+      TestObject(3, "p2", "c3", 3L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val suffixes = Array("a", "b", "c", "d", "e", "f", "g", "h").par
+
+    suffixes.foreach({
+      x =>
+        connector.setSuffix(Some(x)).write(dff.toDF())
+        Thread.sleep(1000)
+    })
+
+    assert(connector.writeCount.get() === 8L)
+    suffixes
+      .foreach {
+        x =>
+          val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
+          println(s"read src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
+          assert(data.count() === 6)
+      }
+
+    connector.delete()
+  }
 
 }

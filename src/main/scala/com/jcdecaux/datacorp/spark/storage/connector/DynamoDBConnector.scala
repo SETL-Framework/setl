@@ -34,16 +34,21 @@ class DynamoDBConnector(val spark: SparkSession,
                         val throughput: String = "10000"
                        ) extends DBConnector {
 
-  import com.audienceproject.spark.dynamodb.implicits._
-
   override val reader: DataFrameReader = {
     log.debug(s"DynamoDB connector read throughput $throughput")
     spark.read
       .option("region", region)
       .option("throughput", throughput)
+      .format("com.audienceproject.spark.dynamodb")
   }
 
-  override var writer: DataFrameWriter[Row] = _
+  override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
+    df.write
+      .mode(saveMode)
+      .option("region", region)
+      .option("throughput", throughput)
+      .format("com.audienceproject.spark.dynamodb")
+  }
 
   def this(spark: SparkSession, config: Config) = this(
     spark = spark,
@@ -59,28 +64,15 @@ class DynamoDBConnector(val spark: SparkSession,
     saveMode = SaveMode.valueOf(conf.get("region").get)
   )
 
-  @inline private[this] def initWriter(df: DataFrame): Unit = {
-    if (df.hashCode() != lastWriteHashCode) {
-      log.debug(s"DynamoDB connector write throughput $throughput")
-      writer = df.write
-        .mode(saveMode)
-        .option("region", region)
-        .option("throughput", throughput)
-
-      lastWriteHashCode = df.hashCode()
-    }
-  }
-
   override val storage: Storage = Storage.DYNAMODB
 
   private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
-    initWriter(df)
-    writer.dynamodb(tableName)
+    writer(df).option("tableName", tableName).save()
   }
 
   override def read(): DataFrame = {
     log.debug(s"Reading DynamoDB table $table in $region")
-    reader.dynamodb(table)
+    reader.option("tableName", table).load()
   }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = {

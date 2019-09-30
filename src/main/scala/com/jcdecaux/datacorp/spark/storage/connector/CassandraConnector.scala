@@ -21,7 +21,9 @@ class CassandraConnector(val keyspace: String,
                          val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector {
 
   override val reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
-  override var writer: DataFrameWriter[Row] = _
+  override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
+    df.write.mode(SaveMode.Append)
+  }
 
   /**
     * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
@@ -83,12 +85,8 @@ class CassandraConnector(val keyspace: String,
     */
   private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
 
-    if (df.hashCode() != lastWriteHashCode) {
-      writer = df.write.mode(SaveMode.Append)
-    }
-
     log.debug(s"Write DataFrame to $keyspace.$table")
-    writer
+    writer(df)
       .cassandraFormat(table, keyspace)
       .save()
   }

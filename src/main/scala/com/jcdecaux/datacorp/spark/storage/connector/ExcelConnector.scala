@@ -46,7 +46,29 @@ class ExcelConnector(val spark: SparkSession,
 
   override val storage: Storage = Storage.EXCEL
   override val reader: DataFrameReader = initReader()
-  override var writer: DataFrameWriter[Row] = _
+  override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
+
+    val _writer = df
+      .write
+      .format("com.crealytics.spark.excel")
+      .option("useHeader", useHeader)
+      .option("dataAddress", dataAddress)
+      .option("timestampFormat", timestampFormat)
+      .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
+
+    if (sheetName.isDefined) _writer.option("sheetName", sheetName.get)
+
+    saveMode match {
+      case SaveMode.Append =>
+        log.warn("The Append save mode doesn't work properly in excel connecter. Please ckeck manually after the save" +
+          "to ensure that your data are written correctly")
+        _writer.mode("append")
+      case SaveMode.Overwrite => _writer.mode("overwrite")
+      case _ => throw new IllegalArgumentException(s"Unknown save mode: $saveMode")
+    }
+
+    _writer
+  }
 
   private[this] def initReader(): DataFrameReader = {
 
@@ -67,21 +89,6 @@ class ExcelConnector(val spark: SparkSession,
     if (schema.isDefined) reader.schema(schema.get)
 
     reader
-  }
-
-  @inline private[this] def initWriter(df: DataFrame): Unit = {
-    if (df.hashCode() != lastWriteHashCode) {
-      writer = df
-        .write
-        .format("com.crealytics.spark.excel")
-        .option("useHeader", useHeader)
-        .option("dataAddress", dataAddress)
-        .option("timestampFormat", timestampFormat)
-        .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
-
-      if (sheetName.isDefined) writer.option("sheetName", sheetName.get)
-      lastWriteHashCode = df.hashCode()
-    }
   }
 
   def this(spark: SparkSession, conf: Conf) = this(
@@ -146,19 +153,8 @@ class ExcelConnector(val spark: SparkSession,
   }
 
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
-    initWriter(df)
-
     if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
-
-    saveMode match {
-      case SaveMode.Append =>
-        log.warn("It seems that the Append save mode doesn't work properly. Please make sure that your data are written correctly")
-        writer.mode("append")
-      case SaveMode.Overwrite => writer.mode("overwrite")
-      case _ => throw new IllegalArgumentException(s"Unknown save mode: $saveMode")
-    }
-
-    writer.save(path)
+    writer(df).save(path)
   }
 
   override def write(t: DataFrame): Unit = this.write(t, None)
