@@ -166,7 +166,6 @@ abstract class FileConnector(val spark: SparkSession,
   private[this] def waitForSuffixLock(): Unit = {
     var cnt = 0
     while (suffixLock.get() == 0 && cnt <= 20) {
-      // if suffixLock is not yet initialized, then wait
       log.info("Suffix is not yet initialized, wait 100ms")
       Thread.sleep(100)
       cnt += 1
@@ -177,12 +176,24 @@ abstract class FileConnector(val spark: SparkSession,
     }
   }
 
+  /**
+    * <p>Validate the given suffix.</p>
+    * <p>In the case where data were written without suffix, an [[IllegalArgumentException]] will be thrown when one tries
+    * to write new data with suffix.</p>
+    * <p>In the case where data were written with suffix, a new `null` suffix will be transformed into the default suffix
+    * value `default`</p>
+    *
+    * @param suffix suffix to be validated
+    * @return a validated suffix
+    */
+  @throws[IllegalArgumentException]
+  @throws[RuntimeException]
   private[this] def validateSuffix(suffix: Option[String]): Option[String] = {
     if (writeCount.get() == 0) {
       if (suffixLock.get() == 0) {
         suffix match {
-          case Some(_) => suffixLock.set(1)
-          case None => suffixLock.set(2)
+          case Some(_) => suffixLock.set(1) // with suffix
+          case None => suffixLock.set(2) // without suffix
         }
       }
       suffix
@@ -263,15 +274,6 @@ abstract class FileConnector(val spark: SparkSession,
       case Some(sm) => // If schema is defined, reorder df's columns
         log.debug("Detect schema, reorder columns before writing")
         val schemaColumns = sm.map(_.name)
-
-        //        val generatedColumns = df.columns
-        //          .filterNot(schemaColumns.contains)
-        //            .filter{
-        //              name =>
-        //                val elem = name.split(SchemaConverter.compoundKeySeparator)
-        //                elem.head == SchemaConverter.compoundKeyPrefix && elem.last == SchemaConverter.compoundKeySuffix
-        //            }
-
         df.select(schemaColumns.map(functions.col): _*)
 
       case _ => df // Otherwise, do nothing
