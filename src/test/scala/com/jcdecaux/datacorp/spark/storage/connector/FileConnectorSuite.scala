@@ -5,6 +5,8 @@ import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.scalatest.FunSuite
 
+import scala.util.Random
+
 class FileConnectorSuite extends FunSuite {
 
   val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
@@ -77,7 +79,7 @@ class FileConnectorSuite extends FunSuite {
 
       override def write(t: DataFrame): Unit = {
         writeToPath(t, outputPath)
-        Thread.sleep(100)
+        Thread.sleep(Random.nextInt(200))
       }
     }
 
@@ -90,20 +92,27 @@ class FileConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val suffixes = (1 to 100).map(_.toString).par
+    val suffixes = (1 to 100).map(_.toString).toList
 
-    suffixes.foreach({
-      x => connector.write(dff.toDF(), Some(x))
-    })
+    val header: String = null
 
-    assert(connector.writeCount.get() === suffixes.size)
-    suffixes
-      .foreach {
-        x =>
-          val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
-          println(s"read src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
-          assert(data.count() === 6)
-      }
+    try {
+      (header :: suffixes).par
+        .foreach({
+          x => connector.write(dff.toDF(), Option(x))
+        })
+
+      assert(connector.writeCount.get() === suffixes.size + 1)
+      ("default" :: suffixes).par
+        .foreach {
+          x =>
+            val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
+            assert(data.count() === 6, s"the file src/test/resources/test_csv_parallel/_user_defined_suffix=${x} should have 6 rows")
+        }
+    } catch {
+      case e: IllegalArgumentException => //
+      case other: Exception => throw other
+    }
 
     connector.delete()
   }
