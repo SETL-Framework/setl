@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
 import java.net.{URI, URLDecoder, URLEncoder}
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import java.util.concurrent.locks.ReentrantLock
 
@@ -44,12 +45,11 @@ abstract class FileConnector(val spark: SparkSession,
     * 1: with suffix
     * 2: without suffix
     */
-  private[connector] val suffixState: AtomicInteger = new AtomicInteger(0)
+  private[this] val suffixState: AtomicInteger = new AtomicInteger(0)
 
   private[this] val lock: ReentrantLock = new ReentrantLock()
-  private[this] val firstInitialization = lock.newCondition()
 
-  private[connector] var userDefinedSuffixKey: String = "_user_defined_suffix"
+  private[this] val userDefinedSuffixKey: String = "_user_defined_suffix"
 
   // use a ThreadLocal object to keep it thread safe
   private[this] val userDefinedSuffixValue: ThreadLocal[Option[String]] = new ThreadLocal[Option[String]]() {
@@ -241,24 +241,20 @@ abstract class FileConnector(val spark: SparkSession,
     */
   def setSuffix(suffix: Option[String]): this.type = {
 
-    // Wait for the first initialization
-    while (lock.isLocked) {
-      log.debug(s"(${Thread.currentThread().getId}) Wait for the lock to be released")
+    val locked = lock.tryLock(10, TimeUnit.SECONDS)
+
+    val _suffix = if (locked) {
+      // log.debug(s"(${Thread.currentThread().getId}) Acquire lock")
       try {
-        firstInitialization.await()
-      } catch {
-        case _: IllegalMonitorStateException => // if the lock is no longer held when we call await, just do nothing
+        if (suffixState.get() == 0) updateSuffixState(suffix)
+        validateSuffix(suffix)
+      } finally {
+        // log.debug(s"(${Thread.currentThread().getId}) Release lock")
+        lock.unlock()
       }
+    } else {
+      throw new RuntimeException(s"(${Thread.currentThread().getId}) Can't acquire lock")
     }
-
-    lock.lock()
-    val _suffix = try {
-      if (suffixState.get() == 0) updateSuffixState(suffix)
-      validateSuffix(suffix)
-    } finally {
-      lock.unlock()
-    }
-
     this.userDefinedSuffixValue.set(_suffix)
 
     this
