@@ -93,7 +93,7 @@ class JSONConnectorSuite extends FunSuite {
     // with partition, with suffix
     connector.write(dff.toDF, Some("1"))
     connector.write(dff.toDF, Some("2"))
-    connector.dropUserDefinedSuffix = false
+    connector.dropUserDefinedSuffix(false)
 
     connector.read().show()
     assert(connector.read().count() === 12)
@@ -105,7 +105,7 @@ class JSONConnectorSuite extends FunSuite {
     connector.write(dff.toDF)
     assert(connector.read().count() === 6)
     assert(connector.read().columns.length === 4, "column suffix should not exists")
-    connector.dropUserDefinedSuffix = true
+    connector.dropUserDefinedSuffix(true)
     assert(connector.read().columns.length === 4, "column suffix should not exists")
     connector.delete()
   }

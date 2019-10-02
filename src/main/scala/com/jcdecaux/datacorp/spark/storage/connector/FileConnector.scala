@@ -38,7 +38,7 @@ abstract class FileConnector(val spark: SparkSession,
     */
   private[this] val partition: ArrayBuffer[String] = ArrayBuffer()
 
-  private[connector] val writeCount: AtomicLong = new AtomicLong(0L)
+  private[this] val writeCount: AtomicLong = new AtomicLong(0L)
 
   /**
     * 0: suffix not initialized yet
@@ -49,14 +49,51 @@ abstract class FileConnector(val spark: SparkSession,
 
   private[this] val lock: ReentrantLock = new ReentrantLock()
 
-  private[this] val userDefinedSuffixKey: String = "_user_defined_suffix"
+  private[this] var UDSKey: String = "_user_defined_suffix"
 
   // use a ThreadLocal object to keep it thread safe
-  private[this] val userDefinedSuffixValue: ThreadLocal[Option[String]] = new ThreadLocal[Option[String]]() {
+  private[this] val UDSValue: ThreadLocal[Option[String]] = new ThreadLocal[Option[String]]() {
     override def initialValue(): Option[String] = None
   }
 
-  private[connector] var dropUserDefinedSuffix: Boolean = true
+  private[this] var _dropUDS: Boolean = true
+
+  /**
+    * Set to true to drop the column containing user defined suffix (default name _user_defined_suffix)
+    *
+    * @param boo true to drop, false to keep
+    */
+  def dropUserDefinedSuffix(boo: Boolean): this.type = {
+    _dropUDS = boo
+    this
+  }
+
+  /**
+    * Get the boolean value of dropUserDefinedSuffix.
+    *
+    * @return true if the column will be dropped, false otherwise
+    */
+  def dropUserDefinedSuffix: Boolean = _dropUDS
+
+  /**
+    * Set the name of user defined suffix column (by default is _user_defined_suffix
+    *
+    * @param key name of the new key
+    */
+  def setUserDefinedSuffixKey(key: String): this.type = {
+    UDSKey = key
+    this
+  }
+
+  /**
+    * Get the value of user defined suffix column name
+    *
+    * @return
+    */
+  def getUserDefinedSuffixKey: String = this.UDSKey
+
+  def getWriteCount: Long = this.writeCount.get()
+
 
   /**
     * Create a URI of the given file path.
@@ -212,9 +249,7 @@ abstract class FileConnector(val spark: SparkSession,
             s"Current version of ${this.getClass.getSimpleName} " +
             s"doesn't support adding an user defined suffix into already-saved non-suffix data")
 
-        case _ =>
-          log.debug("Set suffix None to non-suffix data")
-          suffix
+        case _ => suffix
       }
 
     } else {
@@ -255,7 +290,7 @@ abstract class FileConnector(val spark: SparkSession,
     } else {
       throw new RuntimeException(s"(${Thread.currentThread().getId}) Can't acquire lock")
     }
-    this.userDefinedSuffixValue.set(_suffix)
+    this.UDSValue.set(_suffix)
 
     this
   }
@@ -268,7 +303,7 @@ abstract class FileConnector(val spark: SparkSession,
   def resetSuffix(force: Boolean = false): this.type = {
     if (force) {
       log.warn("Reset suffix may cause unexpected behavior of FileConnector")
-      this.userDefinedSuffixValue.set(None)
+      this.UDSValue.set(None)
       this.writeCount.set(0L)
       this.suffixState.set(0)
     } else {
@@ -352,8 +387,8 @@ abstract class FileConnector(val spark: SparkSession,
 
   override def write(t: DataFrame): Unit = writeToPath(t, outputPath)
 
-  private[connector] def outputPath: String = userDefinedSuffixValue.get() match {
-    case Some(suffix) => s"${this.absolutePath.toString}/$userDefinedSuffixKey=$suffix"
+  private[connector] def outputPath: String = UDSValue.get() match {
+    case Some(suffix) => s"${this.absolutePath.toString}/$UDSKey=$suffix"
     case _ => this.absolutePath.toString
   }
 
@@ -367,8 +402,8 @@ abstract class FileConnector(val spark: SparkSession,
 
     val df = reader.format(options.getStorage.toString.toLowerCase()).load(listFiles(): _*)
 
-    if (dropUserDefinedSuffix & df.columns.contains(userDefinedSuffixKey)) {
-      df.drop(userDefinedSuffixKey)
+    if (dropUserDefinedSuffix & df.columns.contains(UDSKey)) {
+      df.drop(UDSKey)
     } else {
       df
     }

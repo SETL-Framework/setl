@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
-import com.jcdecaux.datacorp.spark.internal.{HasDescription, HasUUIDRegistry, Logging}
+import com.jcdecaux.datacorp.spark.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -12,7 +12,7 @@ import scala.reflect.runtime.{universe => ru}
   * Pipeline is a complete data transformation workflow.
   */
 @InterfaceStability.Evolving
-class Pipeline extends Logging with HasUUIDRegistry with HasDescription {
+class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable {
 
   private[workflow] var deliverableDispatcher: DeliverableDispatcher = new DeliverableDispatcher
   private[workflow] var stageCounter: Int = 0

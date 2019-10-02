@@ -94,7 +94,7 @@ class ParquetConnectorSuite extends FunSuite {
     // with partition, with suffix
     parquetConnector2.write(dff.toDF, Some("1"))
     parquetConnector2.write(dff.toDF, Some("2"))
-    parquetConnector2.dropUserDefinedSuffix = false
+    parquetConnector2.dropUserDefinedSuffix(false)
 
     parquetConnector2.read().show()
     assert(parquetConnector2.read().count() === 12)
@@ -106,7 +106,7 @@ class ParquetConnectorSuite extends FunSuite {
     parquetConnector2.write(dff.toDF)
     assert(parquetConnector2.read().count() === 6)
     assert(parquetConnector2.read().columns.length === 4, "column suffix should not exists")
-    parquetConnector2.dropUserDefinedSuffix = true
+    parquetConnector2.dropUserDefinedSuffix(true)
     assert(parquetConnector2.read().columns.length === 4, "column suffix should not exists")
     parquetConnector2.delete()
   }

@@ -14,7 +14,8 @@ import scala.reflect.runtime
   */
 private[workflow] case class Flow(payload: runtime.universe.Type,
                                   from: Node,
-                                  to: Node, stage: Int) extends HasDescription {
+                                  to: Node,
+                                  stage: Int) extends HasDescription {
   override def describe(): this.type = {
     println("Flow")
     println(s"Stage     : $stage")

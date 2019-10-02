@@ -21,7 +21,6 @@ object FilterImplicits extends Logging {
         .filter(row => row.value.isDefined)
         .map(_.toSqlRequest)
         .mkString(" AND ")
-
       log.debug(s"Query: $query")
       query
     }
@@ -54,8 +53,6 @@ object FilterImplicits extends Logging {
       } else {
         ""
       }
-
-      log.debug(s"Query: $query")
       query
     }
   }

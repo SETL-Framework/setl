@@ -1,5 +1,7 @@
 package com.jcdecaux.datacorp.spark.config
 
+import java.util.concurrent.ConcurrentHashMap
+
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.AppEnv
 import com.jcdecaux.datacorp.spark.internal.Logging
@@ -42,6 +44,7 @@ import com.typesafe.config._
 @InterfaceStability.Evolving
 abstract class ConfigLoader extends Logging {
   val appName: String = "APP"
+  var appEnv: String = "local"
   val availableAppEnvs: Array[String] = AppEnv.values().map(_.toString.toLowerCase())
   val fallBackConf: String = "application.conf"
   val clearCaches: Boolean = true
@@ -51,7 +54,7 @@ abstract class ConfigLoader extends Logging {
     if (envNameVariable != "") {
       require(availableAppEnvs.contains(envNameVariable), s"Invalid environment ${envNameVariable} in system environmental variables")
     } else if (envNameProperty != "") {
-      require(availableAppEnvs.contains(envNameProperty), s"Invalid environment ${envNameVariable} in JVM properties")
+      require(availableAppEnvs.contains(envNameProperty), s"Invalid environment ${envNameProperty} in JVM properties")
     }
 
   }
@@ -87,9 +90,11 @@ abstract class ConfigLoader extends Logging {
 
     if (availableAppEnvs.contains(envNameVariable)) {
       log.debug(s"find $envNameVariable in system environmental variables")
+      appEnv = envNameVariable
       ConfigFactory.load(s"$envNameVariable.conf")
     } else if (availableAppEnvs.contains(envNameProperty)) {
       log.debug(s"find $envNameProperty in jvm properties")
+      appEnv = envNameProperty
       ConfigFactory.load(s"$envNameProperty.conf")
     } else {
       log.debug(s"No app ENV setting was found in neither system environmental variables nor JVM properties. " +
@@ -100,6 +105,21 @@ abstract class ConfigLoader extends Logging {
 
   def get(key: String): String = config.getString(key)
 
+  def getOption(key: String): Option[String] = {
+    if (has(key)) {
+      Option(get(key))
+    } else {
+      None
+    }
+  }
+
+  def getArray(key: String): Array[String] = {
+    import scala.collection.JavaConverters._
+    config.getStringList(key).asScala.toArray
+  }
+
+  def has(key: String): Boolean = config.hasPath(key)
+
   def getObject(key: String): ConfigObject = config.getObject(key)
 
   def getConfig(key: String): Config = config.getConfig(key)
@@ -108,4 +128,57 @@ abstract class ConfigLoader extends Logging {
     * beforeAll will be called before loading the typesafe config file. User can override it with property settings
     */
   def beforeAll(): Unit = {}
+}
+
+object ConfigLoader {
+
+  class Builder extends com.jcdecaux.datacorp.spark.Builder[ConfigLoader] {
+
+    var configLoader: ConfigLoader = _
+    var _appName: String = "APP"
+    val properties: ConcurrentHashMap[String, String] = new ConcurrentHashMap()
+
+    def setAppEnv(env: String): this.type = {
+      properties.put("app.environment", env)
+      this
+    }
+
+    def setProperty(key: String, value: String): this.type = {
+      properties.put(key, value)
+      this
+    }
+
+    def setAppName(name: String): this.type = {
+      _appName = name
+      this
+    }
+
+    /**
+      * Build an object
+      *
+      * @return
+      */
+    override def build(): Builder.this.type = {
+
+      configLoader = new ConfigLoader() {
+
+        override val appName: String = _appName
+
+        override def beforeAll(): Unit = {
+          import scala.collection.JavaConverters._
+          properties.asScala.foreach {
+            case (k, v) =>
+              log.debug(s"Add property $k: $v")
+              System.setProperty(k, v)
+          }
+        }
+      }
+
+      this
+    }
+
+    override def get(): ConfigLoader = configLoader
+  }
+
+  def builder(): Builder = new Builder
 }
