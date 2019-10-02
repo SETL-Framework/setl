@@ -102,7 +102,7 @@ class FileConnectorSuite extends FunSuite {
           x => connector.write(dff.toDF(), Option(x))
         })
 
-      assert(connector.writeCount.get() === suffixes.size + 1)
+      assert(connector.getWriteCount === suffixes.size + 1)
       ("default" :: suffixes).par
         .foreach {
           x =>

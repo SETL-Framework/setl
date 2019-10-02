@@ -120,7 +120,7 @@ class CSVConnectorSuite extends FunSuite {
     // with partition, with suffix
     csvConnector2.write(dff.toDF, Some("1"))
     csvConnector2.write(dff.toDF, Some("2"))
-    csvConnector2.dropUserDefinedSuffix = false
+    csvConnector2.dropUserDefinedSuffix(false)
 
     csvConnector2.read().show()
     assert(csvConnector2.read().count() === 12)
@@ -132,7 +132,7 @@ class CSVConnectorSuite extends FunSuite {
     csvConnector2.write(dff.toDF)
     assert(csvConnector2.read().count() === 6)
     assert(csvConnector2.read().columns.length === 4, "column suffix should not exists")
-    csvConnector2.dropUserDefinedSuffix = true
+    csvConnector2.dropUserDefinedSuffix(true)
     assert(csvConnector2.read().columns.length === 4, "column suffix should not exists")
     csvConnector2.delete()
 
@@ -171,7 +171,7 @@ class CSVConnectorSuite extends FunSuite {
     // without partition, with suffix
     csvConnector2.write(dff.toDF, Some("1"))
     csvConnector2.write(df2.toDF, None)
-    csvConnector2.dropUserDefinedSuffix = false
+    csvConnector2.dropUserDefinedSuffix(false)
     csvConnector2.read().show()
     assert(csvConnector2.read().count() === 12)
     csvConnector2.delete()

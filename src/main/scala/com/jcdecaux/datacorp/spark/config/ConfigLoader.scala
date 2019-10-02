@@ -100,6 +100,21 @@ abstract class ConfigLoader extends Logging {
 
   def get(key: String): String = config.getString(key)
 
+  def getOption(key: String): Option[String] = {
+    if (has(key)) {
+      Option(get(key))
+    } else {
+      None
+    }
+  }
+
+  def getArray(key: String): Array[String] = {
+    import scala.collection.JavaConverters._
+    config.getStringList(key).asScala.toArray
+  }
+
+  def has(key: String): Boolean = config.hasPath(key)
+
   def getObject(key: String): ConfigObject = config.getObject(key)
 
   def getConfig(key: String): Config = config.getConfig(key)

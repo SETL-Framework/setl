@@ -11,6 +11,8 @@ case class CompressionDemo(@Compress col1: Seq[Int],
 - Added trait **Converter[A, B]** that handles the conversion between an object of type A and an object of type **B**
 - Added abstract class **DatasetConverter[A, B]** that extends a **Converter[Dataset[A], Dataset[B]]**
 - Added auto-correction for `SparkRepository.findby(conditions)` method when we filter by case class field name instead of column name
+- Added **DCContext** that simplifies the creation of *SparkSession*, *SparkRepository*, *Connector* and *Pipeline*
+
 
 ## 0.3.1 (2019-08-23)
 - Added sequential mode in class `Stage`. Use can turn in on by setting `parallel` to *true*.
