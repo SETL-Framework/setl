@@ -28,6 +28,23 @@ class ConfLoaderSuite extends FunSuite {
       }
     }
     assertThrows[IllegalArgumentException](x.config, "There is no file called test.conf. Exception should be thrown")
+
+    System.clearProperty("app.environment")
+    System.clearProperty("myvalue")
+  }
+
+  test("ConfigLoader builder should build configloader") {
+
+    val cl = ConfigLoader.builder()
+      .setAppEnv("local")
+      .setAppName("TestConfigLoaderBuilder")
+      .setProperty("myJvmProperty", "myJvmPropertyValue")
+      .getOrCreate()
+
+    assert(cl.get("test.string") === "foo")
+    assert(cl.get("test.variable") === "myJvmPropertyValue")
+    System.clearProperty("app.environment")
+    System.clearProperty("myJvmProperty")
   }
 
 }

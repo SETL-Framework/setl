@@ -98,16 +98,11 @@ object DCContext {
         Array()
       }
 
-      val appEnv = configLoader.getOption(pathOf("appEnv"))
-
       val cassandraHost = configLoader.getOption(pathOf("cassandraHost"))
 
-      val sparkSessionBuilder = new SparkSessionBuilder(usages: _*).setAppName(configLoader.appName)
-
-      appEnv match {
-        case Some(env) => sparkSessionBuilder.setEnv(env)
-        case _ =>
-      }
+      val sparkSessionBuilder = new SparkSessionBuilder(usages: _*)
+        .setAppName(configLoader.appName)
+        .setEnv(configLoader.appEnv)
 
       cassandraHost match {
         case Some(cqlHost) => sparkSessionBuilder.setCassandraHost(cqlHost)
@@ -138,6 +133,6 @@ object DCContext {
     override def get(): DCContext = dcContext
   }
 
-  def builder(): DCContext.Builder = new DCContext.Builder
+  def builder(): DCContext.Builder = new DCContext.Builder()
 
 }

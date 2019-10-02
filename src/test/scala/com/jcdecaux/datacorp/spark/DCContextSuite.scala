@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark
 
 import com.jcdecaux.datacorp.spark.annotation.Delivery
-import com.jcdecaux.datacorp.spark.config.Properties
+import com.jcdecaux.datacorp.spark.config.ConfigLoader
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.FileConnector
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
@@ -12,6 +12,11 @@ import org.scalatest.FunSuite
 
 class DCContextSuite extends FunSuite {
 
+  val configLoader: ConfigLoader = ConfigLoader.builder()
+    .setAppEnv("local")
+    .setAppName("Test ConfigLoader builder")
+    .getOrCreate()
+
   val ds: Seq[TestObject] = Seq(
     TestObject(1, "a", "A", 1L),
     TestObject(2, "b", "B", 2L)
@@ -19,12 +24,13 @@ class DCContextSuite extends FunSuite {
 
   test("DCContext should build a spark session") {
     val dcContext: DCContext = DCContext.builder()
-      .setConfigLoader(Properties)
-      .setDCContextConfigPath("test.context")
+      .setConfigLoader(configLoader)
+      .setDCContextConfigPath("context")
       .getOrCreate()
 
     val ss = dcContext.spark
 
+    println(configLoader.appName)
     println(ss.sparkContext.appName)
     println(ss.sparkContext.getConf.get("spark.app.name"))
 
@@ -32,8 +38,8 @@ class DCContextSuite extends FunSuite {
 
   test("DCContext should be able to create SparkRepository") {
     val dcContext: DCContext = DCContext.builder()
-      .setConfigLoader(Properties)
-      .setDCContextConfigPath("test.context")
+      .setConfigLoader(configLoader)
+      .setDCContextConfigPath("context")
       .getOrCreate()
 
     val ss = dcContext.spark
@@ -42,7 +48,7 @@ class DCContextSuite extends FunSuite {
 
     val ds = this.ds.toDS()
 
-    val repo = dcContext.getSparkRepository[TestObject]("test.csv_dc_context2")
+    val repo = dcContext.getSparkRepository[TestObject]("csv_dc_context2")
 
     repo.save(ds)
     val read = repo.findAll()
@@ -55,22 +61,19 @@ class DCContextSuite extends FunSuite {
 
   test("DCContext should be able to create a pipeline with all the registered spark repository") {
     val context = DCContext.builder()
-      .setConfigLoader(Properties)
-      .setDCContextConfigPath("test.context")
+      .setConfigLoader(configLoader)
       .getOrCreate()
 
-    val repo1 = context.getSparkRepository[TestObject]("test.csv_dc_context")
-    val repo2 = context.getSparkRepository[TestObject3]("test.parquet_dc_context")
+    val repo1 = context.getSparkRepository[TestObject]("csv_dc_context")
+    val repo2 = context.getSparkRepository[TestObject3]("parquet_dc_context")
 
-    val pipe = context.newPipeline()
-
-    pipe
+    context
+      .newPipeline()
       .addStage(classOf[DCContextSuite.MyFactory], context.spark)
       .addStage(classOf[DCContextSuite.MyFactory2], context.spark)
       .run()
       .getLastOutput().asInstanceOf[Dataset[TestObject3]]
       .show()
-
 
     assert(repo1.findAll().count() === 2)
     assert(repo2.findAll().count() === 2)
