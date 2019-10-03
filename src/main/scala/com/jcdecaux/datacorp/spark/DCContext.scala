@@ -47,8 +47,8 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     this
   }
 
-  def getConnector(config: String): Connector = {
-    new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate()
+  def getConnector[C <: Connector](config: String): C = {
+    new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate().asInstanceOf[C]
   }
 
   def getSparkSession: SparkSession = this.spark
