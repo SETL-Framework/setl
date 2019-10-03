@@ -177,11 +177,11 @@ abstract class FileConnector(val spark: SparkSession,
     case _ => None
   }
 
-  private[connector] def listFiles(): Array[String] = {
+  def listFiles(): Array[String] = {
     listPaths().map(_.toString)
   }
 
-  private[this] def listPaths(): Array[Path] = {
+  def listPaths(): Array[Path] = {
     val filePaths = ArrayBuffer[Path]()
     val files = fileSystem.listFiles(absolutePath, true)
 
@@ -201,20 +201,6 @@ abstract class FileConnector(val spark: SparkSession,
     }
     log.debug(s"Find ${filePaths.length} files")
     filePaths.toArray
-  }
-
-  @throws[RuntimeException]
-  private[this] def waitForSuffixLock(): Unit = {
-    var cnt = 0
-    while (suffixState.get() == 0 && cnt <= 20) {
-      log.info("Suffix is not yet initialized, wait 100ms")
-      Thread.sleep(100)
-      cnt += 1
-    }
-
-    if (cnt > 10 && suffixState.get() == 0) {
-      throw new RuntimeException("Cannot initialize suffix lock")
-    }
   }
 
   /**
