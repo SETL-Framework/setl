@@ -197,6 +197,14 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
+    * Wrapper of withSparkConf
+    *
+    * @param conf spark configuration
+    * @return
+    */
+  def configure(conf: SparkConf): this.type = withSparkConf(conf)
+
+  /**
     * Set a SparkConf property
     *
     * @param key   key of spark conf
