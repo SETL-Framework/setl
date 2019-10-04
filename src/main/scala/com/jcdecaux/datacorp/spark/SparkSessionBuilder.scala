@@ -189,7 +189,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @param conf spark configuration
     * @return
     */
-  def configure(conf: SparkConf): this.type = {
+  def withSparkConf(conf: SparkConf): this.type = {
     log.info("Set customized spark configuration")
     this.sparkConf = conf
     this.initialization = false

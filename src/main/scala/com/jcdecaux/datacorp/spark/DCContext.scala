@@ -122,7 +122,7 @@ object DCContext {
       }
 
       sparkConf match {
-        case Some(conf) => sparkSessionBuilder.configure(conf)
+        case Some(conf) => sparkSessionBuilder.withSparkConf(conf)
         case _ =>
       }
 

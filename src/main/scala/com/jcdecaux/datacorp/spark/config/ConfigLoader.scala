@@ -119,6 +119,9 @@ abstract class ConfigLoader extends Logging {
     }
   }
 
+  /**
+    * Config loaded from filesystem
+    */
   lazy val config: Config = {
     log.debug("Before execution of beforeAll")
     this.beforeAll()
@@ -128,8 +131,22 @@ abstract class ConfigLoader extends Logging {
     loadConfig()
   }
 
+  /**
+    * Get the value of a key
+    *
+    * @param key path expression
+    * @return the string value at the requested path
+    * @throws ConfigException.Missing   if value is absent or null
+    * @throws ConfigException.WrongType if value is not convertible to an Enum
+    */
   def get(key: String): String = config.getString(key)
 
+  /**
+    * Get the value of a key
+    *
+    * @param key path expression
+    * @return Option[String] if the key exists, None otherwise
+    */
   def getOption(key: String): Option[String] = {
     if (has(key)) {
       Option(get(key))
@@ -138,19 +155,43 @@ abstract class ConfigLoader extends Logging {
     }
   }
 
+  /**
+    * Get the value of a key
+    *
+    * @param key path expression
+    * @return the Array[String] value at the requested path
+    */
   def getArray(key: String): Array[String] = {
     import scala.collection.JavaConverters._
     config.getStringList(key).asScala.toArray
   }
 
+  /**
+    * Check if a key is presented in a config
+    *
+    * @param key path expression
+    * @return true if the config contains the key, otherwise false
+    */
   def has(key: String): Boolean = config.hasPath(key)
 
+  /**
+    * Get the value of a key
+    *
+    * @param key path expression
+    * @return the ConfigObject value at the requested path
+    */
   def getObject(key: String): ConfigObject = config.getObject(key)
 
+  /**
+    * Get the value of a key
+    *
+    * @param key path expression
+    * @return the nested Config value at the requested path
+    */
   def getConfig(key: String): Config = config.getConfig(key)
 
   /**
-    * beforeAll will be called before loading the typesafe config file. User can override it with property settings
+    * BeforeAll will be called before loading the typesafe config file. User can override it with property settings
     */
   def beforeAll(): Unit = {}
 }

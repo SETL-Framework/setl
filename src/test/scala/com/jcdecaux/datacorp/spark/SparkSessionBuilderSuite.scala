@@ -63,7 +63,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
       .set("myProperty", "hehehe")
 
     val spark = new SparkSessionBuilder()
-      .configure(sparkConf)
+      .withSparkConf(sparkConf)
       .build()
       .get()
 
