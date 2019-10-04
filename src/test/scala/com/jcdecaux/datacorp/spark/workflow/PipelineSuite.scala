@@ -146,6 +146,22 @@ class DatasetFactory3(spark: SparkSession) extends Factory[Dataset[Product2]] {
   override def get(): Dataset[Product2] = output
 }
 
+class DatasetFactory4(spark: SparkSession) extends Factory[Long] {
+
+  @Delivery
+  var ds1: Dataset[Product1] = _
+
+  override def read(): DatasetFactory4.this.type = this
+
+  override def process(): DatasetFactory4.this.type = {
+    this
+  }
+
+  override def write(): DatasetFactory4.this.type = this
+
+  override def get(): Long = ds1.count()
+}
+
 //////////////////////
 // TESTS START HERE //
 //////////////////////

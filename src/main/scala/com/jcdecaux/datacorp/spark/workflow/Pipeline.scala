@@ -14,8 +14,12 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable {
 
+  private[workflow] var optimization: Boolean = false
+
   private[workflow] var deliverableDispatcher: DeliverableDispatcher = new DeliverableDispatcher
   private[workflow] var stageCounter: Int = 0
+
+  private[workflow] var executionPlan: DAG = _
 
   val stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   val pipelineInspector: PipelineInspector = new PipelineInspector(this)
@@ -34,6 +38,11 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     }
 
     setInput(deliverable)
+  }
+
+  def optimization(boolean: Boolean): this.type = {
+    optimization = boolean
+    this
   }
 
   def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput[T](v, Some(consumer))
@@ -78,7 +87,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
 
   override def describe(): this.type = {
     inspectPipeline()
-    pipelineInspector.describe()
+    executionPlan.describe()
     this
   }
 
@@ -113,7 +122,20 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     */
   private[this] def forceInspectPipeline(): Unit = {
     pipelineInspector.inspect()
-    deliverableDispatcher.setDataFlowGraph(pipelineInspector.getDataFlowGraph)
+
+    val optimiser = new PipelineOptimizer(pipelineInspector.getDataFlowGraph)
+
+    executionPlan = if (optimization) {
+      val newStages = optimiser.optimize(stages)
+      stages.clear()
+      stages ++= newStages
+      optimiser.optimizedDag
+
+    } else {
+      pipelineInspector.getDataFlowGraph
+    }
+
+    deliverableDispatcher.setDataFlowGraph(executionPlan)
   }
 
 

@@ -118,7 +118,14 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @param factory a factory object
     * @return
     */
-  private[workflow] def collectDeliverable(factory: Factory[_]): this.type = setDelivery(factory.getDelivery)
+  private[workflow] def collectDeliverable(factory: Factory[_]): this.type = {
+    setDelivery(factory.getDelivery)
+  }
+
+  private[workflow] def collectDeliverable(stage: Stage): this.type = {
+    stage.deliveries.foreach(setDelivery)
+    this
+  }
 
   /**
     * Used only for testing
