@@ -122,7 +122,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     *
     * @return an object. it has to be convert to the according type manually.
     */
-  def getLastOutput(): Any = {
+  def getLastOutput: Any = {
     stages.last.factories.last.get()
   }
 

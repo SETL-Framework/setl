@@ -27,7 +27,7 @@ class ConfLoaderSuite extends FunSuite {
         System.setProperty("myvalue", "test-my-value")
       }
     }
-    assertThrows[IllegalArgumentException](x.config, "There is no file called test.conf. Exception should be thrown")
+    assertThrows[IllegalArgumentException](x.config, "test is not a valid AppEnv value. Exception should be thrown")
 
     System.clearProperty("app.environment")
     System.clearProperty("myvalue")

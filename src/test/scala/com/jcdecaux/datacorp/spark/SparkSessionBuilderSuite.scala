@@ -34,7 +34,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
     assert(sparkSessionBuilder.appEnv === AppEnv.LOCAL)
     assert(sparkSessionBuilder.appName === "SparkApplication")
     assert(sparkSessionBuilder.cassandraHost === null)
-    assert(sparkSessionBuilder.config.getClass === classOf[SparkConf])
+    assert(sparkSessionBuilder.sparkConf.getClass === classOf[SparkConf])
     assert(sparkSessionBuilder.initialization === true)
     assert(sparkSessionBuilder.spark === null)
 
@@ -60,6 +60,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
       .setAppName("CustomConfigApp")
       .setMaster("local[*]")
       .set("spark.cassandra.connection.host", "localhost")
+      .set("myProperty", "hehehe")
 
     val spark = new SparkSessionBuilder()
       .configure(sparkConf)
@@ -71,7 +72,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
 
   test("SparkSessionBuilder exception thrown") {
     assertThrows[UnknownException.Environment](new SparkSessionBuilder().setEnv("hahaha"))
-    assertThrows[UnknownException](new SparkSessionBuilder("cassandra").setEnv(AppEnv.PROD).getOrCreate())
+    assertThrows[IllegalArgumentException](new SparkSessionBuilder("cassandra").setEnv(AppEnv.PROD).getOrCreate())
   }
 
 

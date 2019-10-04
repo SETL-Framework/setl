@@ -14,6 +14,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 import scala.reflect.runtime.{universe => ru}
+import scala.util.Random
 
 @InterfaceStability.Unstable
 abstract class DCContext(val configLoader: ConfigLoader) {
@@ -63,6 +64,9 @@ abstract class DCContext(val configLoader: ConfigLoader) {
 
   def getPipeline(uuid: UUID): Pipeline = this.pipelineRegister.get(uuid)
 
+  def stop(): Unit = {
+    this.spark.stop()
+  }
 }
 
 object DCContext {
@@ -86,6 +90,14 @@ object DCContext {
 
     def setConfigLoader(configLoader: ConfigLoader): this.type = {
       this.configLoader = configLoader
+      this
+    }
+
+    def withDefaultConfigLoader(configPath: String): this.type = {
+      this.configLoader = ConfigLoader.builder()
+        .setAppName(s"dc_spark_app_${Random.alphanumeric.take(10).mkString("")}")
+        .setConfigPath(configPath)
+        .getOrCreate()
       this
     }
 

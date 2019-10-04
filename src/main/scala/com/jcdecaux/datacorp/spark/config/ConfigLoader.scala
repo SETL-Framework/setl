@@ -48,6 +48,7 @@ abstract class ConfigLoader extends Logging {
   val availableAppEnvs: Array[String] = AppEnv.values().map(_.toString.toLowerCase())
   val fallBackConf: String = "application.conf"
   val clearCaches: Boolean = true
+  val configPath: Option[String] = None
 
   @throws[IllegalArgumentException]
   private[this] def validate(): Unit = {
@@ -59,7 +60,7 @@ abstract class ConfigLoader extends Logging {
 
   }
 
-  def envNameVariable: String = {
+  private[this] def envNameVariable: String = {
     if (System.getenv(s"${appName}_ENV") == null) {
       ""
     } else {
@@ -67,7 +68,7 @@ abstract class ConfigLoader extends Logging {
     }
   }
 
-  def envNameProperty: String = {
+  private[this] def envNameProperty: String = {
     if (System.getProperty("app.environment") == null) {
       ""
     } else {
@@ -75,32 +76,56 @@ abstract class ConfigLoader extends Logging {
     }
   }
 
-  lazy val config: Config = {
+  private[this] def invalidateCaches(): Unit = {
+    log.debug("Clear ConfigFactory caches")
+    ConfigFactory.invalidateCaches()
+  }
 
-    log.debug("Before execution of beforeAll")
-    beforeAll()
-    log.debug("After execution of beforeAll")
+  private[this] def loadConfig(): Config = {
 
-    validate()
+    configPath match {
+      case Some(path) =>
+        log.debug(s"Configuration path is defined ($path).")
+        updateAppEnv()
+        ConfigFactory.load(path)
 
-    if (clearCaches) {
-      log.debug("Clear ConfigFactory caches")
-      ConfigFactory.invalidateCaches()
+      case _ =>
+        log.debug("No defined configuration path. Fetch from environmental variables.")
+        if (updateAppEnv()) {
+          ConfigFactory.load(s"$appEnv.conf")
+        } else {
+          ConfigFactory.load(fallBackConf)
+        }
     }
+  }
 
+  /**
+    * Update application environment (default LOCAL) by searching in system variables.
+    *
+    * @return true if appEnv has been updated, false otherwise
+    */
+  private[this] def updateAppEnv(): Boolean = {
     if (availableAppEnvs.contains(envNameVariable)) {
-      log.debug(s"find $envNameVariable in system environmental variables")
+      log.debug(s"Find AppEnv ($envNameVariable) in system environmental variables")
       appEnv = envNameVariable
-      ConfigFactory.load(s"$envNameVariable.conf")
+      true
     } else if (availableAppEnvs.contains(envNameProperty)) {
-      log.debug(s"find $envNameProperty in jvm properties")
+      log.debug(s"Find AppEnv ($envNameProperty) in jvm properties")
       appEnv = envNameProperty
-      ConfigFactory.load(s"$envNameProperty.conf")
+      true
     } else {
-      log.debug(s"No app ENV setting was found in neither system environmental variables nor JVM properties. " +
-        s"configuration $fallBackConf will be loaded.")
-      ConfigFactory.load(fallBackConf)
+      log.debug(s"No AppEnv was found in neither system environmental variables nor JVM properties.")
+      false
     }
+  }
+
+  lazy val config: Config = {
+    log.debug("Before execution of beforeAll")
+    this.beforeAll()
+    log.debug("After execution of beforeAll")
+    this.validate()
+    if (clearCaches) this.invalidateCaches()
+    loadConfig()
   }
 
   def get(key: String): String = config.getString(key)
@@ -136,6 +161,7 @@ object ConfigLoader {
 
     var configLoader: ConfigLoader = _
     var _appName: String = "APP"
+    var _configPath: Option[String] = None
     val properties: ConcurrentHashMap[String, String] = new ConcurrentHashMap()
 
     def setAppEnv(env: String): this.type = {
@@ -153,6 +179,11 @@ object ConfigLoader {
       this
     }
 
+    def setConfigPath(path: String): this.type = {
+      _configPath = Option(path)
+      this
+    }
+
     /**
       * Build an object
       *
@@ -163,6 +194,8 @@ object ConfigLoader {
       configLoader = new ConfigLoader() {
 
         override val appName: String = _appName
+
+        override val configPath: Option[String] = _configPath
 
         override def beforeAll(): Unit = {
           import scala.collection.JavaConverters._

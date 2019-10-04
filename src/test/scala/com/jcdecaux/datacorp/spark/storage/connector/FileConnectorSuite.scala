@@ -20,7 +20,7 @@ class FileConnectorSuite extends FunSuite {
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
-  val connector2: FileConnector = new FileConnector(spark, Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test).*")) {
+  val connector2: FileConnector = new FileConnector(spark, Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
     override val storage: Storage = Storage.OTHER
 
     override def read(): DataFrame = null

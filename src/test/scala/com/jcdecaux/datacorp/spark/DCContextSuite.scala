@@ -23,32 +23,31 @@ class DCContextSuite extends FunSuite {
   )
 
   test("DCContext should build a spark session") {
-    val dcContext: DCContext = DCContext.builder()
+    val context: DCContext = DCContext.builder()
       .setConfigLoader(configLoader)
       .setDCContextConfigPath("context")
       .getOrCreate()
 
-    val ss = dcContext.spark
+    val ss = context.spark
 
     println(configLoader.appName)
     println(ss.sparkContext.appName)
     println(ss.sparkContext.getConf.get("spark.app.name"))
-
   }
 
   test("DCContext should be able to create SparkRepository") {
-    val dcContext: DCContext = DCContext.builder()
+    val context: DCContext = DCContext.builder()
       .setConfigLoader(configLoader)
       .setDCContextConfigPath("context")
       .getOrCreate()
 
-    val ss = dcContext.spark
+    val ss = context.spark
 
     import ss.implicits._
 
     val ds = this.ds.toDS()
 
-    val repo = dcContext.getSparkRepository[TestObject]("csv_dc_context2")
+    val repo = context.getSparkRepository[TestObject]("csv_dc_context2")
 
     repo.save(ds)
     val read = repo.findAll()
@@ -72,7 +71,7 @@ class DCContextSuite extends FunSuite {
       .addStage(classOf[DCContextSuite.MyFactory], context.spark)
       .addStage(classOf[DCContextSuite.MyFactory2], context.spark)
       .run()
-      .getLastOutput().asInstanceOf[Dataset[TestObject3]]
+      .getLastOutput.asInstanceOf[Dataset[TestObject3]]
       .show()
 
     assert(repo1.findAll().count() === 2)
@@ -82,6 +81,28 @@ class DCContextSuite extends FunSuite {
 
     repo1.getConnector.asInstanceOf[FileConnector].delete()
     repo2.getConnector.asInstanceOf[FileConnector].delete()
+
+    assert(context.configLoader.configPath === None)
+    assert(context.configLoader.appEnv === "local")
+  }
+
+  test("DCContext should be work with default config loader") {
+    System.setProperty("app.environment", "local")
+    val context = DCContext.builder()
+      .withDefaultConfigLoader("myconf.conf")
+      .getOrCreate()
+
+    assert(context.configLoader.get("my_test_variable") === "haha")
+    assert(context.configLoader.appEnv === "local")
+    assert(context.configLoader.configPath === Some("myconf.conf"))
+  }
+
+  test("DCContext should be able to handle AppEnv setting with default config loader") {
+    System.setProperty("app.environment", "test")
+    assertThrows[java.lang.IllegalArgumentException](
+      DCContext.builder().withDefaultConfigLoader("myconf.conf").getOrCreate(),
+      "DCContext should throw an exception when the app.environment value is invalid"
+    )
   }
 }
 

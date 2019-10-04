@@ -244,14 +244,14 @@ class PipelineSuite extends FunSuite {
       .describe()
       .run()
 
-    pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].show()
+    pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].show()
 
     // Test get() method
-    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].count() === 2)
-    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
-    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
+    assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].count() === 2)
+    assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
+    assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
     assert(
-      pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
+      pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
         Product2("id_of_product1", "c2")
     )
 
@@ -286,14 +286,14 @@ class PipelineSuite extends FunSuite {
       .describe()
       .run()
 
-    pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].show()
+    pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].show()
 
     // Test get()
-    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].count() === 2)
-    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
-    assert(pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
+    assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].count() === 2)
+    assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "pd1").count() === 1)
+    assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
     assert(
-      pipeline.getLastOutput().asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
+      pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
         Product2("id_of_product1", "c2")
     )
 
