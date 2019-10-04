@@ -3,7 +3,7 @@ package com.jcdecaux.datacorp.spark.workflow
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
 import com.jcdecaux.datacorp.spark.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
-import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, FactoryDeliveryMetadata, FactoryOutput}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
@@ -77,12 +77,17 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     deliveries = parallelFactories match {
       case Left(par) =>
         log.debug(s"Stage $stageId will be run in parallel mode")
-        par.map(_.read().process().write().getDelivery).toArray
+        par.map(runFactory).toArray
+
       case Right(nonpar) =>
         log.debug(s"Stage $stageId will be run in sequential mode")
-        nonpar.map(_.read().process().write().getDelivery)
+        nonpar.map(runFactory)
     }
     this
+  }
+
+  private[this] val runFactory: Factory[_] => Deliverable[_] = {
+    factory: Factory[_] => factory.read().process().write().getDelivery
   }
 
   private[this] def parallelFactories: Either[ParArray[Factory[_]], Array[Factory[_]]] = {
@@ -91,6 +96,17 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     } else {
       Right(factories.toArray)
     }
+  }
+
+  private[workflow] def createDAGNodes(): Array[Node] = {
+
+    factories.map {
+      fac =>
+        val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
+        val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers)
+
+        Node(fac.getClass, fac.getUUID, this.stageId, setter.toList, output)
+    }.toArray
   }
 
 }

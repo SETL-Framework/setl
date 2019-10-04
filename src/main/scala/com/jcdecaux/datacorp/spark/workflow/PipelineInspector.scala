@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.internal.{HasDescription, Logging}
-import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
+import com.jcdecaux.datacorp.spark.transformation.Factory
 
 /**
   * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a
@@ -43,17 +43,9 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   def findNode(factory: Factory[_]): Option[Node] = nodes.find(_.factoryUUID == factory.getUUID)
 
   private[this] def createNodes(): Set[Node] = {
-    pipeline.stages
-      .flatMap {
-        stage =>
-          stage.factories.map {
-            fac =>
-              val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
-              val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers)
-
-              Node(fac.getClass, fac.getUUID, stage.stageId, setter.toList, output)
-          }
-      }
+    pipeline
+      .stages
+      .flatMap(stage => stage.createDAGNodes())
       .toSet
   }
 
