@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 
 @InterfaceStability.Unstable
 class PipelineOptimizer(val executionPlan: DAG,
-                        val parallelism: Int = 4) extends Logging {
+                        val parallelism: Int = 6) extends Logging {
 
   val nodes: Set[Node] = executionPlan.nodes
   val flows: Set[Flow] = executionPlan.flows
@@ -32,9 +32,11 @@ class PipelineOptimizer(val executionPlan: DAG,
         val stage = new Stage().setStageId(id)
 
         val factoryUUIDs = nodes.map(_.factoryUUID)
+
         factories
           .filter(f => factoryUUIDs.contains(f.getUUID))
           .foreach(stage.addFactory)
+
         stage
     }.toArray.sortBy(_.stageId)
 
@@ -44,7 +46,7 @@ class PipelineOptimizer(val executionPlan: DAG,
     dag.flows.filter(_.to.factoryUUID == node.factoryUUID)
   }
 
-  def updateDag(newNode: Node, dag: DAG): DAG = {
+  private[this] def updateDag(newNode: Node, dag: DAG): DAG = {
     log.debug(s"Update DAG for node ${newNode.getPrettyName}")
     val oldNode = dag.nodes.find(_.factoryUUID == newNode.factoryUUID).get
 
@@ -53,6 +55,7 @@ class PipelineOptimizer(val executionPlan: DAG,
       .map {
         f => f.copy(stage = newNode.stage, from = newNode)
       }
+
     val endingFlows = dag.flows
       .filter(_.to == oldNode)
       .map(f => f.copy(to = newNode))

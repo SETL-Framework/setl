@@ -14,18 +14,15 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable {
 
-  private[workflow] var optimization: Boolean = false
-
-  private[workflow] var deliverableDispatcher: DeliverableDispatcher = new DeliverableDispatcher
-  private[workflow] var stageCounter: Int = 0
-
-  private[workflow] var executionPlan: DAG = _
-
-  val stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
-  val pipelineInspector: PipelineInspector = new PipelineInspector(this)
+  private[this] var stageCounter: Int = 0
+  private[this] var executionPlan: DAG = _
+  private[this] var _optimization: Boolean = false
+  private[this] val _deliverableDispatcher: DeliverableDispatcher = new DeliverableDispatcher
+  private[this] val _stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
+  private[this] val _pipelineInspector: PipelineInspector = new PipelineInspector(this)
 
   def setInput(v: Deliverable[_]): this.type = {
-    deliverableDispatcher.setDelivery(v)
+    _deliverableDispatcher.setDelivery(v)
     this
   }
 
@@ -40,8 +37,22 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     setInput(deliverable)
   }
 
+  def stages: ArrayBuffer[Stage] = this._stages
+
+  def pipelineInspector: PipelineInspector = this._pipelineInspector
+
+  def deliverableDispatcher: DeliverableDispatcher = this._deliverableDispatcher
+
+  def optimization: Boolean = this._optimization
+
+  /**
+    * Set to true to allow auto optimization of this pipeline.
+    *
+    * @param boolean true to allow optimization, otherwise false
+    * @return this pipeline
+    */
   def optimization(boolean: Boolean): this.type = {
-    optimization = boolean
+    _optimization = boolean
     this
   }
 
@@ -67,7 +78,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
 
     if (registerNewItem(stage)) {
       resetEndStage()
-      stages += stage.setStageId(stageCounter)
+      _stages += stage.setStageId(stageCounter)
       stageCounter += 1
     } else {
       throw new AlreadyExistsException("Stage already exists")
@@ -76,13 +87,13 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     this
   }
 
-  def getStage(id: Int): Stage = stages(id)
+  def getStage(id: Int): Stage = _stages(id)
 
   /**
     * Mark the last stage as a NON-end stage
     */
   private[this] def resetEndStage(): Unit = {
-    if (stages.nonEmpty) stages.last.end = false
+    if (_stages.nonEmpty) _stages.last.end = false
   }
 
   override def describe(): this.type = {
@@ -93,20 +104,20 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
 
   def run(): this.type = {
     inspectPipeline()
-    stages
+    _stages
       .foreach {
         stage =>
           // Describe current stage
           stage.describe()
 
           // Dispatch input if stageID doesn't equal 0
-          if (deliverableDispatcher.deliveries.nonEmpty) {
-            stage.factories.foreach(deliverableDispatcher.dispatch)
+          if (_deliverableDispatcher.deliveries.nonEmpty) {
+            stage.factories.foreach(_deliverableDispatcher.dispatch)
           }
 
           // run the stage
           stage.run()
-          stage.factories.foreach(deliverableDispatcher.collectDeliverable)
+          stage.factories.foreach(_deliverableDispatcher.collectDeliverable)
       }
 
     this
@@ -115,27 +126,27 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   /**
     * Inspect the current pipeline if it has not been inspected
     */
-  private[this] def inspectPipeline(): Unit = if (!pipelineInspector.inspected) forceInspectPipeline()
+  private[this] def inspectPipeline(): Unit = if (!_pipelineInspector.inspected) forceInspectPipeline()
 
   /**
     * Inspect the current pipeline
     */
   private[this] def forceInspectPipeline(): Unit = {
-    pipelineInspector.inspect()
+    _pipelineInspector.inspect()
 
-    val optimiser = new PipelineOptimizer(pipelineInspector.getDataFlowGraph)
+    val optimiser = new PipelineOptimizer(_pipelineInspector.getDataFlowGraph)
 
-    executionPlan = if (optimization) {
-      val newStages = optimiser.optimize(stages)
-      stages.clear()
-      stages ++= newStages
+    executionPlan = if (_optimization) {
+      val newStages = optimiser.optimize(_stages)
+      _stages.clear()
+      _stages ++= newStages
       optimiser.optimizedDag
 
     } else {
-      pipelineInspector.getDataFlowGraph
+      _pipelineInspector.getDataFlowGraph
     }
 
-    deliverableDispatcher.setDataFlowGraph(executionPlan)
+    _deliverableDispatcher.setDataFlowGraph(executionPlan)
   }
 
 
@@ -145,7 +156,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     * @return an object. it has to be convert to the according type manually.
     */
   def getLastOutput: Any = {
-    stages.last.factories.last.get()
+    _stages.last.factories.last.get()
   }
 
   /**
@@ -155,7 +166,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     * @return
     */
   def getOutput[A](cls: Class[_ <: Factory[_]]): A = {
-    val factory = stages.flatMap(s => s.factories).find(f => f.getClass == cls)
+    val factory = _stages.flatMap(s => s.factories).find(f => f.getClass == cls)
 
     factory match {
       case Some(x) => x.get().asInstanceOf[A]
@@ -169,7 +180,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     * @param t runtime type of the Deliverable's payload
     * @return
     */
-  def getDeliverable(t: ru.Type): Array[Deliverable[_]] = deliverableDispatcher.findDeliverableByType(t)
+  def getDeliverable(t: ru.Type): Array[Deliverable[_]] = _deliverableDispatcher.findDeliverableByType(t)
 
 
 }
