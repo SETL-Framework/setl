@@ -15,7 +15,7 @@ import scala.collection.parallel.mutable.ParArray
 @InterfaceStability.Evolving
 class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescription {
 
-  private[this] var _optimize: Boolean = false
+  private[this] var _optimization: Boolean = false
   private[this] var _end: Boolean = true
   private[this] var _parallel: Boolean = true
   private[this] var _stageId: Int = _
@@ -52,7 +52,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     this
   }
 
-  def optimize: Boolean = this._optimize
+  def optimization: Boolean = this._optimization
 
   /**
     * Set to true to allow the PipelineOptimizer to optimize the execution order of factories within the stage. Default
@@ -61,8 +61,8 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     * @param boo true to allow optimization
     * @return this stage
     */
-  def optimize(boo: Boolean): this.type = {
-    _optimize = boo
+  def optimization(boo: Boolean): this.type = {
+    _optimization = boo
     this
   }
 
