@@ -101,6 +101,10 @@ object DCContext {
       this
     }
 
+    def withDefaultConfigLoader(): this.type = {
+      withDefaultConfigLoader("application.conf")
+    }
+
     private[this] def buildSparkSession(): SparkSession = {
       val pathOf: String => String = (s: String) => s"$dcContextConfiguration.$s"
 

@@ -8,24 +8,23 @@ import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, Factory
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
 
+/**
+  * A Stage is a collection of independent Factories. All the stages of a pipeline will be executed
+  * sequentially at runtime. Within a stage, all factories could be executed in parallel or in sequential order.
+  */
 @InterfaceStability.Evolving
 class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescription {
 
+  private[this] var _optimization: Boolean = false
   private[this] var _end: Boolean = true
-
   private[this] var _parallel: Boolean = true
-
   private[this] var _stageId: Int = _
-
-  val factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
-
-  var deliveries: Array[Deliverable[_]] = _
+  private[this] val _factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
+  private[this] var _deliveries: Array[Deliverable[_]] = _
 
   private[workflow] def end: Boolean = _end
 
-  private[workflow] def end_=(value: Boolean): Unit = {
-    _end = value
-  }
+  private[workflow] def end_=(value: Boolean): Unit = _end = value
 
   private[workflow] def start: Boolean = if (stageId == 0) true else false
 
@@ -36,10 +35,35 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     this
   }
 
+  def factories: ArrayBuffer[Factory[_]] = this._factories
+
+  def deliveries: Array[Deliverable[_]] = this._deliveries
+
   def parallel: Boolean = _parallel
 
-  def parallel_=(boo: Boolean): Unit = {
+  /**
+    * Set to true to run all factories of this stage in parallel. Otherwise they will be executed in sequential order
+    *
+    * @param boo true for parallel. otherwise false
+    * @return
+    */
+  def parallel(boo: Boolean): this.type = {
     _parallel = boo
+    this
+  }
+
+  def optimization: Boolean = this._optimization
+
+  /**
+    * Set to true to allow the PipelineOptimizer to optimize the execution order of factories within the stage. Default
+    * false
+    *
+    * @param boo true to allow optimization
+    * @return this stage
+    */
+  def optimization(boo: Boolean): this.type = {
+    _optimization = boo
+    this
   }
 
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
@@ -59,7 +83,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   @throws[AlreadyExistsException]
   def addFactory(factory: Factory[_]): this.type = {
     if (registerNewItem(factory)) {
-      factories += factory
+      _factories += factory
     } else {
       throw new AlreadyExistsException(s"The current factory ${factory.getCanonicalName} (${factory.getUUID.toString})" +
         s"already exists")
@@ -68,13 +92,13 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   }
 
   override def describe(): this.type = {
-    log.info(s"Stage $stageId contains ${factories.length} factories")
-    factories.foreach(_.describe())
+    log.info(s"Stage $stageId contains ${_factories.length} factories")
+    _factories.foreach(_.describe())
     this
   }
 
   def run(): this.type = {
-    deliveries = parallelFactories match {
+    _deliveries = parallelFactories match {
       case Left(par) =>
         log.debug(s"Stage $stageId will be run in parallel mode")
         par.map(runFactory).toArray
@@ -92,15 +116,15 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
 
   private[this] def parallelFactories: Either[ParArray[Factory[_]], Array[Factory[_]]] = {
     if (_parallel) {
-      Left(factories.par)
+      Left(_factories.par)
     } else {
-      Right(factories.toArray)
+      Right(_factories.toArray)
     }
   }
 
   private[workflow] def createDAGNodes(): Array[Node] = {
 
-    factories.map {
+    _factories.map {
       fac =>
         val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
         val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers)
