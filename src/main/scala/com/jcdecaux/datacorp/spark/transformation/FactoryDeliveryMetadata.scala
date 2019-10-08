@@ -52,7 +52,7 @@ private[spark] object FactoryDeliveryMetadata {
 
     override def build(): this.type = {
 
-      log.debug(s"Fetch methods of ${cls.getCanonicalName} having Delivery annotation")
+      log.debug(s"Search Deliveries of ${cls.getCanonicalName}")
 
       // Black magic XD
       val classSymbol = runtime.universe.runtimeMirror(getClass.getClassLoader).classSymbol(cls)
@@ -66,7 +66,7 @@ private[spark] object FactoryDeliveryMetadata {
         mth =>
 
           if (mth.isMethod) {
-            log.debug(s"Find @Delivery annotated method ${cls.getCanonicalName}.${mth.name}")
+            log.debug(s"Find annotated method ${cls.getCanonicalName}.${mth.name}")
 
             val annotation = cls
               .getDeclaredMethods
@@ -84,7 +84,7 @@ private[spark] object FactoryDeliveryMetadata {
               optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean]
             )
           } else {
-            log.debug(s"Find @Delivery annotated variable ${cls.getCanonicalName}.${mth.name}")
+            log.debug(s"Find annotated variable ${cls.getCanonicalName}.${mth.name}")
 
             val annotation = cls
               .getDeclaredField(mth.name.toString.trim)

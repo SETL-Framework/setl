@@ -270,7 +270,7 @@ object SchemaConverter {
         (df, sf) =>
           val compressorName = sf.metadata.getStringArray(classOf[Compress].getCanonicalName).head
           val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
-          val compress: String => Array[Byte] = (input: String) => compressor.compress(input)
+          val compress: String => Array[Byte] = input => compressor.compress(input)
           val compressUDF = functions.udf(compress)
           df.withColumn(sf.name, compressUDF(functions.to_json(functions.col(sf.name))))
       }
@@ -292,7 +292,7 @@ object SchemaConverter {
         (df, sf) => {
           val compressorName = sf.metadata.getStringArray(classOf[Compress].getCanonicalName).head
           val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
-          val decompress: Array[Byte] => String = (input: Array[Byte]) => compressor.decompress(input)
+          val decompress: Array[Byte] => String = input => compressor.decompress(input)
           val decompressUDF = functions.udf(decompress)
           df.withColumn(sf.name, functions.from_json(decompressUDF(functions.col(sf.name)), sf.dataType))
         }

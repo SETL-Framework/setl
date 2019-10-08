@@ -166,7 +166,8 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
           val args = setterMethod.argTypes.map {
             argType =>
-              log.debug(s"Dispatch $argType by calling ${factory.getClass.getCanonicalName}.${setterMethod.name}")
+              log.debug(s"Dispatch ${simpleTypeNameOf(argType)} by calling " +
+                s"${factory.getClass.getCanonicalName}.${setterMethod.name}")
 
               getDelivery(
                 deliveryType = argType,
@@ -191,6 +192,10 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           }
       }
     this
+  }
+
+  private[this] val simpleTypeNameOf: ru.Type => String = {
+    rType => rType.toString.split("\\[").map(_.split("\\.").last).mkString("[")
   }
 
 }
