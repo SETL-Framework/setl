@@ -44,6 +44,11 @@ class ExcelConnector(val spark: SparkSession,
                      var saveMode: SaveMode = SaveMode.Overwrite
                     ) extends Connector {
 
+  if (inferSchema.toBoolean && schema.isEmpty) {
+    log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
+      "It's recommended to define a schema instead of infer one")
+  }
+
   override val storage: Storage = Storage.EXCEL
   override val reader: DataFrameReader = initReader()
   override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
