@@ -19,7 +19,9 @@ import org.apache.spark.sql.SparkSession
   * @param config optional, a [[com.typesafe.config.Config]] object
   * @param conf   optional, a [[com.jcdecaux.datacorp.spark.config.Conf]] object
   */
-class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val conf: Option[Conf]) extends Builder[Connector] {
+class ConnectorBuilder(val spark: SparkSession,
+                       val config: Option[Config],
+                       val conf: Option[Conf]) extends Builder[Connector] {
 
   def this(spark: SparkSession, config: Config) = this(spark, Some(config), None)
 
@@ -31,18 +33,16 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     * Build a connector
     */
   override def build(): ConnectorBuilder.this.type = {
-
     connector = (config, conf) match {
       case (Some(c), None) => buildConnectorWithConfig(c)
       case (None, Some(c)) => buildConnectorWithConf(c)
       case (_, _) => throw new IllegalArgumentException("Can't build connector with redundant configurations")
     }
-
     this
   }
 
   /**
-    * Instantiate a constructor of connector according to the storage type and constructor's arguments
+    * Instantiate a connector constructor according to the storage type and constructor's arguments
     *
     * @param storage         storage enum
     * @param constructorArgs type of constructor arguments
@@ -50,15 +50,12 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
     */
   @throws[NoSuchMethodException]
   private[this] def connectorConstructorOf(storage: Storage, constructorArgs: Class[_]*): Constructor[Connector] = {
-    storage match {
-      case Storage.OTHER =>
-        throw new UnknownException.Storage("Storage OTHER is not supported")
-      case _ =>
-        val cst = Class.forName(storage.connectorName())
-          .getDeclaredConstructor(constructorArgs: _*)
-        cst.setAccessible(true)
-        cst.asInstanceOf[Constructor[Connector]]
+    if (storage.connectorName() == null) {
+      throw new UnknownException.Storage(s"Storage $storage is not supported")
     }
+    val cst = Class.forName(storage.connectorName()).getDeclaredConstructor(constructorArgs: _*)
+    cst.setAccessible(true)
+    cst.asInstanceOf[Constructor[Connector]]
   }
 
   /**
