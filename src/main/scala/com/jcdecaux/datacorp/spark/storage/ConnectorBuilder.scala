@@ -62,7 +62,7 @@ class ConnectorBuilder(val spark: SparkSession, val config: Option[Config], val 
   }
 
   /**
-    * Build a connector from a [[Conf]] object.
+    * Build a connector from a [[com.jcdecaux.datacorp.spark.config.Conf]] object.
     *
     * the `Conf` object must have a key `storage` and the parameters corresponding to the storage
     *
