@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage
 
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.sql.{Date, Timestamp}
 
 import com.datastax.spark.connector.cql.CassandraConnector
@@ -241,7 +242,8 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     assertThrows[UnknownException.Storage](new SparkRepositoryBuilder[TestObject](Storage.OTHER).setSpark(spark).build())
 
     // NoSuchElementException should be thrown if missing arguments
-    assertThrows[NoSuchElementException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
+    assertThrows[InvocationTargetException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
+    //    assertThrows[NoSuchElementException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
   }
 
   private[this] def sparkRepositoryBuilderWithConfigTest(config: Config): Unit = {
