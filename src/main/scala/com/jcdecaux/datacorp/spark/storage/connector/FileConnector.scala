@@ -47,8 +47,19 @@ abstract class FileConnector(val spark: SparkSession,
     */
   private[this] val suffixState: AtomicInteger = new AtomicInteger(0)
 
+  /**
+    * Lock that will be used when configuring suffix
+    */
   private[this] val lock: ReentrantLock = new ReentrantLock()
 
+  /**
+    * FileConnector will create a sub-directory for a given suffix. The name of directory respects the naming convention
+    * of HIVE partition:
+    *
+    * {{{
+    *   ../_user_defined_suffix=xxx
+    * }}}
+    */
   private[this] var UDSKey: String = "_user_defined_suffix"
 
   // use a ThreadLocal object to keep it thread safe
@@ -307,7 +318,7 @@ abstract class FileConnector(val spark: SparkSession,
     * of input DataFrame is different than the last written DataFrame.
     */
   @inline override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
-    val _df = schema match {
+    val reOrderedDf = schema match {
       case Some(sm) => // If schema is defined, reorder df's columns
         log.debug("Detect schema, reorder columns before writing")
         val schemaColumns = sm.map(_.name)
@@ -316,7 +327,7 @@ abstract class FileConnector(val spark: SparkSession,
       case _ => df // Otherwise, do nothing
     }
 
-    _df.write
+    reOrderedDf.write
       .mode(options.getSaveMode)
       .options(options.getDataFrameWriterOptions)
       .partitionBy(partition: _*)
