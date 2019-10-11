@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.config
 
 import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.exception.ConfException
 import org.apache.spark.sql.SaveMode
 
 class ConnectorConf extends Conf {
@@ -32,14 +33,20 @@ class ConnectorConf extends Conf {
 
   def getSaveMode: SaveMode = SaveMode.valueOf(get("saveMode", defaultSaveMode))
 
-  def getStorage: Storage = Storage.valueOf(get("storage").get)
+  def getStorage: Storage = get("storage") match {
+    case Some(storage) => Storage.valueOf(storage)
+    case _ => throw new ConfException("The value of storage is not set")
+  }
 
   /**
     * Get path of file to be loaded.
     * It could be a file path or a directory (for CSV and Parquet).
     * In the case of a directory, the correctness of Spark partition structure should be guaranteed by user.
     */
-  def getPath: String = get("path").get
+  def getPath: String = get("path") match {
+    case Some(path) => path
+    case _ => throw new ConfException("The value of path is not set")
+  }
 
   def getSchema: Option[String] = get("schema")
 
