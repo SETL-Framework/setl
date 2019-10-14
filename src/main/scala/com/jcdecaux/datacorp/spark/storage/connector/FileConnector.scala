@@ -147,12 +147,14 @@ abstract class FileConnector(val spark: SparkSession,
     FileSystem.get(pathURI, hadoopConfiguration)
   }
 
+  def getFileSystem: FileSystem = this.fileSystem
+
   /**
     * Absolute path of the given path string according to the current filesystem.
     * If the filesystem is a local system, then we try to decode the path string to remove encoded
     * characters like whitespace "%20%", etc
     */
-  private[this] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
+  private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
     log.debug(s"Detect local file system: ${pathURI.toString}")
     new Path(URLDecoder.decode(pathURI.toString, options.getEncoding))
   } else {

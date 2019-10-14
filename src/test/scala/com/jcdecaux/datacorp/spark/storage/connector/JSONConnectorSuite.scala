@@ -121,4 +121,12 @@ class JSONConnectorSuite extends FunSuite {
 
   }
 
+  test("JSONConnector should be able to write standard JSON format") {
+    val path1: String = new File("src/test/resources/standart_json_format").toURI.toString
+    val connector1 = new JSONConnector(spark, Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
+    connector1.writeStandardJSON(testTable.toDF)
+    assert(connector1.readStandardJSON() === "[{\"partition1\":1,\"partition2\":\"p1\",\"clustering1\":\"c1\",\"value\":1},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":3,\"partition2\":\"p3\",\"clustering1\":\"c3\",\"value\":3}]")
+    connector1.deleteStandardJSON()
+  }
+
 }

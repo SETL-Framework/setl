@@ -1,10 +1,14 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
+import java.nio.charset.StandardCharsets
+
 import com.jcdecaux.datacorp.spark.config.{Conf, ConnectorConf}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
-import org.apache.spark.sql.SparkSession
+import org.apache.commons.io.IOUtils
+import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
   * Connector that loads JSON files and returns the results as a `DataFrame`.
@@ -72,4 +76,57 @@ class JSONConnector(override val spark: SparkSession,
   override val storage: Storage = Storage.JSON
   options.setStorage(storage)
 
+  private[this] val standardJSONPath: Path = if (!absolutePath.getName.endsWith(".json")) {
+    absolutePath.suffix(".json")
+  } else {
+    absolutePath
+  }
+
+  def getStandardJSONPath: Path = this.standardJSONPath
+
+  /**
+    * Write a JSON file with the standard format.
+    *
+    * @param df DataFrame to be written
+    * @return
+    */
+  def writeStandardJSON(df: DataFrame): this.type = {
+    import org.apache.spark.sql.functions._
+
+    val bytes = df.withColumn("_json", to_json(struct(df.columns.map(col): _*)))
+      .select(col("_json"))
+      .collect()
+      .map(_.getAs[String]("_json"))
+      .mkString("[", ",", "]")
+      .getBytes(StandardCharsets.UTF_8)
+
+    val overwrite = options.getSaveMode match {
+      case SaveMode.Overwrite => true
+      case _ => false
+    }
+
+    val hdfsOutputStream = this.getFileSystem.create(standardJSONPath, overwrite)
+
+    try {
+      hdfsOutputStream.write(bytes)
+    } finally {
+      hdfsOutputStream.close()
+    }
+
+    this
+  }
+
+  def readStandardJSON(): String = {
+    val hdfsInputStream = this.getFileSystem.open(standardJSONPath)
+    try {
+      IOUtils.toString(hdfsInputStream, StandardCharsets.UTF_8)
+    } finally {
+      hdfsInputStream.close()
+    }
+  }
+
+  def deleteStandardJSON(): this.type = {
+    this.getFileSystem.delete(standardJSONPath, true)
+    this
+  }
 }
