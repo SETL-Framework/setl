@@ -85,7 +85,10 @@ class JSONConnector(override val spark: SparkSession,
   def getStandardJSONPath: Path = this.standardJSONPath
 
   /**
-    * Write a JSON file with the standard format.
+    * Write a JSON file in the standard format.
+    *
+    * <p>This method will collect all the DataFrame partitions to the spark driver so it may impact the performance
+    * when the amount of data to write is huge.</p>
     *
     * @param df DataFrame to be written
     * @return

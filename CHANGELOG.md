@@ -13,6 +13,7 @@ case class CompressionDemo(@Compress col1: Seq[Int],
 - Added auto-correction for `SparkRepository.findby(conditions)` method when we filter by case class field name instead of column name
 - Added **DCContext** that simplifies the creation of *SparkSession*, *SparkRepository*, *Connector* and *Pipeline*
 - Added a builder for **ConfigLoader** to simplify the instantiation of a **ConfigLoader** object
+- Added `readStandardJSON` and `writeStandardJSON` method into **JSONConnector** to read/write standard JSON format file
 
 ## 0.3.1 (2019-08-23)
 - Added sequential mode in class `Stage`. Use can turn in on by setting `parallel` to *true*.
