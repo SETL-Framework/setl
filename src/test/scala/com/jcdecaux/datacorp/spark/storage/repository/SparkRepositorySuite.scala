@@ -14,13 +14,8 @@ class SparkRepositorySuite extends FunSuite {
 
   import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursively
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_parquet"
   val table: String = "test_table"
-
-  val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
-
-  import spark.implicits._
 
   val options = Map[String, String](
     "inferSchema" -> "false",
@@ -28,20 +23,23 @@ class SparkRepositorySuite extends FunSuite {
     "header" -> "true"
   )
 
-  val testTable: Dataset[TestObject] = Seq(
+  val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
-  ).toDS()
+  )
 
   test("Instantiation") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    import spark.implicits._
 
     val repo = new SparkRepository[TestObject]().setConnector(parquetConnector)
     val condition = Condition("partition1", "=", 1L)
 
     assert(repo.getStorage === Storage.PARQUET)
-    repo.save(testTable)
-    repo.save(testTable)
+    repo.save(testTable.toDS())
+    repo.save(testTable.toDS())
     val test = repo.findAll()
     assert(test.count() === 3)
     assert(repo.getConnector === parquetConnector)
@@ -52,6 +50,8 @@ class SparkRepositorySuite extends FunSuite {
   }
 
   test("Test with annotated case class") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_anno"
@@ -82,6 +82,9 @@ class SparkRepositorySuite extends FunSuite {
   }
 
   test("Test spark repository save with suffix") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_annotation"
     val connector = new CSVConnector(spark, Map[String, String](
@@ -107,6 +110,8 @@ class SparkRepositorySuite extends FunSuite {
   }
 
   test("SparkRepository should handle column name changed by annotation") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_spark_repository_colname_change"
@@ -130,6 +135,8 @@ class SparkRepositorySuite extends FunSuite {
   }
 
   test("SparkRepository should compress columns with Compress annotation") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val ics = Seq(
       InnerClass("i1", "你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见"),
@@ -177,6 +184,8 @@ class SparkRepositorySuite extends FunSuite {
   }
 
   test("SparkRepository should compress columns with Compress annotation with another Compressor") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val ics = Seq(
       InnerClass("i1", "你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见你好谢谢再见"),

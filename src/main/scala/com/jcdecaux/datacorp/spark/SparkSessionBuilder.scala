@@ -29,18 +29,23 @@ import org.apache.spark.sql.SparkSession
   */
 class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
-  private[this] val SPARK_MASTER: String = "spark.master"
-  private[this] val CQL_HOST: String = "spark.cassandra.connection.host"
-  private[this] val SPARK_APP_NAME: String = "spark.app.name"
-  private[this] val SPARK_SHUFFLE_PARTITIONS: String = "spark.sql.shuffle.partitions"
+  import SparkSessionBuilder._
   private[this] val properties: ConcurrentHashMap[String, String] = new ConcurrentHashMap()
   set(SPARK_APP_NAME, "SparkApplication")
-  set(SPARK_SHUFFLE_PARTITIONS, "200")
 
   private[spark] var appEnv: AppEnv = AppEnv.LOCAL
   private[spark] var sparkConf: SparkConf = new SparkConf()
   private[spark] var initialization: Boolean = true
   private[spark] var spark: SparkSession = _
+
+  private[this] var kryoRegister: Array[Class[_]] = Array(
+    classOf[AppEnv],
+    classOf[Storage],
+    classOf[ValueType],
+    classOf[Compress],
+    classOf[ColumnName],
+    classOf[CompoundKey]
+  )
 
   /**
     * Automatically build a SparkSession
@@ -48,6 +53,15 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def build(): this.type = {
+
+    SparkSession.getActiveSession match {
+      case Some(ss) =>
+        ss.stop()
+        SparkSession.clearDefaultSession()
+        SparkSession.clearActiveSession()
+
+      case _ =>
+    }
 
     if (initialization) {
       log.debug("Initialize spark config")
@@ -63,6 +77,11 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     import scala.collection.JavaConverters.mapAsScalaMapConverter
     properties.asScala.foreach {
       case (k, v) => updateSparkConf(k, v)
+    }
+
+    if (useKryo) {
+      log.debug("User Kryo serializer")
+      this.sparkConf.registerKryoClasses(kryoRegister)
     }
 
     validateSparkConf()
@@ -201,6 +220,22 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     */
   def getParallelism: String = get(SPARK_SHUFFLE_PARTITIONS)
 
+  def useKryo(boo: Boolean): this.type = set(SPARK_SERIALIZER, "org.apache.spark.serializer.KryoSerializer")
+
+  def useKryo: Boolean = get(SPARK_SERIALIZER) == "org.apache.spark.serializer.KryoSerializer"
+
+  def registerClass(cls: Class[_]): this.type = {
+    kryoRegister = kryoRegister :+ cls
+    this
+  }
+
+  def registerClasses(cls: Array[Class[_]]): this.type = {
+    kryoRegister = kryoRegister ++ cls
+    this
+  }
+
+  def setKryoRegistrationRequired(boolean: Boolean): this.type = set(SPARK_KRYO_REGISTRATION_REQUIRED, boolean.toString)
+
   /**
     * Override the existing configuration with an user defined configuration
     *
@@ -249,4 +284,13 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return spark session
     */
   def get(): SparkSession = this.spark.newSession()
+}
+
+object SparkSessionBuilder {
+  val SPARK_MASTER: String = "spark.master"
+  val CQL_HOST: String = "spark.cassandra.connection.host"
+  val SPARK_APP_NAME: String = "spark.app.name"
+  val SPARK_SHUFFLE_PARTITIONS: String = "spark.sql.shuffle.partitions"
+  val SPARK_KRYO_REGISTRATION_REQUIRED: String = "spark.kryo.registrationRequired"
+  val SPARK_SERIALIZER: String = "spark.serializer"
 }

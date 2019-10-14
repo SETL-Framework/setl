@@ -7,26 +7,20 @@ import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObje
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
-class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with SparkTemplate with BeforeAndAfterAll {
+class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with BeforeAndAfterAll {
 
-  val keyspace = "test_space"
-  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("local").setCassandraHost("localhost").build().get()
 
-  val cqlConnector = new CassandraConnector(
-    keyspace = keyspace,
-    table = "test_spark_connector",
-    spark = spark,
-    partitionKeyColumns = Some(Seq("partition1", "partition2")),
-    clusteringKeyColumns = Some(Seq("clustering1"))
-  )
+  import SparkTemplate.defaultConf
 
   override def clearCache(): Unit = CC.evictCache()
 
   //Sets up CassandraConfig and SparkContext
   System.setProperty("test.cassandra.version", "3.11.4")
   useCassandraConfig(Seq(YamlTransformations.Default))
-  useSparkConf(defaultConf)
+  //  useSparkConf(defaultConf)
   val connector = CC(defaultConf)
+
+  val keyspace = "test_space"
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -36,6 +30,20 @@ class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with Spark
   }
 
   test("Manipulate cassandra table") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      //    .setCassandraHost("localhost")
+      .build().get()
+
+    val cqlConnector = new CassandraConnector(
+      keyspace = keyspace,
+      table = "test_spark_connector",
+      spark = spark,
+      partitionKeyColumns = Some(Seq("partition1", "partition2")),
+      clusteringKeyColumns = Some(Seq("clustering1"))
+    )
+
     import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(
@@ -59,6 +67,21 @@ class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with Spark
   }
 
   test("Test with auxiliary cassandra connector constructor") {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      //    .setCassandraHost("localhost")
+      .build().get()
+
+    val cqlConnector = new CassandraConnector(
+      keyspace = keyspace,
+      table = "test_spark_connector",
+      spark = spark,
+      partitionKeyColumns = Some(Seq("partition1", "partition2")),
+      clusteringKeyColumns = Some(Seq("clustering1"))
+    )
+
     import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(

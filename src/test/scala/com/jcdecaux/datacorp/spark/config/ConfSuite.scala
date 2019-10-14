@@ -8,7 +8,6 @@ class ConfSuite extends FunSuite {
 
   val conf = new Conf()
 
-
   test("Set Conf") {
     conf.set("string", "mystring")
     conf.set("int", 1234)

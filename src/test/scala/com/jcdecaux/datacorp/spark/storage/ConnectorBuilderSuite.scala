@@ -10,28 +10,24 @@ import com.jcdecaux.datacorp.spark.exception.{ConfException, UnknownException}
 import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursively
 import com.jcdecaux.datacorp.spark.storage.connector.JSONConnector
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
-class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTemplate with BeforeAndAfterAll {
+class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeAndAfterAll {
 
-  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("local").setCassandraHost("localhost").build().get()
-
-  import spark.implicits._
-
-  val testTable: Dataset[TestObject] = Seq(
-    TestObject(1, "p1", "c1", 1L),
-    TestObject(2, "p2", "c2", 2L),
-    TestObject(3, "p3", "c3", 3L)
-  ).toDS()
-
+  import SparkTemplate.defaultConf
   override def clearCache(): Unit = CC.evictCache()
 
   //Sets up CassandraConfig and SparkContext
   System.setProperty("test.cassandra.version", "3.11.4")
   useCassandraConfig(Seq(YamlTransformations.Default))
-  useSparkConf(defaultConf)
-  val _connector = CC(defaultConf)
+  val _connector: CC = CC(defaultConf)
+
+  val testTable: Seq[TestObject] = Seq(
+    TestObject(1, "p1", "c1", 1L),
+    TestObject(2, "p2", "c2", 2L),
+    TestObject(3, "p3", "c3", 3L)
+  )
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -41,6 +37,14 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
   }
 
   test("build cassandra connector") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
+    import spark.implicits._
+
     val connector = new ConnectorBuilder(spark, Properties.cassandraConfigConnectorBuilder).build().get()
 
     // Create table and write data
@@ -53,6 +57,14 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
   }
 
   test("build csv connector") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
+    import spark.implicits._
+
     val connector = new ConnectorBuilder(spark, Properties.csvConfigConnectorBuilder).build().get()
 
     connector.write(testTable.toDF())
@@ -65,6 +77,13 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
   }
 
   test("build parquet connector") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
+    import spark.implicits._
     val connector = new ConnectorBuilder(spark, Properties.parquetConfigConnectorBuilder).build().get()
 
     connector.write(testTable.toDF())
@@ -77,6 +96,13 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
   }
 
   test("build excel connector") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
+    import spark.implicits._
     val connector = new ConnectorBuilder(spark, Properties.excelConfigConnectorBuilder).build().get()
 
     testTable.toDF.show()
@@ -90,6 +116,13 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
   }
 
   test("build JSONConnector") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
+    import spark.implicits._
     val connector = new ConnectorBuilder(spark, Properties.jsonConfigConnectorBuilder).build().get()
 
     testTable.toDF.show()
@@ -103,6 +136,13 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
   }
 
   test("wrong builder configuration") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
+
     // IllegalArgumentException should be thrown when the typesafe config contains a wrong storage type
     assertThrows[IllegalArgumentException](new ConnectorBuilder(spark, Properties.wrongCsvConfigConnectorBuilder).build().get())
 
@@ -114,10 +154,15 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTe
     // UnknownException.Storage should be thrown if the given storage is not supported
     assertThrows[UnknownException.Storage](new ConnectorBuilder(spark, Properties.wrongCsvConfigConnectorBuilder2).build().get())
     assertThrows[UnknownException.Storage](new ConnectorBuilder(spark, new Conf().set("storage", Storage.OTHER)).build().get())
-
   }
 
   test("Connector builder with two configurations") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .build()
+      .get()
+
     assertThrows[IllegalArgumentException](
       new ConnectorBuilder(spark, Some(Properties.wrongCsvConfigConnectorBuilder2), Some(new Conf().set("storage", "BLABLA"))).build().get()
     )

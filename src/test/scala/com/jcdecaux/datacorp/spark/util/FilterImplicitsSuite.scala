@@ -8,7 +8,6 @@ class FilterImplicitsSuite extends FunSuite {
 
   import FilterImplicits._
 
-
   test("Datetime/date condition to SQL request") {
 
     val datetimeFilter = Condition("dt", "<=", Some("2019-01-01 00:00:05.1"), ValueType.DATETIME)

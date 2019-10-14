@@ -8,6 +8,8 @@ import org.scalatest.FunSuite
 
 class SimplePipelineOptimizerSuite extends FunSuite {
 
+  import PipelineSuite._
+
   test("PipelineOptimizer should optimize a pipeline") {
     val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
     import spark.implicits._

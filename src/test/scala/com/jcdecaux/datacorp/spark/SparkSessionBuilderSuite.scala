@@ -10,14 +10,15 @@ import org.apache.spark.sql.cassandra._
 import org.scalatest.{BeforeAndAfterAll, FunSuite, SequentialNestedSuiteExecution}
 
 
-class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with SequentialNestedSuiteExecution with EmbeddedCassandra with SparkTemplate {
+class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with SequentialNestedSuiteExecution with EmbeddedCassandra {
 
+  import SparkTemplate.defaultConf
   override def clearCache(): Unit = CassandraConnector.evictCache()
 
   //Sets up CassandraConfig and SparkContext
   System.setProperty("test.cassandra.version", "3.11.4")
   useCassandraConfig(Seq(YamlTransformations.Default))
-  useSparkConf(defaultConf)
+
   val connector = CassandraConnector(defaultConf)
 
   override def beforeAll(): Unit = {
@@ -46,8 +47,9 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
   test("Cassandra connection") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(SparkTemplate.defaultConf)
       .setEnv("local")
-      .setCassandraHost("localhost")
+      //      .setCassandraHost("localhost")
       .build()
       .get()
 
@@ -56,7 +58,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
 
   test("Custom configuration") {
 
-    val sparkConf = new SparkConf()
+    val sparkConf = SparkTemplate.defaultConf // new SparkConf()
       .setAppName("CustomConfigApp")
       .setMaster("local[*]")
       .set("spark.cassandra.connection.host", "localhost")

@@ -9,7 +9,6 @@ import org.scalatest.FunSuite
 
 class RepositoryAdapterSuite extends FunSuite {
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_repository_adapter"
 
   val data: Seq[RepoAdapterTesterA] = Seq(
@@ -17,9 +16,10 @@ class RepositoryAdapterSuite extends FunSuite {
     RepoAdapterTesterA("b", "B")
   )
 
-  val ds: Dataset[RepoAdapterTesterA] = spark.createDataset(data)(ExpressionEncoder[RepoAdapterTesterA])
-
   test("RepositoryAdapter should implicitly convert two dataset") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val ds: Dataset[RepoAdapterTesterA] = spark.createDataset(data)(ExpressionEncoder[RepoAdapterTesterA])
+
     import com.jcdecaux.datacorp.spark.storage.repository.ImplicitConverter.a2b
     import com.jcdecaux.datacorp.spark.storage.repository.ImplicitRepositoryAdapter._
 
@@ -46,6 +46,9 @@ class RepositoryAdapterSuite extends FunSuite {
   }
 
   test("RepositoryAdapter should be able to handle filter") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val ds: Dataset[RepoAdapterTesterA] = spark.createDataset(data)(ExpressionEncoder[RepoAdapterTesterA])
+
     import com.jcdecaux.datacorp.spark.storage.repository.ImplicitConverter.a2b
     import com.jcdecaux.datacorp.spark.storage.repository.ImplicitRepositoryAdapter._
 

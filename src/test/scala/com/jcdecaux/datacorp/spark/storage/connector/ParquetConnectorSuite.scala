@@ -9,21 +9,21 @@ import org.scalatest.FunSuite
 
 class ParquetConnectorSuite extends FunSuite {
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test parquet"
   val table: String = "test_table"
 
-  val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
-
-  import spark.implicits._
-
-  val testTable: Dataset[TestObject] = Seq(
+  val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
-  ).toDS()
+  )
 
   test("test Parquet connector with different file path") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    import spark.implicits._
+
     val path1: String = new File("src/test/resources/test parquet").toURI.toString
     val path2: String = new File("src/test/resources/test parquet").getPath
 
@@ -38,6 +38,10 @@ class ParquetConnectorSuite extends FunSuite {
 
   test("parquet connector  IO ") {
 
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    import spark.implicits._
+
     testTable.toDF.show()
     parquetConnector.write(testTable.toDF())
     parquetConnector.write(testTable.toDF())
@@ -49,6 +53,9 @@ class ParquetConnectorSuite extends FunSuite {
   }
 
   test("IO with auxiliary parquet connector constructor") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val connector = new ParquetConnector(spark, Properties.parquetConfig)
 
@@ -62,6 +69,10 @@ class ParquetConnectorSuite extends FunSuite {
   }
 
   test("Test Parquet Connector Suffix") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    import spark.implicits._
 
     parquetConnector.resetSuffix(true)
     parquetConnector.write(testTable.toDF(), Some("2"))
@@ -79,6 +90,10 @@ class ParquetConnectorSuite extends FunSuite {
   }
 
   test("test partition by") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val dff: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),

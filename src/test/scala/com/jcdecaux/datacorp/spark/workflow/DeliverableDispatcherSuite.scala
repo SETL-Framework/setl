@@ -7,60 +7,9 @@ import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.Dataset
 import org.scalatest.FunSuite
 
-class MyFactory extends Factory[Container[Product23]] {
-
-  var input: Container2[Product] = _
-  var output: Container[Product23] = _
-
-  @Delivery
-  def setOutput(v: Container[Product23]): this.type = {
-    output = v
-    this
-  }
-
-  @Delivery
-  def setInput(v: Container2[Product]): this.type = {
-    input = v
-    this
-  }
-
-  override def read(): MyFactory.this.type = this
-
-  override def process(): MyFactory.this.type = this
-
-  override def write(): MyFactory.this.type = this
-
-  override def get(): Container[Product23] = output
-}
-
-class MyFactory2 extends Factory[Dataset[Product23]] with Serializable {
-
-  var input: Dataset[Product] = _
-  var output: Dataset[Product23] = _
-
-  @Delivery
-  def setInput(v: Dataset[Product]): this.type = {
-    input = v
-    this
-  }
-
-  @Delivery
-  def setOutput(v: Dataset[Product23]): this.type = {
-    output = v
-    this
-  }
-
-  override def read(): this.type = this
-
-  override def process(): this.type = this
-
-  override def write(): this.type = this
-
-  override def get(): Dataset[Product23] = output
-}
-
 class DeliverableDispatcherSuite extends FunSuite {
 
+  import DeliverableDispatcherSuite._
   test("Test delivery manager with container and product") {
 
     val CP = Container(Product("1"))
@@ -232,4 +181,60 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     assertThrows[InvalidDeliveryException](dispatchManager._dispatch(factory2))
   }
+}
+
+object DeliverableDispatcherSuite {
+
+  class MyFactory extends Factory[Container[Product23]] {
+
+    var input: Container2[Product] = _
+    var output: Container[Product23] = _
+
+    @Delivery
+    def setOutput(v: Container[Product23]): this.type = {
+      output = v
+      this
+    }
+
+    @Delivery
+    def setInput(v: Container2[Product]): this.type = {
+      input = v
+      this
+    }
+
+    override def read(): MyFactory.this.type = this
+
+    override def process(): MyFactory.this.type = this
+
+    override def write(): MyFactory.this.type = this
+
+    override def get(): Container[Product23] = output
+  }
+
+  class MyFactory2 extends Factory[Dataset[Product23]] with Serializable {
+
+    var input: Dataset[Product] = _
+    var output: Dataset[Product23] = _
+
+    @Delivery
+    def setInput(v: Dataset[Product]): this.type = {
+      input = v
+      this
+    }
+
+    @Delivery
+    def setOutput(v: Dataset[Product23]): this.type = {
+      output = v
+      this
+    }
+
+    override def read(): this.type = this
+
+    override def process(): this.type = this
+
+    override def write(): this.type = this
+
+    override def get(): Dataset[Product23] = output
+  }
+
 }

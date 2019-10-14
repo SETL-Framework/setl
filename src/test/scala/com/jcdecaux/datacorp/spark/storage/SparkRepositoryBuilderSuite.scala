@@ -16,20 +16,15 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
-class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with SparkTemplate with BeforeAndAfterAll {
-
+class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeAndAfterAll {
   import SparkRepositorySuite.deleteRecursively
+  import SparkTemplate.defaultConf
 
   override def clearCache(): Unit = CassandraConnector.evictCache()
-
-  val spark: SparkSession = new SparkSessionBuilder("cassandra").setEnv("local").setCassandraHost("localhost").build().get()
-
-  import spark.implicits._
 
   var mockCassandra: MockCassandra = _
   System.setProperty("test.cassandra.version", "3.11.4")
   useCassandraConfig(Seq(YamlTransformations.Default))
-  useSparkConf(defaultConf)
   val connector = CassandraConnector(defaultConf)
 
   override def beforeAll(): Unit = {
@@ -52,6 +47,13 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   test("SparkRepository cassandra") {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
 
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -79,6 +81,13 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
 
   test("SparkRepository CSV") {
 
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
+
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -98,6 +107,14 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   test("SparkRepository JSON access") {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
+
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -105,7 +122,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
     ).toDS()
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.JSON)
-    //    case class TestObject(partition1: Int, partition2: String, clustering1: String, value: Long)
 
     repoBuilder.setSpark(spark)
     repoBuilder.setPath("src/test/resources/test_json")
@@ -124,6 +140,14 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   test("SparkRepository Parquet") {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
+
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -147,6 +171,15 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   test("Excel") {
+
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
+
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -178,6 +211,14 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   test("SparkRepository Customized connector") {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
+
     val path: String = "src/test/resources/test_excel.xlsx"
 
     val testTable: Dataset[TestObject2] = Seq(
@@ -235,6 +276,12 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   test("SparkRepository throw exceptions") {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
     // NullPointerException should be thrown if spark session is not set
     assertThrows[NullPointerException](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
 
@@ -247,6 +294,14 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with S
   }
 
   private[this] def sparkRepositoryBuilderWithConfigTest(config: Config): Unit = {
+
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(defaultConf)
+      .setEnv("local")
+      .getOrCreate()
+
+    import spark.implicits._
+
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),

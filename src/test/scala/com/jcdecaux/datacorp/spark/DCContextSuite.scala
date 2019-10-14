@@ -33,6 +33,8 @@ class DCContextSuite extends FunSuite {
     println(configLoader.appName)
     println(ss.sparkContext.appName)
     println(ss.sparkContext.getConf.get("spark.app.name"))
+
+    assert(ss.sparkContext.appName === configLoader.appName)
   }
 
   test("DCContext should be able to create SparkRepository") {

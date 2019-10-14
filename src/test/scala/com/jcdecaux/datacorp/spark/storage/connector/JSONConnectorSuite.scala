@@ -9,23 +9,22 @@ import org.scalatest.FunSuite
 
 class JSONConnectorSuite extends FunSuite {
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test JSON"
-
-  val connector = new JSONConnector(spark, Map("path" -> path, "saveMode" -> "Overwrite"))
-
-  import spark.implicits._
-
-  val testTable: Dataset[TestObject] = Seq(
+  val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
-  ).toDS()
+  )
 
   test("JSON connector IO") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val connector = new JSONConnector(spark, Map("path" -> path, "saveMode" -> "Overwrite"))
+
+    import spark.implicits._
+
     connector.partitionBy("partition1").write(testTable.toDF())
     val df = connector.read()
     assert(df.count() === 6)
@@ -34,6 +33,9 @@ class JSONConnectorSuite extends FunSuite {
   }
 
   test("test JSON connector with different file path") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val path1: String = new File("src/test/resources/test_json").toURI.toString
     val path2: String = new File("src/test/resources/test_json").getPath
 
@@ -47,6 +49,9 @@ class JSONConnectorSuite extends FunSuite {
   }
 
   test("IO with auxiliary JSONConnector constructor") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val connector = new JSONConnector(spark, Properties.jsonConfig)
 
     connector.write(testTable.toDF())
@@ -59,6 +64,8 @@ class JSONConnectorSuite extends FunSuite {
   }
 
   test("Test JSON Connector Suffix") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val connector = new JSONConnector(spark, Map("path" -> path, "saveMode" -> "Append"))
 
@@ -78,6 +85,9 @@ class JSONConnectorSuite extends FunSuite {
   }
 
   test("test JSON partition by") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val dff: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -122,6 +132,9 @@ class JSONConnectorSuite extends FunSuite {
   }
 
   test("JSONConnector should be able to write standard JSON format") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val path1: String = new File("src/test/resources/standart_json_format").toURI.toString
     val connector1 = new JSONConnector(spark, Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
     connector1.writeStandardJSON(testTable.toDF)

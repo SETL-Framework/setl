@@ -8,15 +8,11 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 class SchemaConverterSuite extends FunSuite {
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-
-  import spark.implicits._
-
-  val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
-
-
   test("SchemaConverter should handle the annotation ColumnName") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
+    val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     ds.show()
     assert(ds.columns === Array("column1", "column2"))
 
@@ -35,6 +31,8 @@ class SchemaConverterSuite extends FunSuite {
   }
 
   test("Schema converter should handle the annotation CompoundKey") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val ds = Seq(
       TestCompoundKey("a", 1, "A"),
@@ -56,6 +54,8 @@ class SchemaConverterSuite extends FunSuite {
   }
 
   test("Schema converter should add missing nullable columns in the DF-DS conversion") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val data = Seq(
       TestNullableColumn("A", "a", Some(1), 1D),
@@ -74,6 +74,9 @@ class SchemaConverterSuite extends FunSuite {
   }
 
   test("Schema converter should throw exception if any non-nullable column is missing in a DF") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val data = Seq(
       TestNullableColumn("A", "a", Some(1), 1D),
       TestNullableColumn("B", "b", Some(2), 2D)
@@ -89,6 +92,9 @@ class SchemaConverterSuite extends FunSuite {
   }
 
   test("SchemaConverter should be able to Compress column") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val ics = Seq(
       InnerClass("i1", "你好谢谢再见你好谢谢再见你好谢谢再见"),
       InnerClass("i11", "165498465DDDFKLJKSDOIJ__çezé*/-+")

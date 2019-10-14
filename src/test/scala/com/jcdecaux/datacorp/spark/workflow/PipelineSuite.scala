@@ -9,163 +9,12 @@ import org.scalatest.FunSuite
 
 import scala.reflect.runtime.{universe => ru}
 
-class ProductFactory extends Factory[Product1] {
-  @Delivery
-  var id: String = _
-  var output: Product1 = _
-
-  override def read(): ProductFactory.this.type = this
-
-  override def process(): ProductFactory.this.type = {
-    output = Product1(id)
-    this
-  }
-
-  override def write(): ProductFactory.this.type = this
-
-  override def get(): Product1 = output
-}
-
-class Product2Factory extends Factory[Product2] {
-  var output: Product2 = _
-
-  override def read(): this.type = this
-
-  override def process(): this.type = {
-    output = Product2("a", "b")
-    this
-  }
-
-  override def write(): this.type = this
-
-  override def get(): Product2 = output
-}
-
-class ContainerFactory extends Factory[Container[Product1]] {
-  @Delivery
-  var product1: Product1 = _
-  var output: Container[Product1] = _
-
-  override def read(): ContainerFactory.this.type = this
-
-  override def process(): ContainerFactory.this.type = {
-    output = Container(product1)
-    this
-  }
-
-  override def write(): ContainerFactory.this.type = this
-
-  override def get(): Container[Product1] = output
-}
-
-class Container2Factory extends Factory[Container2[Product2]] {
-  @Delivery
-  var p1: Product1 = _
-  var p2: Product2 = _
-  var output: Container2[Product2] = _
-
-  @Delivery
-  def setProduct(v: Product2): this.type = {
-    this.p2 = v
-    this
-  }
-
-  override def read(): this.type = this
-
-  override def process(): this.type = {
-    output = Container2(p2)
-    this
-  }
-
-  override def write(): this.type = this
-
-  override def get(): Container2[Product2] = output
-}
-
-class DatasetFactory(spark: SparkSession) extends Factory[Dataset[Product1]] {
-
-  import spark.implicits._
-
-  @Delivery
-  var p1: Product1 = _
-  var output: Dataset[Product1] = _
-
-  override def read(): DatasetFactory.this.type = this
-
-  override def process(): DatasetFactory.this.type = {
-    output = Seq(p1, Product1("pd1")).toDS
-    this
-  }
-
-  override def write(): DatasetFactory.this.type = this
-
-  override def get(): Dataset[Product1] = output
-}
-
-class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
-  @Delivery
-  var p1: Product1 = _
-  @Delivery
-  var ds: Dataset[Product1] = _
-  @Delivery
-  var ds2: Dataset[Product2] = _
-  var output: Dataset[Product2] = _
-
-  override def read(): DatasetFactory2.this.type = this
-
-  override def process(): DatasetFactory2.this.type = {
-    import spark.implicits._
-    output = ds.join(ds2, Seq("x")).as[Product2]
-    this
-  }
-
-  override def write(): DatasetFactory2.this.type = this
-
-  override def get(): Dataset[Product2] = output
-}
-
-class DatasetFactory3(spark: SparkSession) extends Factory[Dataset[Product2]] {
-
-  @Delivery
-  var p1: Product1 = _
-  @Delivery(producer = classOf[DatasetFactory2])
-  var ds: Dataset[Product2] = _
-  @Delivery
-  var ds2: Dataset[Product2] = _
-  var output: Dataset[Product2] = _
-
-  override def read(): DatasetFactory3.this.type = this
-
-  override def process(): DatasetFactory3.this.type = {
-    output = ds.union(ds2)
-    this
-  }
-
-  override def write(): DatasetFactory3.this.type = this
-
-  override def get(): Dataset[Product2] = output
-}
-
-class DatasetFactory4(spark: SparkSession) extends Factory[Long] {
-
-  @Delivery
-  var ds1: Dataset[Product1] = _
-
-  override def read(): DatasetFactory4.this.type = this
-
-  override def process(): DatasetFactory4.this.type = {
-    this
-  }
-
-  override def write(): DatasetFactory4.this.type = this
-
-  override def get(): Long = ds1.count()
-}
-
 //////////////////////
 // TESTS START HERE //
 //////////////////////
 class PipelineSuite extends FunSuite {
+
+  import PipelineSuite._
 
   test("Test pipeline") {
 
@@ -405,4 +254,161 @@ class PipelineSuite extends FunSuite {
     val pipeline = new Pipeline
     pipeline.describe()
   }
+}
+
+object PipelineSuite {
+
+  class ProductFactory extends Factory[Product1] {
+    @Delivery
+    var id: String = _
+    var output: Product1 = _
+
+    override def read(): ProductFactory.this.type = this
+
+    override def process(): ProductFactory.this.type = {
+      output = Product1(id)
+      this
+    }
+
+    override def write(): ProductFactory.this.type = this
+
+    override def get(): Product1 = output
+  }
+
+  class Product2Factory extends Factory[Product2] {
+    var output: Product2 = _
+
+    override def read(): this.type = this
+
+    override def process(): this.type = {
+      output = Product2("a", "b")
+      this
+    }
+
+    override def write(): this.type = this
+
+    override def get(): Product2 = output
+  }
+
+  class ContainerFactory extends Factory[Container[Product1]] {
+    @Delivery
+    var product1: Product1 = _
+    var output: Container[Product1] = _
+
+    override def read(): ContainerFactory.this.type = this
+
+    override def process(): ContainerFactory.this.type = {
+      output = Container(product1)
+      this
+    }
+
+    override def write(): ContainerFactory.this.type = this
+
+    override def get(): Container[Product1] = output
+  }
+
+  class Container2Factory extends Factory[Container2[Product2]] {
+    @Delivery
+    var p1: Product1 = _
+    var p2: Product2 = _
+    var output: Container2[Product2] = _
+
+    @Delivery
+    def setProduct(v: Product2): this.type = {
+      this.p2 = v
+      this
+    }
+
+    override def read(): this.type = this
+
+    override def process(): this.type = {
+      output = Container2(p2)
+      this
+    }
+
+    override def write(): this.type = this
+
+    override def get(): Container2[Product2] = output
+  }
+
+  class DatasetFactory(spark: SparkSession) extends Factory[Dataset[Product1]] {
+
+    import spark.implicits._
+
+    @Delivery
+    var p1: Product1 = _
+    var output: Dataset[Product1] = _
+
+    override def read(): DatasetFactory.this.type = this
+
+    override def process(): DatasetFactory.this.type = {
+      output = Seq(p1, Product1("pd1")).toDS
+      this
+    }
+
+    override def write(): DatasetFactory.this.type = this
+
+    override def get(): Dataset[Product1] = output
+  }
+
+  class DatasetFactory2(spark: SparkSession) extends Factory[Dataset[Product2]] {
+    @Delivery
+    var p1: Product1 = _
+    @Delivery
+    var ds: Dataset[Product1] = _
+    @Delivery
+    var ds2: Dataset[Product2] = _
+    var output: Dataset[Product2] = _
+
+    override def read(): DatasetFactory2.this.type = this
+
+    override def process(): DatasetFactory2.this.type = {
+      import spark.implicits._
+      output = ds.join(ds2, Seq("x")).as[Product2]
+      this
+    }
+
+    override def write(): DatasetFactory2.this.type = this
+
+    override def get(): Dataset[Product2] = output
+  }
+
+  class DatasetFactory3(spark: SparkSession) extends Factory[Dataset[Product2]] {
+
+    @Delivery
+    var p1: Product1 = _
+    @Delivery(producer = classOf[DatasetFactory2])
+    var ds: Dataset[Product2] = _
+    @Delivery
+    var ds2: Dataset[Product2] = _
+    var output: Dataset[Product2] = _
+
+    override def read(): DatasetFactory3.this.type = this
+
+    override def process(): DatasetFactory3.this.type = {
+      output = ds.union(ds2)
+      this
+    }
+
+    override def write(): DatasetFactory3.this.type = this
+
+    override def get(): Dataset[Product2] = output
+  }
+
+  class DatasetFactory4(spark: SparkSession) extends Factory[Long] {
+
+    @Delivery
+    var ds1: Dataset[Product1] = _
+
+    override def read(): DatasetFactory4.this.type = this
+
+    override def process(): DatasetFactory4.this.type = {
+      this
+    }
+
+    override def write(): DatasetFactory4.this.type = this
+
+    override def get(): Long = ds1.count()
+  }
+
 }

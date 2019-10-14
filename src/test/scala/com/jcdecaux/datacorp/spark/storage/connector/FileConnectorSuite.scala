@@ -9,35 +9,36 @@ import scala.util.Random
 
 class FileConnectorSuite extends FunSuite {
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_csv"
 
-  val connector: FileConnector = new FileConnector(spark, Map[String, String]("path" -> "src/test/resources")) {
+  val connector: SparkSession => FileConnector = spark => new FileConnector(spark, Map[String, String]("path" -> "src/test/resources")) {
     override val storage: Storage = Storage.OTHER
-
     override def read(): DataFrame = null
-
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
-  val connector2: FileConnector = new FileConnector(spark, Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
+  val connector2: SparkSession => FileConnector = spark => new FileConnector(spark, Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
     override val storage: Storage = Storage.OTHER
-
     override def read(): DataFrame = null
-
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
   test("File connector list files ") {
-    assert(connector.listFiles().length > 1)
-    assert(connector2.listFiles().length === 1)
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    assert(connector(spark).listFiles().length > 1)
+    assert(connector2(spark).listFiles().length === 1)
   }
 
   test("File connector functionality") {
-    assert(connector2.getSize === 624)
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    assert(connector2(spark).getSize === 624)
   }
 
   test("FileConnector should throw exception with we try add suffix to an already-saved non-suffix directory") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
     import spark.implicits._
     val connector: FileConnector =
       new FileConnector(spark, Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
@@ -66,6 +67,8 @@ class FileConnectorSuite extends FunSuite {
   }
 
   test("FileConnector should handle parallel write") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
     import spark.implicits._
 
     val connector: FileConnector = new FileConnector(spark, Map[String, String](

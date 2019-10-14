@@ -14,18 +14,17 @@ class ExcelConnectorSuite extends FunSuite {
 
   import SparkRepositorySuite.deleteRecursively
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_excel.xlsx"
 
-  import spark.implicits._
-
-  val testTable: Dataset[TestObject2] = Seq(
+  val testTable: Seq[TestObject2] = Seq(
     TestObject2("string", 5, 0.000000001685400132103450D, new Timestamp(1557153268000L), new Date(1557100800000L), 999999999999999999L),
     TestObject2("string2", 5, 0.000000001685400132103450D, new Timestamp(1557153268000L), new Date(1557100800000L), 999999999999999999L),
     TestObject2("string3", 5, 0.000000001685400132103450D, new Timestamp(1557153268000L), new Date(1557100800000L), 999999999999999999L)
-  ).toDS()
+  )
 
   test("IO with default excel connector parameters") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val excelConnector = new ExcelConnector(spark, path, "true")
 
@@ -44,7 +43,8 @@ class ExcelConnectorSuite extends FunSuite {
   }
 
   test("IO with customized format excel connector") {
-
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
     val schema: StructType = StructType(Array(
       StructField("col1", StringType),
       StructField("col2", IntegerType),
@@ -79,7 +79,7 @@ class ExcelConnectorSuite extends FunSuite {
   }
 
   test("IO with excel connector auxiliary constructor") {
-
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
     val testTable: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),

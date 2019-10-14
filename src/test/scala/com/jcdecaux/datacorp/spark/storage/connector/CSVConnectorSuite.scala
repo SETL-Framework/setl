@@ -9,7 +9,6 @@ import org.scalatest.FunSuite
 
 class CSVConnectorSuite extends FunSuite {
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
   val path: String = "src/test/resources/test_csv"
 
   val options: Map[String, String] = Map[String, String](
@@ -20,17 +19,17 @@ class CSVConnectorSuite extends FunSuite {
     "saveMode" -> "Append"
   )
 
-  val csvConnector = new CSVConnector(spark, options)
-
-  import spark.implicits._
-
-  val testTable: Dataset[TestObject] = Seq(
+  val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
-  ).toDS()
+  )
 
   test("test CSV connector with different file path") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val csvConnector = new CSVConnector(spark, options)
+    import spark.implicits._
+
     val path1: String = new File("src/test/resources/test_csv").toURI.toString
     val path2: String = new File("src/test/resources/test_csv").getPath
 
@@ -56,6 +55,9 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("IO CSVConnector") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val csvConnector = new CSVConnector(spark, options)
+    import spark.implicits._
 
     testTable.toDF.show()
     csvConnector.write(testTable.toDF)
@@ -69,6 +71,10 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("IO with auxiliary CSVConnector constructor") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val connector = new CSVConnector(spark, Properties.csvConfig)
 
     connector.write(testTable.toDF())
@@ -81,6 +87,10 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("Test CSV Connector Suffix") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val csvConnector = new CSVConnector(spark, options)
+    import spark.implicits._
+
     csvConnector.resetSuffix(true)
     csvConnector.write(testTable.toDF(), Some("2"))
     csvConnector.write(testTable.toDF(), Some("2"))
@@ -98,6 +108,10 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("CSVConnector should partition data") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val csvConnector = new CSVConnector(spark, options)
+    import spark.implicits._
+
     val dff: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
@@ -139,6 +153,8 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("CSV Connector should handle user defined suffix") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
     val dff: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
@@ -178,6 +194,9 @@ class CSVConnectorSuite extends FunSuite {
   }
 
   test("Test csv connctor with Schema") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
     val dff: Dataset[TestObject] = Seq(
       TestObject(1, "p1", "c1", 1L),
       TestObject(2, "p2", "c2", 2L),
