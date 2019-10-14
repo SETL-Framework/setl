@@ -77,6 +77,7 @@ object DCContext {
     private[this] var dcContextConfiguration: String = _
     private[this] var configLoader: ConfigLoader = _
     private[this] var sparkConf: Option[SparkConf] = None
+    private[this] var parallelism: Int = 200
 
     def setDCContextConfigPath(config: String): this.type = {
       dcContextConfiguration = config
@@ -85,6 +86,11 @@ object DCContext {
 
     def setSparkConf(sparkConf: SparkConf): this.type = {
       this.sparkConf = Option(sparkConf)
+      this
+    }
+
+    def setParallelism(par: Int): this.type = {
+      this.parallelism = par
       this
     }
 
@@ -119,6 +125,7 @@ object DCContext {
       val sparkSessionBuilder = new SparkSessionBuilder(usages: _*)
         .setAppName(configLoader.appName)
         .setEnv(configLoader.appEnv)
+        .setParallelism(parallelism)
 
       cassandraHost match {
         case Some(cqlHost) => sparkSessionBuilder.setCassandraHost(cqlHost)

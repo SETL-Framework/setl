@@ -2,7 +2,8 @@ package com.jcdecaux.datacorp.spark
 
 import java.util.concurrent.ConcurrentHashMap
 
-import com.jcdecaux.datacorp.spark.enums.AppEnv
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress}
+import com.jcdecaux.datacorp.spark.enums.{AppEnv, Storage, ValueType}
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -31,8 +32,10 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   private[this] val SPARK_MASTER: String = "spark.master"
   private[this] val CQL_HOST: String = "spark.cassandra.connection.host"
   private[this] val SPARK_APP_NAME: String = "spark.app.name"
+  private[this] val SPARK_SHUFFLE_PARTITIONS: String = "spark.sql.shuffle.partitions"
   private[this] val properties: ConcurrentHashMap[String, String] = new ConcurrentHashMap()
   set(SPARK_APP_NAME, "SparkApplication")
+  set(SPARK_SHUFFLE_PARTITIONS, "200")
 
   private[spark] var appEnv: AppEnv = AppEnv.LOCAL
   private[spark] var sparkConf: SparkConf = new SparkConf()
@@ -182,6 +185,21 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def cassandraHost: String = get(CQL_HOST)
+
+  /**
+    * Set spark.sql.shuffle.partitions
+    *
+    * @param par default number of partition
+    * @return
+    */
+  def setParallelism(par: Int): this.type = set(SPARK_SHUFFLE_PARTITIONS, par.toString)
+
+  /**
+    * Get spark.sql.shuffle.partitions
+    *
+    * @return
+    */
+  def getParallelism: String = get(SPARK_SHUFFLE_PARTITIONS)
 
   /**
     * Override the existing configuration with an user defined configuration
