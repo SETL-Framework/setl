@@ -29,20 +29,3 @@ Otherwise, add to your `pom.xml`
 
 ## Documentation
 [Click here](https://git.jcdecaux.com/DataCorp/dc-spark-sdk/wikis/home)
-
-## Build and deployment
-Maven is used as the dependency manager in this project.
-
-### Build
-```bash
-mvn clean package -Pprovided
-```
-
-### Deploy
-```bash
-# SNAPSHOT
-mvn -Pprovided clean deploy 
-
-# RELEASE
-mvn -Dchangelist= -Pprovided clean deploy 
-```
