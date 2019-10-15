@@ -18,9 +18,14 @@ build:
   stage: build
   script:
     - mvn clean $MAVEN_CLI_OPTS compile
+  except:
+    changes:
+      - ".md"
 
 test:
   stage: test
+  dependencies:
+    - build
   script:
     - export JAVA_TOOL_OPTIONS="-Xmx1024m -Xms1024m"  # solve jvm heap size problem
     - mvn $MAVEN_CLI_OPTS test
