@@ -20,7 +20,7 @@ build:
     - mvn clean $MAVEN_CLI_OPTS compile
   except:
     changes:
-      - ".md"
+      - "*.md"
 
 test:
   stage: test
