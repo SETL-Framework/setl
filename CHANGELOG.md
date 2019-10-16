@@ -1,4 +1,4 @@
-## 0.3.2-SNAPSHOT (2019-10-14)
+## 0.3.2 (2019-10-14)
 - Added **@Compress** annotation. **SparkRepository** will compress all columns having this annotation by
 using a **Compressor** (the default compressor is **XZCompressor**)
 ```scala
