@@ -45,7 +45,7 @@ deploy:snapshot:
     changes:
       - "*.md"
 
-deploy:release:
+deploy:release:manual:
   stage: deploy
   script:
     - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
@@ -54,6 +54,17 @@ deploy:release:
   only:
     - master
   when: manual
+  
+deploy:release:auto:
+  stage: deploy
+  script:
+    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+  dependencies:
+    - test
+  only:
+    - /^v.*$/
+  except:
+    - branches
 
 deploy:snapshot-compat:
   stage: deploy
