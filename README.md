@@ -29,3 +29,9 @@ Otherwise, add to your `pom.xml`
 
 ## Documentation
 [Click here](https://git.jcdecaux.com/DataCorp/dc-spark-sdk/wikis/home)
+
+## Development
+All the modifications in the master branche will be deployed to the snapshot repository.
+
+All the tags starting with `v` will be deployed to the release repository.
+
