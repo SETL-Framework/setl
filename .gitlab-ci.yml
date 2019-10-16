@@ -29,6 +29,9 @@ test:
   script:
     - export JAVA_TOOL_OPTIONS="-Xmx1024m -Xms1024m"  # solve jvm heap size problem
     - mvn $MAVEN_CLI_OPTS test
+  except:
+    changes:
+      - "*.md"
 
 deploy:snapshot:
   stage: deploy
@@ -38,6 +41,9 @@ deploy:snapshot:
     - test
   only:
     - master
+  except:
+    changes:
+      - "*.md"
 
 deploy:release:
   stage: deploy
@@ -48,7 +54,7 @@ deploy:release:
   only:
     - master
   when: manual
-  
+
 deploy:snapshot-compat:
   stage: deploy
   script:
