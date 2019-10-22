@@ -1,3 +1,6 @@
+## 0.3.3-SNAPSHOT (2019-10-22)
+- Added **SnappyCompressor**
+
 ## 0.3.2 (2019-10-14)
 - Added **@Compress** annotation. **SparkRepository** will compress all columns having this annotation by
 using a **Compressor** (the default compressor is **XZCompressor**)
