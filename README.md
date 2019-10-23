@@ -1,5 +1,5 @@
 # DataCorp Spark Framework
-This project provides a general-proposed framework for data transformation application.
+This project provides an easy-to-use and general-purpose framework for data transformation application.
 
 ## Use
 ### Maven
