@@ -8,9 +8,20 @@ import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.transformation.Factory
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{Dataset, SparkSession, functions}
-import org.scalatest.FunSuite
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
-class DCContextSuite extends FunSuite {
+class DCContextSuite extends FunSuite with BeforeAndAfterAll {
+
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+    System.setProperty("myvalue", "test-my-value")
+  }
+
+  System.setProperty("myvalue", "test-my-value")
+
+  override protected def afterAll(): Unit = {
+    System.clearProperty("myvalue")
+  }
 
   val configLoader: ConfigLoader = ConfigLoader.builder()
     .setAppEnv("local")
@@ -99,13 +110,13 @@ class DCContextSuite extends FunSuite {
     assert(context.configLoader.configPath === Some("myconf.conf"))
   }
 
-  test("DCContext should be able to handle AppEnv setting with default config loader") {
-    System.setProperty("app.environment", "test")
-    assertThrows[java.lang.IllegalArgumentException](
-      DCContext.builder().withDefaultConfigLoader("myconf.conf").getOrCreate(),
-      "DCContext should throw an exception when the app.environment value is invalid"
-    )
-  }
+  //  test("DCContext should be able to handle AppEnv setting with default config loader") {
+  //    System.setProperty("app.environment", "test")
+  //    assertThrows[java.lang.IllegalArgumentException](
+  //      DCContext.builder().withDefaultConfigLoader("myconf.conf").getOrCreate(),
+  //      "DCContext should throw an exception when the app.environment value is invalid"
+  //    )
+  //  }
 }
 
 object DCContextSuite {

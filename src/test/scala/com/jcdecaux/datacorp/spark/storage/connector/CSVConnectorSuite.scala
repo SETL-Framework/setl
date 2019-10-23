@@ -206,8 +206,8 @@ class CSVConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS
 
-    val csvConnectorWithSchema = new CSVConnector(spark, Properties.getConfig("connector.csvWithSchema"))
-    val csvConnectorWithSchema2 = new CSVConnector(spark, Properties.getConfig("connector.csvWithSchema2"))
+    val csvConnectorWithSchema = new CSVConnector(spark, Properties.cl.getConfig("connector.csvWithSchema"))
+    val csvConnectorWithSchema2 = new CSVConnector(spark, Properties.cl.getConfig("connector.csvWithSchema2"))
 
     csvConnectorWithSchema.write(dff.toDF)
     assert(csvConnectorWithSchema.read().columns === Array("partition2", "clustering1", "partition1", "value"))

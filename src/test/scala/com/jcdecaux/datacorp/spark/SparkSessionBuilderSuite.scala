@@ -2,8 +2,6 @@ package com.jcdecaux.datacorp.spark
 
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
-import com.jcdecaux.datacorp.spark.enums.AppEnv
-import com.jcdecaux.datacorp.spark.exception.UnknownException
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.cassandra._
@@ -32,7 +30,7 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
   test("Default instantiation") {
     val sparkSessionBuilder = new SparkSessionBuilder()
 
-    assert(sparkSessionBuilder.appEnv === AppEnv.LOCAL)
+    assert(sparkSessionBuilder.appEnv === "local")
     assert(sparkSessionBuilder.appName === "SparkApplication")
     assert(sparkSessionBuilder.cassandraHost === null)
     assert(sparkSessionBuilder.sparkConf.getClass === classOf[SparkConf])
@@ -73,8 +71,8 @@ class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with Sequ
   }
 
   test("SparkSessionBuilder exception thrown") {
-    assertThrows[UnknownException.Environment](new SparkSessionBuilder().setEnv("hahaha"))
-    assertThrows[IllegalArgumentException](new SparkSessionBuilder("cassandra").setEnv(AppEnv.PROD).getOrCreate())
+    //    assertThrows[UnknownException.Environment](new SparkSessionBuilder().setEnv("hahaha"))
+    assertThrows[IllegalArgumentException](new SparkSessionBuilder("cassandra").setEnv("prod").getOrCreate())
   }
 
 

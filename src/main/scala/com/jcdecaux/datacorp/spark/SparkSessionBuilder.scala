@@ -3,8 +3,7 @@ package com.jcdecaux.datacorp.spark
 import java.util.concurrent.ConcurrentHashMap
 
 import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress}
-import com.jcdecaux.datacorp.spark.enums.{AppEnv, Storage, ValueType}
-import com.jcdecaux.datacorp.spark.exception.UnknownException
+import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -33,13 +32,12 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   private[this] val properties: ConcurrentHashMap[String, String] = new ConcurrentHashMap()
   set(SPARK_APP_NAME, "SparkApplication")
 
-  private[spark] var appEnv: AppEnv = AppEnv.LOCAL
+  private[spark] var appEnv: String = "local"
   private[spark] var sparkConf: SparkConf = new SparkConf()
   private[spark] var initialization: Boolean = true
   private[spark] var spark: SparkSession = _
 
   private[this] var kryoRegister: Array[Class[_]] = Array(
-    classOf[AppEnv],
     classOf[Storage],
     classOf[ValueType],
     classOf[Compress],
@@ -69,8 +67,8 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     }
 
     log.debug(s"Detect $appEnv environment")
-    appEnv match {
-      case AppEnv.LOCAL => setSparkMaster("local")
+    appEnv.toLowerCase() match {
+      case "local" => setSparkMaster("local")
       case _ =>
     }
 
@@ -165,23 +163,6 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     * @return
     */
   def setEnv(env: String): this.type = {
-    appEnv = try {
-      log.debug(s"Set application environment to $env")
-      AppEnv.valueOf(env.toUpperCase())
-    } catch {
-      case _: IllegalArgumentException =>
-        throw new UnknownException.Environment(s"Unknown environment $env")
-    }
-    this
-  }
-
-  /**
-    * Set application environment
-    *
-    * @param env AppEnv
-    * @return
-    */
-  def setEnv(env: AppEnv): this.type = {
     appEnv = env
     this
   }
