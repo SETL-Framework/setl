@@ -1,5 +1,7 @@
 ## 0.3.3-SNAPSHOT (2019-10-22)
 - Added **SnappyCompressor**
+- Added method **persist(persistence: Boolean)** into **Stage** and **Factory** to 
+activate/deactivate output persistence. By default the output persistence is set to *true*.
 
 ## 0.3.2 (2019-10-14)
 - Added **@Compress** annotation. **SparkRepository** will compress all columns having this annotation by
@@ -8,6 +10,7 @@ using a **Compressor** (the default compressor is **XZCompressor**)
 case class CompressionDemo(@Compress col1: Seq[Int],
                            @Compress(compressor = classOf[GZIPCompressor]) col2: Seq[String])
 ```
+
 - Added interface **Compressor** and implemented **XZCompressor** and **GZIPCompressor**
 - Added **SparkRepositoryAdapter[A, B]**. It will allow a **SparkRepository[A]** to write/read a data store of type
  **B** by using an implicit **DatasetConverter[A, B]**

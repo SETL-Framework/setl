@@ -16,7 +16,18 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with HasDescription {
 
-  var consumers: List[Class[_ <: Factory[_]]] = List()
+  private[this] val _consumers: List[Class[_ <: Factory[_]]] = List()
+
+  private[this] var _persistence: Boolean = true
+
+  def persist(persistence: Boolean): this.type = {
+    this._persistence = persistence
+    this
+  }
+
+  def persist: Boolean = this._persistence
+
+  def consumers: List[Class[_ <: Factory[_]]] = this._consumers
 
   /**
     * Read data
@@ -41,7 +52,7 @@ abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with Has
   /**
     * Create a new Deliverable object
     */
-  def getDelivery: Deliverable[A] = new Deliverable[A](this.get()).setProducer(this.getClass).setConsumers(consumers: _*)
+  def getDelivery: Deliverable[A] = new Deliverable[A](this.get()).setProducer(this.getClass).setConsumers(_consumers: _*)
 
   /**
     * Get the type of deliverable payload

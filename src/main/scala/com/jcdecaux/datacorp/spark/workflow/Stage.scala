@@ -7,6 +7,7 @@ import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, Factory
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
+import scala.reflect.ClassTag
 
 /**
   * A Stage is a collection of independent Factories. All the stages of a pipeline will be executed
@@ -21,6 +22,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   private[this] var _stageId: Int = _
   private[this] val _factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
   private[this] var _deliveries: Array[Deliverable[_]] = _
+  private[this] var _persistence: Boolean = true
 
   private[workflow] def end: Boolean = _end
 
@@ -40,6 +42,13 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   def deliveries: Array[Deliverable[_]] = this._deliveries
 
   def parallel: Boolean = _parallel
+
+  def persist: Boolean = this._persistence
+
+  def persist(persistence: Boolean): this.type = {
+    this._persistence = persistence
+    this
+  }
 
   /**
     * Set to true to run all factories of this stage in parallel. Otherwise they will be executed in sequential order
@@ -66,10 +75,9 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     this
   }
 
-  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
-  def addFactory(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
-
-    val primaryConstructor = factory.getConstructors.head
+  private[this] def instantiateFactory(cls: Class[_ <: Factory[_]],
+                                       constructorArgs: Array[Object]): Factory[_] = {
+    val primaryConstructor = cls.getConstructors.head
 
     val newFactory = if (primaryConstructor.getParameterCount == 0) {
       primaryConstructor.newInstance()
@@ -77,7 +85,19 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
       primaryConstructor.newInstance(constructorArgs: _*)
     }
 
-    addFactory(newFactory.asInstanceOf[Factory[_]])
+    newFactory.asInstanceOf[Factory[_]]
+  }
+
+  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
+  def addFactory(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
+    addFactory(instantiateFactory(factory, constructorArgs.toArray))
+  }
+
+  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
+  def addFactory[T <: Factory[_] : ClassTag](constructorArgs: Array[Object] = Array.empty,
+                                             persistence: Boolean = true): this.type = {
+    val cls = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
+    addFactory(instantiateFactory(cls, constructorArgs).persist(persistence))
   }
 
   @throws[AlreadyExistsException]
@@ -111,7 +131,13 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   }
 
   private[this] val runFactory: Factory[_] => Deliverable[_] = {
-    factory: Factory[_] => factory.read().process().write().getDelivery
+    factory: Factory[_] =>
+      factory.read().process()
+      if (this.persist && factory.persist) {
+        log.debug(s"Persist output of ${factory.getPrettyName}")
+        factory.write()
+      }
+      factory.getDelivery
   }
 
   private[this] def parallelFactories: Either[ParArray[Factory[_]], Array[Factory[_]]] = {

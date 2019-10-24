@@ -6,6 +6,7 @@ import com.jcdecaux.datacorp.spark.internal.{HasDescription, HasUUIDRegistry, Id
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 
 /**
@@ -90,6 +91,12 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
     addStage(new Stage().addFactory(factory, constructorArgs: _*))
+  }
+
+  @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
+  def addStage[T <: Factory[_] : ClassTag](constructorArgs: Array[Object] = Array.empty,
+                                           persistence: Boolean = true): this.type = {
+    addStage(new Stage().addFactory[T](constructorArgs, persistence))
   }
 
   def addStage(stage: Stage): this.type = {

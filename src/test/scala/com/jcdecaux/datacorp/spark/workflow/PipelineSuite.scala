@@ -88,6 +88,41 @@ class PipelineSuite extends FunSuite {
     assert(pipeline.pipelineInspector.flows.size === 5)
   }
 
+  test("Pipeline should handle addStage[T](args, persist)") {
+    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    import spark.implicits._
+
+    val ds2: Dataset[Product2] = Seq(
+      Product2("id_of_product1", "c2"),
+      Product2("pd1", "c2")
+    ).toDS
+
+    val pipeline = new Pipeline
+
+    pipeline
+      .setInput(new Deliverable[String]("wrong_id_of_product1"))
+      .setInput[String]("id_of_product1", classOf[ProductFactory])
+      .setInput(ds2)
+      .addStage[ProductFactory]()
+      .addStage[DatasetFactory](Array(spark))
+      .addStage[DatasetFactory2](Array(spark))
+      .describe()
+      .run()
+
+    val f3 = pipeline.stages.last.factories.head.asInstanceOf[DatasetFactory2]
+
+    f3.get().show()
+    assert(f3.get().count() === 2)
+    assert(f3.get().filter($"x" === "pd1").count() === 1)
+    assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
+    assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+
+    // Check inspector
+    assert(pipeline.pipelineInspector.nodes.size === 3)
+    assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
+    assert(pipeline.pipelineInspector.flows.size === 5)
+  }
+
   test("Test get methods of Pipeline") {
     val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
     import spark.implicits._
