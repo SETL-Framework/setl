@@ -67,10 +67,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     }
 
     log.debug(s"Detect $appEnv environment")
-    appEnv.toLowerCase() match {
-      case "local" => setSparkMaster("local")
-      case _ =>
-    }
+    if (appEnv.toLowerCase().contains("local")) setSparkMaster("local")
 
     import scala.collection.JavaConverters.mapAsScalaMapConverter
     properties.asScala.foreach {
