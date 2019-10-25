@@ -2,6 +2,8 @@
 - Added **SnappyCompressor**
 - Added method **persist(persistence: Boolean)** into **Stage** and **Factory** to 
 activate/deactivate output persistence. By default the output persistence is set to *true*.
+- Added implicit method `filter(cond: Set[Condition])` for Dataset and DataFrame
+- Added `setUserDefinedSuffixKey` and `getUserDefinedSuffixKey` to **SparkRepository**
 
 ## 0.3.2 (2019-10-14)
 - Added **@Compress** annotation. **SparkRepository** will compress all columns having this annotation by

@@ -19,6 +19,21 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
   private[this] implicit val dataEncoder: Encoder[DataType] = ExpressionEncoder[DataType]
   private[this] val schema: StructType = StructAnalyser.analyseSchema[DataType]
 
+  def setUserDefinedSuffixKey(key: String): this.type = {
+    connector match {
+      case c: FileConnector => c.setUserDefinedSuffixKey(key)
+      case _ => log.warn(s"Current connector doesn't support user defined suffix, skip UDS setting")
+    }
+    this
+  }
+
+  def getUserDefinedSuffixKey: Option[String] = {
+    connector match {
+      case c: FileConnector => Option(c.getUserDefinedSuffixKey)
+      case _ => None
+    }
+  }
+
   def getStorage: Storage = connector.storage
 
   /**

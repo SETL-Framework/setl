@@ -5,7 +5,7 @@ import java.io.File
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.internal.TestClasses.InnerClass
 import com.jcdecaux.datacorp.spark.storage.Condition
-import com.jcdecaux.datacorp.spark.storage.connector.{CSVConnector, ParquetConnector}
+import com.jcdecaux.datacorp.spark.storage.connector.{CSVConnector, Connector, ParquetConnector}
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
@@ -79,6 +79,23 @@ class SparkRepositorySuite extends FunSuite {
     assert(filteredData.count() === 1)
 
     deleteRecursively(new File(path))
+  }
+
+  test("SparkRepository should handle UDS key configuration") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val path: String = "src/test/resources/test_parquet_with_anno"
+    val connector = new CSVConnector(spark, Map[String, String](
+      "path" -> path,
+      "inferSchema" -> "false",
+      "delimiter" -> ";",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    )).asInstanceOf[Connector]
+    val repo = new SparkRepository[MyObject].setConnector(connector)
+
+    assert(connector.asInstanceOf[CSVConnector].getUserDefinedSuffixKey === "_user_defined_suffix")
+    repo.setUserDefinedSuffixKey("TestKey")
+    assert(connector.asInstanceOf[CSVConnector].getUserDefinedSuffixKey === "TestKey")
   }
 
   test("Test spark repository save with suffix") {
