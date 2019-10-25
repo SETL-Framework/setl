@@ -101,15 +101,20 @@ object DCContext {
 
     def withDefaultConfigLoader(configPath: String): this.type = {
       this.configLoader = ConfigLoader.builder()
-        .setAppName(s"dc_spark_app_${Random.alphanumeric.take(10).mkString("")}")
+        .setAppName(sparkAppName)
         .setConfigPath(configPath)
         .getOrCreate()
       this
     }
 
     def withDefaultConfigLoader(): this.type = {
-      withDefaultConfigLoader("application.conf")
+      this.configLoader = ConfigLoader.builder()
+        .setAppName(sparkAppName)
+        .getOrCreate()
+      this
     }
+
+    private[this] val sparkAppName: String = s"dc_spark_app_${Random.alphanumeric.take(10).mkString("")}"
 
     private[this] def buildSparkSession(): SparkSession = {
       val pathOf: String => String = (s: String) => s"$dcContextConfiguration.$s"
