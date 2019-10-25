@@ -1,7 +1,9 @@
 package com.jcdecaux.datacorp.spark.util
 
+import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.storage.Condition
+import com.jcdecaux.datacorp.spark.util.FilterImplicitsSuite.TestFilterImplicit
 import org.scalatest.FunSuite
 
 class FilterImplicitsSuite extends FunSuite {
@@ -67,4 +69,28 @@ class FilterImplicitsSuite extends FunSuite {
     )
     assert(assetFilters.toSqlRequest === "country = 'HK' AND asset = 'asset-8'")
   }
+
+  test("Filter implicit should be applied to dataset") {
+
+    val spark = new SparkSessionBuilder().setEnv("local").getOrCreate()
+    import spark.implicits._
+    val ds = spark.createDataset(
+      Seq(
+        TestFilterImplicit("a", "A"),
+        TestFilterImplicit("b", "B"),
+        TestFilterImplicit("c", "C")
+      )
+    )
+
+    val df = ds.toDF()
+    import FilterImplicits.DatasetFilterByCondition
+    assert(ds.filter(Condition("col1", "=", "a")).count() === 1)
+    assert(df.filter(Condition("col1", "=", "a")).count() === 1)
+  }
+}
+
+object FilterImplicitsSuite {
+
+  case class TestFilterImplicit(col1: String, col2: String)
+
 }
