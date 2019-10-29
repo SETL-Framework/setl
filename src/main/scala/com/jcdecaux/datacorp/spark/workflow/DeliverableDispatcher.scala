@@ -69,6 +69,13 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
         log.warn("No deliverable available")
         None
       case 1 =>
+
+        val deliverable = availableDeliverable.head
+
+        if (deliverable.consumer.nonEmpty && !deliverable.consumer.contains(consumer)) {
+          throw new InvalidDeliveryException(s"Can't find ${consumer.getSimpleName} in the consumer list")
+        }
+
         log.debug("Find Deliverable")
         Some(availableDeliverable.head)
       case _ =>
