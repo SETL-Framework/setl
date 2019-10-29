@@ -94,12 +94,8 @@ class JSONConnector(override val spark: SparkSession,
     * @return
     */
   def writeStandardJSON(df: DataFrame): this.type = {
-    import org.apache.spark.sql.functions._
-
-    val bytes = df.withColumn("_json", to_json(struct(df.columns.map(col): _*)))
-      .select(col("_json"))
+    val bytes = df.toJSON
       .collect()
-      .map(_.getAs[String]("_json"))
       .mkString("[", ",", "]")
       .getBytes(StandardCharsets.UTF_8)
 
