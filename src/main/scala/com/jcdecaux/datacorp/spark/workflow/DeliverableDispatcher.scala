@@ -181,7 +181,9 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                 consumer = factory.getClass,
                 producer = setterMethod.producer
               ) match {
-                case Some(delivery) => delivery
+                case Some(delivery) =>
+                  require(delivery.payload != null, "Deliverable is null")
+                  delivery
                 case _ =>
                   if (!setterMethod.optional) {
                     throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
