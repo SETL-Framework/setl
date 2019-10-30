@@ -12,6 +12,7 @@ import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.StructType
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
@@ -157,30 +158,36 @@ abstract class FileConnector(val spark: SparkSession,
     * If the filesystem is a local system, then we try to decode the path string to remove encoded
     * characters like whitespace "%20%", etc
     */
-  private[connector] val absolutePath: Path = if (fileSystem.isInstanceOf[LocalFileSystem]) {
-    log.debug(s"Detect local file system: ${pathURI.toString}")
-    new Path(URLDecoder.decode(pathURI.toString, options.getEncoding))
-  } else {
-    log.debug(s"Detect distributed filesystem: ${pathURI.toString}")
-    new Path(pathURI)
+  private[connector] val absolutePath: Path = {
+    log.debug(s"File system URI: ${fileSystem.getUri}")
+
+    if (fileSystem.isInstanceOf[LocalFileSystem]) {
+      new Path(URLDecoder.decode(pathURI.toString, options.getEncoding))
+    } else {
+      new Path(pathURI)
+    }
   }
 
   /**
     * Get the basePath of the current path. If the value path is a file path, then its basePath will be
     * it's parent's path. Otherwise it will be the current path itself.
     */
-  private[this] val baseDirectory: String = {
-    if (fileSystem.exists(absolutePath)) {
-      if (fileSystem.getFileStatus(absolutePath).isDirectory) {
-        absolutePath.toString
-      } else {
-        absolutePath.getParent.toString
-      }
+  val basePath: String = findBasePath(absolutePath).toString
+
+  def getBasePath: String = basePath
+
+  @tailrec
+  private[this] def findBasePath(path: Path): Path = {
+    if (path.getName.split("=").length == 2) {
+      findBasePath(path.getParent)
     } else {
-      absolutePath.getParent.toString
+      path
     }
   }
 
+  /**
+    * DataFrame reader for the current path of connector
+    */
   override val reader: DataFrameReader = schema match {
     case Some(sm) => initReader().schema(sm)
     case _ => initReader()
@@ -353,7 +360,8 @@ abstract class FileConnector(val spark: SparkSession,
   }
 
   @inline private[this] def initReader(): DataFrameReader = {
-    this.spark.read.option("basePath", baseDirectory).options(options.getDataFrameReaderOptions)
+    log.debug(s"DataFrameReader base path ${basePath}")
+    this.spark.read.option("basePath", basePath).options(options.getDataFrameReaderOptions)
   }
 
   /**
