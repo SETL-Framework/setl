@@ -124,4 +124,21 @@ class FileConnectorSuite extends FunSuite {
     connector.delete()
   }
 
+  test("FileConnector should handle base path correctly") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(spark, Map[String, String](
+      "path" -> "src/test/resources/test_base_path.csv",
+      "inferSchema" -> "true",
+      "header" -> "false",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assert(connector.basePath.toString !== "src/test/resources/test_base_path.csv")
+    assert(connector.basePath.toString === "src/test/resources")
+  }
+
 }

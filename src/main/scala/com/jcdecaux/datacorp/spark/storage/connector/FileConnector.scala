@@ -172,9 +172,16 @@ abstract class FileConnector(val spark: SparkSession,
     * Get the basePath of the current path. If the value path is a file path, then its basePath will be
     * it's parent's path. Otherwise it will be the current path itself.
     */
-  val basePath: String = findBasePath(absolutePath).toString
+  @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
+  def basePath: Path = {
+    val bp = findBasePath(absolutePath)
 
-  def getBasePath: String = basePath
+    if (fileSystem.getFileStatus(absolutePath).isDirectory) {
+      bp
+    } else {
+      bp.getParent
+    }
+  }
 
   @tailrec
   private[this] def findBasePath(path: Path): Path = {
@@ -188,7 +195,7 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * DataFrame reader for the current path of connector
     */
-  override val reader: DataFrameReader = schema match {
+  override lazy val reader: DataFrameReader = schema match {
     case Some(sm) => initReader().schema(sm)
     case _ => initReader()
   }
@@ -360,8 +367,7 @@ abstract class FileConnector(val spark: SparkSession,
   }
 
   @inline private[this] def initReader(): DataFrameReader = {
-    log.debug(s"DataFrameReader base path ${basePath}")
-    this.spark.read.option("basePath", basePath).options(options.getDataFrameReaderOptions)
+    this.spark.read.options(options.getDataFrameReaderOptions)
   }
 
   /**
@@ -445,17 +451,12 @@ abstract class FileConnector(val spark: SparkSession,
     *
     * @return
     */
+  @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
   override def read(): DataFrame = {
-
-    val status = fileSystem.getFileStatus(absolutePath)
-
-    if (status.isDirectory) {
-      log.debug(s"Reading ${options.getStorage.toString} files from directory: '${absolutePath.toString}'")
-    } else {
-      log.debug(s"Reading ${options.getStorage.toString} file: '${absolutePath.toString}'")
-    }
+    log.debug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
 
     val df = reader
+      .option("basePath", basePath.toString)
       .format(options.getStorage.toString.toLowerCase())
       .load(listFilesToLoad(false): _*)
 
