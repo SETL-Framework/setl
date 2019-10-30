@@ -41,7 +41,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return this DeliverableDispatcher
     */
   private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
-    log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer}")
+    log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
 
     if (registerNewItem(v)) {
       deliveries.append(v)
@@ -174,7 +174,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           val args = setterMethod.argTypes.map {
             argType =>
               log.debug(s"Dispatch ${simpleTypeNameOf(argType)} by calling " +
-                s"${factory.getClass.getCanonicalName}.${setterMethod.name}")
+                s"${factory.getClass.getSimpleName}.${setterMethod.name}")
 
               getDelivery(
                 deliveryType = argType,
