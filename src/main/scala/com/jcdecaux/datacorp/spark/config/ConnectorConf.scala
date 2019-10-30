@@ -69,6 +69,7 @@ class ConnectorConf extends Conf {
       "path" -
       "filenamePattern" -
       "saveMode" -
+      "schema" -
       "fs.s3a.aws.credentials.provider" -
       "fs.s3a.access.key" -
       "fs.s3a.secret.key" -

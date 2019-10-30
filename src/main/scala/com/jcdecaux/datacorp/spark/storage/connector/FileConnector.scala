@@ -216,7 +216,7 @@ abstract class FileConnector(val spark: SparkSession,
     * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
     * to false. Otherwise, return a list of file paths in the directory</p>
     *
-    * @param detailed
+    * @param detailed true to list all file paths
     * @return
     */
   def listFilesToLoad(detailed: Boolean = true): Array[String] = filesToLoad(detailed).map(_.toString)
@@ -299,7 +299,7 @@ abstract class FileConnector(val spark: SparkSession,
       // If there is no suffix
       suffix match {
         case Some(s) =>
-          throw new IllegalArgumentException(s"Can't set suffix ${s}. " +
+          throw new IllegalArgumentException(s"Can't set suffix $s. " +
             s"Current version of ${this.getClass.getSimpleName} " +
             s"doesn't support adding an user defined suffix into already-saved non-suffix data")
 
