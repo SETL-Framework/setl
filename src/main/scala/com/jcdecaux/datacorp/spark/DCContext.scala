@@ -8,7 +8,7 @@ import com.jcdecaux.datacorp.spark.config.ConfigLoader
 import com.jcdecaux.datacorp.spark.storage.connector.Connector
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.storage.{ConnectorBuilder, SparkRepositoryBuilder}
-import com.jcdecaux.datacorp.spark.transformation.Deliverable
+import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import com.jcdecaux.datacorp.spark.workflow.Pipeline
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -21,7 +21,7 @@ abstract class DCContext(val configLoader: ConfigLoader) {
 
   val spark: SparkSession
 
-  private[this] val sparkRepositoryRegister: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
+  private[this] val inputRegister: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
   private[this] val pipelineRegister: ConcurrentHashMap[UUID, Pipeline] = new ConcurrentHashMap()
 
   /**
@@ -33,18 +33,20 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     */
   def getSparkRepository[DT: ru.TypeTag](config: String): SparkRepository[DT] = {
     setSparkRepository[DT](config)
-    sparkRepositoryRegister.get(config).payload.asInstanceOf[SparkRepository[DT]]
+    inputRegister.get(config).payload.asInstanceOf[SparkRepository[DT]]
   }
 
-  def resetSparkRepository[DT: ru.TypeTag](config: String): this.type = {
+  def resetSparkRepository[DT: ru.TypeTag](config: String,
+                                           consumer: Array[Class[_ <: Factory[_]]] = Array.empty): this.type = {
     val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).setSpark(spark).getOrCreate()
-    val deliverable = new Deliverable(repo)
-    sparkRepositoryRegister.put(config, deliverable)
+    val deliverable = new Deliverable(repo).setConsumers(consumer: _*)
+    inputRegister.put(config, deliverable)
     this
   }
 
-  def setSparkRepository[DT: ru.TypeTag](config: String): this.type = {
-    if (!sparkRepositoryRegister.contains(config)) resetSparkRepository[DT](config)
+  def setSparkRepository[DT: ru.TypeTag](config: String,
+                                         consumer: Array[Class[_ <: Factory[_]]] = Array.empty): this.type = {
+    if (!inputRegister.contains(config)) resetSparkRepository[DT](config, consumer)
     this
   }
 
@@ -58,7 +60,7 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     val _pipe = new Pipeline
     pipelineRegister.put(_pipe.getUUID, _pipe)
     import scala.collection.JavaConverters._
-    sparkRepositoryRegister.asScala.foreach { case (_, del) => _pipe.setInput(del) }
+    inputRegister.asScala.foreach { case (_, del) => _pipe.setInput(del) }
     _pipe
   }
 

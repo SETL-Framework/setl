@@ -70,9 +70,9 @@ class DeliverableDispatcherSuite extends FunSuite {
   }
 
 
-  class P1
+  abstract class P1 extends Factory[External]
 
-  class P2
+  abstract class P2 extends Factory[External]
 
   class Test extends Factory[String] {
 

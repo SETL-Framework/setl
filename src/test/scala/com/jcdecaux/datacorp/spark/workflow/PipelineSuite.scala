@@ -227,7 +227,7 @@ class PipelineSuite extends FunSuite {
 
     val pipeline2 = new Pipeline()
       .setInput(new Deliverable[String]("wrong_id_of_product1"))
-      .setInput[String]("wrong_id_of_product2", classOf[Object], classOf[String])
+      .setInput[String]("wrong_id_of_product2", classOf[Producer1], classOf[Producer2])
       .setInput[String]("id_of_product1")
       .addStage(stage0)
 
@@ -292,6 +292,10 @@ class PipelineSuite extends FunSuite {
 }
 
 object PipelineSuite {
+
+  abstract class Producer1 extends Factory[External]
+
+  abstract class Producer2 extends Factory[External]
 
   class ProductFactory extends Factory[Product1] {
     @Delivery

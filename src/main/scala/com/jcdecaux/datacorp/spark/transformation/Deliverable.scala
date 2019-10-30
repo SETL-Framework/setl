@@ -20,7 +20,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
 
   private[spark] def isEmpty: Boolean = empty
 
-  var producer: Class[_] = classOf[External]
+  var producer: Class[_ <: Factory[_]] = classOf[External]
 
   /**
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
@@ -58,7 +58,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     * @param t class of producer
     * @return
     */
-  def setProducer(t: Class[_]): this.type = {
+  def setProducer(t: Class[_ <: Factory[_]]): this.type = {
     producer = t
     this
   }
@@ -69,17 +69,17 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     * @param t class of consumer
     * @return
     */
-  def setConsumer(t: Class[_]): this.type = {
+  def setConsumer(t: Class[_ <: Factory[_]]): this.type = {
     consumer.append(t)
     this
   }
 
-  def setConsumers(consumer: Class[_]*): this.type = {
+  def setConsumers(consumer: Class[_ <: Factory[_]]*): this.type = {
     consumer.foreach(setConsumer)
     this
   }
 
-  def setProducer(producer: Option[Class[_]]): this.type = {
+  def setProducer(producer: Option[Class[_ <: Factory[_]]]): this.type = {
     producer match {
       case Some(p) => setProducer(p)
       case _ => this

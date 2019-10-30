@@ -27,7 +27,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     this
   }
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Option[Class[_]]): this.type = {
+  def setInput[T: ru.TypeTag](v: T, consumer: Option[Class[_ <: Factory[_]]]): this.type = {
     val deliverable = new Deliverable[T](v)
 
     consumer match {
@@ -76,9 +76,9 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     this
   }
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_]): this.type = setInput[T](v, Some(consumer))
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_ <: Factory[_]]): this.type = setInput[T](v, Some(consumer))
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_], consumers: Class[_]*): this.type = {
+  def setInput[T: ru.TypeTag](v: T, consumer: Class[_ <: Factory[_]], consumers: Class[_ <: Factory[_]]*): this.type = {
     val deliverable = new Deliverable[T](v)
     (consumer +: consumers).foreach(c => deliverable.setConsumer(c))
     setInput(deliverable)

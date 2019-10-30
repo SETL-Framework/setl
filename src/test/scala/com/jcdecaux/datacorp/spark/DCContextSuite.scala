@@ -110,6 +110,26 @@ class DCContextSuite extends FunSuite with BeforeAndAfterAll {
     assert(context.configLoader.configPath === Some("myconf.conf"))
   }
 
+  test("DCContext set repository should be able to handle different consumer") {
+    val context = DCContext.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    context.setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]))
+    context.setSparkRepository[TestObject]("parquet_dc_context_consumer")
+
+    context
+      .newPipeline()
+      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .run()
+
+    val repo = context.getSparkRepository[TestObject]("csv_dc_context_consumer")
+    val conn = repo.getConnector.asInstanceOf[FileConnector]
+
+    assert(conn.basePath.toString === "file:/Users/qin/IdeaProjects/dc-spark-sdk/src/test/resources/test_config_csv_dc_context_consumer")
+    conn.delete()
+  }
+
   //  test("DCContext should be able to handle AppEnv setting with default config loader") {
   //    System.setProperty("app.environment", "test")
   //    assertThrows[java.lang.IllegalArgumentException](
