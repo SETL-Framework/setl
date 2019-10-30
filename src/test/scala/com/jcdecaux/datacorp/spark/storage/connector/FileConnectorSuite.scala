@@ -26,8 +26,12 @@ class FileConnectorSuite extends FunSuite {
   test("File connector list files ") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
+    assert(connector(spark).listFilesToLoad(false).length === 1)
+    assert(connector(spark).listFilesToLoad().length > 1)
     assert(connector(spark).listFiles().length > 1)
-    assert(connector2(spark).listFiles().length === 1)
+    assert(connector2(spark).listFilesToLoad().length === 1)
+    assert(connector2(spark).listFiles().length > 1)
+    assert(connector(spark).listFiles() === connector2(spark).listFiles())
   }
 
   test("File connector functionality") {

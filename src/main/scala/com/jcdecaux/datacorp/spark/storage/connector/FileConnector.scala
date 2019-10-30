@@ -147,6 +147,9 @@ abstract class FileConnector(val spark: SparkSession,
     FileSystem.get(pathURI, hadoopConfiguration)
   }
 
+  /**
+    * Get the current filesystem based on the path URI
+    */
   def getFileSystem: FileSystem = this.fileSystem
 
   /**
@@ -190,30 +193,68 @@ abstract class FileConnector(val spark: SparkSession,
     case _ => None
   }
 
-  def listFiles(): Array[String] = {
-    listPaths().map(_.toString)
-  }
+  /**
+    * List all the file path (in format of string) to be loaded.
+    *
+    * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
+    * the pattern.</p>
+    *
+    * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
+    * to false. Otherwise, return a list of file paths in the directory</p>
+    *
+    * @param detailed
+    * @return
+    */
+  def listFilesToLoad(detailed: Boolean = true): Array[String] = filesToLoad(detailed).map(_.toString)
 
+  /**
+    * List ALL the file paths (in format of string) of the current path of connector
+    *
+    * @return
+    */
+  def listFiles(): Array[String] = listPaths().map(_.toString)
+
+  /**
+    * List ALL the file paths of the current path of connector
+    *
+    * @return
+    */
   def listPaths(): Array[Path] = {
     val filePaths = ArrayBuffer[Path]()
-    val files = fileSystem.listFiles(absolutePath, true)
+    val files = fileSystem.listLocatedStatus(absolutePath)
 
     while (files.hasNext) {
-      val file = files.next()
-      filenamePattern match {
-        case Some(regex) =>
-          // If the regex pattern is defined
-          file.getPath.getName match {
-            case regex(_*) => filePaths += file.getPath
-            case _ =>
-          }
-        case _ =>
-          // if regex not defined, append file path to the output
-          filePaths += file.getPath
+      val status = files.next()
+      if (status.isFile) {
+        filePaths += status.getPath
       }
     }
     log.debug(s"Find ${filePaths.length} files")
     filePaths.toArray
+  }
+
+  /**
+    * List files to be loaded.
+    * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
+    * the pattern.</p>
+    *
+    * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
+    * to false. Otherwise, return a list of file paths in the directory</p>
+    *
+    * @param detailed true to return a list of file paths if the current absolute path is a directory
+    * @return
+    */
+  def filesToLoad(detailed: Boolean): Array[Path] = {
+    filenamePattern match {
+      case Some(pattern) =>
+        listPaths().filter(p => p.getName.matches(pattern.toString()))
+      case _ =>
+        if (detailed) {
+          listPaths()
+        } else {
+          Array(absolutePath)
+        }
+    }
   }
 
   /**
@@ -356,7 +397,7 @@ abstract class FileConnector(val spark: SparkSession,
     * @return size in byte
     */
   def getSize: Long = {
-    listPaths().map(path => fileSystem.getFileStatus(path).getLen).sum
+    filesToLoad(true).map(path => fileSystem.getFileStatus(path).getLen).sum
   }
 
   /**
@@ -397,9 +438,18 @@ abstract class FileConnector(val spark: SparkSession,
     * @return
     */
   override def read(): DataFrame = {
-    log.debug(s"Reading ${options.getStorage.toString} file from ${absolutePath.toString}")
 
-    val df = reader.format(options.getStorage.toString.toLowerCase()).load(listFiles(): _*)
+    val status = fileSystem.getFileStatus(absolutePath)
+
+    if (status.isDirectory) {
+      log.debug(s"Reading ${options.getStorage.toString} files from directory: '${absolutePath.toString}'")
+    } else {
+      log.debug(s"Reading ${options.getStorage.toString} file: '${absolutePath.toString}'")
+    }
+
+    val df = reader
+      .format(options.getStorage.toString.toLowerCase())
+      .load(listFilesToLoad(false): _*)
 
     if (dropUserDefinedSuffix & df.columns.contains(UDSKey)) {
       df.drop(UDSKey)
