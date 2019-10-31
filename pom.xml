@@ -70,24 +70,25 @@
             <scope>${dependencies.scope}</scope>
         </dependency>
 
-        <!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.tukaani/xz &ndash;&gt;-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.tukaani</groupId>-->
-        <!--            <artifactId>xz</artifactId>-->
-        <!--            <version>1.8</version>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>${dependencies.scope}</scope>
+        </dependency>
+
 
         <!-- HADOOP AWS SUPPORT -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>3.2.0</version>
+            <version>2.9.2</version>
             <scope>${dependencies.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
-            <version>3.2.0</version>
+            <version>2.9.2</version>
             <scope>${dependencies.scope}</scope>
         </dependency>
 
@@ -120,12 +121,6 @@
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
             <version>3.0.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_${scala.compat.version}</artifactId>
-            <version>${spark.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

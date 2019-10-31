@@ -202,7 +202,7 @@ abstract class FileConnector(val spark: SparkSession,
 
   private[this] val filenamePattern: Option[Regex] = options.getFilenamePattern match {
     case Some(pattern) =>
-      log.debug("Detect filename pattern")
+      log.debug(s"Detect filename pattern: $pattern")
       Some(pattern.r)
     case _ => None
   }
