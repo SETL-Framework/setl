@@ -61,7 +61,7 @@ class DynamoDBConnector(val spark: SparkSession,
     spark = spark,
     region = conf.get("region").get,
     table = conf.get("table").get,
-    saveMode = SaveMode.valueOf(conf.get("region").get)
+    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
   )
 
   override val storage: Storage = Storage.DYNAMODB
