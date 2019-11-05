@@ -1,5 +1,8 @@
 package com.jcdecaux.datacorp.spark.storage.repository
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+
 import com.jcdecaux.datacorp.spark.annotation.{ColumnName, Compress, InterfaceStability}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
@@ -12,12 +15,20 @@ import org.apache.spark.sql.{DataFrame, Dataset, Encoder}
 
 import scala.reflect.runtime.universe.TypeTag
 
+/**
+  * SparkRepository guarantee a Read-after-write consistency.
+  *
+  * @tparam DataType type of spark repository
+  */
 @InterfaceStability.Evolving
 class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Logging {
 
   private[this] var connector: Connector = _
   private[this] implicit val dataEncoder: Encoder[DataType] = ExpressionEncoder[DataType]
   private[this] val schema: StructType = StructAnalyser.analyseSchema[DataType]
+  private[this] var readCache: DataFrame = _
+  private[this] val flushReadCache: AtomicBoolean = new AtomicBoolean(true)
+  private[this] val lock: ReentrantLock = new ReentrantLock()
 
   def setUserDefinedSuffixKey(key: String): this.type = {
     connector match {
@@ -44,6 +55,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
     */
   def setConnector(connector: Connector): this.type = {
     this.connector = connector
+    flushReadCache.set(true)
     this
   }
 
@@ -61,9 +73,9 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
     import com.jcdecaux.datacorp.spark.util.FilterImplicits._
 
     if (conditions.nonEmpty && !conditions.toSqlRequest.isEmpty) {
-      connector.read().filter(conditions.toSqlRequest)
+      readDataFrame().filter(conditions.toSqlRequest)
     } else {
-      connector.read()
+      readDataFrame()
     }
   }
 
@@ -82,7 +94,34 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
     * Retrieve all data
     */
   override def findAll(): Dataset[DataType] = {
-    SchemaConverter.fromDF[DataType](connector.read())
+    SchemaConverter.fromDF[DataType](readDataFrame())
+  }
+
+  /**
+    * Load data into read cache
+    *
+    * @return
+    */
+  private[repository] def readDataFrame(): DataFrame = {
+    lock.lock()
+    try {
+      if (flushReadCache.getAndSet(false)) {
+        readCache = connector.read()
+      }
+      readCache
+    } finally {
+      lock.unlock()
+    }
+  }
+
+  /**
+    * Write data frame and set flushReadCach to true
+    *
+    * @param data data to be saved
+    */
+  private[repository] def writeDataFrame(data: DataFrame): Unit = {
+    connector.write(data)
+    flushReadCache.set(true)
   }
 
   /**
@@ -92,7 +131,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
     */
   override def save(data: Dataset[DataType], suffix: Option[String] = None): SparkRepository.this.type = {
     configureConnector(data.toDF(), suffix)
-    connector.write(SchemaConverter.toDF[DataType](data))
+    writeDataFrame(SchemaConverter.toDF[DataType](data))
     this
   }
 
