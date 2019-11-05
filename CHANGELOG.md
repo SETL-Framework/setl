@@ -1,9 +1,13 @@
 ## 0.3.3-SNAPSHOT (2019-10-22)
-- Added **SnappyCompressor**
-- Added method **persist(persistence: Boolean)** into **Stage** and **Factory** to 
+- Added option **autoLoad** in the Delivery annotation so that *DeliverableDispatcher* can still handle the dependency
+injection in the case where the delivery is missing but a corresponding
+repository is present.
+- Added option **condition** in the Delivery annotation to pre-filter loaded data when **autoLoad** is set to true.
+- Added **SnappyCompressor**.
+- Added method **persist(persistence: Boolean)** into **Stage** and **Factory** to.
 activate/deactivate output persistence. By default the output persistence is set to *true*.
-- Added implicit method `filter(cond: Set[Condition])` for Dataset and DataFrame
-- Added `setUserDefinedSuffixKey` and `getUserDefinedSuffixKey` to **SparkRepository**
+- Added implicit method `filter(cond: Set[Condition])` for Dataset and DataFrame.
+- Added `setUserDefinedSuffixKey` and `getUserDefinedSuffixKey` to **SparkRepository**.
 
 ## 0.3.2 (2019-10-14)
 - Added **@Compress** annotation. **SparkRepository** will compress all columns having this annotation by
