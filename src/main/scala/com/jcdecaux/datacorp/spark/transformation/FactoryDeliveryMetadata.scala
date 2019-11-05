@@ -3,6 +3,7 @@ package com.jcdecaux.datacorp.spark.transformation
 import java.util.UUID
 
 import com.jcdecaux.datacorp.spark.annotation.{Delivery, InterfaceStability}
+import org.apache.spark.sql.Dataset
 
 import scala.reflect.runtime
 
@@ -33,6 +34,9 @@ private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
     */
   def getFactoryInputs: List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer))
 
+  def isDataset: List[Boolean] = argTypes.map {
+    tp => tp.toString.startsWith(runtime.universe.typeOf[Dataset[_]].toString.dropRight(2))
+  }
 }
 
 private[spark] object FactoryDeliveryMetadata {
@@ -66,7 +70,6 @@ private[spark] object FactoryDeliveryMetadata {
 
       metadata = methodsWithDeliveryAnnotation.map {
         mth =>
-
           val annotation = if (mth.isMethod) {
             cls
               .getDeclaredMethods
@@ -107,55 +110,6 @@ private[spark] object FactoryDeliveryMetadata {
             autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
             condition = conditionMethod.invoke(annotation).asInstanceOf[String]
           )
-
-        //          if (mth.isMethod) {
-        //            log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
-        //
-        //            val annotation = cls
-        //              .getDeclaredMethods
-        //              .find(_.getName == mth.name.toString).get
-        //              .getAnnotation(classOf[Delivery])
-        //
-        //            val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-        //            val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
-        //            val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
-        //            val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
-        //
-        //            FactoryDeliveryMetadata(
-        //              factoryUUID = factoryUUID,
-        //              name = mth.name.toString,
-        //              argTypes = mth.typeSignature.paramLists.head.map(_.typeSignature),
-        //              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
-        //              optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
-        //              autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
-        //              condition = conditionMethod.invoke(annotation).asInstanceOf[String]
-        //            )
-        //          } else {
-        //            log.debug(s"Find annotated variable `${mth.name.toString.trim}` in ${cls.getSimpleName}")
-        //
-        //            val annotation = cls
-        //              .getDeclaredField(mth.name.toString.trim)
-        //              .getAnnotation(classOf[Delivery])
-        //
-        //            val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-        //            val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
-        //            val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
-        //            val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
-        //
-        //            /*
-        //             * If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-        //             */
-        //            FactoryDeliveryMetadata(
-        //              factoryUUID = factoryUUID,
-        //              name = mth.name.toString.trim + "_$eq",
-        //              argTypes = List(mth.typeSignature),
-        //              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
-        //              optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
-        //              autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
-        //              condition = conditionMethod.invoke(annotation).asInstanceOf[String]
-        //            )
-        //          }
-
       }
 
       this

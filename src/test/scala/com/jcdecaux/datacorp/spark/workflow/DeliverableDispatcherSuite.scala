@@ -2,14 +2,18 @@ package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.annotation.Delivery
+import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.{AlreadyExistsException, InvalidDeliveryException}
+import com.jcdecaux.datacorp.spark.storage.SparkRepositoryBuilder
+import com.jcdecaux.datacorp.spark.storage.connector.FileConnector
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 class DeliverableDispatcherSuite extends FunSuite {
 
   import DeliverableDispatcherSuite._
+
   test("Test delivery manager with container and product") {
 
     val CP = Container(Product("1"))
@@ -26,7 +30,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     deliveryManager.setDelivery(new Deliverable(CP2))
     deliveryManager.setDelivery(new Deliverable(C2P2))
 
-    deliveryManager._dispatch(myFactory)
+    deliveryManager.testDispatch(myFactory)
 
     assert(myFactory.input == C2P)
     assert(myFactory.output == CP2)
@@ -57,7 +61,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     deliveryManager.setDelivery(new Deliverable(dsP2))
     deliveryManager.setDelivery(new Deliverable(dsC1))
 
-    deliveryManager._dispatch(myFactory2)
+    deliveryManager.testDispatch(myFactory2)
 
     assert(myFactory2.input.count() === 2)
     assert(myFactory2.input.collect().count(_.x === "a") === 1)
@@ -116,14 +120,14 @@ class DeliverableDispatcherSuite extends FunSuite {
     val test = new Test
     val dispatchManager = new DeliverableDispatcher
 
-    dispatchManager._dispatch(test)
+    dispatchManager.testDispatch(test)
 
     assert(test.v1 === null)
     assert(test.v2 === null)
 
     dispatchManager.setDelivery(new Deliverable[String]("hehehe").setProducer(classOf[P1]))
     dispatchManager.setDelivery(new Deliverable[String]("hahaha").setProducer(classOf[P2]))
-    dispatchManager._dispatch(test)
+    dispatchManager.testDispatch(test)
 
     assert(test.v1 === "hehehe")
     assert(test.v2 === "hahaha")
@@ -179,8 +183,109 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     val factory2 = new Factory2
 
-    assertThrows[InvalidDeliveryException](dispatchManager._dispatch(factory2))
+    assertThrows[InvalidDeliveryException](dispatchManager.testDispatch(factory2))
   }
+
+  test("Deliverabl dispatcher should handle auto loading") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setSpark(spark)
+      .setPath("src/test/resources/csv_test_auto_load")
+      .getOrCreate()
+
+    val ds = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDS
+
+    repo.save(ds)
+
+    val dispatchManager = new DeliverableDispatcher
+    dispatchManager.setDelivery(new Deliverable(repo))
+    val factoryWithAutoLoad = new FactoryWithAutoLoad
+    dispatchManager.testDispatch(factoryWithAutoLoad)
+    assert(factoryWithAutoLoad.input.count() === 3)
+    repo.getConnector.asInstanceOf[FileConnector].delete()
+  }
+
+  test("Deliverabl dispatcher should handle auto loading with condition") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setSpark(spark)
+      .setPath("src/test/resources/csv_test_auto_load")
+      .getOrCreate()
+
+    val ds = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDS
+
+    repo.save(ds)
+
+    val dispatchManager = new DeliverableDispatcher
+    dispatchManager.setDelivery(new Deliverable(repo))
+    val factoryWithAutoLoad = new FactoryWithAutoLoadWithCondition
+    dispatchManager.testDispatch(factoryWithAutoLoad)
+    factoryWithAutoLoad.input.show()
+    assert(factoryWithAutoLoad.input.count() === 1)
+    repo.getConnector.asInstanceOf[FileConnector].delete()
+  }
+
+  test("Deliverable dispatcher should throw exception when repository for auto loading has a wrong consumer") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setSpark(spark)
+      .setPath("src/test/resources/csv_test_auto_load")
+      .getOrCreate()
+
+    val dispatchManager = new DeliverableDispatcher
+    dispatchManager.setDelivery(new Deliverable(repo).setConsumer(classOf[MyFactory2]))
+    val factoryWithAutoLoad = new FactoryWithAutoLoad
+    assertThrows[InvalidDeliveryException](dispatchManager.testDispatch(factoryWithAutoLoad))
+  }
+
+  test("Deliverable dispatcher should throw exception when there is neither delivery nor repository") {
+
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setSpark(spark)
+      .setPath("src/test/resources/csv_test_auto_load_optional")
+      .getOrCreate()
+
+    val dispatchManager = new DeliverableDispatcher
+    dispatchManager.setDelivery(new Deliverable(repo))
+
+    val factoryWithAutoLoadException = new FactoryWithAutoLoadException
+    val factoryWithOptional = new FactoryWithAutoLoadOptional
+
+    val ds = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDS
+
+    repo.save(ds)
+
+    dispatchManager.testDispatch(factoryWithOptional)
+    assert(factoryWithOptional.input.count() === 3)
+    assert(factoryWithOptional.product23 === null)
+
+    assertThrows[NoSuchElementException](dispatchManager.testDispatch(factoryWithAutoLoadException))
+    repo.getConnector.asInstanceOf[FileConnector].delete()
+  }
+
 }
 
 object DeliverableDispatcherSuite {
@@ -235,6 +340,64 @@ object DeliverableDispatcherSuite {
     override def write(): this.type = this
 
     override def get(): Dataset[Product23] = output
+  }
+
+  class FactoryWithAutoLoad extends Factory[Dataset[Product2]] {
+    @Delivery(autoLoad = true)
+    var input: Dataset[Product2] = _
+
+    override def read(): FactoryWithAutoLoad.this.type = this
+
+    override def process(): FactoryWithAutoLoad.this.type = this
+
+    override def write(): FactoryWithAutoLoad.this.type = this
+
+    override def get(): Dataset[Product2] = input
+  }
+
+  class FactoryWithAutoLoadWithCondition extends Factory[Dataset[Product2]] {
+    @Delivery(autoLoad = true, condition = "x = 'a'")
+    var input: Dataset[Product2] = _
+
+    override def read(): FactoryWithAutoLoadWithCondition.this.type = this
+
+    override def process(): FactoryWithAutoLoadWithCondition.this.type = this
+
+    override def write(): FactoryWithAutoLoadWithCondition.this.type = this
+
+    override def get(): Dataset[Product2] = input
+  }
+
+  class FactoryWithAutoLoadException extends Factory[Dataset[Product2]] {
+    @Delivery(autoLoad = true)
+    var input: Dataset[Product2] = _
+
+    @Delivery(autoLoad = true)
+    var product23: Dataset[Product23] = _
+
+    override def read(): FactoryWithAutoLoadException.this.type = this
+
+    override def process(): FactoryWithAutoLoadException.this.type = this
+
+    override def write(): FactoryWithAutoLoadException.this.type = this
+
+    override def get(): Dataset[Product2] = input
+  }
+
+  class FactoryWithAutoLoadOptional extends Factory[Dataset[Product2]] {
+    @Delivery(autoLoad = true)
+    var input: Dataset[Product2] = _
+
+    @Delivery(autoLoad = true, optional = true)
+    var product23: Dataset[Product23] = _
+
+    override def read(): FactoryWithAutoLoadOptional.this.type = this
+
+    override def process(): FactoryWithAutoLoadOptional.this.type = this
+
+    override def write(): FactoryWithAutoLoadOptional.this.type = this
+
+    override def get(): Dataset[Product2] = input
   }
 
 }
