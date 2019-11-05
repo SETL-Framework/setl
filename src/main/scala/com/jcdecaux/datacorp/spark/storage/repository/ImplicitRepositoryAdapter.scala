@@ -43,7 +43,7 @@ object ImplicitRepositoryAdapter {
     private[this] val DBTypeSchema: StructType = StructAnalyser.analyseSchema[B]
 
     def findAllAndConvert(): Dataset[A] = {
-      val data = repository.getConnector.read()
+      val data = repository.readDataFrame()
       converter.convertFrom(SchemaConverter.fromDF[B](data))
     }
 
@@ -59,7 +59,7 @@ object ImplicitRepositoryAdapter {
     def convertAndSave(data: Dataset[A], suffix: Option[String] = None): SparkRepositoryAdapter.this.type = {
       val dsToSave = converter.convertTo(data)
       repository.configureConnector(dsToSave.toDF(), suffix)
-      repository.getConnector.write(SchemaConverter.toDF[B](dsToSave))
+      repository.writeDataFrame(SchemaConverter.toDF[B](dsToSave))
       this
     }
   }
