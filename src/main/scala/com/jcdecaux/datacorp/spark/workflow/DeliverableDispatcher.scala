@@ -3,7 +3,9 @@ package com.jcdecaux.datacorp.spark.workflow
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.exception.{AlreadyExistsException, InvalidDeliveryException}
 import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
+import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
+import org.apache.spark.sql.Dataset
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.{universe => ru}
@@ -54,50 +56,44 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   /**
     * Find the corresponding [[Deliverable]] from the pool with the given runtime Type information
     *
-    * @param deliveryType runtime type
+    * @param availableDeliverable an array of available deliverable
     * @return
     */
   @throws[InvalidDeliveryException]("find multiple matched deliveries")
-  private[this] def getDelivery(deliveryType: ru.Type,
+  private[this] def getDelivery(availableDeliverable: Array[Deliverable[_]],
                                 consumer: Class[_ <: Factory[_]],
                                 producer: Class[_ <: Factory[_]]): Option[Deliverable[_]] = {
-
-    val availableDeliverable = findDeliverableByType(deliveryType)
-
     availableDeliverable.length match {
       case 0 =>
-        log.warn("No deliverable available")
+        log.warn("Can not find any deliverable")
         None
       case 1 =>
-
         val deliverable = availableDeliverable.head
-
         if (deliverable.consumer.nonEmpty && !deliverable.consumer.contains(consumer)) {
           throw new InvalidDeliveryException(s"Can't find ${consumer.getSimpleName} in the consumer list")
         }
-
         log.debug("Find Deliverable")
         Some(availableDeliverable.head)
       case _ =>
-        log.info("Multiple Deliverable with same type were received. Try matching by producer")
+        log.info("Find multiple Deliverable with same type. Try matching by producer")
         val matchedByProducer = availableDeliverable.filter(_.producer == producer)
 
         matchedByProducer.length match {
           case 0 =>
-            log.warn("No deliverable available")
+            log.warn("Can not find any deliverable that matches the producer")
             None
           case 1 =>
             log.debug("Find Deliverable")
             Some(matchedByProducer.head)
           case _ =>
-            log.info("Multiple Deliverable with same type and same producer were received. Try matching by consumer")
+            log.info("Find multiple Deliverable with same type and same producer Try matching by consumer")
             val matchedByConsumer = matchedByProducer
               .filter(_.consumer.nonEmpty)
               .filter(_.consumer.contains(consumer))
 
             matchedByConsumer.length match {
               case 0 =>
-                log.warn("No deliverable available")
+                log.warn("Can not find any deliverable that matches the consumer")
                 None
               case 1 =>
                 log.debug("Find Deliverable")
@@ -120,7 +116,17 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * Collect a [[Deliverable]] from a [[Factory]]
+    * Get all the Deliverable by matching the payload type name with the given name
+    *
+    * @param deliveryName string, type of data
+    * @return
+    */
+  private[workflow] def findDeliverableByName(deliveryName: String): Array[Deliverable[_]] = {
+    deliveries.filter(_.hasSamePayloadType(deliveryName)).toArray
+  }
+
+  /**
+    * Collect a [[Deliverable]] from a [[Factory]] and set the deliverable to this DeliverableDispatcher
     *
     * @param factory a factory object
     * @return
@@ -129,6 +135,12 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     setDelivery(factory.getDelivery)
   }
 
+  /**
+    * Collect [[Deliverable]] from a stage and set those deliverable to this DeliverableDispatcher
+    *
+    * @param stage stage
+    * @return
+    */
   private[workflow] def collectDeliverable(stage: Stage): this.type = {
     stage.deliveries.foreach(setDelivery)
     this
@@ -137,7 +149,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   /**
     * Used only for testing
     */
-  private[workflow] def _dispatch(factory: Factory[_]): this.type = {
+  private[workflow] def testDispatch(factory: Factory[_]): this.type = {
     val setters = FactoryDeliveryMetadata
       .builder()
       .setFactory(factory)
@@ -160,12 +172,26 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
+    * For a given dataset runtime type, for example: org.apache.spark.sql.Dataset[T], get the type T and
+    * return the name of the corresponding SparkRepository[T]
+    *
+    * @param datasetType runtime type of a dataset
+    * @return a string like com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[T]
+    */
+  private[workflow] def getRepositoryNameFromDataset(datasetType: ru.Type): String = {
+    val sparkRepo = ru.typeOf[SparkRepository[_]].toString.dropRight(3)
+    val thisArgType = datasetType.toString.split("\\[")(1).dropRight(1)
+    s"$sparkRepo[$thisArgType]"
+  }
+
+  /**
     * Dispatch the right deliverable object to the corresponding methods
     * (denoted by the @Delivery annotation) of a factory
     *
     * @param factory target factory
-    * @return
+    * @return this type
     */
+  @throws[NoSuchElementException]
   private[this] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
     setters
       .foreach {
@@ -173,17 +199,57 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
           val args = setterMethod.argTypes.map {
             argType =>
-              log.debug(s"Dispatch ${simpleTypeNameOf(argType)} by calling " +
-                s"${factory.getClass.getSimpleName}.${setterMethod.name}")
+              log.debug(s"Look for available ${simpleTypeNameOf(argType)} in delivery pool")
+              val availableDeliverable = findDeliverableByType(argType)
 
-              getDelivery(
-                deliveryType = argType,
+              val finalDelivery = getDelivery(
+                availableDeliverable = availableDeliverable,
                 consumer = factory.getClass,
                 producer = setterMethod.producer
               ) match {
                 case Some(delivery) =>
+                  // If we find some delivery, then return it if non null
                   require(delivery.payload != null, "Deliverable is null")
-                  delivery
+                  Some(delivery)
+
+                case _ =>
+                  /*
+                   if there's no delivery, then check if autoLoad is set to true.
+                   if true, then we will try to find the corresponding repository of the input type and load the data
+                  */
+                  val isDataset = argType.toString.startsWith(ru.typeOf[Dataset[_]].toString.dropRight(2)) // check if the input argType is a dataset
+
+                  if (setterMethod.autoLoad && isDataset) {
+                    val repoName = getRepositoryNameFromDataset(argType)
+                    log.info("Find auto load enabled, looking for repository")
+
+                    val availableRepos = findDeliverableByName(repoName)
+                    val matchedRepo = getDelivery(availableRepos, factory.getClass, classOf[External])
+
+                    matchedRepo match {
+                      case Some(deliverable) =>
+                        val repo = deliverable.payload.asInstanceOf[SparkRepository[_]]
+                        val data = if (setterMethod.condition != "") {
+                          repo.findAll().filter(setterMethod.condition)
+                        } else {
+                          repo.findAll()
+                        }
+                        Option(new Deliverable(data))
+                      case _ =>
+                        // throw exception if there's no deliverable and the current delivery is not optional
+                        if (!setterMethod.optional) {
+                          throw new NoSuchElementException(s"Can not find $repoName from DispatchManager")
+                        }
+
+                        None
+                    }
+                  } else {
+                    None
+                  }
+              }
+
+              finalDelivery match {
+                case Some(delivery) => delivery
                 case _ =>
                   if (!setterMethod.optional) {
                     throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
@@ -196,6 +262,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           if (args.exists(_.isEmpty)) {
             log.warn(s"No deliverable was found for optional input ${setterMethod.name}")
           } else {
+            log.debug(s"Dispatch by calling ${factory.getClass.getSimpleName}.${setterMethod.name}")
             val factorySetter = factory.getClass.getMethod(setterMethod.name, args.map(_.classInfo): _*)
             factorySetter.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
           }
