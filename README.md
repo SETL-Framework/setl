@@ -8,7 +8,7 @@ This project provides an easy-to-use and general-purpose framework for data tran
 <dependency>
   <groupId>com.jcdecaux.datacorp</groupId>
   <artifactId>dc-spark-sdk_2.4</artifactId>
-  <version>0.3.3-SNAPSHOT</version>
+  <version>0.3.4-SNAPSHOT</version>
 </dependency>
 ```
 
