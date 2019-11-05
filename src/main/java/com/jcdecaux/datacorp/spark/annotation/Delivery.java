@@ -29,4 +29,8 @@ public @interface Delivery {
      * Indicates whether the current Delivery is optional or not
      */
     boolean optional() default false;
+
+    boolean autoLoad() default false;
+
+    String condition() default "";
 }

@@ -21,7 +21,9 @@ private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
                                                   name: String,
                                                   argTypes: List[runtime.universe.Type],
                                                   producer: Class[_ <: Factory[_]],
-                                                  optional: Boolean) {
+                                                  optional: Boolean,
+                                                  autoLoad: Boolean = false,
+                                                  condition: String = "") {
 
   /**
     * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
@@ -56,56 +58,105 @@ private[spark] object FactoryDeliveryMetadata {
 
       // Black magic XD
       val classSymbol = runtime.universe.runtimeMirror(getClass.getClassLoader).classSymbol(cls)
-      val methodsWithDeliveryAnnotation = classSymbol.info.decls.filter({
+      val methodsWithDeliveryAnnotation = classSymbol.info.decls.filter {
         x => x.annotations.exists(y => y.tree.tpe =:= runtime.universe.typeOf[Delivery])
-      })
+      }
 
       if (methodsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
 
-      metadata = methodsWithDeliveryAnnotation.map({
+      metadata = methodsWithDeliveryAnnotation.map {
         mth =>
 
-          if (mth.isMethod) {
-            log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
-
-            val annotation = cls
+          val annotation = if (mth.isMethod) {
+            cls
               .getDeclaredMethods
               .find(_.getName == mth.name.toString).get
               .getAnnotation(classOf[Delivery])
-
-            val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-            val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
-
-            FactoryDeliveryMetadata(
-              factoryUUID = factoryUUID,
-              name = mth.name.toString,
-              argTypes = mth.typeSignature.paramLists.head.map(_.typeSignature),
-              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
-              optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean]
-            )
           } else {
-            log.debug(s"Find annotated variable `${mth.name.toString.trim}` in ${cls.getSimpleName}")
-
-            val annotation = cls
+            cls
               .getDeclaredField(mth.name.toString.trim)
               .getAnnotation(classOf[Delivery])
-
-            val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-            val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
-
-            /*
-             * If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-             */
-            FactoryDeliveryMetadata(
-              factoryUUID = factoryUUID,
-              name = mth.name.toString.trim + "_$eq",
-              argTypes = List(mth.typeSignature),
-              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
-              optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean]
-            )
           }
 
-      })
+          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
+          val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
+          val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
+          val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
+
+          val name = if (mth.isMethod) {
+            log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
+            mth.name.toString
+          } else {
+            // If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
+            log.debug(s"Find annotated variable `${mth.name.toString.trim}` in ${cls.getSimpleName}")
+            mth.name.toString.trim + "_$eq"
+          }
+
+          val argTypes = if (mth.isMethod) {
+            mth.typeSignature.paramLists.head.map(_.typeSignature)
+          } else {
+            List(mth.typeSignature)
+          }
+
+          FactoryDeliveryMetadata(
+            factoryUUID = factoryUUID,
+            name = name,
+            argTypes = argTypes,
+            producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
+            optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
+            autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
+            condition = conditionMethod.invoke(annotation).asInstanceOf[String]
+          )
+
+        //          if (mth.isMethod) {
+        //            log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
+        //
+        //            val annotation = cls
+        //              .getDeclaredMethods
+        //              .find(_.getName == mth.name.toString).get
+        //              .getAnnotation(classOf[Delivery])
+        //
+        //            val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
+        //            val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
+        //            val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
+        //            val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
+        //
+        //            FactoryDeliveryMetadata(
+        //              factoryUUID = factoryUUID,
+        //              name = mth.name.toString,
+        //              argTypes = mth.typeSignature.paramLists.head.map(_.typeSignature),
+        //              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
+        //              optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
+        //              autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
+        //              condition = conditionMethod.invoke(annotation).asInstanceOf[String]
+        //            )
+        //          } else {
+        //            log.debug(s"Find annotated variable `${mth.name.toString.trim}` in ${cls.getSimpleName}")
+        //
+        //            val annotation = cls
+        //              .getDeclaredField(mth.name.toString.trim)
+        //              .getAnnotation(classOf[Delivery])
+        //
+        //            val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
+        //            val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
+        //            val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
+        //            val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
+        //
+        //            /*
+        //             * If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
+        //             */
+        //            FactoryDeliveryMetadata(
+        //              factoryUUID = factoryUUID,
+        //              name = mth.name.toString.trim + "_$eq",
+        //              argTypes = List(mth.typeSignature),
+        //              producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
+        //              optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
+        //              autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
+        //              condition = conditionMethod.invoke(annotation).asInstanceOf[String]
+        //            )
+        //          }
+
+      }
 
       this
     }
