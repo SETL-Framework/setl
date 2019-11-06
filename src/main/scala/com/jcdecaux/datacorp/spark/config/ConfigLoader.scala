@@ -73,7 +73,11 @@ abstract class ConfigLoader extends Logging {
 
   def appEnv: String = applicationEnvironment.get.toLowerCase()
 
-  def getConfigPath: String = configPath.getOrElse(s"$appEnv.conf")
+  def getConfigPath: String = {
+    val cf = configPath.getOrElse(s"$appEnv.conf")
+    log.debug(s"Load config file: $cf")
+    cf
+  }
 
   private[this] def invalidateCaches(): Unit = {
     log.debug("Clear ConfigFactory caches")
