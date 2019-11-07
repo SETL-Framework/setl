@@ -17,10 +17,18 @@ import scala.reflect.runtime.{universe => ru}
 class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false
-
+  private[this] var _producer: Class[_ <: Factory[_]] = classOf[External]
+  private[this] var _deliveryId: String = Deliverable.DEFAULT_ID
   private[spark] def isEmpty: Boolean = empty
 
-  var producer: Class[_ <: Factory[_]] = classOf[External]
+  def producer: Class[_ <: Factory[_]] = _producer
+
+  def deliveryId: String = _deliveryId
+
+  def setDeliveryId(id: String): this.type = {
+    _deliveryId = id
+    this
+  }
 
   /**
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
@@ -61,7 +69,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     * @return
     */
   def setProducer(t: Class[_ <: Factory[_]]): this.type = {
-    producer = t
+    _producer = t
     this
   }
 
@@ -97,6 +105,8 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
 }
 
 object Deliverable {
+
+  val DEFAULT_ID: String = ""
 
   def empty(): Deliverable[Option[Nothing]] = {
     val emptyDelivery = new Deliverable[Option[Nothing]](None)

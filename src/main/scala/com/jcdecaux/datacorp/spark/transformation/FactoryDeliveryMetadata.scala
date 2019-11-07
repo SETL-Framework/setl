@@ -24,7 +24,8 @@ private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
                                                   producer: Class[_ <: Factory[_]],
                                                   optional: Boolean,
                                                   autoLoad: Boolean = false,
-                                                  condition: String = "") {
+                                                  condition: String = "",
+                                                  id: String = "") {
 
   /**
     * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
@@ -85,6 +86,7 @@ private[spark] object FactoryDeliveryMetadata {
           val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
           val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
           val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
+          val idMethod = annotation.annotationType().getDeclaredMethod("id")
 
           val name = if (mth.isMethod) {
             log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
@@ -108,7 +110,8 @@ private[spark] object FactoryDeliveryMetadata {
             producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
             optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
             autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
-            condition = conditionMethod.invoke(annotation).asInstanceOf[String]
+            condition = conditionMethod.invoke(annotation).asInstanceOf[String],
+            id = idMethod.invoke(annotation).asInstanceOf[String]
           )
       }
 
