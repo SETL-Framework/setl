@@ -153,6 +153,9 @@ object SparkRepository {
   /**
     * Change the column name according to DataType schema's annotation (@ColumnName)
     *
+    * In the case where a case class field is annotated by @ColumnName, if the name of case class' field is used in the
+    * condition, we replace it with its alias (the value given by @ColumnName annotation)
+    *
     * @param conditions conditions
     * @return
     */
@@ -166,7 +169,7 @@ object SparkRepository {
         cond =>
 
           if (binaryColumns.map(_.name).contains(cond.key)) {
-            // TODO the following code doesn't handle the alais
+            // TODO the following code doesn't handle the alias
             throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
           }
 

@@ -68,7 +68,7 @@ class SparkRepositorySuite extends FunSuite {
 
   }
 
-  test("Test with annotated case class") {
+  test("SparkRepository should handle case class with CompoundKey annotation") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
@@ -85,7 +85,15 @@ class SparkRepositorySuite extends FunSuite {
 
     val repo = new SparkRepository[MyObject].setConnector(connector)
 
-    repo.save(ds)
+    repo
+      .partitionBy("_sort_key")
+      .save(ds)
+
+    // to verify if the filter is pushed down
+    val filteredBySortKey = repo.findBy(Condition("_sort_key", "=", "A-a"))
+    filteredBySortKey.explain()
+    assert(filteredBySortKey.count() === 1)
+
     val data = repo.findAll()
     assert(data.columns === Array("column1", "column2"))
 
