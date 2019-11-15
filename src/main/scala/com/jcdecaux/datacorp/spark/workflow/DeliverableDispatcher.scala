@@ -167,8 +167,8 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   @throws[NoSuchElementException]("Cannot find any matched delivery")
   @throws[InvalidDeliveryException]("Find multiple matched deliveries")
   private[workflow] def dispatch(factory: Factory[_]): this.type = {
-    val setters = this.graph.findSetters(factory)
-    dispatch(factory, setters)
+    val deliveryMetadata = this.graph.findDeliveryMetadata(factory)
+    dispatch(factory, deliveryMetadata)
   }
 
   /**
@@ -192,12 +192,12 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return this type
     */
   @throws[NoSuchElementException]
-  private[this] def dispatch(factory: Factory[_], setters: Iterable[FactoryDeliveryMetadata]): this.type = {
-    setters
+  private[this] def dispatch(factory: Factory[_], deliveries: Iterable[FactoryDeliveryMetadata]): this.type = {
+    deliveries
       .foreach {
-        setterMethod =>
+        deliveryMeta =>
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
-          val args = setterMethod.argTypes.map {
+          val args = deliveryMeta.argTypes.map {
             argType =>
               log.debug(s"Look for available ${simpleTypeNameOf(argType)} in delivery pool")
               val availableDeliverable = findDeliverableByType(argType)
@@ -205,12 +205,12 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
               val finalDelivery = getDelivery(
                 availableDeliverable = availableDeliverable,
                 consumer = factory.getClass,
-                producer = setterMethod.producer
+                producer = deliveryMeta.producer
               ) match {
-                case Some(delivery) =>
+                case Some(deliverable) =>
                   // If we find some delivery, then return it if non null
-                  require(delivery.payload != null, "Deliverable is null")
-                  Some(delivery)
+                  require(deliverable.payload != null, "Deliverable is null")
+                  Some(deliverable)
 
                 case _ =>
                   /*
@@ -219,7 +219,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                   */
                   val isDataset = argType.toString.startsWith(ru.typeOf[Dataset[_]].toString.dropRight(2)) // check if the input argType is a dataset
 
-                  if (setterMethod.autoLoad && isDataset) {
+                  if (deliveryMeta.autoLoad && isDataset) {
                     val repoName = getRepositoryNameFromDataset(argType)
                     log.info("Find auto load enabled, looking for repository")
 
@@ -229,18 +229,17 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                     matchedRepo match {
                       case Some(deliverable) =>
                         val repo = deliverable.payload.asInstanceOf[SparkRepository[_]]
-                        val data = if (setterMethod.condition != "") {
-                          repo.findAll().filter(setterMethod.condition)
+                        val data = if (deliveryMeta.condition != "") {
+                          repo.findAll().filter(deliveryMeta.condition)
                         } else {
                           repo.findAll()
                         }
                         Option(new Deliverable(data))
                       case _ =>
-                        // throw exception if there's no deliverable and the current delivery is not optional
-                        if (!setterMethod.optional) {
+                        if (!deliveryMeta.optional) {
+                          // throw exception if there's no deliverable and the current delivery is not optional
                           throw new NoSuchElementException(s"Can not find $repoName from DispatchManager")
                         }
-
                         None
                     }
                   } else {
@@ -249,9 +248,9 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
               }
 
               finalDelivery match {
-                case Some(delivery) => delivery
+                case Some(deliverable) => deliverable
                 case _ =>
-                  if (!setterMethod.optional) {
+                  if (!deliveryMeta.optional) {
                     throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
                   } else {
                     Deliverable.empty()
@@ -260,10 +259,10 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           }
 
           if (args.exists(_.isEmpty)) {
-            log.warn(s"No deliverable was found for optional input ${setterMethod.name}")
+            log.warn(s"No deliverable was found for optional input ${deliveryMeta.name}")
           } else {
-            log.debug(s"Dispatch by calling ${factory.getClass.getSimpleName}.${setterMethod.name}")
-            val factorySetter = factory.getClass.getMethod(setterMethod.name, args.map(_.classInfo): _*)
+            log.debug(s"Dispatch by calling ${factory.getClass.getSimpleName}.${deliveryMeta.name}")
+            val factorySetter = factory.getClass.getMethod(deliveryMeta.name, args.map(_.classInfo): _*)
             factorySetter.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
           }
       }
