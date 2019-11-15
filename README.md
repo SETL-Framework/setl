@@ -2,7 +2,10 @@
 This project provides an easy-to-use and general-purpose framework for data transformation application.
 
 ## Use
-### Maven
+### Create a new project
+You can start working by cloning [this template project](https://git.jcdecaux.com/qin/spark-framework-singleton).
+
+### Use in an existing project
 ```xml
 <!--JCDecaux Datacorp-->
 <dependency>
