@@ -57,6 +57,19 @@ private[spark] object FactoryDeliveryMetadata {
       this
     }
 
+    /**
+      * Invoke a declared method of the delivery and get the value
+      *
+      * @param delivery       delivery object
+      * @param declaredMethod name of the method
+      * @tparam T type of the returned value of the method
+      * @return an object of type T
+      */
+    private[this] def getDeliveryParameter[T](delivery: Delivery, declaredMethod: String): T = {
+      val method = delivery.annotationType().getDeclaredMethod(declaredMethod)
+      method.invoke(delivery).asInstanceOf[T]
+    }
+
     override def build(): this.type = {
 
       log.debug(s"Search Deliveries of ${cls.getSimpleName}")
@@ -70,7 +83,7 @@ private[spark] object FactoryDeliveryMetadata {
 
       metadata = symbolsWithDeliveryAnnotation.map {
         symbol =>
-          val annotation = if (symbol.isMethod) {
+          val delivery: Delivery = if (symbol.isMethod) {
             cls
               .getDeclaredMethods
               .find(_.getName == symbol.name.toString).get
@@ -80,12 +93,6 @@ private[spark] object FactoryDeliveryMetadata {
               .getDeclaredField(symbol.name.toString.trim)
               .getAnnotation(classOf[Delivery])
           }
-
-          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-          val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
-          val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
-          val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
-          val idMethod = annotation.annotationType().getDeclaredMethod("id")
 
           val name = if (symbol.isMethod) {
             log.debug(s"Find annotated method `${symbol.name}` in ${cls.getSimpleName}")
@@ -106,11 +113,11 @@ private[spark] object FactoryDeliveryMetadata {
             factoryUUID = factoryUUID,
             name = name,
             argTypes = argTypes,
-            producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
-            optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
-            autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
-            condition = conditionMethod.invoke(annotation).asInstanceOf[String],
-            id = idMethod.invoke(annotation).asInstanceOf[String]
+            producer = getDeliveryParameter[Class[_ <: Factory[_]]](delivery, "producer"),
+            optional = getDeliveryParameter[Boolean](delivery, "optional"),
+            autoLoad = getDeliveryParameter[Boolean](delivery, "autoLoad"),
+            condition = getDeliveryParameter[String](delivery, "condition"),
+            id = getDeliveryParameter[String](delivery, "id")
           )
       }
 
