@@ -61,24 +61,23 @@ private[spark] object FactoryDeliveryMetadata {
 
       log.debug(s"Search Deliveries of ${cls.getSimpleName}")
 
-      // Black magic XD
       val classSymbol = runtime.universe.runtimeMirror(getClass.getClassLoader).classSymbol(cls)
-      val methodsWithDeliveryAnnotation = classSymbol.info.decls.filter {
+      val symbolsWithDeliveryAnnotation = classSymbol.info.decls.filter {
         x => x.annotations.exists(y => y.tree.tpe =:= runtime.universe.typeOf[Delivery])
       }
 
-      if (methodsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
+      if (symbolsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
 
-      metadata = methodsWithDeliveryAnnotation.map {
-        mth =>
-          val annotation = if (mth.isMethod) {
+      metadata = symbolsWithDeliveryAnnotation.map {
+        symbol =>
+          val annotation = if (symbol.isMethod) {
             cls
               .getDeclaredMethods
-              .find(_.getName == mth.name.toString).get
+              .find(_.getName == symbol.name.toString).get
               .getAnnotation(classOf[Delivery])
           } else {
             cls
-              .getDeclaredField(mth.name.toString.trim)
+              .getDeclaredField(symbol.name.toString.trim)
               .getAnnotation(classOf[Delivery])
           }
 
@@ -88,19 +87,19 @@ private[spark] object FactoryDeliveryMetadata {
           val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
           val idMethod = annotation.annotationType().getDeclaredMethod("id")
 
-          val name = if (mth.isMethod) {
-            log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
-            mth.name.toString
+          val name = if (symbol.isMethod) {
+            log.debug(s"Find annotated method `${symbol.name}` in ${cls.getSimpleName}")
+            symbol.name.toString
           } else {
             // If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-            log.debug(s"Find annotated variable `${mth.name.toString.trim}` in ${cls.getSimpleName}")
-            mth.name.toString.trim + "_$eq"
+            log.debug(s"Find annotated variable `${symbol.name.toString.trim}` in ${cls.getSimpleName}")
+            symbol.name.toString.trim + "_$eq"
           }
 
-          val argTypes = if (mth.isMethod) {
-            mth.typeSignature.paramLists.head.map(_.typeSignature)
+          val argTypes = if (symbol.isMethod) {
+            symbol.typeSignature.paramLists.head.map(_.typeSignature)
           } else {
-            List(mth.typeSignature)
+            List(symbol.typeSignature)
           }
 
           FactoryDeliveryMetadata(
