@@ -112,7 +112,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return
     */
   private[workflow] def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = {
-    deliveries.filter(_.hasSamePayloadType(deliveryType)).toArray
+    findDeliverableBy(x => x.hasSamePayloadType(deliveryType))
+  }
+
+  private[workflow] def findDeliverableBy(condition: Deliverable[_] => Boolean): Array[Deliverable[_]] = {
+    deliveries.filter(d => condition(d)).toArray
   }
 
   /**
@@ -122,7 +126,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return
     */
   private[workflow] def findDeliverableByName(deliveryName: String): Array[Deliverable[_]] = {
-    deliveries.filter(_.hasSamePayloadType(deliveryName)).toArray
+    findDeliverableBy(x => x.hasSamePayloadType(deliveryName))
   }
 
   /**
@@ -188,11 +192,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * Dispatch the right deliverable object to the corresponding methods
     * (denoted by the @Delivery annotation) of a factory
     *
-    * @param factory target factory
+    * @param consumer target factory
     * @return this type
     */
   @throws[NoSuchElementException]
-  private[this] def dispatch(factory: Factory[_], deliveries: Iterable[FactoryDeliveryMetadata]): this.type = {
+  private[this] def dispatch(consumer: Factory[_], deliveries: Iterable[FactoryDeliveryMetadata]): this.type = {
     deliveries
       .foreach {
         deliveryMeta =>
@@ -200,11 +204,14 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           val args = deliveryMeta.argTypes.map {
             argType =>
               log.debug(s"Look for available ${simpleTypeNameOf(argType)} in delivery pool")
-              val availableDeliverable = findDeliverableByType(argType)
+
+              val availableDeliverable = findDeliverableBy {
+                deliverable => deliverable.hasSamePayloadType(argType) && deliverable.deliveryId == deliveryMeta.id
+              }
 
               val finalDelivery = getDelivery(
                 availableDeliverable = availableDeliverable,
-                consumer = factory.getClass,
+                consumer = consumer.getClass,
                 producer = deliveryMeta.producer
               ) match {
                 case Some(deliverable) =>
@@ -223,8 +230,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                     val repoName = getRepositoryNameFromDataset(argType)
                     log.info("Find auto load enabled, looking for repository")
 
-                    val availableRepos = findDeliverableByName(repoName)
-                    val matchedRepo = getDelivery(availableRepos, factory.getClass, classOf[External])
+                    val availableRepos = findDeliverableBy {
+                      deliverable => deliverable.hasSamePayloadType(repoName) && deliverable.deliveryId == deliveryMeta.id
+                    }
+
+                    val matchedRepo = getDelivery(availableRepos, consumer.getClass, classOf[External])
 
                     matchedRepo match {
                       case Some(deliverable) =>
@@ -261,9 +271,9 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
           if (args.exists(_.isEmpty)) {
             log.warn(s"No deliverable was found for optional input ${deliveryMeta.name}")
           } else {
-            log.debug(s"Dispatch by calling ${factory.getClass.getSimpleName}.${deliveryMeta.name}")
-            val factorySetter = factory.getClass.getMethod(deliveryMeta.name, args.map(_.classInfo): _*)
-            factorySetter.invoke(factory, args.map(_.get.asInstanceOf[Object]): _*)
+            log.debug(s"Dispatch by calling ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
+            val factorySetter = consumer.getClass.getMethod(deliveryMeta.name, args.map(_.classInfo): _*)
+            factorySetter.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
           }
       }
     this
