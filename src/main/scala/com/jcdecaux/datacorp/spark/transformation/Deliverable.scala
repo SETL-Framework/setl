@@ -18,6 +18,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
 
   private var empty: Boolean = false
   private[this] var _producer: Class[_ <: Factory[_]] = classOf[External]
+  private[this] val _consumer: ArrayBuffer[Class[_ <: Factory[_]]] = ArrayBuffer()
   private[this] var _deliveryId: String = Deliverable.DEFAULT_ID
   private[spark] def isEmpty: Boolean = empty
 
@@ -34,7 +35,8 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
     * type, it will select the correct deliverable by looking at the consumer
     */
-  val consumer: ArrayBuffer[Class[_]] = ArrayBuffer()
+
+  def consumer: List[Class[_ <: Factory[_]]] = _consumer.toList
 
   override val runtimeType: ru.Type = ru.typeTag[T].tpe
 
@@ -74,26 +76,25 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
   }
 
   /**
-    * Set consumer of this deliverable
+    * Set consumer to this deliverable
     *
-    * @param t class of consumer
+    * @param consumer class of consumer
     * @return
     */
-  def setConsumer(t: Class[_ <: Factory[_]]): this.type = {
-    consumer.append(t)
+  def setConsumer(consumer: Class[_ <: Factory[_]]): this.type = {
+    this._consumer.append(consumer)
     this
   }
 
-  def setConsumers(consumer: Class[_ <: Factory[_]]*): this.type = {
-    consumer.foreach(setConsumer)
+  /**
+    * Set consumers to this deliverable
+    *
+    * @param consumer class of consumer
+    * @return
+    */
+  def setConsumers(consumer: Seq[Class[_ <: Factory[_]]]): this.type = {
+    this._consumer.appendAll(consumer)
     this
-  }
-
-  def setProducer(producer: Option[Class[_ <: Factory[_]]]): this.type = {
-    producer match {
-      case Some(p) => setProducer(p)
-      case _ => this
-    }
   }
 
   def describe(): Unit = {
