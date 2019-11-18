@@ -275,6 +275,8 @@ class SparkRepositorySuite extends FunSuite {
     assert(t2 < t1)
     assert(t3 < t1)
     assert(t4 > t3)
+
+    connector.delete()
   }
 }
 
