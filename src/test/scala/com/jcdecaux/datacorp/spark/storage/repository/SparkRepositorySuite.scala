@@ -272,8 +272,18 @@ class SparkRepositorySuite extends FunSuite {
     repo.save(testData)
     val (r4, t4) = profile(repo.findAll())
 
+    println(s"First read time elapsed: $t1 nano seconds")
+    println(s"Second read time elapsed: $t2 nano seconds")
+    println(s"Third read time elapsed: $t3 nano seconds")
+    println(s"Fourth read time elapsed: $t4 nano seconds")
+
+    assert(r1.count() === 3)
+    assert(r2.count() === 3)
+    assert(r3.count() === 3)
     assert(t2 < t1)
     assert(t3 < t1)
+
+    assert(r4.count() === 6)
     assert(t4 > t3)
 
     connector.delete()
