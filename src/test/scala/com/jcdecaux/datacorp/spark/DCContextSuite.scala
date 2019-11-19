@@ -3,11 +3,11 @@ package com.jcdecaux.datacorp.spark
 import com.jcdecaux.datacorp.spark.annotation.Delivery
 import com.jcdecaux.datacorp.spark.config.ConfigLoader
 import com.jcdecaux.datacorp.spark.storage.Condition
-import com.jcdecaux.datacorp.spark.storage.connector.FileConnector
+import com.jcdecaux.datacorp.spark.storage.connector.{Connector, FileConnector}
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.transformation.Factory
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
-import org.apache.spark.sql.{Dataset, SparkSession, functions}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 class DCContextSuite extends FunSuite with BeforeAndAfterAll {
@@ -130,6 +130,35 @@ class DCContextSuite extends FunSuite with BeforeAndAfterAll {
     conn.delete()
   }
 
+  test("DCContext should handle connectors with delivery id") {
+
+    val context = DCContext.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    context
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
+      .setConnector("csv_dc_context_consumer", "1")
+
+    val factory = new DCContextSuite.FactoryWithConnector
+
+    context
+      .newPipeline()
+      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(factory)
+      .describe()
+      .run()
+
+    val output = factory.get()
+    output.show()
+    assert(output.count() === 2)
+    assert(output.collect() === Array(
+      TestObject(1, "a", "A", 1L),
+      TestObject(2, "b", "B", 2L)
+    ))
+    context.getConnector("csv_dc_context_consumer").asInstanceOf[FileConnector].delete()
+  }
+
   //  test("DCContext should be able to handle AppEnv setting with default config loader") {
   //    System.setProperty("app.environment", "test")
   //    assertThrows[java.lang.IllegalArgumentException](
@@ -186,6 +215,32 @@ object DCContextSuite {
     }
 
     override def get(): Dataset[TestObject3] = output
+  }
+
+  class FactoryWithConnector extends Factory[Dataset[TestObject]] {
+
+    @Delivery(id = "1")
+    var testObjectConnector: Connector = _
+
+    @Delivery(id = "2", optional = true)
+    var anotherConnector: Connector = _
+
+    var output: DataFrame = _
+
+    override def read(): FactoryWithConnector.this.type = {
+      output = testObjectConnector.read()
+      this
+    }
+
+    override def process(): FactoryWithConnector.this.type = this
+
+    override def write(): FactoryWithConnector.this.type = this
+
+    override def get(): Dataset[TestObject] = {
+      val spark = SparkSession.getActiveSession.get
+      import spark.implicits._
+      output.as[TestObject]
+    }
   }
 
 }

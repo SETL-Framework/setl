@@ -62,7 +62,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
       this.producer == deliverable.producer
   }
 
-  def classInfo: Class[_] = payload.getClass
+  def payloadClass: Class[_] = payload.getClass
 
   /**
     * Set producer of this deliverable

@@ -52,8 +52,9 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     */
   def resetSparkRepository[DT: ru.TypeTag](config: String,
                                            consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
-                                           deliveryId: String = Deliverable.DEFAULT_ID): this.type = {
-    val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).setSpark(spark).getOrCreate()
+                                           deliveryId: String = Deliverable.DEFAULT_ID,
+                                           readCache: Boolean = false): this.type = {
+    val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).setSpark(spark).getOrCreate().persistReadData(readCache)
     val deliverable = new Deliverable(repo).setConsumers(consumer).setDeliveryId(deliveryId)
     inputRegister.put(repositoryId(config), deliverable)
     this
@@ -71,8 +72,9 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     */
   def setSparkRepository[DT: ru.TypeTag](config: String,
                                          consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
-                                         deliveryId: String = Deliverable.DEFAULT_ID): this.type = {
-    if (!inputRegister.contains(repositoryId(config))) resetSparkRepository[DT](config, consumer, deliveryId)
+                                         deliveryId: String = Deliverable.DEFAULT_ID,
+                                         readCache: Boolean = false): this.type = {
+    if (!inputRegister.contains(repositoryId(config))) resetSparkRepository[DT](config, consumer, deliveryId, readCache)
     this
   }
 

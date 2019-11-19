@@ -272,8 +272,35 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
             log.warn(s"No deliverable was found for optional input ${deliveryMeta.name}")
           } else {
             log.debug(s"Dispatch by calling ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
-            val factorySetter = consumer.getClass.getMethod(deliveryMeta.name, args.map(_.classInfo): _*)
-            factorySetter.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
+
+            val consumerClass = consumer.getClass
+            val consumerSetter = try {
+              consumerClass.getMethod(deliveryMeta.name, args.map(_.payloadClass): _*)
+            } catch {
+              case n: NoSuchMethodException =>
+                log.debug("Can't find setter method. Try to match with super class")
+                val similarMethods = consumerClass.getDeclaredMethods.filter(_.getName == deliveryMeta.name)
+
+                if (similarMethods.length > 1) throw new NoSuchMethodException("Multiple setter methods found.")
+
+                val setter = similarMethods.head
+                val setterParamsClass = setter.getParameterTypes
+                val argsClass = args.map(_.payloadClass)
+
+                val interchangeable = argsClass.zip(setterParamsClass).map {
+                  case (arg, param) => param.isAssignableFrom(arg)
+                }.forall(x => x)
+
+                if (interchangeable) {
+                  setter
+                } else {
+                  throw n
+                }
+
+              case e => throw e
+            }
+
+            consumerSetter.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
           }
       }
     this
