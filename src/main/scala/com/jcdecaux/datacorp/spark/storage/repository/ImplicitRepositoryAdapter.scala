@@ -38,7 +38,7 @@ object ImplicitRepositoryAdapter {
     */
   implicit class SparkRepositoryAdapter[A: TypeTag, B: TypeTag]
   (override val repository: SparkRepository[A])
-  (override implicit val converter: DatasetConverter[A, B]) extends RepositoryAdapter[A, B] {
+  (override implicit val converter: DatasetConverter[A, B]) extends RepositoryAdapter[Dataset[A], Dataset[B]] {
 
     private[this] val DBTypeSchema: StructType = StructAnalyser.analyseSchema[B]
 

@@ -19,7 +19,7 @@ trait Repository[DT] {
     * @param conditions Set of [[Condition]]
     * @return
     */
-  def findBy(conditions: Set[Condition]): Dataset[DT]
+  def findBy(conditions: Set[Condition]): DT
 
   /**
     * Find data by giving a single condition
@@ -27,14 +27,14 @@ trait Repository[DT] {
     * @param condition a [[Condition]]
     * @return
     */
-  def findBy(condition: Condition): Dataset[DT] = this.findBy(Set(condition))
+  def findBy(condition: Condition): DT = this.findBy(Set(condition))
 
   /**
     * Retrieve all data
     *
     * @return
     */
-  def findAll(): Dataset[DT]
+  def findAll(): DT
 
   /**
     * Save a [[Dataset]] into a data persistence store
@@ -43,5 +43,5 @@ trait Repository[DT] {
     * @param suffix  an optional string to separate data
     * @return
     */
-  def save(data: Dataset[DT], suffix: Option[String]): this.type
+  def save(data: DT, suffix: Option[String]): this.type
 }

@@ -248,7 +248,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                       case _ =>
                         if (!deliveryMeta.optional) {
                           // throw exception if there's no deliverable and the current delivery is not optional
-                          throw new NoSuchElementException(s"Can not find $repoName from DispatchManager")
+                          throw new NoSuchElementException(s"Can not find $repoName from DeliverableDispatcher")
                         }
                         None
                     }
@@ -261,7 +261,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                 case Some(deliverable) => deliverable
                 case _ =>
                   if (!deliveryMeta.optional) {
-                    throw new NoSuchElementException(s"Can not find type $argType from DispatchManager")
+                    throw new NoSuchElementException(s"Can not find type $argType from DeliverableDispatcher")
                   } else {
                     Deliverable.empty()
                   }
