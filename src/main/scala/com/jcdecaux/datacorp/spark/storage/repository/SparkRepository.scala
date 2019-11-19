@@ -22,7 +22,7 @@ import scala.reflect.runtime.universe.TypeTag
   * @tparam DataType type of spark repository
   */
 @InterfaceStability.Evolving
-class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Logging {
+class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] with Logging {
 
   private[this] var connector: Connector = _
   private[this] implicit val dataEncoder: Encoder[DataType] = ExpressionEncoder[DataType]

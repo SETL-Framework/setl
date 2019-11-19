@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.repository
 
-import com.jcdecaux.datacorp.spark.storage.{Condition, DatasetConverter}
-import org.apache.spark.sql.Dataset
+import com.jcdecaux.datacorp.spark.Converter
+import com.jcdecaux.datacorp.spark.storage.Condition
 
 /**
   * RepositoryAdapter could be used when one wants to save a `Dataset[A]` to a data store of type `B`.
@@ -15,14 +15,14 @@ trait RepositoryAdapter[A, B] {
 
   val repository: Repository[A]
 
-  val converter: DatasetConverter[A, B]
+  val converter: Converter
 
-  def findAllAndConvert(): Dataset[A]
+  def findAllAndConvert(): A
 
-  def findByAndConvert(conditions: Set[Condition]): Dataset[A]
+  def findByAndConvert(conditions: Set[Condition]): A
 
-  def findByAndConvert(condition: Condition): Dataset[A]
+  def findByAndConvert(condition: Condition): A
 
-  def convertAndSave(data: Dataset[A], suffix: Option[String]): this.type
+  def convertAndSave(data: A, suffix: Option[String]): this.type
 
 }
