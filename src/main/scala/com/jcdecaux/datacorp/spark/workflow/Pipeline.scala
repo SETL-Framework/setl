@@ -22,33 +22,31 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   private[this] val _pipelineInspector: PipelineInspector = new PipelineInspector(this)
   private[this] var _pipelineOptimizer: Option[PipelineOptimizer] = None
 
-  def setInput(v: Deliverable[_]): this.type = {
-    _deliverableDispatcher.setDelivery(v)
-    this
-  }
+  def stages: Array[Stage] = this._stages.toArray
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Option[Class[_ <: Factory[_]]]): this.type = {
-    val deliverable = new Deliverable[T](v)
-
-    consumer match {
-      case Some(c) => deliverable.setConsumer(c)
-      case _ =>
-    }
-
-    setInput(deliverable)
-  }
-
-  def stages: ArrayBuffer[Stage] = this._stages
-
+  /**
+    * Get the inspector of this pipeline
+    *
+    * @return
+    */
   def pipelineInspector: PipelineInspector = this._pipelineInspector
 
+  /**
+    * Get the deliverable dispatcher of this pipeline
+    *
+    * @return
+    */
   def deliverableDispatcher: DeliverableDispatcher = this._deliverableDispatcher
 
+  /**
+    * Boolean indicating if the pipeline will be optimized
+    *
+    * @return
+    */
   def optimization: Boolean = _pipelineOptimizer match {
     case Some(_) => true
     case _ => false
   }
-
 
   /**
     * Optimise execution with an optimizer
@@ -76,29 +74,159 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     this
   }
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_ <: Factory[_]]): this.type = setInput[T](v, Some(consumer))
+  /**
+    * Put the Deliverable to the input pool of the pipeline
+    *
+    * @param deliverable Deliverable object
+    * @return
+    */
+  def setInput(deliverable: Deliverable[_]): this.type = {
+    _deliverableDispatcher.setDelivery(deliverable)
+    this
+  }
 
-  def setInput[T: ru.TypeTag](v: T, consumer: Class[_ <: Factory[_]], consumers: Class[_ <: Factory[_]]*): this.type = {
-    val deliverable = new Deliverable[T](v)
-    (consumer +: consumers).foreach(c => deliverable.setConsumer(c))
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload    object to be delivered
+    * @param consumer   consumer of this payload
+    * @param deliveryId id of this delivery
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T,
+                              consumer: Seq[Class[_ <: Factory[_]]],
+                              deliveryId: String): this.type = {
+    val deliverable = new Deliverable[T](payload).setDeliveryId(deliveryId).setConsumers(consumer)
     setInput(deliverable)
   }
 
-  def setInput[T: ru.TypeTag](v: T): this.type = setInput[T](v, None)
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload    object to be delivered
+    * @param consumer   consumer of this payload
+    * @param deliveryId id of this delivery
+    * @param consumers  other consumers of the payload
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T,
+                              deliveryId: String,
+                              consumer: Class[_ <: Factory[_]],
+                              consumers: Class[_ <: Factory[_]]*): this.type = {
+    setInput(payload, consumer +: consumers, deliveryId)
+  }
 
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload   object to be delivered
+    * @param consumer  consumer of this payload
+    * @param consumers other consumers of the payload
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T,
+                              consumer: Class[_ <: Factory[_]],
+                              consumers: Class[_ <: Factory[_]]*): this.type = {
+    setInput(payload, consumer +: consumers, Deliverable.DEFAULT_ID)
+  }
+
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload  object to be delivered
+    * @param consumer consumer of this payload
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T,
+                              consumer: Class[_ <: Factory[_]]): this.type = {
+    setInput[T](payload, List(consumer), Deliverable.DEFAULT_ID)
+  }
+
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload    object to be delivered
+    * @param consumer   consumer of this payload
+    * @param deliveryId id of this delivery
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T,
+                              consumer: Class[_ <: Factory[_]],
+                              deliveryId: String): this.type = {
+    setInput[T](payload, List(consumer), deliveryId)
+  }
+
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload object to be delivered
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T): this.type = {
+    setInput[T](payload, Seq.empty, Deliverable.DEFAULT_ID)
+  }
+
+  /**
+    * Set input of the pipeline
+    *
+    * @param payload    object to be delivered
+    * @param deliveryId id of this delivery
+    * @tparam T type of payload
+    * @return
+    */
+  def setInput[T: ru.TypeTag](payload: T,
+                              deliveryId: String): this.type = {
+    setInput[T](payload, Seq.empty, deliveryId)
+  }
+
+  /**
+    * Add a new stage containing the given factory
+    *
+    * @param factory Factory to be executed
+    * @return
+    */
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
+  /**
+    * Add a new stage containing the given factory
+    *
+    * @param factory         Factory to be executed
+    * @param constructorArgs Arguments of the primary constructor of the factory
+    * @throws IllegalArgumentException this will be thrown if arguments don't match
+    * @return
+    */
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
     addStage(new Stage().addFactory(factory, constructorArgs: _*))
   }
 
+  /**
+    * Add a new stage containing the given factory
+    *
+    * @param constructorArgs Arguments of the primary constructor of the factory
+    * @param persistence     if set to true, then the `write` method of the factory will be called to persist the output.
+    * @tparam T Class of the Factory
+    * @throws IllegalArgumentException this will be thrown if arguments don't match
+    * @return
+    */
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage[T <: Factory[_] : ClassTag](constructorArgs: Array[Object] = Array.empty,
                                            persistence: Boolean = true): this.type = {
     addStage(new Stage().addFactory[T](constructorArgs, persistence))
   }
 
+  /**
+    * Add a new stage to the pipeline
+    *
+    * @param stage stage object
+    * @return
+    */
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage ${_stageCounter}")
 

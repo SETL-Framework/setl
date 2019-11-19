@@ -286,9 +286,78 @@ class DeliverableDispatcherSuite extends FunSuite {
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
 
+  test("Deliverable dispatcher should handle delivery ID when there are multiple deliveries of the same type") {
+
+    val arrayOne = new Deliverable[Array[String]](Array("a", "b")).setDeliveryId("first")
+    val arrayTwo = new Deliverable[Array[String]](Array("1", "2")).setDeliveryId("second")
+    val arrayThree = new Deliverable[Array[String]](Array("x", "y"))
+    val arrayFour = new Deliverable[Array[String]](Array("m", "n")).setDeliveryId("fourth")
+
+    val dispatcher = new DeliverableDispatcher
+    dispatcher
+      .setDelivery(arrayOne)
+      .setDelivery(arrayTwo)
+      .setDelivery(arrayThree)
+      .setDelivery(arrayFour)
+
+    val multipleInputFactory = new MultipleInputFactory
+    dispatcher.testDispatch(multipleInputFactory)
+    val output = multipleInputFactory.read().process().write().get()
+    assert(output === Array("a", "b", "1", "2", "x", "y"))
+  }
+
+  test("Deliverable dispatcher should throw exception when ID not matching") {
+
+    val arrayOne = new Deliverable[Array[String]](Array("a", "b")).setDeliveryId("first")
+    val arrayTwo = new Deliverable[Array[String]](Array("1", "2")).setDeliveryId("second")
+    val arrayThree = new Deliverable[Array[String]](Array("x", "y"))
+    val arrayFour = new Deliverable[Array[String]](Array("m", "n"))
+
+    val dispatcher = new DeliverableDispatcher
+    dispatcher
+      .setDelivery(arrayOne)
+      .setDelivery(arrayTwo)
+      .setDelivery(arrayThree)
+      .setDelivery(arrayFour)
+
+    val multipleInputFactory = new MultipleInputFactory
+    assertThrows[NoSuchElementException](dispatcher.testDispatch(multipleInputFactory))
+  }
 }
 
 object DeliverableDispatcherSuite {
+
+  class MultipleInputFactory extends Factory[Array[String]] {
+
+    @Delivery(id = "first")
+    var arrayOne: Array[String] = _
+
+    @Delivery(id = "second")
+    var arrayTwo: Array[String] = _
+
+    @Delivery
+    var arrayThree: Array[String] = _
+
+    /**
+      * Read data
+      */
+    override def read(): MultipleInputFactory.this.type = this
+
+    /**
+      * Process data
+      */
+    override def process(): MultipleInputFactory.this.type = this
+
+    /**
+      * Write data
+      */
+    override def write(): MultipleInputFactory.this.type = this
+
+    /**
+      * Get the processed data
+      */
+    override def get(): Array[String] = arrayOne ++ arrayTwo ++ arrayThree
+  }
 
   class MyFactory extends Factory[Container[Product23]] {
 

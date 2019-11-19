@@ -37,15 +37,15 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   }
 
   def resetSparkRepository[DT: ru.TypeTag](config: String,
-                                           consumer: Array[Class[_ <: Factory[_]]] = Array.empty): this.type = {
+                                           consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty): this.type = {
     val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).setSpark(spark).getOrCreate()
-    val deliverable = new Deliverable(repo).setConsumers(consumer: _*)
+    val deliverable = new Deliverable(repo).setConsumers(consumer)
     inputRegister.put(config, deliverable)
     this
   }
 
   def setSparkRepository[DT: ru.TypeTag](config: String,
-                                         consumer: Array[Class[_ <: Factory[_]]] = Array.empty): this.type = {
+                                         consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty): this.type = {
     if (!inputRegister.contains(config)) resetSparkRepository[DT](config, consumer)
     this
   }

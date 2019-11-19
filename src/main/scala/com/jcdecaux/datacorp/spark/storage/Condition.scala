@@ -30,6 +30,11 @@ object Condition {
 
   def apply(key: String, operator: String, value: Double): Condition = Condition(key, operator, Some(value.toString), ValueType.NUMBER)
 
-  // TODO add constructors of timestamp and date
-
+  def apply(key: String, operator: String, value: Set[_]): Condition = {
+    val reformatValue: Set[Any] = value.map {
+      case str: String => s"'$str'"
+      case num => num
+    }
+    Condition(key, operator, Some(reformatValue.mkString("(", ",", ")")), ValueType.SET)
+  }
 }

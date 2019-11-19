@@ -24,7 +24,8 @@ private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
                                                   producer: Class[_ <: Factory[_]],
                                                   optional: Boolean,
                                                   autoLoad: Boolean = false,
-                                                  condition: String = "") {
+                                                  condition: String = "",
+                                                  id: String = "") {
 
   /**
     * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
@@ -56,59 +57,67 @@ private[spark] object FactoryDeliveryMetadata {
       this
     }
 
+    /**
+      * Invoke a declared method of the delivery and get the value
+      *
+      * @param delivery       delivery object
+      * @param declaredMethod name of the method
+      * @tparam T type of the returned value of the method
+      * @return an object of type T
+      */
+    private[this] def getDeliveryParameter[T](delivery: Delivery, declaredMethod: String): T = {
+      val method = delivery.annotationType().getDeclaredMethod(declaredMethod)
+      method.invoke(delivery).asInstanceOf[T]
+    }
+
     override def build(): this.type = {
 
       log.debug(s"Search Deliveries of ${cls.getSimpleName}")
 
-      // Black magic XD
       val classSymbol = runtime.universe.runtimeMirror(getClass.getClassLoader).classSymbol(cls)
-      val methodsWithDeliveryAnnotation = classSymbol.info.decls.filter {
+      val symbolsWithDeliveryAnnotation = classSymbol.info.decls.filter {
         x => x.annotations.exists(y => y.tree.tpe =:= runtime.universe.typeOf[Delivery])
       }
 
-      if (methodsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
+      if (symbolsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
 
-      metadata = methodsWithDeliveryAnnotation.map {
-        mth =>
-          val annotation = if (mth.isMethod) {
+      metadata = symbolsWithDeliveryAnnotation.map {
+        symbol =>
+          val delivery: Delivery = if (symbol.isMethod) {
             cls
               .getDeclaredMethods
-              .find(_.getName == mth.name.toString).get
+              .find(_.getName == symbol.name.toString).get
               .getAnnotation(classOf[Delivery])
           } else {
             cls
-              .getDeclaredField(mth.name.toString.trim)
+              .getDeclaredField(symbol.name.toString.trim)
               .getAnnotation(classOf[Delivery])
           }
 
-          val producerMethod = annotation.annotationType().getDeclaredMethod("producer")
-          val optionalMethod = annotation.annotationType().getDeclaredMethod("optional")
-          val autoLoadMethod = annotation.annotationType().getDeclaredMethod("autoLoad")
-          val conditionMethod = annotation.annotationType().getDeclaredMethod("condition")
-
-          val name = if (mth.isMethod) {
-            log.debug(s"Find annotated method `${mth.name}` in ${cls.getSimpleName}")
-            mth.name.toString
+          val name = if (symbol.isMethod) {
+            log.debug(s"Find annotated method `${symbol.name}` in ${cls.getSimpleName}")
+            symbol.name.toString
           } else {
             // If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-            log.debug(s"Find annotated variable `${mth.name.toString.trim}` in ${cls.getSimpleName}")
-            mth.name.toString.trim + "_$eq"
+            log.debug(s"Find annotated variable `${symbol.name.toString.trim}` in ${cls.getSimpleName}")
+            symbol.name.toString.trim + "_$eq"
           }
 
-          val argTypes = if (mth.isMethod) {
-            mth.typeSignature.paramLists.head.map(_.typeSignature)
+          val argTypes = if (symbol.isMethod) {
+            symbol.typeSignature.paramLists.head.map(_.typeSignature)
           } else {
-            List(mth.typeSignature)
+            List(symbol.typeSignature)
           }
 
           FactoryDeliveryMetadata(
             factoryUUID = factoryUUID,
             name = name,
             argTypes = argTypes,
-            producer = producerMethod.invoke(annotation).asInstanceOf[Class[_ <: Factory[_]]],
-            optional = optionalMethod.invoke(annotation).asInstanceOf[Boolean],
-            autoLoad = autoLoadMethod.invoke(annotation).asInstanceOf[Boolean],
-            condition = conditionMethod.invoke(annotation).asInstanceOf[String]
+            producer = getDeliveryParameter[Class[_ <: Factory[_]]](delivery, "producer"),
+            optional = getDeliveryParameter[Boolean](delivery, "optional"),
+            autoLoad = getDeliveryParameter[Boolean](delivery, "autoLoad"),
+            condition = getDeliveryParameter[String](delivery, "condition"),
+            id = getDeliveryParameter[String](delivery, "id")
           )
       }
 

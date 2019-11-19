@@ -48,7 +48,7 @@ object ImplicitRepositoryAdapter {
     }
 
     def findByAndConvert(conditions: Set[Condition]): Dataset[A] = {
-      val data = repository.findDataFrameBy(SparkRepository.handleConditions(conditions, DBTypeSchema))
+      val data = repository.readDataFrame(SparkRepository.handleConditions(conditions, DBTypeSchema))
       converter.convertFrom(SchemaConverter.fromDF[B](data))
     }
 

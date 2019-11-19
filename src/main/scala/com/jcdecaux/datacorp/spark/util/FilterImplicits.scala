@@ -59,7 +59,7 @@ object FilterImplicits extends Logging {
             s"${condition.key} ${condition.operator} cast('$t' as ${condition.valueType.value})"
           case ValueType.STRING =>
             s"${condition.key} ${condition.operator} '${condition.value.get}'"
-          case ValueType.NUMBER =>
+          case _ =>
             s"${condition.key} ${condition.operator} ${condition.value.get}"
         }
       } else {
