@@ -43,6 +43,13 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
     this
   }
 
+  def getReadCacheStorageLevel: StorageLevel = this.persistenceStorageLevel
+
+  def setReadCacheStorageLevel(storageLevel: StorageLevel): this.type = {
+    this.persistenceStorageLevel = storageLevel
+    this
+  }
+
   def setUserDefinedSuffixKey(key: String): this.type = {
     connector match {
       case c: FileConnector => c.setUserDefinedSuffixKey(key)
@@ -92,7 +99,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
   }
 
   /**
-    * Find data by giving a set of conditions
+    * Find data that match the given condition set
     *
     * @param conditions Set of [[com.jcdecaux.datacorp.spark.storage.Condition]]
     * @return
@@ -110,14 +117,15 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
   }
 
   /**
-    * Load data into read cache
+    * Load data into a DataFrame
     *
+    * @param conditions : condition set, by default empty
     * @return
     */
   private[repository] def readDataFrame(conditions: Set[Condition] = Set.empty): DataFrame = {
     if (cacheLastReadData.get()) {
-      log.debug("Acquire thread lock")
       lock.lock()
+      log.debug("Acquire thread lock")
       val thisReadHashCode = conditions.hashCode
       try {
         if (!flushReadCache.getAndSet(false) && lastReadHashCode.getAndSet(thisReadHashCode) == thisReadHashCode) {
@@ -131,7 +139,6 @@ class SparkRepository[DataType: TypeTag] extends Repository[DataType] with Loggi
           readCache
         }
       } finally {
-        log.debug("Unlock the thread")
         lock.unlock()
       }
     } else {
