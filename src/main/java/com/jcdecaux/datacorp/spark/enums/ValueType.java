@@ -4,7 +4,8 @@ public enum ValueType {
     STRING("string"),
     DATETIME("timestamp"),
     DATE("date"),
-    NUMBER("number");
+    NUMBER("number"),
+    SET("set");
 
     private final String value;
 
