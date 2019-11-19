@@ -24,8 +24,12 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   private[this] val inputRegister: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
   private[this] val pipelineRegister: ConcurrentHashMap[UUID, Pipeline] = new ConcurrentHashMap()
 
+  private[this] val repositoryId: String => String = config => s"@rpstry.$config"
+  private[this] val connectorId: String => String = config => s"@cnnctr.$config"
+
   /**
-    * Get a SparkRepository[DT]
+    * Get a SparkRepository[DT]. If the given config path hasn't been registered, then the repository will
+    * firstly be registered and then be returned.
     *
     * @param config path to spark repository configuration
     * @tparam DT type of spark repository
@@ -33,29 +37,116 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     */
   def getSparkRepository[DT: ru.TypeTag](config: String): SparkRepository[DT] = {
     setSparkRepository[DT](config)
-    inputRegister.get(config).payload.asInstanceOf[SparkRepository[DT]]
+    inputRegister.get(repositoryId(config)).payload.asInstanceOf[SparkRepository[DT]]
   }
 
+  /**
+    * Force register a spark repository for the given config path. If there this config path has been registered,
+    * it will be updated
+    *
+    * @param config     path to spark repository configuration
+    * @param consumer   Seq of consumer
+    * @param deliveryId id of this delivery that will be used during the delivery matching
+    * @tparam DT type of spark repository
+    * @return
+    */
   def resetSparkRepository[DT: ru.TypeTag](config: String,
-                                           consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty): this.type = {
+                                           consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
+                                           deliveryId: String = Deliverable.DEFAULT_ID): this.type = {
     val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).setSpark(spark).getOrCreate()
-    val deliverable = new Deliverable(repo).setConsumers(consumer)
-    inputRegister.put(config, deliverable)
+    val deliverable = new Deliverable(repo).setConsumers(consumer).setDeliveryId(deliveryId)
+    inputRegister.put(repositoryId(config), deliverable)
     this
   }
 
+  /**
+    * Register a spark repository for the given config path. If there this config path has been registered,
+    * it will NOT be updated
+    *
+    * @param config     path to spark repository configuration
+    * @param consumer   Seq of consumer
+    * @param deliveryId id of this delivery that will be used during the delivery matching
+    * @tparam DT type of spark repository
+    * @return
+    */
   def setSparkRepository[DT: ru.TypeTag](config: String,
-                                         consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty): this.type = {
-    if (!inputRegister.contains(config)) resetSparkRepository[DT](config, consumer)
+                                         consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
+                                         deliveryId: String = Deliverable.DEFAULT_ID): this.type = {
+    if (!inputRegister.contains(repositoryId(config))) resetSparkRepository[DT](config, consumer, deliveryId)
     this
   }
 
-  def getConnector[C <: Connector](config: String): C = {
-    new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate().asInstanceOf[C]
+  /**
+    * Get a Connector. If the given config path hasn't been registered, then the connector will
+    * firstly be registered and then be returned.
+    *
+    * @param config path to connector configuration
+    * @tparam CN type of the connector
+    * @return
+    */
+  def getConnector[CN <: Connector](config: String): CN = {
+    new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
   }
 
-  def getSparkSession: SparkSession = this.spark
+  /**
+    * Register a connector. As each connector must have an delivery ID, by default the config path will be used.
+    *
+    * <p>If there this config path has been registered, it will NOT be updated.</p>
+    *
+    * @param config path to connector configuration
+    * @return
+    */
+  def setConnector(config: String): this.type = this.setConnector(config, config)
 
+  /**
+    * Register a connector.
+    *
+    * <p>If there this config path has been registered, it will NOT be updated.</p>
+    *
+    * @param config     path to connector configuration
+    * @param deliveryId delivery ID
+    * @return
+    */
+  def setConnector(config: String, deliveryId: String): this.type = {
+    if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId)
+    this
+  }
+
+  /**
+    * Force register a connector. As each connector must have an delivery ID, by default the config path will be used.
+    *
+    * <p>If there this config path has been registered, it will be updated.</p>
+    *
+    * @param config path to connector configuration
+    * @return
+    */
+  def resetConnector(config: String): this.type = this.resetConnector(config, config)
+
+  /**
+    * Register a connector.
+    *
+    * <p>If there this config path has been registered, it will be updated.</p>
+    *
+    * @param config     path to connector configuration
+    * @param deliveryId delivery ID
+    * @return
+    */
+  def resetConnector(config: String, deliveryId: String): this.type = {
+    val payload = new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate()
+    val deliverable = new Deliverable(payload).setDeliveryId(deliveryId)
+    inputRegister.put(connectorId(config), deliverable)
+    this
+  }
+
+
+  def sparkSession: SparkSession = this.spark
+
+  /**
+    * Create a new pipeline. All the registered repositories and connectors will be passed into the delivery pool
+    * of the pipeline.
+    *
+    * @return
+    */
   def newPipeline(): Pipeline = {
     val _pipe = new Pipeline
     pipelineRegister.put(_pipe.getUUID, _pipe)
@@ -64,8 +155,17 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     _pipe
   }
 
+  /**
+    * Find a pipeline by its UUID
+    *
+    * @param uuid UUID of the target pipeline
+    * @return
+    */
   def getPipeline(uuid: UUID): Pipeline = this.pipelineRegister.get(uuid)
 
+  /**
+    * Stop the spark session
+    */
   def stop(): Unit = {
     this.spark.stop()
   }
