@@ -100,6 +100,9 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     */
   def setConnector(config: String): this.type = this.setConnector(config, config)
 
+  def setConnector[CN <: Connector : ru.TypeTag](config: String, cls: Class[CN]): this.type =
+    this.setConnector(config, config, classOf[Connector])
+
   /**
     * Register a connector.
     *
@@ -110,7 +113,23 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     * @return
     */
   def setConnector(config: String, deliveryId: String): this.type = {
-    if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId)
+    if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId, classOf[Connector])
+    this
+  }
+
+  /**
+    * Register a connector.
+    *
+    * <p>If there this config path has been registered, it will NOT be updated.</p>
+    *
+    * @param config     path to connector configuration
+    * @param deliveryId delivery ID
+    * @param cls        class of the Connector
+    * @tparam CN type of spark connector
+    * @return
+    */
+  def setConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
+    if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId, cls)
     this
   }
 
@@ -122,7 +141,7 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     * @param config path to connector configuration
     * @return
     */
-  def resetConnector(config: String): this.type = this.resetConnector(config, config)
+  def resetConnector(config: String): this.type = this.resetConnector(config, config, classOf[Connector])
 
   /**
     * Register a connector.
@@ -131,10 +150,12 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     *
     * @param config     path to connector configuration
     * @param deliveryId delivery ID
+    * @param cls        class of the Connector
+    * @tparam CN type of spark connector
     * @return
     */
-  def resetConnector(config: String, deliveryId: String): this.type = {
-    val payload = new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate()
+  def resetConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
+    val payload = new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
     val deliverable = new Deliverable(payload).setDeliveryId(deliveryId)
     inputRegister.put(connectorId(config), deliverable)
     this

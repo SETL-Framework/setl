@@ -1,9 +1,11 @@
 package com.jcdecaux.datacorp.spark
 
+import com.jcdecaux.datacorp
+import com.jcdecaux.datacorp.spark
 import com.jcdecaux.datacorp.spark.annotation.Delivery
 import com.jcdecaux.datacorp.spark.config.ConfigLoader
 import com.jcdecaux.datacorp.spark.storage.Condition
-import com.jcdecaux.datacorp.spark.storage.connector.{Connector, FileConnector}
+import com.jcdecaux.datacorp.spark.storage.connector.{CSVConnector, Connector, FileConnector}
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.transformation.Factory
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
@@ -140,7 +142,7 @@ class DCContextSuite extends FunSuite with BeforeAndAfterAll {
       .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
       .setConnector("csv_dc_context_consumer", "1")
 
-    val factory = new DCContextSuite.FactoryWithConnector
+    val factory = new DCContextSuite.FactoryWithConnectorDeliveryVariable
 
     context
       .newPipeline()
@@ -159,13 +161,55 @@ class DCContextSuite extends FunSuite with BeforeAndAfterAll {
     context.getConnector("csv_dc_context_consumer").asInstanceOf[FileConnector].delete()
   }
 
-  //  test("DCContext should be able to handle AppEnv setting with default config loader") {
-  //    System.setProperty("app.environment", "test")
-  //    assertThrows[java.lang.IllegalArgumentException](
-  //      DCContext.builder().withDefaultConfigLoader("myconf.conf").getOrCreate(),
-  //      "DCContext should throw an exception when the app.environment value is invalid"
-  //    )
-  //  }
+  test("DCContext should handle delivery annotated method with deliveryID") {
+
+    val context = DCContext.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    context
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
+      .setConnector("csv_dc_context_consumer", "1", classOf[CSVConnector])
+
+    val factory = new spark.DCContextSuite.FactoryWithConnectorDeliveryMethod
+
+    context
+      .newPipeline()
+      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(factory)
+      .describe()
+      .run()
+
+    val output = factory.get()
+    output.show()
+    assert(output.count() === 2)
+    assert(output.collect() === Array(
+      TestObject(1, "a", "A", 1L),
+      TestObject(2, "b", "B", 2L)
+    ))
+    context.getConnector[FileConnector]("csv_dc_context_consumer").delete()
+  }
+
+  test("DCContext should throw exception when there overloaded delivery setter methods") {
+
+    val context = DCContext.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    context
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
+      .setConnector("csv_dc_context_consumer", "1")
+
+    val factory = new datacorp.spark.DCContextSuite.FactoryWithConnectorException
+
+    val pipeline = context
+      .newPipeline()
+      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(factory)
+
+    assertThrows[NoSuchMethodException](pipeline.describe())
+  }
+
 }
 
 object DCContextSuite {
@@ -217,7 +261,7 @@ object DCContextSuite {
     override def get(): Dataset[TestObject3] = output
   }
 
-  class FactoryWithConnector extends Factory[Dataset[TestObject]] {
+  class FactoryWithConnectorDeliveryVariable extends Factory[Dataset[TestObject]] {
 
     @Delivery(id = "1")
     var testObjectConnector: Connector = _
@@ -227,14 +271,72 @@ object DCContextSuite {
 
     var output: DataFrame = _
 
-    override def read(): FactoryWithConnector.this.type = {
+    override def read(): FactoryWithConnectorDeliveryVariable.this.type = {
       output = testObjectConnector.read()
       this
     }
 
-    override def process(): FactoryWithConnector.this.type = this
+    override def process(): FactoryWithConnectorDeliveryVariable.this.type = this
 
-    override def write(): FactoryWithConnector.this.type = this
+    override def write(): FactoryWithConnectorDeliveryVariable.this.type = this
+
+    override def get(): Dataset[TestObject] = {
+      val spark = SparkSession.getActiveSession.get
+      import spark.implicits._
+      output.as[TestObject]
+    }
+  }
+
+  class FactoryWithConnectorDeliveryMethod extends Factory[Dataset[TestObject]] {
+
+    var testObjectConnector: Connector = _
+
+    @Delivery(id = "1")
+    def deliveryConnector(c: CSVConnector): Unit = {
+      testObjectConnector = c
+    }
+
+
+    var output: DataFrame = _
+
+    override def read(): FactoryWithConnectorDeliveryMethod.this.type = {
+      output = testObjectConnector.read()
+      this
+    }
+
+    override def process(): FactoryWithConnectorDeliveryMethod.this.type = this
+
+    override def write(): FactoryWithConnectorDeliveryMethod.this.type = this
+
+    override def get(): Dataset[TestObject] = {
+      val spark = SparkSession.getActiveSession.get
+      import spark.implicits._
+      output.as[TestObject]
+    }
+  }
+
+  class FactoryWithConnectorException extends Factory[Dataset[TestObject]] {
+
+    @Delivery(id = "1")
+    var deliveryConnector: Connector = _
+    var testObjectConnector: Connector = _
+
+    @Delivery(id = "1") def deliveryConnector(c: Connector): Unit = {
+      testObjectConnector = c
+    }
+
+    @Delivery(optional = true) def deliveryConnector(s: FileConnector): Unit = println("wrong method")
+
+    var output: DataFrame = _
+
+    override def read(): FactoryWithConnectorException.this.type = {
+      output = testObjectConnector.read()
+      this
+    }
+
+    override def process(): FactoryWithConnectorException.this.type = this
+
+    override def write(): FactoryWithConnectorException.this.type = this
 
     override def get(): Dataset[TestObject] = {
       val spark = SparkSession.getActiveSession.get
