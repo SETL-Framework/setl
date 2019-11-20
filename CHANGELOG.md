@@ -6,6 +6,8 @@ repository is present.
 - Added option **condition** in the Delivery annotation to pre-filter loaded data when **autoLoad** is set to true.
 - Added option **id** in the Delivery annotation. DeliveryDispatcher will match deliveries by the id in addition to 
 the payload type. By default the id is an empty string ("").
+- Added **setConnector** method in DCContext. Each connector should be delivered with an ID. By default the ID will be its
+config path.
 
 ## 0.3.3 (2019-10-22)
 - Added **SnappyCompressor**.
