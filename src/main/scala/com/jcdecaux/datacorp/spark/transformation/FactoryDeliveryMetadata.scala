@@ -84,10 +84,14 @@ private[spark] object FactoryDeliveryMetadata {
       metadata = symbolsWithDeliveryAnnotation.map {
         symbol =>
           val delivery: Delivery = if (symbol.isMethod) {
-            cls
+            val methods = cls
               .getDeclaredMethods
-              .find(_.getName == symbol.name.toString).get
-              .getAnnotation(classOf[Delivery])
+              .filter(mth => mth.getName == symbol.name.toString && mth.isAnnotationPresent(classOf[Delivery]))
+
+            if (methods.length > 1) throw new NoSuchMethodException("Found multiple methods with save name")
+            if (methods.isEmpty) throw new NoSuchElementException("Can't find any method")
+
+            methods.head.getAnnotation(classOf[Delivery])
           } else {
             cls
               .getDeclaredField(symbol.name.toString.trim)
