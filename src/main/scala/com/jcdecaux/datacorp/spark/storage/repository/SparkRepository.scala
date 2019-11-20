@@ -90,9 +90,12 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   }
 
   private[this] def findDataFrameBy(conditions: Set[Condition]): DataFrame = {
-    import com.jcdecaux.datacorp.spark.util.FilterImplicits.DatasetFilterByCondition
+    import com.jcdecaux.datacorp.spark.util.FilterImplicits.ConditionsToRequest
+
     if (conditions.nonEmpty) {
-      connector.read().filter(conditions)
+      val sql = conditions.toSqlRequest
+      log.debug(s"Spark SQL request: $sql")
+      connector.read().filter(sql)
     } else {
       connector.read()
     }
