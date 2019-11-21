@@ -5,6 +5,7 @@ import java.util.UUID
 import com.jcdecaux.datacorp.spark.annotation.{Delivery, InterfaceStability}
 import org.apache.spark.sql.Dataset
 
+import scala.language.existentials
 import scala.reflect.runtime
 
 /**

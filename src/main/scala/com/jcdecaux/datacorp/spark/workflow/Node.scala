@@ -6,6 +6,7 @@ import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.internal.{HasDescription, Identifiable, Logging}
 import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryInput, FactoryOutput}
 
+import scala.language.existentials
 import scala.reflect.runtime
 
 /**

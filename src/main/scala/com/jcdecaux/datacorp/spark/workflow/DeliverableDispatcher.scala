@@ -8,6 +8,7 @@ import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, Factory
 import org.apache.spark.sql.Dataset
 
 import scala.collection.mutable.ArrayBuffer
+import scala.language.existentials
 import scala.reflect.runtime.{universe => ru}
 
 /**
