@@ -25,10 +25,10 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     val deliveryManager = new DeliverableDispatcher
 
-    deliveryManager.setDelivery(new Deliverable(CP))
-    deliveryManager.setDelivery(new Deliverable(C2P))
-    deliveryManager.setDelivery(new Deliverable(CP2))
-    deliveryManager.setDelivery(new Deliverable(C2P2))
+    deliveryManager.addDeliverable(new Deliverable(CP))
+    deliveryManager.addDeliverable(new Deliverable(C2P))
+    deliveryManager.addDeliverable(new Deliverable(CP2))
+    deliveryManager.addDeliverable(new Deliverable(C2P2))
 
     deliveryManager.testDispatch(myFactory)
 
@@ -57,9 +57,9 @@ class DeliverableDispatcherSuite extends FunSuite {
     val myFactory2 = new MyFactory2
     val deliveryManager = new DeliverableDispatcher
 
-    deliveryManager.setDelivery(new Deliverable(dsP1))
-    deliveryManager.setDelivery(new Deliverable(dsP2))
-    deliveryManager.setDelivery(new Deliverable(dsC1))
+    deliveryManager.addDeliverable(new Deliverable(dsP1))
+    deliveryManager.addDeliverable(new Deliverable(dsP2))
+    deliveryManager.addDeliverable(new Deliverable(dsC1))
 
     deliveryManager.testDispatch(myFactory2)
 
@@ -125,8 +125,8 @@ class DeliverableDispatcherSuite extends FunSuite {
     assert(test.v1 === null)
     assert(test.v2 === null)
 
-    dispatchManager.setDelivery(new Deliverable[String]("hehehe").setProducer(classOf[P1]))
-    dispatchManager.setDelivery(new Deliverable[String]("hahaha").setProducer(classOf[P2]))
+    dispatchManager.addDeliverable(new Deliverable[String]("hehehe").setProducer(classOf[P1]))
+    dispatchManager.addDeliverable(new Deliverable[String]("hahaha").setProducer(classOf[P2]))
     dispatchManager.testDispatch(test)
 
     assert(test.v1 === "hehehe")
@@ -140,7 +140,7 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     val dispatchManager = new DeliverableDispatcher
     val del = new Deliverable[String]("hehehe")
-    assertThrows[AlreadyExistsException](dispatchManager.setDelivery(del).setDelivery(del))
+    assertThrows[AlreadyExistsException](dispatchManager.addDeliverable(del).addDeliverable(del))
 
   }
 
@@ -178,8 +178,8 @@ class DeliverableDispatcherSuite extends FunSuite {
     val del2 = new Deliverable[String]("hehe2").setProducer(classOf[Factory1]).setConsumer(classOf[Factory2])
 
     dispatchManager
-      .setDelivery(del1)
-      .setDelivery(del2)
+      .addDeliverable(del1)
+      .addDeliverable(del2)
 
     val factory2 = new Factory2
 
@@ -205,7 +205,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     repo.save(ds)
 
     val dispatchManager = new DeliverableDispatcher
-    dispatchManager.setDelivery(new Deliverable(repo))
+    dispatchManager.addDeliverable(new Deliverable(repo))
     val factoryWithAutoLoad = new FactoryWithAutoLoad
     dispatchManager.testDispatch(factoryWithAutoLoad)
     assert(factoryWithAutoLoad.input.count() === 3)
@@ -231,7 +231,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     repo.save(ds)
 
     val dispatchManager = new DeliverableDispatcher
-    dispatchManager.setDelivery(new Deliverable(repo))
+    dispatchManager.addDeliverable(new Deliverable(repo))
     val factoryWithAutoLoad = new FactoryWithAutoLoadWithCondition
     dispatchManager.testDispatch(factoryWithAutoLoad)
     factoryWithAutoLoad.input.show()
@@ -249,7 +249,7 @@ class DeliverableDispatcherSuite extends FunSuite {
       .getOrCreate()
 
     val dispatchManager = new DeliverableDispatcher
-    dispatchManager.setDelivery(new Deliverable(repo).setConsumer(classOf[MyFactory2]))
+    dispatchManager.addDeliverable(new Deliverable(repo).setConsumer(classOf[MyFactory2]))
     val factoryWithAutoLoad = new FactoryWithAutoLoad
     assertThrows[InvalidDeliveryException](dispatchManager.testDispatch(factoryWithAutoLoad))
   }
@@ -265,7 +265,7 @@ class DeliverableDispatcherSuite extends FunSuite {
       .getOrCreate()
 
     val dispatchManager = new DeliverableDispatcher
-    dispatchManager.setDelivery(new Deliverable(repo))
+    dispatchManager.addDeliverable(new Deliverable(repo))
 
     val factoryWithAutoLoadException = new FactoryWithAutoLoadException
     val factoryWithOptional = new FactoryWithAutoLoadOptional
@@ -295,10 +295,10 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     val dispatcher = new DeliverableDispatcher
     dispatcher
-      .setDelivery(arrayOne)
-      .setDelivery(arrayTwo)
-      .setDelivery(arrayThree)
-      .setDelivery(arrayFour)
+      .addDeliverable(arrayOne)
+      .addDeliverable(arrayTwo)
+      .addDeliverable(arrayThree)
+      .addDeliverable(arrayFour)
 
     val multipleInputFactory = new MultipleInputFactory
     dispatcher.testDispatch(multipleInputFactory)
@@ -315,10 +315,10 @@ class DeliverableDispatcherSuite extends FunSuite {
 
     val dispatcher = new DeliverableDispatcher
     dispatcher
-      .setDelivery(arrayOne)
-      .setDelivery(arrayTwo)
-      .setDelivery(arrayThree)
-      .setDelivery(arrayFour)
+      .addDeliverable(arrayOne)
+      .addDeliverable(arrayTwo)
+      .addDeliverable(arrayThree)
+      .addDeliverable(arrayFour)
 
     val multipleInputFactory = new MultipleInputFactory
     assertThrows[NoSuchElementException](dispatcher.testDispatch(multipleInputFactory))

@@ -24,7 +24,7 @@ import scala.reflect.runtime.{universe => ru}
 @InterfaceStability.Evolving
 private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
 
-  private[workflow] val deliveries: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
+  private[workflow] val deliverablePool: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
   private[this] var graph: DAG = _
 
   def setDataFlowGraph(graph: DAG): this.type = {
@@ -42,11 +42,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @param v : Deliverable
     * @return this DeliverableDispatcher
     */
-  private[workflow] def setDelivery(v: Deliverable[_]): this.type = {
+  private[workflow] def addDeliverable(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
 
     if (registerNewItem(v)) {
-      deliveries.append(v)
+      deliverablePool.append(v)
     } else {
       throw new AlreadyExistsException(s"The current deliverable ${v.getUUID} already exists")
     }
@@ -60,9 +60,9 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return
     */
   @throws[InvalidDeliveryException]("find multiple matched deliveries")
-  private[this] def getDelivery(availableDeliverable: Array[Deliverable[_]],
-                                consumer: Class[_ <: Factory[_]],
-                                producer: Class[_ <: Factory[_]]): Option[Deliverable[_]] = {
+  private[this] def getDeliverable(availableDeliverable: Array[Deliverable[_]],
+                                   consumer: Class[_ <: Factory[_]],
+                                   producer: Class[_ <: Factory[_]]): Option[Deliverable[_]] = {
     availableDeliverable.length match {
       case 0 =>
         log.warn("Can not find any deliverable")
@@ -116,7 +116,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   private[workflow] def findDeliverableBy(condition: Deliverable[_] => Boolean): Array[Deliverable[_]] = {
-    deliveries.filter(d => condition(d)).toArray
+    deliverablePool.filter(d => condition(d)).toArray
   }
 
   /**
@@ -136,7 +136,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return
     */
   private[workflow] def collectDeliverable(factory: Factory[_]): this.type = {
-    setDelivery(factory.getDelivery)
+    addDeliverable(factory.getDelivery)
   }
 
   /**
@@ -146,7 +146,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
     * @return
     */
   private[workflow] def collectDeliverable(stage: Stage): this.type = {
-    stage.deliveries.foreach(setDelivery)
+    stage.deliverable.foreach(addDeliverable)
     this
   }
 
@@ -210,7 +210,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                 deliverable => deliverable.hasSamePayloadType(argType) && deliverable.deliveryId == deliveryMeta.id
               }
 
-              val finalDelivery = getDelivery(
+              val finalDeliverable = getDeliverable(
                 availableDeliverable = availableDeliverable,
                 consumer = consumer.getClass,
                 producer = deliveryMeta.producer
@@ -235,7 +235,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                       deliverable => deliverable.hasSamePayloadType(repoName) && deliverable.deliveryId == deliveryMeta.id
                     }
 
-                    val matchedRepo = getDelivery(availableRepos, consumer.getClass, classOf[External])
+                    val matchedRepo = getDeliverable(availableRepos, consumer.getClass, classOf[External])
 
                     matchedRepo match {
                       case Some(deliverable) =>
@@ -258,7 +258,7 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                   }
               }
 
-              finalDelivery match {
+              finalDeliverable match {
                 case Some(deliverable) => deliverable
                 case _ =>
                   if (!deliveryMeta.optional) {

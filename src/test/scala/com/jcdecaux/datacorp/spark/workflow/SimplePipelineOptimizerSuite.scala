@@ -46,7 +46,7 @@ class SimplePipelineOptimizerSuite extends FunSuite {
       .run()
 
     pipeline.stages.foreach(_.factories.foreach(println))
-    pipeline.deliverableDispatcher.deliveries.foreach(println)
+    pipeline.deliverableDispatcher.deliverablePool.foreach(println)
 
     dsFactory3.get().show()
     assert(dsFactory3.get().count() === 4)

@@ -21,7 +21,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   private[this] var _parallel: Boolean = true
   private[this] var _stageId: Int = _
   private[this] val _factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
-  private[this] var _deliveries: Array[Deliverable[_]] = _
+  private[this] var _deliverable: Array[Deliverable[_]] = _
   private[this] var _persistence: Boolean = true
 
   private[workflow] def end: Boolean = _end
@@ -39,7 +39,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
 
   def factories: ArrayBuffer[Factory[_]] = this._factories
 
-  def deliveries: Array[Deliverable[_]] = this._deliveries
+  def deliverable: Array[Deliverable[_]] = this._deliverable
 
   def parallel: Boolean = _parallel
 
@@ -118,7 +118,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   }
 
   def run(): this.type = {
-    _deliveries = parallelFactories match {
+    _deliverable = parallelFactories match {
       case Left(par) =>
         log.debug(s"Stage $stageId will be run in parallel mode")
         par.map(runFactory).toArray

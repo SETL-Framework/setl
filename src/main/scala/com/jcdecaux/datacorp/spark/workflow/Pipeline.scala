@@ -81,7 +81,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     * @return
     */
   def setInput(deliverable: Deliverable[_]): this.type = {
-    _deliverableDispatcher.setDelivery(deliverable)
+    _deliverableDispatcher.addDeliverable(deliverable)
     this
   }
 
@@ -264,8 +264,8 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
           // Describe current stage
           stage.describe()
 
-          // Dispatch input if stageID doesn't equal 0
-          if (_deliverableDispatcher.deliveries.nonEmpty) {
+          // dispatch only if deliverable pool is not empty
+          if (_deliverableDispatcher.deliverablePool.nonEmpty) {
             stage.factories.foreach(_deliverableDispatcher.dispatch)
           }
 

@@ -185,9 +185,16 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>4.0.1</version>
+                <version>4.3.0</version>
                 <configuration>
                     <recompileMode>incremental</recompileMode>
+                    <args>
+                        <arg>-unchecked</arg>
+                        <arg>-deprecation</arg>
+                        <arg>-feature</arg>
+                        <arg>-explaintypes</arg>
+                        <arg>-target:jvm-1.8</arg>
+                    </args>
                 </configuration>
                 <executions>
                     <execution>

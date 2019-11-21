@@ -30,7 +30,7 @@ trait Connector extends Logging {
 
   def read(): DataFrame
 
-  @deprecated("This method will be removed in v0.4. Use `write(t: DataFrame)` instead.")
+  @deprecated("This method will be removed in v0.4. Use `write(t: DataFrame)` instead.", "0.3.0")
   def write(t: DataFrame, suffix: Option[String]): Unit
 
   def write(t: DataFrame): Unit

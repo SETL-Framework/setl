@@ -5,7 +5,7 @@ import org.apache.spark.sql.DataFrame
 
 @InterfaceStability.Evolving
 abstract class DBConnector extends Connector {
-  @deprecated("This method will be removed in v0.4. Use `create(t: DataFrame)` instead.")
+  @deprecated("This method will be removed in v0.4. Use `create(t: DataFrame)` instead.", "0.3.0")
   def create(t: DataFrame, suffix: Option[String]): Unit
 
   def create(t: DataFrame): Unit
