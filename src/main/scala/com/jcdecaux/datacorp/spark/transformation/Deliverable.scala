@@ -50,7 +50,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     * @param deliverable a deliverable object
     * @return
     */
-  def hasSamePayloadType(deliverable: Deliverable[_]): Boolean = this.payloadType == deliverable.payloadType
+  def hasSamePayloadType(deliverable: Deliverable[_]): Boolean = this.payloadType =:= deliverable.payloadType
 
   def hasSamePayloadType(deliverable: ru.Type): Boolean = this.payloadType =:= deliverable
 
