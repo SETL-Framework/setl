@@ -52,7 +52,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     */
   def hasSamePayloadType(deliverable: Deliverable[_]): Boolean = this.payloadType == deliverable.payloadType
 
-  def hasSamePayloadType(deliverable: ru.Type): Boolean = this.payloadType.equals(deliverable)
+  def hasSamePayloadType(deliverable: ru.Type): Boolean = this.payloadType =:= deliverable
 
   def hasSamePayloadType(deliverableType: String): Boolean = this.payloadType.toString.equals(deliverableType)
 
