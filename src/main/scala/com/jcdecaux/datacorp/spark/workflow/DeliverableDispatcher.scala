@@ -5,7 +5,7 @@ import com.jcdecaux.datacorp.spark.exception.{AlreadyExistsException, InvalidDel
 import com.jcdecaux.datacorp.spark.internal.{HasUUIDRegistry, Logging}
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{Dataset, Row}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.language.existentials
@@ -219,7 +219,20 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
                 case Some(deliverable) =>
                   // If we find some delivery, then return it if non null
                   require(deliverable.payload != null, "Deliverable is null")
-                  Some(deliverable)
+
+                  if (deliveryMeta.condition != "" && deliverable.payloadClass.isAssignableFrom(classOf[Dataset[Row]])) {
+                    log.debug("Find data frame filtering condition to be applied")
+                    Some(
+                      new Deliverable(
+                        deliverable
+                          .payload
+                          .asInstanceOf[Dataset[Row]]
+                          .filter(deliveryMeta.condition)
+                      )
+                    )
+                  } else {
+                    Some(deliverable)
+                  }
 
                 case _ =>
                   /*

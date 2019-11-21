@@ -7,7 +7,7 @@ import com.jcdecaux.datacorp.spark.exception.{AlreadyExistsException, InvalidDel
 import com.jcdecaux.datacorp.spark.storage.SparkRepositoryBuilder
 import com.jcdecaux.datacorp.spark.storage.connector.FileConnector
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.scalatest.FunSuite
 
 class DeliverableDispatcherSuite extends FunSuite {
@@ -212,7 +212,7 @@ class DeliverableDispatcherSuite extends FunSuite {
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
 
-  test("Deliverabl dispatcher should handle auto loading with condition") {
+  test("Deliverabl dispatcher should handle auto loading with condition when no DS is available") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
@@ -237,6 +237,50 @@ class DeliverableDispatcherSuite extends FunSuite {
     factoryWithAutoLoad.input.show()
     assert(factoryWithAutoLoad.input.count() === 1)
     repo.getConnector.asInstanceOf[FileConnector].delete()
+  }
+
+  test("Deliverabl dispatcher should handle auto loading with condition when a DS is available") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val ds = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDS
+
+    val dispatchManager = new DeliverableDispatcher
+    dispatchManager.addDeliverable(new Deliverable(ds))
+    val factoryWithAutoLoad = new FactoryWithAutoLoadWithCondition
+    dispatchManager.testDispatch(factoryWithAutoLoad)
+    factoryWithAutoLoad.input.show()
+    assert(factoryWithAutoLoad.input.count() === 1)
+    assert(factoryWithAutoLoad.get().count() === 1)
+    assert(factoryWithAutoLoad.get().getClass.isAssignableFrom(classOf[Dataset[Product2]]))
+  }
+
+  test("Deliverabl dispatcher should handle auto loading with condition when a data frame is available") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val ds = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDF
+
+    val dispatchManager = new DeliverableDispatcher
+    val deliverable = new Deliverable(ds)
+
+    println(deliverable.payloadType)
+    dispatchManager.addDeliverable(deliverable)
+    val factoryWithAutoLoad = new FactoryWithAutoLoadWithConditionDF
+    dispatchManager.testDispatch(factoryWithAutoLoad)
+    factoryWithAutoLoad.input.show()
+    assert(factoryWithAutoLoad.input.count() === 1)
+    assert(factoryWithAutoLoad.get().count() === 1)
+    assert(factoryWithAutoLoad.get().getClass.isAssignableFrom(classOf[Dataset[Product2]]))
+    assert(factoryWithAutoLoad.get().getClass.isAssignableFrom(classOf[DataFrame]))
   }
 
   test("Deliverable dispatcher should throw exception when repository for auto loading has a wrong consumer") {
@@ -432,9 +476,32 @@ object DeliverableDispatcherSuite {
 
     override def process(): FactoryWithAutoLoadWithCondition.this.type = this
 
-    override def write(): FactoryWithAutoLoadWithCondition.this.type = this
+    override def write(): FactoryWithAutoLoadWithCondition.this.type = {
+
+      println(input.getClass)
+
+      this
+    }
 
     override def get(): Dataset[Product2] = input
+  }
+
+  class FactoryWithAutoLoadWithConditionDF extends Factory[DataFrame] {
+    @Delivery(autoLoad = true, condition = "x = 'a'")
+    var input: DataFrame = _
+
+    override def read(): FactoryWithAutoLoadWithConditionDF.this.type = this
+
+    override def process(): FactoryWithAutoLoadWithConditionDF.this.type = this
+
+    override def write(): FactoryWithAutoLoadWithConditionDF.this.type = {
+
+      println(input.getClass)
+
+      this
+    }
+
+    override def get(): DataFrame = input
   }
 
   class FactoryWithAutoLoadException extends Factory[Dataset[Product2]] {
