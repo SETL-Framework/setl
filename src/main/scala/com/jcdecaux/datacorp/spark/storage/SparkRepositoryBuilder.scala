@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage
 
 import com.jcdecaux.datacorp.spark.Builder
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.config.Conf.Serializer
 import com.jcdecaux.datacorp.spark.enums.Storage
@@ -21,6 +22,7 @@ import scala.reflect.runtime.{universe => ru}
   * @param config  a [[com.typesafe.config.Config]] object
   * @tparam DataType type of data
   */
+@InterfaceStability.Evolving
 class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSession],
                                                    var storage: Option[Storage],
                                                    var config: Option[Config])
@@ -74,7 +76,7 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSessio
   /**
     * Only affect file storage system to get a specific path (exp : Reach -> suffix [Rome])
     *
-    * @param pathSuffix
+    * @param pathSuffix suffix of the file
     * @return
     */
   def setSuffix(pathSuffix: String): this.type = {

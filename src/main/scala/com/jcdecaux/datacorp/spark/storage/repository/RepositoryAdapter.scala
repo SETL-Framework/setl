@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.repository
 
 import com.jcdecaux.datacorp.spark.Converter
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.storage.Condition
 
 /**
@@ -11,6 +12,7 @@ import com.jcdecaux.datacorp.spark.storage.Condition
   * @tparam A Type of the Repository
   * @tparam B Target data store type
   */
+@InterfaceStability.Evolving
 trait RepositoryAdapter[A, B] {
 
   val repository: Repository[A]

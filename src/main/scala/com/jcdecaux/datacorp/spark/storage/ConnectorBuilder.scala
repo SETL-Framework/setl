@@ -3,6 +3,7 @@ package com.jcdecaux.datacorp.spark.storage
 import java.lang.reflect.Constructor
 
 import com.jcdecaux.datacorp.spark.Builder
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.Conf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.UnknownException
@@ -19,6 +20,7 @@ import org.apache.spark.sql.SparkSession
   * @param config optional, a [[com.typesafe.config.Config]] object
   * @param conf   optional, a [[com.jcdecaux.datacorp.spark.config.Conf]] object
   */
+@InterfaceStability.Evolving
 class ConnectorBuilder(val spark: SparkSession,
                        val config: Option[Config],
                        val conf: Option[Conf]) extends Builder[Connector] {

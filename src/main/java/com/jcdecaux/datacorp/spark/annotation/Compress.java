@@ -22,6 +22,7 @@ import java.lang.annotation.Target;
  * by implementing <code>com.jcdecaux.datacorp.storage.Compressor</code> interface.
  * </p>
  */
+@InterfaceStability.Stable
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface Compress {

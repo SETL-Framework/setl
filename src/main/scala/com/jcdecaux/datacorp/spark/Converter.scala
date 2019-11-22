@@ -1,8 +1,11 @@
 package com.jcdecaux.datacorp.spark
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+
 /**
   * A converter should be able to convert between two types T1 and T2.
   */
+@InterfaceStability.Evolving
 trait Converter {
   type T1
   type T2

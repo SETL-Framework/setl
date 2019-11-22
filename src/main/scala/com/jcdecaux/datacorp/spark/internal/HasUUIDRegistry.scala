@@ -2,6 +2,8 @@ package com.jcdecaux.datacorp.spark.internal
 
 import java.util.UUID
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+
 import scala.collection.mutable
 
 /**
@@ -9,6 +11,7 @@ import scala.collection.mutable
   * [[com.jcdecaux.datacorp.spark.internal.Identifiable]] object already
   * exists in its registry
   */
+@InterfaceStability.Evolving
 trait HasUUIDRegistry {
 
   /**

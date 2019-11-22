@@ -16,7 +16,7 @@ import org.apache.spark.sql.SparkSession
 import scala.reflect.runtime.{universe => ru}
 import scala.util.Random
 
-@InterfaceStability.Unstable
+@InterfaceStability.Evolving
 abstract class DCContext(val configLoader: ConfigLoader) {
 
   val spark: SparkSession

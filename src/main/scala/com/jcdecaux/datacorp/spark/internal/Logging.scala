@@ -1,8 +1,10 @@
 package com.jcdecaux.datacorp.spark.internal
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.log4j.{LogManager, Logger}
 
 
+@InterfaceStability.Evolving
 private[spark] trait Logging {
 
   // Make the log field transient so that objects with Logging can

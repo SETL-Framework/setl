@@ -13,7 +13,7 @@ import scala.reflect.runtime.{universe => ru}
   * @param payload data that will be transferred
   * @tparam T type of the payload
   */
-@InterfaceStability.Unstable
+@InterfaceStability.Evolving
 class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false

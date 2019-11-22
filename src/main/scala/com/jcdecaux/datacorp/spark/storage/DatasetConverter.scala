@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage
 
 import com.jcdecaux.datacorp.spark.Converter
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import org.apache.spark.sql.Dataset
 
 /**
@@ -9,6 +10,7 @@ import org.apache.spark.sql.Dataset
   * @tparam A Type of Dataset[A]
   * @tparam B Type of Dataset[B]
   */
+@InterfaceStability.Evolving
 abstract class DatasetConverter[A, B] extends Converter {
 
   override type T1 = Dataset[A]

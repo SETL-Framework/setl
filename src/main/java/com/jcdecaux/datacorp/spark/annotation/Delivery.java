@@ -14,6 +14,7 @@ import java.lang.annotation.Target;
  * If multiple {@link com.jcdecaux.datacorp.spark.transformation.Deliverable} of the same type were found in the delivery pool of DispatchManager, then
  * it will try to compare the producer of the Deliverable
  */
+@InterfaceStability.Evolving
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface Delivery {

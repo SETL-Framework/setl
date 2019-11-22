@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark
 
 import java.util.concurrent.ConcurrentHashMap
 
-import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress}
+import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress, InterfaceStability}
 import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -26,6 +26,7 @@ import org.apache.spark.sql.SparkSession
   *               <li>TODO</li>
   *               </ul>
   */
+@InterfaceStability.Evolving
 class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   import SparkSessionBuilder._

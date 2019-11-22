@@ -2,9 +2,12 @@ package com.jcdecaux.datacorp.spark.storage
 
 import java.io.IOException
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
+
 /**
   * A Compressor is able to compress an input string into a byte array and vice versa.
   */
+@InterfaceStability.Evolving
 trait Compressor extends Serializable {
 
   /**

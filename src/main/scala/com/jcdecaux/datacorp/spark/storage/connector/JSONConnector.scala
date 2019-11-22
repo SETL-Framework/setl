@@ -2,6 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.connector
 
 import java.nio.charset.StandardCharsets
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.{Conf, ConnectorConf}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
@@ -64,6 +65,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
   * empty array/struct during schema inference.</li>
   * </ul>
   **/
+@InterfaceStability.Evolving
 class JSONConnector(override val spark: SparkSession,
                     override val options: ConnectorConf) extends FileConnector(spark, options) {
 

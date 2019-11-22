@@ -1,9 +1,11 @@
 package com.jcdecaux.datacorp.spark.config
 
+import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.ConfException
 import org.apache.spark.sql.SaveMode
 
+@InterfaceStability.Evolving
 class ConnectorConf extends Conf {
 
   private[this] val defaultEncoding: String = "UTF-8"
