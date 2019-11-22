@@ -130,8 +130,11 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
       lock.lock()
       log.debug("Acquire thread lock")
       val thisReadHashCode = conditions.hashCode
+      val flush = flushReadCache.getAndSet(false)
+      val sameHash = lastReadHashCode.getAndSet(thisReadHashCode) == thisReadHashCode
+
       try {
-        if (!flushReadCache.getAndSet(false) && lastReadHashCode.getAndSet(thisReadHashCode) == thisReadHashCode) {
+        if (!flush && sameHash) {
           log.debug("Load data from read cache")
           readCache
         } else {
