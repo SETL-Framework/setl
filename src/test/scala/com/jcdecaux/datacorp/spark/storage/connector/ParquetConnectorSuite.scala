@@ -3,7 +3,10 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import java.io.File
 
 import com.jcdecaux.datacorp.spark.config.Properties
+import com.jcdecaux.datacorp.spark.storage.Condition
+import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
+import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
 
@@ -17,6 +20,41 @@ class ParquetConnectorSuite extends FunSuite {
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   )
+
+  test("Parquet connector should push down filter and select") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+
+    val repository = new SparkRepository[TestObject].setConnector(parquetConnector).persistReadData(true)
+    import spark.implicits._
+
+    val ds = testTable.toDS()
+    parquetConnector.write(ds.toDF())
+
+    val ds2 = parquetConnector.read().filter("partition1 = 1").as[TestObject].select($"partition1".as[Long])
+    ds2.show()
+    ds2.explain()
+
+    val ds3 = repository.findBy(Condition("partition1", "=", 1)).select("partition1")
+    ds3.show()
+    ds3.explain()
+
+    val ds4 = repository.findBy(Condition("partition1", "=", 1)).select("partition1")
+    ds4.explain()
+
+    val ds5 = repository.findBy(Condition("partition1", "=", 1)).select($"partition1".as[Long], $"partition2".as[String])
+    ds5.show()
+    ds5.explain()
+
+    val explain = ExplainCommand(ds5.queryExecution.logical, false)
+    assert(
+      spark.sessionState.executePlan(explain).executedPlan.executeCollect()
+        .map(_.getString(0)).mkString("; ")
+        .contains("PushedFilters: [IsNotNull(partition1), EqualTo(partition1,1)], ReadSchema: struct<partition1:int,partition2:string,clustering1:string,value:bigint>"),
+      "Filters should be pushed"
+    )
+    parquetConnector.delete()
+  }
 
   test("test Parquet connector with different file path") {
 
