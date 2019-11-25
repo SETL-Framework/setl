@@ -3,7 +3,7 @@ This project provides an easy-to-use and general-purpose framework for data tran
 
 ## Use
 ### Create a new project
-You can start working by cloning [this template project](https://git.jcdecaux.com/qin/spark-framework-singleton).
+You can start working by cloning [this template project](https://git.jcdecaux.com/qin/spark-framework-template).
 
 ### Use in an existing project
 ```xml
