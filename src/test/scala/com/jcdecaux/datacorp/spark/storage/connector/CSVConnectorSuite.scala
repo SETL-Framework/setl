@@ -124,7 +124,7 @@ class CSVConnectorSuite extends FunSuite {
     assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
 
     csvConnector.delete()
-    assertThrows[java.io.FileNotFoundException](csvConnector.read())
+    assertThrows[org.apache.spark.sql.AnalysisException](csvConnector.read())
   }
 
   test("CSVConnector should partition data") {

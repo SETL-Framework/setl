@@ -124,7 +124,7 @@ class ParquetConnectorSuite extends FunSuite {
     assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
 
     parquetConnector.delete()
-    assertThrows[java.io.FileNotFoundException](parquetConnector.read())
+    assertThrows[org.apache.spark.sql.AnalysisException](parquetConnector.read())
   }
 
   test("test partition by") {
