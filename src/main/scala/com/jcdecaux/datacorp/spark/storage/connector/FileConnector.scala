@@ -24,6 +24,7 @@ abstract class FileConnector(val spark: SparkSession,
   def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
 
   private[this] val hadoopConfiguration: Configuration = spark.sparkContext.hadoopConfiguration
+  private[this] var wildcardPath: Boolean = false
 
   val schema: Option[StructType] = options.getSchema match {
     case Some(sm) =>
@@ -67,6 +68,8 @@ abstract class FileConnector(val spark: SparkSession,
   private[this] val UDSValue: ThreadLocal[Option[String]] = new ThreadLocal[Option[String]]() {
     override def initialValue(): Option[String] = None
   }
+
+  def canWrite: Boolean = !wildcardPath
 
   private[this] var _dropUDS: Boolean = true
 
@@ -173,10 +176,12 @@ abstract class FileConnector(val spark: SparkSession,
     * it's parent's path. Otherwise it will be the current path itself.
     */
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
-  def basePath: Path = {
+  lazy val basePath: Path = {
     val bp = findBasePath(absolutePath)
 
-    if (fileSystem.getFileStatus(absolutePath).isDirectory) {
+    if (wildcardPath) {
+      bp
+    } else if (fileSystem.getFileStatus(absolutePath).isDirectory) {
       bp
     } else {
       bp.getParent
@@ -185,7 +190,14 @@ abstract class FileConnector(val spark: SparkSession,
 
   @tailrec
   private[this] def findBasePath(path: Path): Path = {
-    if (path.getName.split("=").length == 2) {
+    val split = path.getName.split("=")
+
+    // if wildcard is detected, set wildcardPath to true
+    if (split.last == "*") {
+      wildcardPath = true
+    }
+
+    if (split.length == 2 || split.head == "*") {
       findBasePath(path.getParent)
     } else {
       path
@@ -209,14 +221,14 @@ abstract class FileConnector(val spark: SparkSession,
 
   /**
     * List all the file path (in format of string) to be loaded.
-    *
     * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
     * the pattern.</p>
-    *
     * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
     * to false. Otherwise, return a list of file paths in the directory</p>
+    * <p>When the filename pattern IS set, a list of file paths will always be returned</p>
     *
-    * @param detailed true to list all file paths
+    * @param detailed true to list all file paths when the absolute path points to a directory otherwise return only
+    *                 the directory path.
     * @return
     */
   def listFilesToLoad(detailed: Boolean = true): Array[String] = filesToLoad(detailed).map(_.toString)
@@ -417,7 +429,7 @@ abstract class FileConnector(val spark: SparkSession,
   /**
     * Write a [[DataFrame]] into the given path with the given save mode
     */
-  private[connector] def writeToPath(df: DataFrame, filepath: String): Unit = {
+  def writeToPath(df: DataFrame, filepath: String): Unit = {
     log.debug(s"(${Thread.currentThread().getId}) Write DataFrame to $filepath")
     incrementWriteCounter()
     writer(df).format(storage.toString.toLowerCase()).save(filepath)
@@ -439,7 +451,10 @@ abstract class FileConnector(val spark: SparkSession,
     this.write(df)
   }
 
-  override def write(t: DataFrame): Unit = writeToPath(t, outputPath)
+  override def write(t: DataFrame): Unit = {
+    require(this.canWrite, "Can't write to wildcard path")
+    writeToPath(t, outputPath)
+  }
 
   private[connector] def outputPath: String = UDSValue.get() match {
     case Some(suffix) => s"${this.absolutePath.toString}/$UDSKey=$suffix"
@@ -452,6 +467,7 @@ abstract class FileConnector(val spark: SparkSession,
     * @return
     */
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
+  @throws[org.apache.spark.sql.AnalysisException](s"$absolutePath doesn't exist")
   override def read(): DataFrame = {
     log.debug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
 

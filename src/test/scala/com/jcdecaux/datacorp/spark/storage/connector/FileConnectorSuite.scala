@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.connector
 
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.FunSuite
 
 import scala.util.Random
@@ -32,6 +32,72 @@ class FileConnectorSuite extends FunSuite {
     assert(connector2(spark).listFilesToLoad().length === 1)
     assert(connector2(spark).listFiles().length > 1)
     assert(connector(spark).listFiles() === connector2(spark).listFiles())
+  }
+
+  test("File connector should handle wildcard file path (parquet)") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val path = "src/test/resources/fileconnector_test_dir"
+    import spark.implicits._
+    val df = Seq(
+      ("a", "A", "aa", "AA"),
+      ("a", "A", "bb", "BB"),
+      ("a", "B", "aa", "AA"),
+      ("a", "B", "bb", "BB"),
+      ("b", "A", "aa", "AA"),
+      ("b", "A", "bb", "BB"),
+      ("b", "B", "aa", "AA"),
+      ("b", "B", "bb", "BB")
+    ).toDF("col1", "col2", "col3", "col4")
+
+    df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").parquet(path)
+
+    val connector = new ParquetConnector(spark, "src/test/resources/fileconnector_test_dir/col1=*/col2=A/*", SaveMode.Overwrite)
+
+    val connectorRead = connector.read()
+
+    val sparkRead = spark.read
+      .option("basePath", "src/test/resources/fileconnector_test_dir")
+      .parquet("src/test/resources/fileconnector_test_dir/col1=*/col2=A/*")
+
+    assert(connector.basePath.toString === "src/test/resources/fileconnector_test_dir")
+    assert(connectorRead.collect() === sparkRead.collect())
+
+    // remove test files
+    new ParquetConnector(spark, path, SaveMode.Overwrite).delete()
+  }
+
+  test("File connector should handle wildcard file path (csv)") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val path = "src/test/resources/fileconnector_test_dir_csv"
+    import spark.implicits._
+    val df = Seq(
+      ("a", "A", "aa", "AA"),
+      ("a", "A", "bb", "BB"),
+      ("a", "B", "aa", "AA"),
+      ("a", "B", "bb", "BB"),
+      ("b", "A", "aa", "AA"),
+      ("b", "A", "bb", "BB"),
+      ("b", "B", "aa", "AA"),
+      ("b", "B", "bb", "BB")
+    ).toDF("col1", "col2", "col3", "col4")
+
+    df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").option("header", "true").csv(path)
+
+    val connector = new CSVConnector(spark, s"$path/col1=*/col2=A/*", "true", ",", "true", SaveMode.Overwrite)
+    val connectorRead = connector.read()
+    connectorRead.show()
+
+    val sparkRead = spark.read
+      .option("basePath", path)
+      .option("header", "true")
+      .csv(s"$path/col1=*/col2=A/*")
+    sparkRead.show()
+
+    assert(connector.basePath.toString === path)
+    assert(connectorRead.collect() === sparkRead.collect())
+
+    // remove test files
+    new CSVConnector(spark, path, "true", ",", "true", SaveMode.Overwrite).delete()
   }
 
   test("File connector functionality") {

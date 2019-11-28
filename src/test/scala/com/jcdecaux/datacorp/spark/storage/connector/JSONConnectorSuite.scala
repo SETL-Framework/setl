@@ -81,7 +81,7 @@ class JSONConnectorSuite extends FunSuite {
     assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
 
     connector.delete()
-    assertThrows[java.io.FileNotFoundException](connector.read())
+    assertThrows[org.apache.spark.sql.AnalysisException](connector.read())
   }
 
   test("test JSON partition by") {
