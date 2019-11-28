@@ -8,6 +8,7 @@ repository is present.
 the payload type. By default the id is an empty string ("").
 - Added **setConnector** method in DCContext. Each connector should be delivered with an ID. By default the ID will be its
 config path.
+- Added support of wildcard path for SparkRepository and Connector
 
 ## 0.3.3 (2019-10-22)
 - Added **SnappyCompressor**.
