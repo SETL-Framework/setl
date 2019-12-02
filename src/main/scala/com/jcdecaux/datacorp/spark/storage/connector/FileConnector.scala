@@ -177,7 +177,7 @@ abstract class FileConnector(val spark: SparkSession,
     */
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
   lazy val basePath: Path = {
-    val bp = findBasePath(absolutePath)
+    val bp = getParentPath(absolutePath)
 
     if (wildcardPath) {
       bp
@@ -188,8 +188,14 @@ abstract class FileConnector(val spark: SparkSession,
     }
   }
 
+  /**
+    * For a given Path of a Spark file persistence, remove sub-directories (directories like /xxxx=yyyy or /xxxx=*)
+    *
+    * @param path file path
+    * @return
+    */
   @tailrec
-  private[this] def findBasePath(path: Path): Path = {
+  private[this] def getParentPath(path: Path): Path = {
     val split = path.getName.split("=")
 
     // if wildcard is detected, set wildcardPath to true
@@ -198,7 +204,7 @@ abstract class FileConnector(val spark: SparkSession,
     }
 
     if (split.length == 2 || split.head == "*") {
-      findBasePath(path.getParent)
+      getParentPath(path.getParent)
     } else {
       path
     }
