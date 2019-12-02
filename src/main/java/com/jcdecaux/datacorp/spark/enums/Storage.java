@@ -10,6 +10,7 @@ public enum Storage {
     CASSANDRA("com.jcdecaux.datacorp.spark.storage.connector.CassandraConnector"),
     DYNAMODB("com.jcdecaux.datacorp.spark.storage.connector.DynamoDBConnector"),
     JSON("com.jcdecaux.datacorp.spark.storage.connector.JSONConnector"),
+    JDBC("com.jcdecaux.datacorp.spark.storage.connector.JDBCConnector"),
     OTHER(null);
 
     private String connectorName;
