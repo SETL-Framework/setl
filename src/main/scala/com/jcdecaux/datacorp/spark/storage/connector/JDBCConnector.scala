@@ -2,8 +2,10 @@ package com.jcdecaux.datacorp.spark.storage.connector
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.jcdecaux.datacorp.spark.config.JDBCConnectorConf
+import com.jcdecaux.datacorp.spark.config.{Conf, JDBCConnectorConf}
 import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
+import com.typesafe.config.Config
 import org.apache.spark.sql._
 import org.apache.spark.sql.execution.command.ExplainCommand
 
@@ -23,6 +25,10 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   }
 
   def this(conf: Map[String, String]) = this(JDBCConnectorConf.fromMap(conf))
+
+  def this(sparkSession: SparkSession, config: Config) = this(TypesafeConfigUtils.getMap(config))
+
+  def this(sparkSession: SparkSession, conf: Conf) = this(conf.toMap)
 
   override val storage: Storage = Storage.JDBC
 
