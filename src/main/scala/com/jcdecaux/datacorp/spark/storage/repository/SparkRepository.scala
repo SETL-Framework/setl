@@ -169,15 +169,18 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     * @param data data to be saved
     */
   override def save(data: Dataset[DataType], suffix: Option[String] = None): SparkRepository.this.type = {
-    configureConnector(data.toDF(), suffix)
-    writeDataFrame(SchemaConverter.toDF[DataType](data))
+
+    val dataToSave = SchemaConverter.toDF[DataType](data)
+
+    configureConnector(dataToSave, suffix)
+    writeDataFrame(dataToSave)
     this
   }
 
   private[repository] def configureConnector(df: DataFrame, suffix: Option[String]): Unit = {
     connector match {
-      case db: DBConnector => db.
-        create(df)
+      case db: DBConnector =>
+        db.create(df)
       case file: FileConnector =>
         file.setSuffix(suffix)
       case _: Connector =>
