@@ -1,10 +1,16 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import com.jcdecaux.datacorp.spark.config.JDBCConnectorConf
 import com.jcdecaux.datacorp.spark.enums.Storage
 import org.apache.spark.sql._
+import org.apache.spark.sql.execution.command.ExplainCommand
 
 class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
+
+  private[this] val _read: AtomicBoolean = new AtomicBoolean(false)
+  private[this] val _source: String = s"JDBCRelation(${conf.getDbTable.get})"
 
   def this(url: String, table: String, user: String, password: String) = {
     this(
@@ -49,10 +55,43 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
   override def delete(query: String): Unit = log.warn("Delete is not supported in JDBC Connector")
 
-
-  override def read(): DataFrame = reader.load()
+  override def read(): DataFrame = {
+    _read.set(true)
+    reader.load()
+  }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = write(t)
 
-  override def write(t: DataFrame): Unit = writer(t).save()
+  override def write(t: DataFrame): Unit = {
+    conf.getSaveMode match {
+      case Some(sm) =>
+        /*
+          If the write mode is overwrite, and the data to be written were loaded from the current connector, and the data
+          are not persisted, throw a runtime exception because it will truncate the table but not insert any new data
+          (because of the laziness of spark)
+       */
+        if (sm == SaveMode.Overwrite.toString && this._read.get()) {
+
+          val queryExplainCommand = ExplainCommand(t.queryExecution.logical, extended = false)
+          val explain = spark.sessionState
+            .executePlan(queryExplainCommand)
+            .executedPlan
+            .executeCollect()
+            .map(_.getString(0))
+            .mkString("; ")
+
+          if (explain.contains(_source) && // if t comes from the same source of this connector
+            !t.storageLevel.useMemory && // if t is not persisted in memory
+            !t.storageLevel.useDisk && // if t is not persisted in disk
+            !t.storageLevel.useOffHeap) { // if t is not persisted using OffHeap
+            throw new RuntimeException("Find save mode equals Overwrite and non-persisted data of the same data source. " +
+              "The write operation is stop because it will only truncate the table.")
+          }
+        }
+      case _ => // do nothing if save mode is not overwrite or data is not read
+    }
+
+    writer(t).save()
+
+  }
 }
