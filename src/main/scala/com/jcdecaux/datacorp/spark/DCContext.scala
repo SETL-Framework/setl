@@ -203,6 +203,7 @@ object DCContext {
     private[this] var configLoader: ConfigLoader = _
     private[this] var sparkConf: Option[SparkConf] = None
     private[this] var parallelism: Int = 200
+    private[this] var sparkMasterUrl: Option[String] = None
 
     def setDCContextConfigPath(config: String): this.type = {
       dcContextConfiguration = config
@@ -221,6 +222,11 @@ object DCContext {
 
     def setConfigLoader(configLoader: ConfigLoader): this.type = {
       this.configLoader = configLoader
+      this
+    }
+
+    def setSparkMaster(url: String): this.type = {
+      this.sparkMasterUrl = Option(url)
       this
     }
 
@@ -264,6 +270,11 @@ object DCContext {
 
       sparkConf match {
         case Some(conf) => sparkSessionBuilder.withSparkConf(conf)
+        case _ =>
+      }
+
+      sparkMasterUrl match {
+        case Some(url) => sparkSessionBuilder.setSparkMaster(url)
         case _ =>
       }
 
