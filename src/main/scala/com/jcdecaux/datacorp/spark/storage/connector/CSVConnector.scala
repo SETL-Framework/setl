@@ -73,21 +73,19 @@ import org.apache.spark.sql._
   * it drops extra tokens.</li>
   * <li>`DROPMALFORMED` : ignores the whole corrupted records.</li>
   * <li>`FAILFAST` : throws an exception when it meets corrupted records.</li>
-  * </ul>
-  * </li>
-  * <li>`columnNameOfCorruptRecord` (default is the value specified in
-  * `spark.sql.columnNameOfCorruptRecord`): allows renaming the new field having malformed string
-  * created by `PERMISSIVE` mode. This overrides `spark.sql.columnNameOfCorruptRecord`.</li>
-  * <li>`multiLine` (default `false`): parse one record, which may span multiple lines.</li>
-  * </ul>
-  *
-  */
+ * </ul>
+ * </li>
+ * <li>`columnNameOfCorruptRecord` (default is the value specified in
+ * `spark.sql.columnNameOfCorruptRecord`): allows renaming the new field having malformed string
+ * created by `PERMISSIVE` mode. This overrides `spark.sql.columnNameOfCorruptRecord`.</li>
+ * <li>`multiLine` (default `false`): parse one record, which may span multiple lines.</li>
+ * </ul>
+ *
+ */
 @InterfaceStability.Evolving
-class CSVConnector(override val spark: SparkSession,
-                   override val options: ConnectorConf) extends FileConnector(spark, options) {
+class CSVConnector(override val options: ConnectorConf) extends FileConnector(options) {
 
-  override val storage: Storage = Storage.CSV
-  this.options.setStorage(storage)
+  def this(spark: SparkSession, options: ConnectorConf) = this(options)
 
   def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
 
@@ -102,5 +100,9 @@ class CSVConnector(override val spark: SparkSession,
   def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
 
   def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
+
+  override val storage: Storage = Storage.CSV
+
+  this.options.setStorage(storage)
 
 }

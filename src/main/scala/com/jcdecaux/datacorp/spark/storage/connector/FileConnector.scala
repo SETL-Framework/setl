@@ -7,6 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.config.ConnectorConf
+import com.jcdecaux.datacorp.spark.util.HasSparkSession
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -17,8 +18,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val spark: SparkSession,
-                             val options: ConnectorConf) extends Connector {
+abstract class FileConnector(val options: ConnectorConf) extends Connector with HasSparkSession {
+
+  def this(spark: SparkSession, options: ConnectorConf) = this(options)
 
   // Note: this constructor was added to keep the backward compatibility
   def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))

@@ -8,14 +8,15 @@ import com.typesafe.config.Config
 import org.apache.spark.sql._
 
 /**
-  * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
-  */
+ * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
+ */
 @InterfaceStability.Evolving
-class ParquetConnector(override val spark: SparkSession,
-                       override val options: ConnectorConf) extends FileConnector(spark, options) {
+class ParquetConnector(override val options: ConnectorConf) extends FileConnector(options) {
 
   override val storage: Storage = Storage.PARQUET
   this.options.setStorage(storage)
+
+  def this(spark: SparkSession, options: ConnectorConf) = this(options)
 
   def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
 

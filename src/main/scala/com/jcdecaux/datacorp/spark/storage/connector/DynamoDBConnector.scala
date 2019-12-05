@@ -16,23 +16,41 @@ import org.apache.spark.sql._
   *   dynamodb {
   *     region = ""
   *     table = ""
-  *     saveMode = ""
-  *   }
-  * }}}
-  *
-  * @param spark      spark session
-  * @param region     region of AWS
-  * @param table      table name
-  * @param saveMode   save mode
-  * @param throughput the desired read/write throughput to use
-  */
+ *     saveMode = ""
+ *   }
+ * }}}
+ *
+ * @param region     region of AWS
+ * @param table      table name
+ * @param saveMode   save mode
+ * @param throughput the desired read/write throughput to use
+ */
 @InterfaceStability.Evolving
-class DynamoDBConnector(val spark: SparkSession,
-                        val region: String, // "eu-west-1"
+class DynamoDBConnector(val region: String, // "eu-west-1"
                         val table: String,
                         val saveMode: SaveMode,
-                        val throughput: String = "10000"
+                        val throughput: String
                        ) extends DBConnector {
+
+  def this(spark: SparkSession,
+           region: String, // "eu-west-1"
+           table: String,
+           saveMode: SaveMode,
+           throughput: String = "10000") = this(region, table, saveMode, throughput)
+
+  def this(spark: SparkSession, config: Config) = this(
+    spark = spark,
+    region = TypesafeConfigUtils.getAs[String](config, "region").get,
+    table = TypesafeConfigUtils.getAs[String](config, "table").get,
+    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
+  )
+
+  def this(spark: SparkSession, conf: Conf) = this(
+    spark = spark,
+    region = conf.get("region").get,
+    table = conf.get("table").get,
+    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
+  )
 
   override val reader: DataFrameReader = {
     log.debug(s"DynamoDB connector read throughput $throughput")
@@ -49,20 +67,6 @@ class DynamoDBConnector(val spark: SparkSession,
       .option("throughput", throughput)
       .format("com.audienceproject.spark.dynamodb")
   }
-
-  def this(spark: SparkSession, config: Config) = this(
-    spark = spark,
-    region = TypesafeConfigUtils.getAs[String](config, "region").get,
-    table = TypesafeConfigUtils.getAs[String](config, "table").get,
-    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
-  )
-
-  def this(spark: SparkSession, conf: Conf) = this(
-    spark = spark,
-    region = conf.get("region").get,
-    table = conf.get("table").get,
-    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
-  )
 
   override val storage: Storage = Storage.DYNAMODB
 

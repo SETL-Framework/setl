@@ -1,4 +1,4 @@
-package com.jcdecaux.datacorp.spark.internal
+package com.jcdecaux.datacorp.spark.util
 
 import org.apache.spark.sql.SparkSession
 

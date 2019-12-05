@@ -32,8 +32,6 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
   override val storage: Storage = Storage.JDBC
 
-  override val spark: SparkSession = SparkSession.getActiveSession.get
-
   override val reader: DataFrameReader = {
     val _reader = spark.read
       .format(conf.getFormat.get)
