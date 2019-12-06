@@ -7,7 +7,7 @@ stages:
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  MVN_CMD_CPT_OPTS: "-Dscala.version=2.11.12 -Dscala.compat.version=2.11"
+  MVN_CMD_CPT_OPTS: "-Dscala.version=2.12.10 -Dscala.compat.version=2.12"
 
 cache:
   paths:
