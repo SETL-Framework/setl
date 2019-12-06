@@ -13,22 +13,27 @@ cache:
   paths:
     - target/
 
-build:
+build:latest:
   stage: build
   script:
     - mvn clean $MAVEN_CLI_OPTS compile
 
-test:current:
+build:compatible:
+  stage: build
+  script:
+    - mvn clean $MAVEN_CLI_OPTS compile
+
+test:latest:
   stage: test
   dependencies:
-    - build
+    - build:latest
   script:
     - mvn clean $MAVEN_CLI_OPTS test
 
 test:compatible:
   stage: test
   dependencies:
-    - build
+    - build:compatible
   script:
     - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS test
 
@@ -37,7 +42,7 @@ deploy:snapshot:
   script:
     - mvn clean -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test
+    - test:latest
   only:
     - master
 
@@ -46,7 +51,7 @@ deploy:snapshot-compat:
   script:
     - mvn clean -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
-    - test
+    - test:compatible
   only:
     - master
 
@@ -55,7 +60,7 @@ deploy:release:manual:
   script:
     - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test
+    - test:latest
   only:
     - master
   when: manual
@@ -65,7 +70,7 @@ deploy:release-compat:manual:
   script:
     - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
-    - test
+    - test:compatible
   only:
     - master
   when: manual
@@ -75,7 +80,7 @@ deploy:release:auto:
   script:
     - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test
+    - test:latest
   only:
     - /^v.*$/
   except:
@@ -86,7 +91,7 @@ deploy:release-compat:auto:
   script:
     - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
-    - test
+    - test:compatible
   only:
     - /^v.*$/
   except:
