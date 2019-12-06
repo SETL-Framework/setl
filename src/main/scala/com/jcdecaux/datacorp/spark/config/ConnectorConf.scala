@@ -9,7 +9,7 @@ import org.apache.spark.sql.SaveMode
 class ConnectorConf extends Conf {
 
   private[this] val defaultEncoding: String = "UTF-8"
-  private[this] val defaultSaveMode: String = "Overwrite"
+  private[this] val defaultSaveMode: String = SaveMode.ErrorIfExists.toString
 
   def setStorage(storage: String): this.type = set("storage", storage.toUpperCase)
 

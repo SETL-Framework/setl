@@ -11,30 +11,28 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.cassandra._
 
 /**
-  * CassandraConnector establish the connection to a given cassandra table of a given keyspace
-  */
+ * CassandraConnector establish the connection to a given cassandra table of a given keyspace
+ */
 @InterfaceStability.Evolving
 class CassandraConnector(val keyspace: String,
                          val table: String,
-                         val spark: SparkSession,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector {
 
-  override val reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
-  override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
-    df.write.mode(SaveMode.Append)
-  }
+  def this(keyspace: String,
+           table: String,
+           spark: SparkSession,
+           partitionKeyColumns: Option[Seq[String]],
+           clusteringKeyColumns: Option[Seq[String]]) = this(keyspace, table, partitionKeyColumns, clusteringKeyColumns)
 
   /**
-    * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
-    *
-    * @param spark spark session
-    * @param conf  [[com.jcdecaux.datacorp.spark.config.Conf]] object
-    */
-  def this(spark: SparkSession, conf: Conf) = this(
+   * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   *
+   * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   */
+  def this(conf: Conf) = this(
     keyspace = conf.get("keyspace").get,
     table = conf.get("table").get,
-    spark = spark,
     partitionKeyColumns = Option(conf.getAs[Array[String]]("partitionKeyColumns").get.toSeq),
     clusteringKeyColumns =
       if (conf.getAs[Array[String]]("clusteringKeyColumns").isDefined) {
@@ -45,15 +43,13 @@ class CassandraConnector(val keyspace: String,
   )
 
   /**
-    * Constructor with a [[com.typesafe.config.Config]] object
-    *
-    * @param spark  spark session
-    * @param config [[com.typesafe.config.Config]] typesafe Config object
-    */
-  def this(spark: SparkSession, config: Config) = this(
+   * Constructor with a [[com.typesafe.config.Config]] object
+   *
+   * @param config [[com.typesafe.config.Config]] typesafe Config object
+   */
+  def this(config: Config) = this(
     keyspace = TypesafeConfigUtils.getAs[String](config, "keyspace").get,
     table = TypesafeConfigUtils.getAs[String](config, "table").get,
-    spark = spark,
     partitionKeyColumns =
       Option(TypesafeConfigUtils.getList(config, "partitionKeyColumns").get.map(_.toString)),
     clusteringKeyColumns =
@@ -64,25 +60,47 @@ class CassandraConnector(val keyspace: String,
       }
   )
 
+  /**
+   * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   *
+   * @param spark spark session
+   * @param conf  [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   */
+  def this(spark: SparkSession, conf: Conf) = this(conf)
+
+  /**
+   * Constructor with a [[com.typesafe.config.Config]] object
+   *
+   * @param spark  spark session
+   * @param config [[com.typesafe.config.Config]] typesafe Config object
+   */
+  def this(spark: SparkSession, config: Config) = this(config)
+
+  override val reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
+
+  override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
+    df.write.mode(SaveMode.Append)
+  }
+
   override val storage: Storage = Storage.CASSANDRA
 
   /**
-    * Read a cassandra table
-    *
-    * @return
-    */
+   * Read a cassandra table
+   *
+   * @return
+   */
   override def read(): DataFrame = {
     log.debug(s"Read $keyspace.$table")
     reader.load()
   }
 
   /**
-    * Write a DataFrame into a Cassandra table
-    *
-    * @param df       DataFrame to be saved
-    * @param table    table name
-    * @param keyspace keyspace name
-    */
+   * Write a DataFrame into a Cassandra table
+   *
+   * @param df       DataFrame to be saved
+   * @param table    table name
+   * @param keyspace keyspace name
+   */
   private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
 
     log.debug(s"Write DataFrame to $keyspace.$table")
@@ -92,20 +110,20 @@ class CassandraConnector(val keyspace: String,
   }
 
   /**
-    * Write a DataFrame into a Cassandra table
-    *
-    * @param df DataFrame to be saved
-    */
+   * Write a DataFrame into a Cassandra table
+   *
+   * @param df DataFrame to be saved
+   */
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
     log.warn("Suffix will be ignore in CassandraConnector")
     write(df)
   }
 
   /**
-    * Create a Cassandra table for a DataFrame
-    *
-    * @param df DataFrame that will be used to create Cassandra table
-    */
+   * Create a Cassandra table for a DataFrame
+   *
+   * @param df DataFrame that will be used to create Cassandra table
+   */
   override def create(df: DataFrame, suffix: Option[String]): Unit = {
     log.warn("Suffix will be ignore in CassandraConnector")
     create(df)
@@ -129,20 +147,20 @@ class CassandraConnector(val keyspace: String,
   }
 
   /**
-    * Delete a record
-    *
-    * @param query query string
-    */
+   * Delete a record
+   *
+   * @param query query string
+   */
   override def delete(query: String): Unit = {
     this.deleteCassandra(query, this.table, this.keyspace)
   }
 
   /**
-    * Delete a record
-    *
-    * @param query    query string
-    * @param keyspace keyspace name
-    */
+   * Delete a record
+   *
+   * @param query    query string
+   * @param keyspace keyspace name
+   */
   private[this] def deleteCassandra(query: String, table: String, keyspace: String): Unit = {
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)

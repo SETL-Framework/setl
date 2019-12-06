@@ -13,27 +13,34 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 
 /**
-  * ConnectorBuilder will build a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] object with the given
-  * configuration.
-  *
-  * @param spark  spark session
-  * @param config optional, a [[com.typesafe.config.Config]] object
-  * @param conf   optional, a [[com.jcdecaux.datacorp.spark.config.Conf]] object
-  */
+ * ConnectorBuilder will build a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] object with the given
+ * configuration.
+ *
+ * @param config optional, a [[com.typesafe.config.Config]] object
+ * @param conf   optional, a [[com.jcdecaux.datacorp.spark.config.Conf]] object
+ */
 @InterfaceStability.Evolving
-class ConnectorBuilder(val spark: SparkSession,
-                       val config: Option[Config],
+class ConnectorBuilder(val config: Option[Config],
                        val conf: Option[Conf]) extends Builder[Connector] {
 
-  def this(spark: SparkSession, config: Config) = this(spark, Some(config), None)
+  def this(config: Config) = this(Some(config), None)
 
-  def this(spark: SparkSession, conf: Conf) = this(spark, None, Some(conf))
+  def this(conf: Conf) = this(None, Some(conf))
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, config: Option[Config], conf: Option[Conf]) = this(config, conf)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, config: Config) = this(Some(config), None)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, conf: Conf) = this(None, Some(conf))
 
   private[this] var connector: Connector = _
 
   /**
-    * Build a connector
-    */
+   * Build a connector
+   */
   override def build(): ConnectorBuilder.this.type = {
     connector = (config, conf) match {
       case (Some(c), None) => buildConnectorWithConfig(c)
@@ -71,8 +78,8 @@ class ConnectorBuilder(val spark: SparkSession,
   private[this] def buildConnectorWithConf(configuration: Conf): Connector = {
     configuration.getAs[Storage]("storage") match {
       case Some(s) =>
-        val constructor = connectorConstructorOf(s, classOf[SparkSession], classOf[Conf])
-        constructor.newInstance(spark, configuration)
+        val constructor = connectorConstructorOf(s, classOf[Conf])
+        constructor.newInstance(configuration)
       case _ => throw new UnknownException.Storage("Unknown storage type")
     }
   }
@@ -89,8 +96,8 @@ class ConnectorBuilder(val spark: SparkSession,
 
     TypesafeConfigUtils.getAs[Storage](configuration, "storage") match {
       case Some(s) =>
-        val constructor = connectorConstructorOf(s, classOf[SparkSession], classOf[Config])
-        constructor.newInstance(spark, configuration)
+        val constructor = connectorConstructorOf(s, classOf[Config])
+        constructor.newInstance(configuration)
       case _ => throw new UnknownException.Storage("Unknown storage type")
     }
   }

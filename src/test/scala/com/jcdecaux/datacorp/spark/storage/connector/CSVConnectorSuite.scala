@@ -47,20 +47,20 @@ class CSVConnectorSuite extends FunSuite {
 
   test("test CSV connector with different file path") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val csvConnector = new CSVConnector(spark, options)
+    val csvConnector = new CSVConnector(options)
     import spark.implicits._
 
     val path1: String = new File("src/test/resources/test_csv").toURI.toString
     val path2: String = new File("src/test/resources/test_csv").getPath
 
-    val csvConnector1 = new CSVConnector(spark, Map[String, String](
+    val csvConnector1 = new CSVConnector(Map[String, String](
       "path" -> path1,
       "inferSchema" -> "true",
       "delimiter" -> "|",
       "header" -> "true",
       "saveMode" -> "Append"
     ))
-    val csvConnector2 = new CSVConnector(spark, Map[String, String](
+    val csvConnector2 = new CSVConnector(Map[String, String](
       "path" -> path2,
       "inferSchema" -> "true",
       "delimiter" -> "|",
@@ -76,7 +76,7 @@ class CSVConnectorSuite extends FunSuite {
 
   test("IO CSVConnector") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val csvConnector = new CSVConnector(spark, options)
+    val csvConnector = new CSVConnector(options)
     import spark.implicits._
 
     testTable.toDF.show()
@@ -95,7 +95,7 @@ class CSVConnectorSuite extends FunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
-    val connector = new CSVConnector(spark, Properties.csvConfig)
+    val connector = new CSVConnector(Properties.csvConfig)
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
@@ -108,7 +108,7 @@ class CSVConnectorSuite extends FunSuite {
 
   test("Test CSV Connector Suffix") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val csvConnector = new CSVConnector(spark, options)
+    val csvConnector = new CSVConnector(options)
     import spark.implicits._
 
     csvConnector.resetSuffix(true)
@@ -129,7 +129,7 @@ class CSVConnectorSuite extends FunSuite {
 
   test("CSVConnector should partition data") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val csvConnector = new CSVConnector(spark, options)
+    val csvConnector = new CSVConnector(options)
     import spark.implicits._
 
     val dff: Dataset[TestObject] = Seq(
@@ -142,7 +142,6 @@ class CSVConnectorSuite extends FunSuite {
     ).toDS()
 
     val csvConnector2 = new CSVConnector(
-      spark,
       Map[String, String](
         "path" -> path,
         "inferSchema" -> "true",
@@ -195,7 +194,6 @@ class CSVConnectorSuite extends FunSuite {
     ).toDS()
 
     val csvConnector2 = new CSVConnector(
-      spark,
       Map[String, String](
         "path" -> path,
         "inferSchema" -> "true",
@@ -226,8 +224,8 @@ class CSVConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS
 
-    val csvConnectorWithSchema = new CSVConnector(spark, Properties.cl.getConfig("connector.csvWithSchema"))
-    val csvConnectorWithSchema2 = new CSVConnector(spark, Properties.cl.getConfig("connector.csvWithSchema2"))
+    val csvConnectorWithSchema = new CSVConnector(Properties.cl.getConfig("connector.csvWithSchema"))
+    val csvConnectorWithSchema2 = new CSVConnector(Properties.cl.getConfig("connector.csvWithSchema2"))
 
     csvConnectorWithSchema.write(dff.toDF)
     assert(csvConnectorWithSchema.read().columns === Array("partition2", "clustering1", "partition1", "value"))

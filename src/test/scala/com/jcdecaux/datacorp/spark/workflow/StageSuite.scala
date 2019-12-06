@@ -33,7 +33,7 @@ class StageSuite extends FunSuite {
       "saveMode" -> "Append"
     )
 
-    val connector = new CSVConnector(spark, connectorOptions)
+    val connector = new CSVConnector(connectorOptions)
 
     new Stage()
       .addFactory[PersistenceTest](Array(connector), false)
@@ -53,7 +53,7 @@ class StageSuite extends FunSuite {
       "saveMode" -> "Append"
     )
 
-    val connector = new CSVConnector(spark, connectorOptions)
+    val connector = new CSVConnector(connectorOptions)
     val stage = new Stage().persist(false)
 
     stage
@@ -74,7 +74,7 @@ class StageSuite extends FunSuite {
       "saveMode" -> "Append"
     )
 
-    val connector = new CSVConnector(spark, connectorOptions)
+    val connector = new CSVConnector(connectorOptions)
     val stage = new Stage().persist(true)
 
     stage

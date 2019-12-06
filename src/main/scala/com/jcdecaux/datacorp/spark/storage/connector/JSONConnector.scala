@@ -56,23 +56,34 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
   * per file</li>
   * <li>`encoding` (by default it is not set): allows to forcibly set one of standard basic
   * or extended encoding for the JSON files. For example UTF-16BE, UTF-32LE. If the encoding
-  * is not specified and `multiLine` is set to `true`, it will be detected automatically.</li>
-  * <li>`lineSep` (default covers all `\r`, `\r\n` and `\n`): defines the line separator
-  * that should be used for parsing.</li>
-  * <li>`samplingRatio` (default is 1.0): defines fraction of input JSON objects used
-  * for schema inferring.</li>
-  * <li>`dropFieldIfAllNull` (default `false`): whether to ignore column of all null values or
-  * empty array/struct during schema inference.</li>
-  * </ul>
-  **/
+ * is not specified and `multiLine` is set to `true`, it will be detected automatically.</li>
+ * <li>`lineSep` (default covers all `\r`, `\r\n` and `\n`): defines the line separator
+ * that should be used for parsing.</li>
+ * <li>`samplingRatio` (default is 1.0): defines fraction of input JSON objects used
+ * for schema inferring.</li>
+ * <li>`dropFieldIfAllNull` (default `false`): whether to ignore column of all null values or
+ * empty array/struct during schema inference.</li>
+ * </ul>
+ **/
 @InterfaceStability.Evolving
-class JSONConnector(override val spark: SparkSession,
-                    override val options: ConnectorConf) extends FileConnector(spark, options) {
+class JSONConnector(override val options: ConnectorConf) extends FileConnector(options) {
 
+  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+
+  def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
+
+  def this(conf: Conf) = this(conf.toMap)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, options: ConnectorConf) = this(options)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
 
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
 
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
 
   override val storage: Storage = Storage.JSON

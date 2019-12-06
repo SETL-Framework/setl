@@ -11,15 +11,19 @@ class FileConnectorSuite extends FunSuite {
 
   val path: String = "src/test/resources/test_csv"
 
-  val connector: SparkSession => FileConnector = spark => new FileConnector(spark, Map[String, String]("path" -> "src/test/resources")) {
+  val connector: SparkSession => FileConnector = spark => new FileConnector(Map[String, String]("path" -> "src/test/resources")) {
     override val storage: Storage = Storage.OTHER
+
     override def read(): DataFrame = null
+
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
-  val connector2: SparkSession => FileConnector = spark => new FileConnector(spark, Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
+  val connector2: SparkSession => FileConnector = spark => new FileConnector(Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
     override val storage: Storage = Storage.OTHER
+
     override def read(): DataFrame = null
+
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
@@ -51,7 +55,7 @@ class FileConnectorSuite extends FunSuite {
 
     df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").parquet(path)
 
-    val connector = new ParquetConnector(spark, "src/test/resources/fileconnector_test_dir/col1=*/col2=A/*", SaveMode.Overwrite)
+    val connector = new ParquetConnector("src/test/resources/fileconnector_test_dir/col1=*/col2=A/*", SaveMode.Overwrite)
 
     val connectorRead = connector.read()
 
@@ -63,7 +67,7 @@ class FileConnectorSuite extends FunSuite {
     assert(connectorRead.collect() === sparkRead.collect())
 
     // remove test files
-    new ParquetConnector(spark, path, SaveMode.Overwrite).delete()
+    new ParquetConnector(path, SaveMode.Overwrite).delete()
   }
 
   test("File connector should handle wildcard file path (csv)") {
@@ -83,7 +87,7 @@ class FileConnectorSuite extends FunSuite {
 
     df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").option("header", "true").csv(path)
 
-    val connector = new CSVConnector(spark, s"$path/col1=*/col2=A/*", "true", ",", "true", SaveMode.Overwrite)
+    val connector = new CSVConnector(s"$path/col1=*/col2=A/*", "true", ",", "true", SaveMode.Overwrite)
     val connectorRead = connector.read()
     connectorRead.show()
 
@@ -97,7 +101,7 @@ class FileConnectorSuite extends FunSuite {
     assert(connectorRead.collect() === sparkRead.collect())
 
     // remove test files
-    new CSVConnector(spark, path, "true", ",", "true", SaveMode.Overwrite).delete()
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
   }
 
   test("File connector functionality") {
@@ -111,7 +115,7 @@ class FileConnectorSuite extends FunSuite {
 
     import spark.implicits._
     val connector: FileConnector =
-      new FileConnector(spark, Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
+      new FileConnector(Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
         override val storage: Storage = Storage.CSV
 
         override def read(): DataFrame = null
@@ -141,7 +145,7 @@ class FileConnectorSuite extends FunSuite {
 
     import spark.implicits._
 
-    val connector: FileConnector = new FileConnector(spark, Map[String, String](
+    val connector: FileConnector = new FileConnector(Map[String, String](
       "path" -> "src/test/resources/test_csv_parallel",
       "inferSchema" -> "true",
       "header" -> "false",
@@ -179,8 +183,8 @@ class FileConnectorSuite extends FunSuite {
       ("default" :: suffixes).par
         .foreach {
           x =>
-            val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
-            assert(data.count() === 6, s"the file src/test/resources/test_csv_parallel/_user_defined_suffix=${x} should have 6 rows")
+            val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=$x")
+            assert(data.count() === 6, s"the file src/test/resources/test_csv_parallel/_user_defined_suffix=$x should have 6 rows")
         }
     } catch {
       case e: IllegalArgumentException => //
@@ -193,7 +197,7 @@ class FileConnectorSuite extends FunSuite {
   test("FileConnector should handle base path correctly") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
-    val connector: FileConnector = new FileConnector(spark, Map[String, String](
+    val connector: FileConnector = new FileConnector(Map[String, String](
       "path" -> "src/test/resources/test_base_path.csv",
       "inferSchema" -> "true",
       "header" -> "false",

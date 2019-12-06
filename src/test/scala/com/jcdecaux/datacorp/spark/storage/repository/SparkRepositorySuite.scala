@@ -17,7 +17,7 @@ class SparkRepositorySuite extends FunSuite {
   val path: String = "src/test/resources/test_parquet"
   val table: String = "test_table"
 
-  val options = Map[String, String](
+  val options: Map[String, String] = Map[String, String](
     "inferSchema" -> "false",
     "delimiter" -> ";",
     "header" -> "true"
@@ -49,7 +49,7 @@ class SparkRepositorySuite extends FunSuite {
 
   test("Instantiation") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
 
     val repo = new SparkRepository[TestObject]().setConnector(parquetConnector)
@@ -73,7 +73,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_anno"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -110,7 +110,7 @@ class SparkRepositorySuite extends FunSuite {
   test("SparkRepository should handle UDS key configuration") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val path: String = "src/test/resources/test_parquet_with_anno"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -130,7 +130,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_annotation"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -158,7 +158,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_spark_repository_colname_change"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -184,7 +184,7 @@ class SparkRepositorySuite extends FunSuite {
     val test = spark.createDataset(testCompressionRepository)
 
     val path: String = "src/test/resources/test_spark_repository_compression"
-    val connector = new ParquetConnector(spark, Map[String, String](
+    val connector = new ParquetConnector(Map[String, String](
       "path" -> path,
       "table" -> "test_repo_compression",
       "saveMode" -> "Append"
@@ -222,7 +222,7 @@ class SparkRepositorySuite extends FunSuite {
     val test = spark.createDataset(testCompressionRepositoryGZIP)
 
     val path: String = "src/test/resources/test_spark_repository_compression_gzip"
-    val connector = new ParquetConnector(spark, Map[String, String](
+    val connector = new ParquetConnector(Map[String, String](
       "path" -> path,
       "table" -> "test_repo_compression_gzip",
       "saveMode" -> "Overwrite"
@@ -265,7 +265,7 @@ class SparkRepositorySuite extends FunSuite {
     val testData = spark.createDataset(testCompressionRepositoryGZIP)
 
     val path: String = "src/test/resources/test_spark_repository_read_cache"
-    val connector = new ParquetConnector(spark, Map[String, String](
+    val connector = new ParquetConnector(Map[String, String](
       "path" -> path,
       "table" -> "test_repo_compression",
       "saveMode" -> "Append"

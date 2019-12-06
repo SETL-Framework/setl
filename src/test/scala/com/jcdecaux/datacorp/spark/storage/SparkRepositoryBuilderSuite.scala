@@ -25,7 +25,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
   var mockCassandra: MockCassandra = _
   System.setProperty("test.cassandra.version", "3.11.4")
   useCassandraConfig(Seq(YamlTransformations.Default))
-  val connector = CassandraConnector(defaultConf)
+  val connector: CassandraConnector = CassandraConnector(defaultConf)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -64,7 +64,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
     val repo = new SparkRepositoryBuilder[TestObject](Storage.CASSANDRA)
       .setKeyspace(MockCassandra.keyspace)
       .setTable("test")
-      .setSpark(spark)
       .setPartitionKeys(Some(Seq("partition1")))
       .build().get()
 
@@ -96,7 +95,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.CSV)
 
-    repoBuilder.setSpark(spark)
     repoBuilder.setPath("src/test/resources/test_csv")
 
     val repo = repoBuilder.build().get()
@@ -123,7 +121,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.JSON)
 
-    repoBuilder.setSpark(spark)
     repoBuilder.setPath("src/test/resources/test_json")
     repoBuilder.setInferSchema(false)
     repoBuilder.setSchema(StructType(Array(
@@ -155,7 +152,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
     ).toDS()
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.PARQUET)
-      .setSpark(spark)
       .setTable("test")
       .setPath("src/test/resources/test_parquet")
 
@@ -198,7 +194,6 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
     repoBuilder
       .setInferSchema(false)
       .setTable("test")
-      .setSpark(spark)
       .setPath("src/test/resources/test_excel.xlsx")
       .setSchema(schema)
 
@@ -282,14 +277,11 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
       .setEnv("local")
       .getOrCreate()
 
-    // NullPointerException should be thrown if spark session is not set
-    assertThrows[NullPointerException](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
-
     // UnknownException.Storage should be thrown if the given storage type is not supported
-    assertThrows[UnknownException.Storage](new SparkRepositoryBuilder[TestObject](Storage.OTHER).setSpark(spark).build())
+    assertThrows[UnknownException.Storage](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
 
     // NoSuchElementException should be thrown if missing arguments
-    assertThrows[InvocationTargetException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
+    assertThrows[InvocationTargetException](new SparkRepositoryBuilder[TestObject](Storage.CSV).build())
     //    assertThrows[NoSuchElementException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
   }
 
@@ -308,7 +300,7 @@ class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with B
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val repo = new SparkRepositoryBuilder[TestObject](config).setSpark(spark).build().get()
+    val repo = new SparkRepositoryBuilder[TestObject](config).build().get()
     repo.save(testTable)
     val df = repo.findAll()
 

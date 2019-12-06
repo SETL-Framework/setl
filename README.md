@@ -11,7 +11,7 @@ You can start working by cloning [this template project](https://git.jcdecaux.co
 <dependency>
   <groupId>com.jcdecaux.datacorp</groupId>
   <artifactId>dc-spark-sdk_2.4</artifactId>
-  <version>0.3.4-SNAPSHOT</version>
+  <version>0.3.5-SNAPSHOT</version>
 </dependency>
 ```
 

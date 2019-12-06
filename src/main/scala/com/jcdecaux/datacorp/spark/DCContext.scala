@@ -54,7 +54,7 @@ abstract class DCContext(val configLoader: ConfigLoader) {
                                            consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                            deliveryId: String = Deliverable.DEFAULT_ID,
                                            readCache: Boolean = false): this.type = {
-    val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).setSpark(spark).getOrCreate().persistReadData(readCache)
+    val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).getOrCreate().persistReadData(readCache)
     val deliverable = new Deliverable(repo).setConsumers(consumer).setDeliveryId(deliveryId)
     inputRegister.put(repositoryId(config), deliverable)
     this
@@ -87,7 +87,7 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     * @return
     */
   def getConnector[CN <: Connector](config: String): CN = {
-    new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
+    new ConnectorBuilder(configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
   }
 
   /**
@@ -155,7 +155,7 @@ abstract class DCContext(val configLoader: ConfigLoader) {
     * @return
     */
   def resetConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
-    val payload = new ConnectorBuilder(spark, configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
+    val payload = new ConnectorBuilder(configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
     val deliverable = new Deliverable(payload).setDeliveryId(deliveryId)
     inputRegister.put(connectorId(config), deliverable)
     this
