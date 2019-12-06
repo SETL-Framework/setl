@@ -71,8 +71,8 @@ class ConnectorBuilder(val spark: SparkSession,
   private[this] def buildConnectorWithConf(configuration: Conf): Connector = {
     configuration.getAs[Storage]("storage") match {
       case Some(s) =>
-        val constructor = connectorConstructorOf(s, classOf[SparkSession], classOf[Conf])
-        constructor.newInstance(spark, configuration)
+        val constructor = connectorConstructorOf(s, classOf[Conf])
+        constructor.newInstance(configuration)
       case _ => throw new UnknownException.Storage("Unknown storage type")
     }
   }
@@ -89,8 +89,8 @@ class ConnectorBuilder(val spark: SparkSession,
 
     TypesafeConfigUtils.getAs[Storage](configuration, "storage") match {
       case Some(s) =>
-        val constructor = connectorConstructorOf(s, classOf[SparkSession], classOf[Config])
-        constructor.newInstance(spark, configuration)
+        val constructor = connectorConstructorOf(s, classOf[Config])
+        constructor.newInstance(configuration)
       case _ => throw new UnknownException.Storage("Unknown storage type")
     }
   }
