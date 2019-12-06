@@ -26,9 +26,15 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
   def this(conf: Map[String, String]) = this(JDBCConnectorConf.fromMap(conf))
 
-  def this(sparkSession: SparkSession, config: Config) = this(TypesafeConfigUtils.getMap(config))
+  def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
 
-  def this(sparkSession: SparkSession, conf: Conf) = this(conf.toMap)
+  def this(conf: Conf) = this(conf.toMap)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(sparkSession: SparkSession, config: Config) = this(config)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(sparkSession: SparkSession, conf: Conf) = this(conf)
 
   override val storage: Storage = Storage.JDBC
 
