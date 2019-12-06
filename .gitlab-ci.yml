@@ -7,8 +7,12 @@ stages:
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  SPARK_VER: "2.2.1"
-  SPARK_COMPAT_VER: "2.2"
+  SPARK_VER: "2.4.4"
+  SPARK_COMPAT_VER: "2.4"
+  SCALA_VER: "2.12.10"
+  SCALA_COMPAT_VER: "2.12"
+  SCALA_VER_2: "2.11.12"
+  SCALA_COMPAT_VER_2: "2.11"
 
 cache:
   paths:
@@ -36,6 +40,15 @@ deploy:snapshot:
   only:
     - master
 
+deploy:snapshot-compat:
+  stage: deploy
+  script:
+    - mvn -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dscala.version=$SCALA_VER_2 -Dscala.compat.version=$SCALA_COMPAT_VER_2 deploy
+  dependencies:
+    - test
+  only:
+    - master
+
 deploy:release:manual:
   stage: deploy
   script:
@@ -45,7 +58,17 @@ deploy:release:manual:
   only:
     - master
   when: manual
-  
+
+deploy:release-compat:manual:
+  stage: deploy
+  script:
+    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dscala.version=$SCALA_VER_2 -Dscala.compat.version=$SCALA_COMPAT_VER_2 deploy
+  dependencies:
+    - test
+  only:
+    - master
+  when: manual
+
 deploy:release:auto:
   stage: deploy
   script:
@@ -57,22 +80,13 @@ deploy:release:auto:
   except:
     - branches
 
-deploy:snapshot-compat:
+deploy:release-compat:auto:
   stage: deploy
   script:
-    - mvn -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dspark.version=$SPARK_VER -Dspark.compat.version=$SPARK_COMPAT_VER deploy
+    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dscala.version=$SCALA_VER_2 -Dscala.compat.version=$SCALA_COMPAT_VER_2 deploy
   dependencies:
     - test
   only:
-    - master
-  when: manual
-
-deploy:release-compat:
-  stage: deploy
-  script:
-    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dspark.version=$SPARK_VER -Dspark.compat.version=$SPARK_COMPAT_VER deploy
-  dependencies:
-    - test
-  only:
-    - master
-  when: manual
+    - /^v.*$/
+  except:
+    - branches
