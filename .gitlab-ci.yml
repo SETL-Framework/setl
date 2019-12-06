@@ -7,12 +7,7 @@ stages:
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  SPARK_VER: "2.4.4"
-  SPARK_COMPAT_VER: "2.4"
-  SCALA_VER: "2.12.10"
-  SCALA_COMPAT_VER: "2.12"
-  SCALA_VER_2: "2.11.12"
-  SCALA_COMPAT_VER_2: "2.11"
+  MVN_CMD_CPT_OPTS: "-Dscala.version=2.11.12 -Dscala.compat.version=2.11"
 
 cache:
   paths:
@@ -23,18 +18,24 @@ build:
   script:
     - mvn clean $MAVEN_CLI_OPTS compile
 
-test:
+test:current:
   stage: test
   dependencies:
     - build
   script:
-    - export JAVA_TOOL_OPTIONS="-Xmx1024m -Xms1024m"  # solve jvm heap size problem
-    - mvn $MAVEN_CLI_OPTS test
+    - mvn clean $MAVEN_CLI_OPTS test
+
+test:compatible:
+  stage: test
+  dependencies:
+    - build
+  script:
+    - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS test
 
 deploy:snapshot:
   stage: deploy
   script:
-    - mvn -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+    - mvn clean -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
     - test
   only:
@@ -43,7 +44,7 @@ deploy:snapshot:
 deploy:snapshot-compat:
   stage: deploy
   script:
-    - mvn -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dscala.version=$SCALA_VER_2 -Dscala.compat.version=$SCALA_COMPAT_VER_2 deploy
+    - mvn clean -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
     - test
   only:
@@ -52,7 +53,7 @@ deploy:snapshot-compat:
 deploy:release:manual:
   stage: deploy
   script:
-    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
     - test
   only:
@@ -62,7 +63,7 @@ deploy:release:manual:
 deploy:release-compat:manual:
   stage: deploy
   script:
-    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dscala.version=$SCALA_VER_2 -Dscala.compat.version=$SCALA_COMPAT_VER_2 deploy
+    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
     - test
   only:
@@ -72,7 +73,7 @@ deploy:release-compat:manual:
 deploy:release:auto:
   stage: deploy
   script:
-    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
   dependencies:
     - test
   only:
@@ -83,7 +84,7 @@ deploy:release:auto:
 deploy:release-compat:auto:
   stage: deploy
   script:
-    - mvn -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS -Dscala.version=$SCALA_VER_2 -Dscala.compat.version=$SCALA_COMPAT_VER_2 deploy
+    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
     - test
   only:
