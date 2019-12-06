@@ -55,7 +55,7 @@ class FileConnectorSuite extends FunSuite {
 
     df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").parquet(path)
 
-    val connector = new ParquetConnector(spark, "src/test/resources/fileconnector_test_dir/col1=*/col2=A/*", SaveMode.Overwrite)
+    val connector = new ParquetConnector("src/test/resources/fileconnector_test_dir/col1=*/col2=A/*", SaveMode.Overwrite)
 
     val connectorRead = connector.read()
 
@@ -67,7 +67,7 @@ class FileConnectorSuite extends FunSuite {
     assert(connectorRead.collect() === sparkRead.collect())
 
     // remove test files
-    new ParquetConnector(spark, path, SaveMode.Overwrite).delete()
+    new ParquetConnector(path, SaveMode.Overwrite).delete()
   }
 
   test("File connector should handle wildcard file path (csv)") {
@@ -183,8 +183,8 @@ class FileConnectorSuite extends FunSuite {
       ("default" :: suffixes).par
         .foreach {
           x =>
-            val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=${x}")
-            assert(data.count() === 6, s"the file src/test/resources/test_csv_parallel/_user_defined_suffix=${x} should have 6 rows")
+            val data = spark.read.csv(s"src/test/resources/test_csv_parallel/_user_defined_suffix=$x")
+            assert(data.count() === 6, s"the file src/test/resources/test_csv_parallel/_user_defined_suffix=$x should have 6 rows")
         }
     } catch {
       case e: IllegalArgumentException => //

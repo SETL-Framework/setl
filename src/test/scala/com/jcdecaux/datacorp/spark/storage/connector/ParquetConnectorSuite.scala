@@ -23,7 +23,7 @@ class ParquetConnectorSuite extends FunSuite {
 
   test("Parquet connector should push down filter and select") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
 
     val repository = new SparkRepository[TestObject].setConnector(parquetConnector).persistReadData(true)
     import spark.implicits._
@@ -46,7 +46,7 @@ class ParquetConnectorSuite extends FunSuite {
     ds5.show()
     ds5.explain()
 
-    val explain = ExplainCommand(ds5.queryExecution.logical, false)
+    val explain = ExplainCommand(ds5.queryExecution.logical, extended = false)
     assert(
       spark.sessionState.executePlan(explain).executedPlan.executeCollect()
         .map(_.getString(0)).mkString("; ")
@@ -59,14 +59,14 @@ class ParquetConnectorSuite extends FunSuite {
   test("test Parquet connector with different file path") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
 
     val path1: String = new File("src/test/resources/test parquet").toURI.toString
     val path2: String = new File("src/test/resources/test parquet").getPath
 
-    val parquetConnector1 = new ParquetConnector(spark, path1, SaveMode.Overwrite)
-    val parquetConnector2 = new ParquetConnector(spark, path2, SaveMode.Overwrite)
+    val parquetConnector1 = new ParquetConnector(path1, SaveMode.Overwrite)
+    val parquetConnector2 = new ParquetConnector(path2, SaveMode.Overwrite)
 
     parquetConnector1.write(testTable.toDF)
     val df = parquetConnector2.read()
@@ -77,7 +77,7 @@ class ParquetConnectorSuite extends FunSuite {
   test("parquet connector  IO ") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
 
     testTable.toDF.show()
@@ -95,7 +95,7 @@ class ParquetConnectorSuite extends FunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
-    val connector = new ParquetConnector(spark, Properties.parquetConfig)
+    val connector = new ParquetConnector(Properties.parquetConfig)
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
@@ -109,7 +109,7 @@ class ParquetConnectorSuite extends FunSuite {
   test("Test Parquet Connector Suffix") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val parquetConnector = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
 
     parquetConnector.resetSuffix(true)
@@ -141,7 +141,7 @@ class ParquetConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val parquetConnector2 = new ParquetConnector(spark, path, SaveMode.Overwrite)
+    val parquetConnector2 = new ParquetConnector(path, SaveMode.Overwrite)
       .partitionBy("partition1", "partition2")
 
     // with partition, with suffix

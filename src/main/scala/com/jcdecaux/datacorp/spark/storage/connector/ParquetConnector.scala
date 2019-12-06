@@ -13,21 +13,30 @@ import org.apache.spark.sql._
 @InterfaceStability.Evolving
 class ParquetConnector(override val options: ConnectorConf) extends FileConnector(options) {
 
-  override val storage: Storage = Storage.PARQUET
-  this.options.setStorage(storage)
+  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
 
+  def this(path: String, saveMode: SaveMode) = this(Map("path" -> path, "saveMode" -> saveMode.toString))
+
+  def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
+
+  def this(conf: Conf) = this(conf.toMap)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, options: ConnectorConf) = this(options)
 
-  def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, options: Map[String, String]) = this(ConnectorConf.fromMap(options))
 
-  def this(spark: SparkSession, path: String, saveMode: SaveMode) =
-    this(spark, Map[String, String](
-      "path" -> path,
-      "saveMode" -> saveMode.toString
-    ))
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, path: String, saveMode: SaveMode) = this(path, saveMode)
 
-  def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, config: Config) = this(TypesafeConfigUtils.getMap(config))
 
-  def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, conf: Conf) = this(conf.toMap)
 
+  override val storage: Storage = Storage.PARQUET
+
+  this.options.setStorage(storage)
 }
