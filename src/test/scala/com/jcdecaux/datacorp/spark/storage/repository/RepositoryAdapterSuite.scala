@@ -31,7 +31,7 @@ class RepositoryAdapterSuite extends FunSuite {
       "saveMode" -> "Overwrite"
     )
 
-    val csvConnector = new CSVConnector(spark, options)
+    val csvConnector = new CSVConnector(options)
 
     val repo: SparkRepository[RepoAdapterTesterA] =
       new SparkRepository[RepoAdapterTesterA]().setConnector(csvConnector)
@@ -60,7 +60,7 @@ class RepositoryAdapterSuite extends FunSuite {
       "saveMode" -> "Overwrite"
     )
 
-    val csvConnector = new CSVConnector(spark, options)
+    val csvConnector = new CSVConnector(options)
 
     val repo: SparkRepository[RepoAdapterTesterA] =
       new SparkRepository[RepoAdapterTesterA]().setConnector(csvConnector)

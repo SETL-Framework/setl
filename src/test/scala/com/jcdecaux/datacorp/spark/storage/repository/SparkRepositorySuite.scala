@@ -73,7 +73,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_anno"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -110,7 +110,7 @@ class SparkRepositorySuite extends FunSuite {
   test("SparkRepository should handle UDS key configuration") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val path: String = "src/test/resources/test_parquet_with_anno"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -130,7 +130,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_parquet_with_annotation"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",
@@ -158,7 +158,7 @@ class SparkRepositorySuite extends FunSuite {
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
     val path: String = "src/test/resources/test_spark_repository_colname_change"
-    val connector = new CSVConnector(spark, Map[String, String](
+    val connector = new CSVConnector(Map[String, String](
       "path" -> path,
       "inferSchema" -> "false",
       "delimiter" -> ";",

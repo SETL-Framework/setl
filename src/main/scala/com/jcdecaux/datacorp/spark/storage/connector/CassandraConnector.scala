@@ -28,13 +28,11 @@ class CassandraConnector(val keyspace: String,
   /**
    * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
    *
-   * @param spark spark session
-   * @param conf  [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   * @param conf [[com.jcdecaux.datacorp.spark.config.Conf]] object
    */
-  def this(spark: SparkSession, conf: Conf) = this(
+  def this(conf: Conf) = this(
     keyspace = conf.get("keyspace").get,
     table = conf.get("table").get,
-    spark = spark,
     partitionKeyColumns = Option(conf.getAs[Array[String]]("partitionKeyColumns").get.toSeq),
     clusteringKeyColumns =
       if (conf.getAs[Array[String]]("clusteringKeyColumns").isDefined) {
@@ -47,13 +45,11 @@ class CassandraConnector(val keyspace: String,
   /**
    * Constructor with a [[com.typesafe.config.Config]] object
    *
-   * @param spark  spark session
    * @param config [[com.typesafe.config.Config]] typesafe Config object
    */
-  def this(spark: SparkSession, config: Config) = this(
+  def this(config: Config) = this(
     keyspace = TypesafeConfigUtils.getAs[String](config, "keyspace").get,
     table = TypesafeConfigUtils.getAs[String](config, "table").get,
-    spark = spark,
     partitionKeyColumns =
       Option(TypesafeConfigUtils.getList(config, "partitionKeyColumns").get.map(_.toString)),
     clusteringKeyColumns =
@@ -63,6 +59,22 @@ class CassandraConnector(val keyspace: String,
         None
       }
   )
+
+  /**
+   * Constructor with a [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   *
+   * @param spark spark session
+   * @param conf  [[com.jcdecaux.datacorp.spark.config.Conf]] object
+   */
+  def this(spark: SparkSession, conf: Conf) = this(conf)
+
+  /**
+   * Constructor with a [[com.typesafe.config.Config]] object
+   *
+   * @param spark  spark session
+   * @param config [[com.typesafe.config.Config]] typesafe Config object
+   */
+  def this(spark: SparkSession, config: Config) = this(config)
 
   override val reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
 

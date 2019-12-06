@@ -83,7 +83,7 @@ class FileConnectorSuite extends FunSuite {
 
     df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").option("header", "true").csv(path)
 
-    val connector = new CSVConnector(spark, s"$path/col1=*/col2=A/*", "true", ",", "true", SaveMode.Overwrite)
+    val connector = new CSVConnector(s"$path/col1=*/col2=A/*", "true", ",", "true", SaveMode.Overwrite)
     val connectorRead = connector.read()
     connectorRead.show()
 
@@ -97,7 +97,7 @@ class FileConnectorSuite extends FunSuite {
     assert(connectorRead.collect() === sparkRead.collect())
 
     // remove test files
-    new CSVConnector(spark, path, "true", ",", "true", SaveMode.Overwrite).delete()
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
   }
 
   test("File connector functionality") {
