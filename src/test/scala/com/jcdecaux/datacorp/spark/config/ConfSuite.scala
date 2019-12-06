@@ -2,9 +2,9 @@ package com.jcdecaux.datacorp.spark.config
 
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.exception.ConfException
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class ConfSuite extends FunSuite {
+class ConfSuite extends AnyFunSuite {
 
   val conf = new Conf()
 

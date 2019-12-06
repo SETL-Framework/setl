@@ -5,9 +5,9 @@ import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.CSVConnector
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class RepositoryAdapterSuite extends FunSuite {
+class RepositoryAdapterSuite extends AnyFunSuite {
 
   val path: String = "src/test/resources/test_repository_adapter"
 

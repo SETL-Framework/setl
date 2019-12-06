@@ -4,9 +4,9 @@ import com.jcdecaux.datacorp.spark.annotation.{ColumnName, CompoundKey, Compress
 import com.jcdecaux.datacorp.spark.internal.TestClasses.TestStructAnalyser
 import com.jcdecaux.datacorp.spark.storage.{Compressor, XZCompressor}
 import org.apache.spark.sql.types.StructType
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class StructAnalyserSuite extends FunSuite {
+class StructAnalyserSuite extends AnyFunSuite {
 
   val schema: StructType = StructAnalyser.analyseSchema[TestStructAnalyser]
 

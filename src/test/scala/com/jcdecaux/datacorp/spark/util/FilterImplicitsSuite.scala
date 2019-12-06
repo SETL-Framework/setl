@@ -4,9 +4,9 @@ import com.jcdecaux.datacorp.spark.SparkSessionBuilder
 import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.util.FilterImplicitsSuite.TestFilterImplicit
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class FilterImplicitsSuite extends FunSuite {
+class FilterImplicitsSuite extends AnyFunSuite {
 
   import FilterImplicits._
 

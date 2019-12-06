@@ -7,9 +7,9 @@ import com.jcdecaux.datacorp.spark.storage.connector.CSVConnector
 import com.jcdecaux.datacorp.spark.transformation.Factory
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class StageSuite extends FunSuite {
+class StageSuite extends AnyFunSuite {
 
   import StageSuite._
 

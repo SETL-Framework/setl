@@ -5,14 +5,14 @@ import com.jcdecaux.datacorp.spark.annotation.Delivery
 import com.jcdecaux.datacorp.spark.exception.AlreadyExistsException
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.runtime.{universe => ru}
 
 //////////////////////
 // TESTS START HERE //
 //////////////////////
-class PipelineSuite extends FunSuite {
+class PipelineSuite extends AnyFunSuite {
 
   import PipelineSuite._
 

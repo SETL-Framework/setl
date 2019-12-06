@@ -3,9 +3,9 @@ package com.jcdecaux.datacorp.spark.factory
 import com.jcdecaux.datacorp.spark.internal.TestClasses.TestFactory
 import com.jcdecaux.datacorp.spark.transformation.FactoryDeliveryMetadata
 import com.jcdecaux.datacorp.spark.workflow.External
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class FactoryDeliveryMetadataSuite extends FunSuite {
+class FactoryDeliveryMetadataSuite extends AnyFunSuite {
 
   val fac = new TestFactory
 

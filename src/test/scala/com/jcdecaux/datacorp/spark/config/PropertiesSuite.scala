@@ -1,9 +1,10 @@
 package com.jcdecaux.datacorp.spark.config
 
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class PropertiesSuite extends FunSuite with BeforeAndAfterAll {
+class PropertiesSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   override protected def beforeAll(): Unit = {
     System.setProperty("myvalue", "test-my-value")

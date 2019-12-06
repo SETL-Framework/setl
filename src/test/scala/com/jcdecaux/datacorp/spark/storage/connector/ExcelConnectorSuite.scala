@@ -8,9 +8,9 @@ import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject, TestObject2}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class ExcelConnectorSuite extends FunSuite {
+class ExcelConnectorSuite extends AnyFunSuite {
 
   import SparkRepositorySuite.deleteRecursively
 

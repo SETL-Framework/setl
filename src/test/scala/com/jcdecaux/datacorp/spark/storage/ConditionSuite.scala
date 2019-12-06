@@ -3,9 +3,9 @@ package com.jcdecaux.datacorp.spark.storage
 import java.time.{LocalDate, LocalDateTime}
 
 import com.jcdecaux.datacorp.spark.enums.ValueType
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class ConditionSuite extends FunSuite {
+class ConditionSuite extends AnyFunSuite {
 
   test("Condition could be converted to sql request") {
 

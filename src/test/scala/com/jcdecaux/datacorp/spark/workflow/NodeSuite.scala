@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.runtime
 
@@ -24,7 +24,7 @@ object NodeSuite {
 
 }
 
-class NodeSuite extends FunSuite {
+class NodeSuite extends AnyFunSuite {
 
   import NodeSuite._
 
