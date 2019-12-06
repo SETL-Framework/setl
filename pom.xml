@@ -327,6 +327,15 @@
                 <dependencies.scope>compile</dependencies.scope>
             </properties>
         </profile>
+
+        <profile>
+            <id>scala-2.12</id>
+            <properties>
+                <dependencies.scope>provided</dependencies.scope>
+                <scala.version>2.12.10</scala.version>
+                <scala.compat.version>2.12</scala.compat.version>
+            </properties>
+        </profile>
     </profiles>
 
     <repositories>

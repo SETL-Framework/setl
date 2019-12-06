@@ -7,87 +7,87 @@ stages:
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  MVN_CMD_CPT_OPTS: "-Dscala.version=2.12.10 -Dscala.compat.version=2.12"
+  MVN_CMD_CPT_OPTS: "-Pscala-2.12"
 
-build:latest:
+build:2-11:
   stage: build
   script:
     - mvn clean $MAVEN_CLI_OPTS compile
 
-build:compatible:
+build:2-12:
   stage: build
   script:
     - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS compile
 
-test:latest:
+test:2-11:
   stage: test
   dependencies:
-    - build:latest
+    - build:2-11
   script:
     - mvn clean $MAVEN_CLI_OPTS test
 
-test:compatible:
+test:2-12:
   stage: test
   dependencies:
-    - build:compatible
+    - build:2-12
   script:
     - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS test
 
-deploy:snapshot:latest:
+deploy:snapshot:2-11:
   stage: deploy
   script:
-    - mvn clean -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+    - mvn clean -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:latest
+    - test:2-11
   only:
     - master
 
-deploy:snapshot:compatible:
+deploy:snapshot:2-12:
   stage: deploy
   script:
-    - mvn clean -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
+    - mvn clean -DskipTests $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
-    - test:compatible
+    - test:2-12
   only:
     - master
 
-deploy:release:latest:manual:
+deploy:release:2-11:manual:
   stage: deploy
   script:
-    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:latest
-  only:
-    - master
-  when: manual
-
-deploy:release:compatible:manual:
-  stage: deploy
-  script:
-    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
-  dependencies:
-    - test:compatible
+    - test:2-11
   only:
     - master
   when: manual
 
-deploy:release:latest:auto:
+deploy:release:2-12:manual:
   stage: deploy
   script:
-    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS deploy
+    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
-    - test:latest
+    - test:2-12
+  only:
+    - master
+  when: manual
+
+deploy:release:2-11:auto:
+  stage: deploy
+  script:
+    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
+  dependencies:
+    - test:2-11
   only:
     - /^v.*$/
   except:
     - branches
 
-deploy:release:compatible:auto:
+deploy:release:2-12:auto:
   stage: deploy
   script:
-    - mvn clean -Dchangelist= -DskipTests -Pprovided $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
+    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
   dependencies:
-    - test:compatible
+    - test:2-12
   only:
     - /^v.*$/
   except:
