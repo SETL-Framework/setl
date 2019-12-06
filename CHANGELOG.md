@@ -1,4 +1,4 @@
-## 0.3.4-SNAPSHOT (2019-11-05)
+## 0.3.4 (2019-12-06)
 - Added read cache into spark repository to avoid consecutive disk IO.
 - Added option **autoLoad** in the Delivery annotation so that *DeliverableDispatcher* can still handle the dependency
 injection in the case where the delivery is missing but a corresponding
