@@ -192,7 +192,6 @@ class DeliverableDispatcherSuite extends FunSuite {
     import spark.implicits._
 
     val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
-      .setSpark(spark)
       .setPath("src/test/resources/csv_test_auto_load")
       .getOrCreate()
 
@@ -218,7 +217,6 @@ class DeliverableDispatcherSuite extends FunSuite {
     import spark.implicits._
 
     val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
-      .setSpark(spark)
       .setPath("src/test/resources/csv_test_auto_load")
       .getOrCreate()
 
@@ -288,7 +286,6 @@ class DeliverableDispatcherSuite extends FunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
-      .setSpark(spark)
       .setPath("src/test/resources/csv_test_auto_load")
       .getOrCreate()
 
@@ -304,7 +301,6 @@ class DeliverableDispatcherSuite extends FunSuite {
     import spark.implicits._
 
     val repo = new SparkRepositoryBuilder[Product2](Storage.CSV)
-      .setSpark(spark)
       .setPath("src/test/resources/csv_test_auto_load_optional")
       .getOrCreate()
 

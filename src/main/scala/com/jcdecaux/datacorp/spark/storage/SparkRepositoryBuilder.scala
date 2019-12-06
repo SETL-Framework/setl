@@ -15,28 +15,29 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
-  *
-  * @param spark   spark session
-  * @param storage type of storage
-  * @param config  a [[com.typesafe.config.Config]] object
-  * @tparam DataType type of data
-  */
+ * The SparkRepositoryBuilder will build a [[SparkRepository]] according to the given [[DataType]] and [[Storage]]
+ *
+ * @param storage type of storage
+ * @param config  a [[com.typesafe.config.Config]] object
+ * @tparam DataType type of data
+ */
 @InterfaceStability.Evolving
-class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSession],
-                                                   var storage: Option[Storage],
-                                                   var config: Option[Config])
+class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage], var config: Option[Config])
   extends Builder[SparkRepository[DataType]] {
 
+  def this() = this(None, None)
+
+  def this(storage: Storage) = this(Some(storage), None)
+
+  def this(config: Config) = this(None, Some(config))
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: Option[SparkSession], storage: Option[Storage], config: Option[Config]) = this(storage, config)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession) = this(None, None)
+
   import Conf.Serializer._
-
-  def this() = this(None, None, None)
-
-  def this(spark: SparkSession) = this(Some(spark), None, None)
-
-  def this(storage: Storage) = this(None, Some(storage), None)
-
-  def this(config: Config) = this(None, None, Some(config))
 
   private[this] val conf: Conf = new Conf()
 
@@ -95,10 +96,8 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSessio
     this
   }
 
-  def setSpark(spark: SparkSession): this.type = {
-    this.spark = Option(spark)
-    this
-  }
+  @deprecated("This method has no effect as SparkSession is removed from SparkRepositoryBuilder", "0.3.4")
+  def setSpark(spark: SparkSession): this.type = this
 
   def setStorage(storage: Storage): this.type = set("storage", storage)
 
@@ -173,29 +172,23 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var spark: Option[SparkSessio
     * @return [[Connector]]
     */
   protected[this] def createConnector(): Connector = {
-
-    // Check if spark is set
-    spark match {
-      case None => throw new NullPointerException("SparkSession is not defined")
-      case _ =>
-    }
-
-    // if a typesafe config is set, then return a corresponding connector
+    // if a TypeSafe config is set, then return a corresponding connector
     config match {
-      case Some(typesafeConfig) =>
+      case Some(typeSafeConfig) =>
+        log.debug("Build connector with TypeSafe configuration")
         try {
-          log.debug("Build connector with configuration")
-          return new ConnectorBuilder(spark.get, typesafeConfig).build().get()
+          return new ConnectorBuilder(typeSafeConfig).build().get()
         } catch {
-          case unknown: UnknownException.Storage => log.error("Unknown storage type in connector configuration")
+          case _: UnknownException.Storage => log.error("Unknown storage type in connector configuration")
           case e: Throwable => throw e
         }
 
-      case _ => log.debug("No com.typesafe connector configuration was found, build with parameters")
+      case _ =>
     }
 
     // Otherwise, build a connector according to the current configuration
-    new ConnectorBuilder(spark.get, conf)
+    log.debug("No TypeSafe configuration was found, build with parameters")
+    new ConnectorBuilder(conf)
       .build()
       .get()
 

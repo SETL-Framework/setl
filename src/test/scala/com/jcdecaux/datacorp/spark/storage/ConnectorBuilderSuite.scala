@@ -45,7 +45,7 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
 
     import spark.implicits._
 
-    val connector = new ConnectorBuilder(spark, Properties.cassandraConfigConnectorBuilder).build().get()
+    val connector = new ConnectorBuilder(Properties.cassandraConfigConnectorBuilder).build().get()
 
     // Create table and write data
     connector.write(testTable.toDF())
@@ -65,7 +65,7 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
 
     import spark.implicits._
 
-    val connector = new ConnectorBuilder(spark, Properties.csvConfigConnectorBuilder).build().get()
+    val connector = new ConnectorBuilder(Properties.csvConfigConnectorBuilder).build().get()
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
@@ -84,7 +84,7 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
       .get()
 
     import spark.implicits._
-    val connector = new ConnectorBuilder(spark, Properties.parquetConfigConnectorBuilder).build().get()
+    val connector = new ConnectorBuilder(Properties.parquetConfigConnectorBuilder).build().get()
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
@@ -103,7 +103,7 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
       .get()
 
     import spark.implicits._
-    val connector = new ConnectorBuilder(spark, Properties.excelConfigConnectorBuilder).build().get()
+    val connector = new ConnectorBuilder(Properties.excelConfigConnectorBuilder).build().get()
 
     testTable.toDF.show()
     connector.write(testTable.toDF)
@@ -123,7 +123,7 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
       .get()
 
     import spark.implicits._
-    val connector = new ConnectorBuilder(spark, Properties.jsonConfigConnectorBuilder).build().get()
+    val connector = new ConnectorBuilder(Properties.jsonConfigConnectorBuilder).build().get()
 
     testTable.toDF.show()
     connector.write(testTable.toDF)
@@ -144,16 +144,16 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
 
 
     // IllegalArgumentException should be thrown when the typesafe config contains a wrong storage type
-    assertThrows[IllegalArgumentException](new ConnectorBuilder(spark, Properties.wrongCsvConfigConnectorBuilder).build().get())
+    assertThrows[IllegalArgumentException](new ConnectorBuilder(Properties.wrongCsvConfigConnectorBuilder).build().get())
 
     // ConfException should be thrown when the storage type can't be parsed
     assertThrows[ConfException](
-      new ConnectorBuilder(spark, new Conf().set("storage", "BLABLA")).build().get()
+      new ConnectorBuilder(new Conf().set("storage", "BLABLA")).build().get()
     )
 
     // UnknownException.Storage should be thrown if the given storage is not supported
-    assertThrows[UnknownException.Storage](new ConnectorBuilder(spark, Properties.wrongCsvConfigConnectorBuilder2).build().get())
-    assertThrows[UnknownException.Storage](new ConnectorBuilder(spark, new Conf().set("storage", Storage.OTHER)).build().get())
+    assertThrows[UnknownException.Storage](new ConnectorBuilder(Properties.wrongCsvConfigConnectorBuilder2).build().get())
+    assertThrows[UnknownException.Storage](new ConnectorBuilder(new Conf().set("storage", Storage.OTHER)).build().get())
   }
 
   test("Connector builder with two configurations") {
@@ -164,7 +164,7 @@ class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeA
       .get()
 
     assertThrows[IllegalArgumentException](
-      new ConnectorBuilder(spark, Some(Properties.wrongCsvConfigConnectorBuilder2), Some(new Conf().set("storage", "BLABLA"))).build().get()
+      new ConnectorBuilder(Some(Properties.wrongCsvConfigConnectorBuilder2), Some(new Conf().set("storage", "BLABLA"))).build().get()
     )
   }
 
