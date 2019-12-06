@@ -21,7 +21,7 @@ class JSONConnectorSuite extends FunSuite {
 
   test("JSON connector IO") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    val connector = new JSONConnector(spark, Map("path" -> path, "saveMode" -> "Overwrite"))
+    val connector = new JSONConnector(Map("path" -> path, "saveMode" -> "Overwrite"))
 
     import spark.implicits._
 
@@ -39,8 +39,8 @@ class JSONConnectorSuite extends FunSuite {
     val path1: String = new File("src/test/resources/test_json").toURI.toString
     val path2: String = new File("src/test/resources/test_json").getPath
 
-    val connector1 = new JSONConnector(spark, Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
-    val connector2 = new JSONConnector(spark, Map[String, String]("path" -> path2, "saveMode" -> "Overwrite"))
+    val connector1 = new JSONConnector(Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
+    val connector2 = new JSONConnector(Map[String, String]("path" -> path2, "saveMode" -> "Overwrite"))
 
     connector1.write(testTable.toDF)
     val df = connector2.read()
@@ -52,7 +52,7 @@ class JSONConnectorSuite extends FunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
-    val connector = new JSONConnector(spark, Properties.jsonConfig)
+    val connector = new JSONConnector(Properties.jsonConfig)
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
@@ -67,7 +67,7 @@ class JSONConnectorSuite extends FunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
-    val connector = new JSONConnector(spark, Map("path" -> path, "saveMode" -> "Append"))
+    val connector = new JSONConnector(Map("path" -> path, "saveMode" -> "Append"))
 
     connector.write(testTable.toDF(), Some("2"))
     connector.write(testTable.toDF(), Some("2"))
@@ -97,7 +97,7 @@ class JSONConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val connector = new JSONConnector(spark, Map[String, String]("path" -> path, "saveMode" -> "Overwrite"))
+    val connector = new JSONConnector(Map[String, String]("path" -> path, "saveMode" -> "Overwrite"))
       .partitionBy("partition1", "partition2")
 
     // with partition, with suffix
@@ -136,7 +136,7 @@ class JSONConnectorSuite extends FunSuite {
     import spark.implicits._
 
     val path1: String = new File("src/test/resources/standart_json_format").toURI.toString
-    val connector1 = new JSONConnector(spark, Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
+    val connector1 = new JSONConnector(Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
     connector1.writeStandardJSON(testTable.toDF)
     assert(connector1.readStandardJSON() === "[{\"partition1\":1,\"partition2\":\"p1\",\"clustering1\":\"c1\",\"value\":1},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":3,\"partition2\":\"p3\",\"clustering1\":\"c3\",\"value\":3}]")
     connector1.deleteStandardJSON()

@@ -68,12 +68,22 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 @InterfaceStability.Evolving
 class JSONConnector(override val options: ConnectorConf) extends FileConnector(options) {
 
+  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+
+  def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
+
+  def this(conf: Conf) = this(conf.toMap)
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, options: ConnectorConf) = this(options)
 
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
 
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
 
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
 
   override val storage: Storage = Storage.JSON
