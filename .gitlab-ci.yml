@@ -21,7 +21,7 @@ build:latest:
 build:compatible:
   stage: build
   script:
-    - mvn clean $MAVEN_CLI_OPTS compile
+    - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS compile
 
 test:latest:
   stage: test
