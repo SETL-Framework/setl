@@ -87,7 +87,7 @@ class ExcelConnectorSuite extends FunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val connector = new ExcelConnector(spark = spark, config = Properties.excelConfig)
+    val connector = new ExcelConnector(Properties.excelConfig)
 
     testTable.toDF.show()
     connector.write(testTable.toDF)

@@ -20,10 +20,14 @@ import scala.util.matching.Regex
 @InterfaceStability.Evolving
 abstract class FileConnector(val options: ConnectorConf) extends Connector with HasSparkSession {
 
+  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, options: ConnectorConf) = this(options)
 
   // Note: this constructor was added to keep the backward compatibility
-  def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, options: Map[String, String]) = this(options)
 
   private[this] val hadoopConfiguration: Configuration = spark.sparkContext.hadoopConfiguration
   private[this] var wildcardPath: Boolean = false

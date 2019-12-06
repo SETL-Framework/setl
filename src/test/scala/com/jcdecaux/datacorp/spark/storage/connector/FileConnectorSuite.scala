@@ -11,15 +11,19 @@ class FileConnectorSuite extends FunSuite {
 
   val path: String = "src/test/resources/test_csv"
 
-  val connector: SparkSession => FileConnector = spark => new FileConnector(spark, Map[String, String]("path" -> "src/test/resources")) {
+  val connector: SparkSession => FileConnector = spark => new FileConnector(Map[String, String]("path" -> "src/test/resources")) {
     override val storage: Storage = Storage.OTHER
+
     override def read(): DataFrame = null
+
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
-  val connector2: SparkSession => FileConnector = spark => new FileConnector(spark, Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
+  val connector2: SparkSession => FileConnector = spark => new FileConnector(Map[String, String]("path" -> "src/test/resources", "filenamePattern" -> "(test-json).*")) {
     override val storage: Storage = Storage.OTHER
+
     override def read(): DataFrame = null
+
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
@@ -111,7 +115,7 @@ class FileConnectorSuite extends FunSuite {
 
     import spark.implicits._
     val connector: FileConnector =
-      new FileConnector(spark, Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
+      new FileConnector(Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
         override val storage: Storage = Storage.CSV
 
         override def read(): DataFrame = null
@@ -141,7 +145,7 @@ class FileConnectorSuite extends FunSuite {
 
     import spark.implicits._
 
-    val connector: FileConnector = new FileConnector(spark, Map[String, String](
+    val connector: FileConnector = new FileConnector(Map[String, String](
       "path" -> "src/test/resources/test_csv_parallel",
       "inferSchema" -> "true",
       "header" -> "false",
@@ -193,7 +197,7 @@ class FileConnectorSuite extends FunSuite {
   test("FileConnector should handle base path correctly") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
-    val connector: FileConnector = new FileConnector(spark, Map[String, String](
+    val connector: FileConnector = new FileConnector(Map[String, String](
       "path" -> "src/test/resources/test_base_path.csv",
       "inferSchema" -> "true",
       "header" -> "false",
