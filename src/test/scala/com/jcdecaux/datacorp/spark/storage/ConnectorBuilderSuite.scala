@@ -11,11 +11,13 @@ import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursivel
 import com.jcdecaux.datacorp.spark.storage.connector.JSONConnector
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class ConnectorBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with BeforeAndAfterAll {
 
   import SparkTemplate.defaultConf
+
   override def clearCache(): Unit = CC.evictCache()
 
   //Sets up CassandraConfig and SparkContext

@@ -1,8 +1,8 @@
 package com.jcdecaux.datacorp.spark.storage
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class XZCompressorSuite extends FunSuite {
+class XZCompressorSuite extends AnyFunSuite {
 
   val compressor = new XZCompressor
 

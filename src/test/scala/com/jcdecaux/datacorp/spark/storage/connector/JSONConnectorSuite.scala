@@ -5,9 +5,9 @@ import java.io.File
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class JSONConnectorSuite extends FunSuite {
+class JSONConnectorSuite extends AnyFunSuite {
 
   val path: String = "src/test/resources/test JSON"
   val testTable: Seq[TestObject] = Seq(

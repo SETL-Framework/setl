@@ -5,12 +5,14 @@ import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, 
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.cassandra._
-import org.scalatest.{BeforeAndAfterAll, FunSuite, SequentialNestedSuiteExecution}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
 
 
-class SparkSessionBuilderSuite extends FunSuite with BeforeAndAfterAll with SequentialNestedSuiteExecution with EmbeddedCassandra {
+class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with SequentialNestedSuiteExecution with EmbeddedCassandra {
 
   import SparkTemplate.defaultConf
+
   override def clearCache(): Unit = CassandraConnector.evictCache()
 
   //Sets up CassandraConfig and SparkContext

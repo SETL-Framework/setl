@@ -14,9 +14,11 @@ import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObje
 import com.typesafe.config.Config
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class SparkRepositoryBuilderSuite extends FunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+
   import SparkRepositorySuite.deleteRecursively
   import SparkTemplate.defaultConf
 

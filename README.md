@@ -10,7 +10,7 @@ You can start working by cloning [this template project](https://git.jcdecaux.co
 <!--JCDecaux Datacorp-->
 <dependency>
   <groupId>com.jcdecaux.datacorp</groupId>
-  <artifactId>dc-spark-sdk_2.4</artifactId>
+  <artifactId>dc-spark-sdk_2.12</artifactId>
   <version>0.3.5-SNAPSHOT</version>
 </dependency>
 ```

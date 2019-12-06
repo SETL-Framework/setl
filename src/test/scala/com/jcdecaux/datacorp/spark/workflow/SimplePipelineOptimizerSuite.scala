@@ -4,9 +4,9 @@ import com.jcdecaux.datacorp.spark.annotation.Delivery
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import com.jcdecaux.datacorp.spark.{DCContext, SparkSessionBuilder}
 import org.apache.spark.sql.Dataset
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SimplePipelineOptimizerSuite extends FunSuite {
+class SimplePipelineOptimizerSuite extends AnyFunSuite {
 
   import PipelineSuite._
 

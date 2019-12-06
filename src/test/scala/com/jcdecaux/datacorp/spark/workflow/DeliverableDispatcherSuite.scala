@@ -8,9 +8,9 @@ import com.jcdecaux.datacorp.spark.storage.SparkRepositoryBuilder
 import com.jcdecaux.datacorp.spark.storage.connector.FileConnector
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class DeliverableDispatcherSuite extends FunSuite {
+class DeliverableDispatcherSuite extends AnyFunSuite {
 
   import DeliverableDispatcherSuite._
 

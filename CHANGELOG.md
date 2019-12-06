@@ -1,4 +1,6 @@
 ## 0.3.5 (2019-12-06)
+- Upgrade dependencies
+- Upgrade Scala version to 2.12
 - Removed **SparkSession** from Connector and SparkRepository constructor
 
 ## 0.3.4 (2019-12-06)

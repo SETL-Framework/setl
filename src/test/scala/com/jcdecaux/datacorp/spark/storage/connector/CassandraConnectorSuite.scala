@@ -5,9 +5,10 @@ import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, 
 import com.jcdecaux.datacorp.spark.config.Properties
 import com.jcdecaux.datacorp.spark.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class CassandraConnectorSuite extends FunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+class CassandraConnectorSuite extends AnyFunSuite with EmbeddedCassandra with BeforeAndAfterAll {
 
 
   import SparkTemplate.defaultConf

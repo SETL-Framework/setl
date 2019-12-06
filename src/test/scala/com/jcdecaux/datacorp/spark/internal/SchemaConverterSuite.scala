@@ -5,9 +5,9 @@ import com.jcdecaux.datacorp.spark.exception.InvalidSchemaException
 import com.jcdecaux.datacorp.spark.internal.TestClasses._
 import org.apache.spark.sql.types.BinaryType
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SchemaConverterSuite extends FunSuite {
+class SchemaConverterSuite extends AnyFunSuite {
   test("SchemaConverter should handle the annotation ColumnName") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._

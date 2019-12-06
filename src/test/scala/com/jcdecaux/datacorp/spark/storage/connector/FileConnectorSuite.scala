@@ -3,11 +3,11 @@ package com.jcdecaux.datacorp.spark.storage.connector
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.util.Random
 
-class FileConnectorSuite extends FunSuite {
+class FileConnectorSuite extends AnyFunSuite {
 
   val path: String = "src/test/resources/test_csv"
 

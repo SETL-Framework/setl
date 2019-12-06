@@ -1,8 +1,8 @@
 package com.jcdecaux.datacorp.spark.util
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class DateUtilsSuite extends FunSuite {
+class DateUtilsSuite extends AnyFunSuite {
 
   test("ReformatTimeFromString") {
 

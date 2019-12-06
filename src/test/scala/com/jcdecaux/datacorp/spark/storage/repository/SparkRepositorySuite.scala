@@ -8,9 +8,9 @@ import com.jcdecaux.datacorp.spark.storage.Condition
 import com.jcdecaux.datacorp.spark.storage.connector.{CSVConnector, Connector, ParquetConnector}
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SparkRepositorySuite extends FunSuite {
+class SparkRepositorySuite extends AnyFunSuite {
 
   import com.jcdecaux.datacorp.spark.storage.SparkRepositorySuite.deleteRecursively
 

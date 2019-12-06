@@ -8,9 +8,9 @@ import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class ParquetConnectorSuite extends FunSuite {
+class ParquetConnectorSuite extends AnyFunSuite {
 
   val path: String = "src/test/resources/test parquet"
   val table: String = "test_table"

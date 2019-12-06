@@ -1,9 +1,10 @@
 package com.jcdecaux.datacorp.spark.config
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
 
-class ConfLoaderSuite extends FunSuite with BeforeAndAfterAll {
+class ConfLoaderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("ConfigLoader builder should take into account the app.environment property in pom") {
     System.clearProperty("app.environment")
