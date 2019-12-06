@@ -1,3 +1,6 @@
+## 0.3.5 (2019-12-06)
+- Removed **SparkSession** from Connector and SparkRepository constructor
+
 ## 0.3.4 (2019-12-06)
 - Added read cache into spark repository to avoid consecutive disk IO.
 - Added option **autoLoad** in the Delivery annotation so that *DeliverableDispatcher* can still handle the dependency
