@@ -32,25 +32,32 @@ class DynamoDBConnector(val region: String, // "eu-west-1"
                         val throughput: String
                        ) extends DBConnector {
 
+  def this(config: Config) = this(
+    region = TypesafeConfigUtils.getAs[String](config, "region").get,
+    table = TypesafeConfigUtils.getAs[String](config, "table").get,
+    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").getOrElse(SaveMode.ErrorIfExists.toString)),
+    throughput = TypesafeConfigUtils.getAs[String](config, "throughput").getOrElse("10000")
+  )
+
+  def this(conf: Conf) = this(
+    region = conf.get("region").get,
+    table = conf.get("table").get,
+    saveMode = SaveMode.valueOf(conf.get("saveMode", SaveMode.ErrorIfExists.toString)),
+    throughput = conf.get("throughput", "10000")
+  )
+
+  @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession,
            region: String, // "eu-west-1"
            table: String,
            saveMode: SaveMode,
            throughput: String = "10000") = this(region, table, saveMode, throughput)
 
-  def this(spark: SparkSession, config: Config) = this(
-    spark = spark,
-    region = TypesafeConfigUtils.getAs[String](config, "region").get,
-    table = TypesafeConfigUtils.getAs[String](config, "table").get,
-    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").get)
-  )
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, config: Config) = this(config)
 
-  def this(spark: SparkSession, conf: Conf) = this(
-    spark = spark,
-    region = conf.get("region").get,
-    table = conf.get("table").get,
-    saveMode = SaveMode.valueOf(conf.get("saveMode").get)
-  )
+  @deprecated("use the constructor with no spark session", "0.3.4")
+  def this(spark: SparkSession, conf: Conf) = this(conf)
 
   override val reader: DataFrameReader = {
     log.debug(s"DynamoDB connector read throughput $throughput")
