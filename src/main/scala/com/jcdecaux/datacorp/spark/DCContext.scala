@@ -9,6 +9,7 @@ import com.jcdecaux.datacorp.spark.storage.connector.Connector
 import com.jcdecaux.datacorp.spark.storage.repository.SparkRepository
 import com.jcdecaux.datacorp.spark.storage.{ConnectorBuilder, SparkRepositoryBuilder}
 import com.jcdecaux.datacorp.spark.transformation.{Deliverable, Factory}
+import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.jcdecaux.datacorp.spark.workflow.Pipeline
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -199,14 +200,15 @@ object DCContext {
   class Builder extends com.jcdecaux.datacorp.spark.Builder[DCContext] {
 
     private[this] var dcContext: DCContext = _
-    private[this] var dcContextConfiguration: String = _
+    private[this] val fallbackContextConfiguration: String = "app.context"
+    private[this] var contextConfiguration: Option[String] = None
     private[this] var configLoader: ConfigLoader = _
     private[this] var sparkConf: Option[SparkConf] = None
-    private[this] var parallelism: Int = 200
+    private[this] var parallelism: Option[Int] = None
     private[this] var sparkMasterUrl: Option[String] = None
 
     def setDCContextConfigPath(config: String): this.type = {
-      dcContextConfiguration = config
+      contextConfiguration = Option(config)
       this
     }
 
@@ -216,7 +218,7 @@ object DCContext {
     }
 
     def setParallelism(par: Int): this.type = {
-      this.parallelism = par
+      this.parallelism = Some(par)
       this
     }
 
@@ -248,7 +250,9 @@ object DCContext {
     private[this] val sparkAppName: String = s"dc_spark_app_${Random.alphanumeric.take(10).mkString("")}"
 
     private[this] def buildSparkSession(): SparkSession = {
-      val pathOf: String => String = (s: String) => s"$dcContextConfiguration.$s"
+      val pathOf: String => String = (s: String) => s"${contextConfiguration.getOrElse(fallbackContextConfiguration)}.$s"
+
+      println(pathOf("spark"))
 
       val usages: Array[String] = if (configLoader.has(pathOf("usages"))) {
         configLoader.getArray(pathOf("usages"))
@@ -256,37 +260,40 @@ object DCContext {
         Array()
       }
 
+      val sparkConfigurations: Map[String, String] = try {
+        TypesafeConfigUtils.getMap(configLoader.getConfig(pathOf("spark")))
+      } catch {
+        case _: com.typesafe.config.ConfigException.Missing =>
+          log.warn(s"Config path ${pathOf("spark")} doesn't exist")
+          Map.empty
+      }
+
       val cassandraHost = configLoader.getOption(pathOf("cassandraHost"))
 
       val sparkSessionBuilder = new SparkSessionBuilder(usages: _*)
         .setAppName(configLoader.appName)
         .setEnv(configLoader.appEnv)
-        .setParallelism(parallelism)
 
-      cassandraHost match {
-        case Some(cqlHost) => sparkSessionBuilder.setCassandraHost(cqlHost)
-        case _ =>
-      }
-
-      sparkConf match {
-        case Some(conf) => sparkSessionBuilder.withSparkConf(conf)
-        case _ =>
-      }
-
-      sparkMasterUrl match {
-        case Some(url) => sparkSessionBuilder.setSparkMaster(url)
-        case _ =>
-      }
-
+      configureSpark(sparkConf, sparkSessionBuilder.withSparkConf)
+      sparkSessionBuilder.set(sparkConfigurations)
+      configureSpark(cassandraHost, sparkSessionBuilder.setCassandraHost)
+      configureSpark(sparkMasterUrl, sparkSessionBuilder.setSparkMaster)
       sparkSessionBuilder.getOrCreate()
+    }
+
+    private[this] def configureSpark[T](opt: Option[T], setter: T => SparkSessionBuilder): Unit = {
+      opt match {
+        case Some(thing) => setter(thing)
+        case _ =>
+      }
     }
 
 
     /**
-      * Build an object
-      *
-      * @return
-      */
+     * Build an object
+     *
+     * @return
+     */
     override def build(): Builder.this.type = {
       dcContext = new DCContext(configLoader) {
         override val spark: SparkSession = buildSparkSession()

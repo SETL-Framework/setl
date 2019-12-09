@@ -237,22 +237,29 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   def configure(conf: SparkConf): this.type = withSparkConf(conf)
 
   /**
-    * Set a SparkConf property
-    *
-    * @param key   key of spark conf
-    * @param value value of spark conf
-    */
+   * Set a SparkConf property
+   *
+   * @param key   key of spark conf
+   * @param value value of spark conf
+   */
   def set(key: String, value: String): this.type = {
     properties.put(key, value)
     this
   }
 
+  def set(options: Map[String, String]): this.type = {
+    options.foreach {
+      case (k: String, v: String) => set(k, v)
+    }
+    this
+  }
+
   /**
-    * Get a SparkConf value
-    *
-    * @param key key of spark conf
-    * @return string if the key exists, null otherwise
-    */
+   * Get a SparkConf value
+   *
+   * @param key key of spark conf
+   * @return string if the key exists, null otherwise
+   */
   def get(key: String): String = {
     properties.get(key)
   }
