@@ -1,7 +1,9 @@
 ## 0.3.5 (2019-12-06)
-- Upgrade dependencies
-- Upgrade Scala version to 2.12
-- Removed **SparkSession** from Connector and SparkRepository constructor
+- BREAKING CHANGE: replace the Spark compatible version by the Scala compatible version in the artifact ID. 
+The old artifact id **dc-spark-sdk_2.4** was changed to **dc-spark-sdk_2.11** (or **dc-spark-sdk_2.12**)
+- Upgraded dependencies
+- Added Scala 2.12 support
+- Removed **SparkSession** from Connector and SparkRepository constructor (old constructors are kept but now deprecated)
 
 ## 0.3.4 (2019-12-06)
 - Added read cache into spark repository to avoid consecutive disk IO.
