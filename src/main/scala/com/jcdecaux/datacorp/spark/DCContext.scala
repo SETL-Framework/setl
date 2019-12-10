@@ -253,8 +253,6 @@ object DCContext {
     private[this] def buildSparkSession(): SparkSession = {
       val pathOf: String => String = (s: String) => s"${contextConfiguration.getOrElse(fallbackContextConfiguration)}.$s"
 
-      println(pathOf("spark"))
-
       val usages: Array[String] = if (configLoader.has(pathOf("usages"))) {
         configLoader.getArray(pathOf("usages"))
       } else {
