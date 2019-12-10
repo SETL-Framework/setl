@@ -17,10 +17,10 @@ import org.apache.spark.storage.StorageLevel
 import scala.reflect.runtime.universe.TypeTag
 
 /**
-  * SparkRepository guarantee a Read-after-write consistency.
-  *
-  * @tparam DataType type of spark repository
-  */
+ * SparkRepository guarantee a Read-after-write consistency.
+ *
+ * @tparam DataType type of spark repository
+ */
 @InterfaceStability.Evolving
 class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] with Logging {
 
@@ -68,11 +68,11 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   def getStorage: Storage = connector.storage
 
   /**
-    * Set the connector of this spark repository
-    *
-    * @param connector [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] an user defined connector
-    * @return
-    */
+   * Set the connector of this spark repository
+   *
+   * @param connector [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] an user defined connector
+   * @return
+   */
   def setConnector(connector: Connector): this.type = {
     this.connector = connector
     flushReadCache.set(true)
@@ -102,29 +102,29 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   }
 
   /**
-    * Find data that match the given condition set
-    *
-    * @param conditions Set of [[com.jcdecaux.datacorp.spark.storage.Condition]]
-    * @return
-    */
+   * Find data that match the given condition set
+   *
+   * @param conditions Set of [[com.jcdecaux.datacorp.spark.storage.Condition]]
+   * @return
+   */
   override def findBy(conditions: Set[Condition]): Dataset[DataType] = {
     val data = readDataFrame(SparkRepository.handleConditions(conditions, schema))
     SchemaConverter.fromDF[DataType](data)
   }
 
   /**
-    * Retrieve all data
-    */
+   * Retrieve all data
+   */
   override def findAll(): Dataset[DataType] = {
     SchemaConverter.fromDF[DataType](readDataFrame())
   }
 
   /**
-    * Load data into a DataFrame
-    *
-    * @param conditions : condition set, by default empty
-    * @return
-    */
+   * Load data into a DataFrame
+   *
+   * @param conditions : condition set, by default empty
+   * @return
+   */
   private[repository] def readDataFrame(conditions: Set[Condition] = Set.empty): DataFrame = {
     if (cacheLastReadData.get()) {
       lock.lock()
@@ -154,20 +154,20 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   }
 
   /**
-    * Write data frame and set flushReadCach to true
-    *
-    * @param data data to be saved
-    */
+   * Write data frame and set flushReadCach to true
+   *
+   * @param data data to be saved
+   */
   private[repository] def writeDataFrame(data: DataFrame): Unit = {
     connector.write(data)
     flushReadCache.set(true)
   }
 
   /**
-    * Save a [[Dataset]] into a data persistence store
-    *
-    * @param data data to be saved
-    */
+   * Save a [[Dataset]] into a data persistence store
+   *
+   * @param data data to be saved
+   */
   override def save(data: Dataset[DataType], suffix: Option[String] = None): SparkRepository.this.type = {
 
     val dataToSave = SchemaConverter.toDF[DataType](data)
@@ -193,14 +193,14 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
 object SparkRepository {
 
   /**
-    * Change the column name according to DataType schema's annotation (@ColumnName)
-    *
-    * In the case where a case class field is annotated by @ColumnName, if the name of case class' field is used in the
-    * condition, we replace it with its alias (the value given by @ColumnName annotation)
-    *
-    * @param conditions conditions
-    * @return
-    */
+   * Change the column name according to DataType schema's annotation (@ColumnName)
+   *
+   * In the case where a case class field is annotated by @ColumnName, if the name of case class' field is used in the
+   * condition, we replace it with its alias (the value given by @ColumnName annotation)
+   *
+   * @param conditions conditions
+   * @return
+   */
   private[repository] def handleConditions(conditions: Set[Condition], schema: StructType): Set[Condition] = {
 
     val columnWithAlias = schema.filter(_.metadata.contains(ColumnName.toString()))

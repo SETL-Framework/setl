@@ -8,23 +8,23 @@ import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.util.DateUtils
 
 /**
-  * Condition is used by [[com.jcdecaux.datacorp.spark.storage.repository.Repository]] to find data
-  *
-  * @param key       key of the field
-  * @param operator  e.g. ">", "<", ">=", "<=", "="
-  * @param value     value to compare
-  * @param valueType type of the value
-  */
+ * Condition is used by [[com.jcdecaux.datacorp.spark.storage.repository.Repository]] to find data
+ *
+ * @param key       key of the field
+ * @param operator  e.g. ">", "<", ">=", "<=", "="
+ * @param value     value to compare
+ * @param valueType type of the value
+ */
 @InterfaceStability.Evolving
 case class Condition(key: String, operator: String, value: Option[String], valueType: ValueType) {
 
   /**
-    * Convert a [[com.jcdecaux.datacorp.spark.storage.Condition]] object to a spark SQL query string
-    *
-    * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
-    *                                  an illegal argument exception will be thrown
-    * @return String
-    */
+   * Convert a [[com.jcdecaux.datacorp.spark.storage.Condition]] object to a spark SQL query string
+   *
+   * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
+   *                                  an illegal argument exception will be thrown
+   * @return String
+   */
   @throws[IllegalArgumentException]
   def toSqlRequest: String = {
     val query: String = if (this.value.isDefined) {

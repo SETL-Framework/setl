@@ -10,14 +10,14 @@ import scala.language.existentials
 import scala.reflect.runtime
 
 /**
-  * Node is a representation of Factory in the DAG. One node could have multiple inputs and one single output.
-  *
-  * @param factoryClass class of the represented Factory
-  * @param factoryUUID  UUID of the represented Factory
-  * @param stage        stage where the node is located in the DAG
-  * @param setters      setter's metadata
-  * @param output       output of node
-  */
+ * Node is a representation of Factory in the DAG. One node could have multiple inputs and one single output.
+ *
+ * @param factoryClass class of the represented Factory
+ * @param factoryUUID  UUID of the represented Factory
+ * @param stage        stage where the node is located in the DAG
+ * @param setters      setter's metadata
+ * @param output       output of node
+ */
 private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
                                   factoryUUID: UUID,
                                   stage: Int,
@@ -42,10 +42,10 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
   }
 
   /**
-    * For a new Node, return true if it is a target node of the current node, false otherwise
-    *
-    * @param next another [[Node]]
-    */
+   * For a new Node, return true if it is a target node of the current node, false otherwise
+   *
+   * @param next another [[Node]]
+   */
   def targetNode(next: Node): Boolean = {
 
     val validNodeUUID = if (this.getUUID == next.getUUID) {

@@ -9,13 +9,13 @@ import org.apache.spark.sql._
 
 
 /**
-  * DynamoDB connector.
-  *
-  * {{{
-  *   # Configuration
-  *   dynamodb {
-  *     region = ""
-  *     table = ""
+ * DynamoDB connector.
+ *
+ * {{{
+ *   # Configuration
+ *   dynamodb {
+ *     region = ""
+ *     table = ""
  *     saveMode = ""
  *   }
  * }}}

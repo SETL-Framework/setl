@@ -42,32 +42,32 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   private[this] val _recursive: Boolean = true
 
   /**
-    * Partition columns when writing the data frame
-    */
+   * Partition columns when writing the data frame
+   */
   private[this] val partition: ArrayBuffer[String] = ArrayBuffer()
 
   private[this] val writeCount: AtomicLong = new AtomicLong(0L)
 
   /**
-    * 0: suffix not initialized yet
-    * 1: with suffix
-    * 2: without suffix
-    */
+   * 0: suffix not initialized yet
+   * 1: with suffix
+   * 2: without suffix
+   */
   private[this] val suffixState: AtomicInteger = new AtomicInteger(0)
 
   /**
-    * Lock that will be used when configuring suffix
-    */
+   * Lock that will be used when configuring suffix
+   */
   private[this] val lock: ReentrantLock = new ReentrantLock()
 
   /**
-    * FileConnector will create a sub-directory for a given suffix. The name of directory respects the naming convention
-    * of HIVE partition:
-    *
-    * {{{
-    *   ../_user_defined_suffix=xxx
-    * }}}
-    */
+   * FileConnector will create a sub-directory for a given suffix. The name of directory respects the naming convention
+   * of HIVE partition:
+   *
+   * {{{
+   *   ../_user_defined_suffix=xxx
+   * }}}
+   */
   private[this] var UDSKey: String = "_user_defined_suffix"
 
   // use a ThreadLocal object to keep it thread safe
@@ -80,47 +80,47 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   private[this] var _dropUDS: Boolean = true
 
   /**
-    * Set to true to drop the column containing user defined suffix (default name _user_defined_suffix)
-    *
-    * @param boo true to drop, false to keep
-    */
+   * Set to true to drop the column containing user defined suffix (default name _user_defined_suffix)
+   *
+   * @param boo true to drop, false to keep
+   */
   def dropUserDefinedSuffix(boo: Boolean): this.type = {
     _dropUDS = boo
     this
   }
 
   /**
-    * Get the boolean value of dropUserDefinedSuffix.
-    *
-    * @return true if the column will be dropped, false otherwise
-    */
+   * Get the boolean value of dropUserDefinedSuffix.
+   *
+   * @return true if the column will be dropped, false otherwise
+   */
   def dropUserDefinedSuffix: Boolean = _dropUDS
 
   /**
-    * Set the name of user defined suffix column (by default is _user_defined_suffix
-    *
-    * @param key name of the new key
-    */
+   * Set the name of user defined suffix column (by default is _user_defined_suffix
+   *
+   * @param key name of the new key
+   */
   def setUserDefinedSuffixKey(key: String): this.type = {
     UDSKey = key
     this
   }
 
   /**
-    * Get the value of user defined suffix column name
-    *
-    * @return
-    */
+   * Get the value of user defined suffix column name
+   *
+   * @return
+   */
   def getUserDefinedSuffixKey: String = this.UDSKey
 
   def getWriteCount: Long = this.writeCount.get()
 
 
   /**
-    * Create a URI of the given file path.
-    * If there are special characters in the string of path (like whitespace), then we
-    * try to firstly encode the string and then create a URI
-    */
+   * Create a URI of the given file path.
+   * If there are special characters in the string of path (like whitespace), then we
+   * try to firstly encode the string and then create a URI
+   */
   private[this] val pathURI: URI = try {
     URI.create(options.getPath)
   } catch {
@@ -131,8 +131,8 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Get the current filesystem based on the path URI
-    */
+   * Get the current filesystem based on the path URI
+   */
   private[this] val fileSystem: FileSystem = {
     options.getS3CredentialsProvider match {
       case Some(v) => hadoopConfiguration.set("fs.s3a.aws.credentials.provider", v)
@@ -158,15 +158,15 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Get the current filesystem based on the path URI
-    */
+   * Get the current filesystem based on the path URI
+   */
   def getFileSystem: FileSystem = this.fileSystem
 
   /**
-    * Absolute path of the given path string according to the current filesystem.
-    * If the filesystem is a local system, then we try to decode the path string to remove encoded
-    * characters like whitespace "%20%", etc
-    */
+   * Absolute path of the given path string according to the current filesystem.
+   * If the filesystem is a local system, then we try to decode the path string to remove encoded
+   * characters like whitespace "%20%", etc
+   */
   private[connector] val absolutePath: Path = {
     log.debug(s"File system URI: ${fileSystem.getUri}")
 
@@ -178,9 +178,9 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Get the basePath of the current path. If the value path is a file path, then its basePath will be
-    * it's parent's path. Otherwise it will be the current path itself.
-    */
+   * Get the basePath of the current path. If the value path is a file path, then its basePath will be
+   * it's parent's path. Otherwise it will be the current path itself.
+   */
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
   lazy val basePath: Path = {
     val bp = getParentPath(absolutePath)
@@ -195,11 +195,11 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * For a given Path of a Spark file persistence, remove sub-directories (directories like /xxxx=yyyy or /xxxx=*)
-    *
-    * @param path file path
-    * @return
-    */
+   * For a given Path of a Spark file persistence, remove sub-directories (directories like /xxxx=yyyy or /xxxx=*)
+   *
+   * @param path file path
+   * @return
+   */
   @tailrec
   private[this] def getParentPath(path: Path): Path = {
     val split = path.getName.split("=")
@@ -217,8 +217,8 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * DataFrame reader for the current path of connector
-    */
+   * DataFrame reader for the current path of connector
+   */
   override lazy val reader: DataFrameReader = schema match {
     case Some(sm) => initReader().schema(sm)
     case _ => initReader()
@@ -232,31 +232,31 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * List all the file path (in format of string) to be loaded.
-    * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
-    * the pattern.</p>
-    * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
-    * to false. Otherwise, return a list of file paths in the directory</p>
-    * <p>When the filename pattern IS set, a list of file paths will always be returned</p>
-    *
-    * @param detailed true to list all file paths when the absolute path points to a directory otherwise return only
-    *                 the directory path.
-    * @return
-    */
+   * List all the file path (in format of string) to be loaded.
+   * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
+   * the pattern.</p>
+   * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
+   * to false. Otherwise, return a list of file paths in the directory</p>
+   * <p>When the filename pattern IS set, a list of file paths will always be returned</p>
+   *
+   * @param detailed true to list all file paths when the absolute path points to a directory otherwise return only
+   *                 the directory path.
+   * @return
+   */
   def listFilesToLoad(detailed: Boolean = true): Array[String] = filesToLoad(detailed).map(_.toString)
 
   /**
-    * List ALL the file paths (in format of string) of the current path of connector
-    *
-    * @return
-    */
+   * List ALL the file paths (in format of string) of the current path of connector
+   *
+   * @return
+   */
   def listFiles(): Array[String] = listPaths().map(_.toString)
 
   /**
-    * List ALL the file paths of the current path of connector
-    *
-    * @return
-    */
+   * List ALL the file paths of the current path of connector
+   *
+   * @return
+   */
   def listPaths(): Array[Path] = {
     val filePaths = ArrayBuffer[Path]()
     val files = fileSystem.listLocatedStatus(absolutePath)
@@ -272,16 +272,16 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * List files to be loaded.
-    * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
-    * the pattern.</p>
-    *
-    * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
-    * to false. Otherwise, return a list of file paths in the directory</p>
-    *
-    * @param detailed true to return a list of file paths if the current absolute path is a directory
-    * @return
-    */
+   * List files to be loaded.
+   * <p>If the current connector has a non-empty filename pattern, then return a list of file paths that match
+   * the pattern.</p>
+   *
+   * <p>When the filename pattern is not set: If the absolute path of this connector is a directory, return the path of the directory if detailed is set
+   * to false. Otherwise, return a list of file paths in the directory</p>
+   *
+   * @param detailed true to return a list of file paths if the current absolute path is a directory
+   * @return
+   */
   def filesToLoad(detailed: Boolean): Array[Path] = {
     filenamePattern match {
       case Some(pattern) =>
@@ -296,15 +296,15 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * <p>Validate the given suffix.</p>
-    * <p>In the case where data were written without suffix, an [[IllegalArgumentException]] will be thrown when one tries
-    * to write new data with suffix.</p>
-    * <p>In the case where data were written with suffix, a new `null` suffix will be transformed into the default suffix
-    * value `default`</p>
-    *
-    * @param suffix suffix to be validated
-    * @return a validated suffix
-    */
+   * <p>Validate the given suffix.</p>
+   * <p>In the case where data were written without suffix, an [[IllegalArgumentException]] will be thrown when one tries
+   * to write new data with suffix.</p>
+   * <p>In the case where data were written with suffix, a new `null` suffix will be transformed into the default suffix
+   * value `default`</p>
+   *
+   * @param suffix suffix to be validated
+   * @return a validated suffix
+   */
   @throws[IllegalArgumentException]
   @throws[RuntimeException]
   private[this] def validateSuffix(suffix: Option[String]): Option[String] = {
@@ -344,14 +344,14 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * The current version of FileConnector doesn't support a mix of suffix
-    * and non-suffix write when the DataFrame is partitioned.
-    *
-    * This method will detect, in the case of a partitioned table, if user
-    * try to use both suffix write and non-suffix write
-    *
-    * @param suffix an option of suffix in string format
-    */
+   * The current version of FileConnector doesn't support a mix of suffix
+   * and non-suffix write when the DataFrame is partitioned.
+   *
+   * This method will detect, in the case of a partitioned table, if user
+   * try to use both suffix write and non-suffix write
+   *
+   * @param suffix an option of suffix in string format
+   */
   def setSuffix(suffix: Option[String]): this.type = {
 
     val locked = lock.tryLock(10, TimeUnit.SECONDS)
@@ -374,10 +374,10 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Reset suffix to None
-    *
-    * @param force set to true to ignore the validity check of suffix value
-    */
+   * Reset suffix to None
+   *
+   * @param force set to true to ignore the validity check of suffix value
+   */
   def resetSuffix(force: Boolean = false): this.type = {
     if (force) {
       log.warn("Reset suffix may cause unexpected behavior of FileConnector")
@@ -395,9 +395,9 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Initialize a DataFrame writer. A new writer will be initiate only if the hashcode
-    * of input DataFrame is different than the last written DataFrame.
-    */
+   * Initialize a DataFrame writer. A new writer will be initiate only if the hashcode
+   * of input DataFrame is different than the last written DataFrame.
+   */
   @inline override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
     val reOrderedDf = schema match {
       case Some(sm) => // If schema is defined, reorder df's columns
@@ -421,8 +421,8 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Delete the current file or directory
-    */
+   * Delete the current file or directory
+   */
   def delete(): Unit = {
     log.debug(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
@@ -430,17 +430,17 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Get the sum of file size
-    *
-    * @return size in byte
-    */
+   * Get the sum of file size
+   *
+   * @return size in byte
+   */
   def getSize: Long = {
     filesToLoad(true).map(path => fileSystem.getFileStatus(path).getLen).sum
   }
 
   /**
-    * Write a [[DataFrame]] into the given path with the given save mode
-    */
+   * Write a [[DataFrame]] into the given path with the given save mode
+   */
   def writeToPath(df: DataFrame, filepath: String): Unit = {
     log.debug(s"(${Thread.currentThread().getId}) Write DataFrame to $filepath")
     incrementWriteCounter()
@@ -453,11 +453,11 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Write a [[DataFrame]] into file
-    *
-    * @param df     dataframe to be written
-    * @param suffix optional, String, write the df in a sub-directory of the defined path
-    */
+   * Write a [[DataFrame]] into file
+   *
+   * @param df     dataframe to be written
+   * @param suffix optional, String, write the df in a sub-directory of the defined path
+   */
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
     setSuffix(suffix)
     this.write(df)
@@ -474,10 +474,10 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   /**
-    * Read a [[DataFrame]] from a file with the path defined during the instantiation.
-    *
-    * @return
-    */
+   * Read a [[DataFrame]] from a file with the path defined during the instantiation.
+   *
+   * @return
+   */
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
   @throws[org.apache.spark.sql.AnalysisException](s"$absolutePath doesn't exist")
   override def read(): DataFrame = {

@@ -19,11 +19,11 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
   }
 
   /**
-    * Find all the setter methods of the given Factory
-    *
-    * @param factory an instantiated Factory
-    * @return a list of [[com.jcdecaux.datacorp.spark.transformation.FactoryDeliveryMetadata]]
-    */
+   * Find all the setter methods of the given Factory
+   *
+   * @param factory an instantiated Factory
+   * @return a list of [[com.jcdecaux.datacorp.spark.transformation.FactoryDeliveryMetadata]]
+   */
   def findDeliveryMetadata(factory: Factory[_]): List[FactoryDeliveryMetadata] = {
     nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
   }

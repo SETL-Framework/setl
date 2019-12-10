@@ -12,16 +12,16 @@ import scala.language.existentials
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * DeliverableDispatcher use a Directed Acyclic Graph (DAG) to transfer data between different stages.
-  *
-  * It can:
-  * <ul>
-  * <li>collect a [[com.jcdecaux.datacorp.spark.transformation.Deliverable]]
-  * from a [[com.jcdecaux.datacorp.spark.transformation.Factory]]</li>
-  * <li>find the right [[com.jcdecaux.datacorp.spark.transformation.Deliverable]]
-  * from its pool and send it to a [[com.jcdecaux.datacorp.spark.transformation.Factory]]</li>
-  * </ul>
-  */
+ * DeliverableDispatcher use a Directed Acyclic Graph (DAG) to transfer data between different stages.
+ *
+ * It can:
+ * <ul>
+ * <li>collect a [[com.jcdecaux.datacorp.spark.transformation.Deliverable]]
+ * from a [[com.jcdecaux.datacorp.spark.transformation.Factory]]</li>
+ * <li>find the right [[com.jcdecaux.datacorp.spark.transformation.Deliverable]]
+ * from its pool and send it to a [[com.jcdecaux.datacorp.spark.transformation.Factory]]</li>
+ * </ul>
+ */
 @InterfaceStability.Evolving
 private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
 
@@ -34,15 +34,15 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * Add a new Deliverable object into DeliverableDispatcher's delivery pool. <br>
-    *
-    * <b>Attention:</b> DeliverableDispatcher only guarantee that each deliverable object has different UUID.
-    * In other word, use cannot call twice <code>setDelivery</code> with the same argument. However, it doesn't
-    * check if multiple deliverables have the same data type with the same producer and the same consumer
-    *
-    * @param v : Deliverable
-    * @return this DeliverableDispatcher
-    */
+   * Add a new Deliverable object into DeliverableDispatcher's delivery pool. <br>
+   *
+   * <b>Attention:</b> DeliverableDispatcher only guarantee that each deliverable object has different UUID.
+   * In other word, use cannot call twice <code>setDelivery</code> with the same argument. However, it doesn't
+   * check if multiple deliverables have the same data type with the same producer and the same consumer
+   *
+   * @param v : Deliverable
+   * @return this DeliverableDispatcher
+   */
   private[workflow] def addDeliverable(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
 
@@ -55,11 +55,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * Find the corresponding [[Deliverable]] from the pool with the given runtime Type information
-    *
-    * @param availableDeliverable an array of available deliverable
-    * @return
-    */
+   * Find the corresponding [[Deliverable]] from the pool with the given runtime Type information
+   *
+   * @param availableDeliverable an array of available deliverable
+   * @return
+   */
   @throws[InvalidDeliveryException]("find multiple matched deliveries")
   private[this] def getDeliverable(availableDeliverable: Array[Deliverable[_]],
                                    consumer: Class[_ <: Factory[_]],
@@ -107,11 +107,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * Get all the [[Deliverable]] by matching their payload's type with the given type
-    *
-    * @param deliveryType type of data
-    * @return
-    */
+   * Get all the [[Deliverable]] by matching their payload's type with the given type
+   *
+   * @param deliveryType type of data
+   * @return
+   */
   private[workflow] def findDeliverableByType(deliveryType: ru.Type): Array[Deliverable[_]] = {
     findDeliverableBy(x => x.hasSamePayloadType(deliveryType))
   }
@@ -121,39 +121,39 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * Get all the Deliverable by matching the payload type name with the given name
-    *
-    * @param deliveryName string, type of data
-    * @return
-    */
+   * Get all the Deliverable by matching the payload type name with the given name
+   *
+   * @param deliveryName string, type of data
+   * @return
+   */
   private[workflow] def findDeliverableByName(deliveryName: String): Array[Deliverable[_]] = {
     findDeliverableBy(x => x.hasSamePayloadType(deliveryName))
   }
 
   /**
-    * Collect a [[Deliverable]] from a [[Factory]] and set the deliverable to this DeliverableDispatcher
-    *
-    * @param factory a factory object
-    * @return
-    */
+   * Collect a [[Deliverable]] from a [[Factory]] and set the deliverable to this DeliverableDispatcher
+   *
+   * @param factory a factory object
+   * @return
+   */
   private[workflow] def collectDeliverable(factory: Factory[_]): this.type = {
     addDeliverable(factory.getDelivery)
   }
 
   /**
-    * Collect [[Deliverable]] from a stage and set those deliverable to this DeliverableDispatcher
-    *
-    * @param stage stage
-    * @return
-    */
+   * Collect [[Deliverable]] from a stage and set those deliverable to this DeliverableDispatcher
+   *
+   * @param stage stage
+   * @return
+   */
   private[workflow] def collectDeliverable(stage: Stage): this.type = {
     stage.deliverable.foreach(addDeliverable)
     this
   }
 
   /**
-    * Used only for testing
-    */
+   * Used only for testing
+   */
   private[workflow] def testDispatch(factory: Factory[_]): this.type = {
     val setters = FactoryDeliveryMetadata
       .builder()
@@ -164,11 +164,11 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * For the given factory, find its setters from the DAG and dispatch deliveries
-    *
-    * @param factory a Factory[A] object
-    * @return
-    */
+   * For the given factory, find its setters from the DAG and dispatch deliveries
+   *
+   * @param factory a Factory[A] object
+   * @return
+   */
   @throws[NoSuchElementException]("Cannot find any matched delivery")
   @throws[InvalidDeliveryException]("Find multiple matched deliveries")
   private[workflow] def dispatch(factory: Factory[_]): this.type = {
@@ -177,12 +177,12 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * For a given dataset runtime type, for example: org.apache.spark.sql.Dataset[T], get the type T and
-    * return the name of the corresponding SparkRepository[T]
-    *
-    * @param datasetType runtime type of a dataset
-    * @return a string like com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[T]
-    */
+   * For a given dataset runtime type, for example: org.apache.spark.sql.Dataset[T], get the type T and
+   * return the name of the corresponding SparkRepository[T]
+   *
+   * @param datasetType runtime type of a dataset
+   * @return a string like com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[T]
+   */
   private[workflow] def getRepositoryNameFromDataset(datasetType: ru.Type): String = {
     val sparkRepo = ru.typeOf[SparkRepository[_]].toString.dropRight(3)
     val thisArgType = datasetType.toString.split("\\[")(1).dropRight(1)
@@ -190,12 +190,12 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * Dispatch the right deliverable object to the corresponding methods
-    * (denoted by the @Delivery annotation) of a factory
-    *
-    * @param consumer target factory
-    * @return this type
-    */
+   * Dispatch the right deliverable object to the corresponding methods
+   * (denoted by the @Delivery annotation) of a factory
+   *
+   * @param consumer target factory
+   * @return this type
+   */
   @throws[NoSuchElementException]
   private[this] def dispatch(consumer: Factory[_], deliveries: Iterable[FactoryDeliveryMetadata]): this.type = {
     deliveries
@@ -303,16 +303,16 @@ private[spark] class DeliverableDispatcher extends Logging with HasUUIDRegistry 
   }
 
   /**
-    * In the case where getMethod(name, argsParameterTypes) fails, this method will be called. It will match
-    * the consumerClass's method by looking at the name and the parameter types, which are assignable from the
-    * given arguments types. In other words, the parameters of the setter methods should be the super-class of
-    * the input arguments.
-    *
-    * @param consumerClass    consumer factory
-    * @param deliveryMetadata metadata of this delivery
-    * @param deliverable      list of deliverable for this delivery
-    * @return
-    */
+   * In the case where getMethod(name, argsParameterTypes) fails, this method will be called. It will match
+   * the consumerClass's method by looking at the name and the parameter types, which are assignable from the
+   * given arguments types. In other words, the parameters of the setter methods should be the super-class of
+   * the input arguments.
+   *
+   * @param consumerClass    consumer factory
+   * @param deliveryMetadata metadata of this delivery
+   * @param deliverable      list of deliverable for this delivery
+   * @return
+   */
   private[this] def getMethodWithAssignableType(consumerClass: Class[_ <: Factory[_]],
                                                 deliveryMetadata: FactoryDeliveryMetadata,
                                                 deliverable: Seq[Deliverable[_]]): java.lang.reflect.Method = {

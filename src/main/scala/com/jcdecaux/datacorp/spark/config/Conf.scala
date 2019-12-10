@@ -36,29 +36,29 @@ class Conf extends Serializable with Configurable {
   def has(key: String): Boolean = if (settings.containsKey(key)) true else false
 
   /**
-    * Get a configuration under the string format
-    *
-    * @param key Key of the configuration
-    * @return
-    */
+   * Get a configuration under the string format
+   *
+   * @param key Key of the configuration
+   * @return
+   */
   def get(key: String): Option[String] = getAs[String](key)
 
   /**
-    * Get a configuration under the string format
-    *
-    * @param key Key of the configuration
-    * @return
-    */
+   * Get a configuration under the string format
+   *
+   * @param key Key of the configuration
+   * @return
+   */
   def get(key: String, defaultValue: String): String = getAs[String](key).getOrElse(defaultValue)
 
   /**
-    * Get a configuration and convert to the given type, return None if it's not set
-    *
-    * @param key       Key of the configuration
-    * @param converter implicit converter
-    * @tparam T define the type of output
-    * @return
-    */
+   * Get a configuration and convert to the given type, return None if it's not set
+   *
+   * @param key       Key of the configuration
+   * @param converter implicit converter
+   * @tparam T define the type of output
+   * @return
+   */
   @throws[ConfException]
   def getAs[T](key: String)(implicit converter: Serializer[T]): Option[T] = {
     getOption(key) match {
@@ -68,12 +68,12 @@ class Conf extends Serializable with Configurable {
   }
 
   /**
-    * Get a configuration and convert to the given type, return a default value if it's not set
-    *
-    * @param key Key of the configuration
-    * @tparam T define the type of output
-    * @return
-    */
+   * Get a configuration and convert to the given type, return a default value if it's not set
+   *
+   * @param key Key of the configuration
+   * @tparam T define the type of output
+   * @return
+   */
   def getAs[T: Serializer](key: String, defaultValue: T): T = this.getAs[T](key).getOrElse(defaultValue)
 
   def set[T](key: String, value: T)(implicit converter: Serializer[T]): this.type = {

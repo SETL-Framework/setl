@@ -12,11 +12,11 @@ import scala.reflect.runtime.{universe => ru}
 object StructAnalyser {
 
   /**
-    * Analyse the metadata of the generic type T. Fetch information for its annotated fields.
-    *
-    * @tparam T Type that we'd like to analyse
-    * @return a StructType object containing information of each field.
-    */
+   * Analyse the metadata of the generic type T. Fetch information for its annotated fields.
+   *
+   * @tparam T Type that we'd like to analyse
+   * @return a StructType object containing information of each field.
+   */
   def analyseSchema[T: ru.TypeTag]: StructType = {
 
     val classSymbol: ru.ClassSymbol = ru.symbolOf[T].asClass
@@ -67,11 +67,11 @@ object StructAnalyser {
   }
 
   /**
-    * Inspect the class T, find fields with @Compress annotation
-    *
-    * @tparam T type of case class to be inspected
-    * @return an array of (index of the field, and class of compressor)
-    */
+   * Inspect the class T, find fields with @Compress annotation
+   *
+   * @tparam T type of case class to be inspected
+   * @return an array of (index of the field, and class of compressor)
+   */
   private[this] def findCompressColumn[T: ru.TypeTag]: Array[(Int, Class[_ <: Compressor])] = {
 
     val classTag = ru.typeTag[T].mirror.runtimeClass(ru.typeTag[T].tpe)

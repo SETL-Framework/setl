@@ -51,6 +51,49 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(ss.sparkContext.appName === configLoader.appName)
   }
 
+  test("DCContext should handle spark configuration") {
+    val context: DCContext = DCContext.builder()
+      .setConfigLoader(configLoader)
+      .setDCContextConfigPath("app.context")
+      .getOrCreate()
+
+    val ss = context.spark
+
+    println(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions"))
+    println(ss.sparkContext.getConf.get("spark.app.name"))
+
+    assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "1000")
+  }
+
+  test("DCContext should handle spark configuration in non local environment (with default config path)") {
+    val context: DCContext = DCContext.builder()
+      .withDefaultConfigLoader("test_priority")
+      .getOrCreate()
+
+    val ss = context.spark
+
+    println(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions"))
+    println(ss.sparkContext.getConf.get("spark.app.name"))
+
+    assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "1000")
+    assert(ss.sparkContext.getConf.get("spark.app.name") === "my_app_2")
+  }
+
+  test("DCContext should handle spark configuration in non local environment (with specific config path)") {
+    val context: DCContext = DCContext.builder()
+      .withDefaultConfigLoader("test_priority")
+      .setDCContextConfigPath("app.context_2")
+      .getOrCreate()
+
+    val ss = context.spark
+
+    println(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions"))
+    println(ss.sparkContext.getConf.get("spark.app.name"))
+
+    assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "2000")
+    assert(ss.sparkContext.getConf.get("spark.app.name") === "my_app_context_2")
+  }
+
   test("DCContext should be able to create SparkRepository") {
     val context: DCContext = DCContext.builder()
       .setConfigLoader(configLoader)

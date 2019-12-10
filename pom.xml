@@ -340,6 +340,10 @@
 
     <repositories>
         <repository>
+            <id>maven.apache.org</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
             <id>nexus-datacorp-snapshots</id>
             <url>https://nexus.jcdecaux.com/repository/snapshots-DATACORP/</url>
         </repository>

@@ -41,10 +41,10 @@ class ConnectorConf extends Conf {
   }
 
   /**
-    * Get path of file to be loaded.
-    * It could be a file path or a directory (for CSV and Parquet).
-    * In the case of a directory, the correctness of Spark partition structure should be guaranteed by user.
-    */
+   * Get path of file to be loaded.
+   * It could be a file path or a directory (for CSV and Parquet).
+   * In the case of a directory, the correctness of Spark partition structure should be guaranteed by user.
+   */
   def getPath: String = get("path") match {
     case Some(path) => path
     case _ => throw new ConfException("The value of path is not set")
@@ -63,8 +63,8 @@ class ConnectorConf extends Conf {
   def getFilenamePattern: Option[String] = get("filenamePattern")
 
   /**
-    * Extra options that will be passed into DataFrameReader. Keys like "path" should be removed
-    */
+   * Extra options that will be passed into DataFrameReader. Keys like "path" should be removed
+   */
   def getDataFrameReaderOptions: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap -
@@ -79,8 +79,8 @@ class ConnectorConf extends Conf {
   }
 
   /**
-    * Extra options that will be passed into DataFrameWriter. Keys like "path" should be removed
-    */
+   * Extra options that will be passed into DataFrameWriter. Keys like "path" should be removed
+   */
   def getDataFrameWriterOptions: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap -

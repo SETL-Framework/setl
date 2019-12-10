@@ -51,12 +51,12 @@ class ConnectorBuilder(val config: Option[Config],
   }
 
   /**
-    * Instantiate a connector constructor according to the storage type and constructor's arguments
-    *
-    * @param storage         storage enum
-    * @param constructorArgs type of constructor arguments
-    * @return
-    */
+   * Instantiate a connector constructor according to the storage type and constructor's arguments
+   *
+   * @param storage         storage enum
+   * @param constructorArgs type of constructor arguments
+   * @return
+   */
   @throws[NoSuchMethodException]
   private[this] def connectorConstructorOf(storage: Storage, constructorArgs: Class[_]*): Constructor[Connector] = {
     if (storage.connectorName() == null) {
@@ -68,13 +68,13 @@ class ConnectorBuilder(val config: Option[Config],
   }
 
   /**
-    * Build a connector from a [[com.jcdecaux.datacorp.spark.config.Conf]] object.
-    *
-    * the `Conf` object must have a key `storage` and the parameters corresponding to the storage
-    *
-    * @param configuration [[com.jcdecaux.datacorp.spark.config.Conf]] configuration
-    * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] a connector object
-    */
+   * Build a connector from a [[com.jcdecaux.datacorp.spark.config.Conf]] object.
+   *
+   * the `Conf` object must have a key `storage` and the parameters corresponding to the storage
+   *
+   * @param configuration [[com.jcdecaux.datacorp.spark.config.Conf]] configuration
+   * @return [[com.jcdecaux.datacorp.spark.storage.connector.Connector]] a connector object
+   */
   private[this] def buildConnectorWithConf(configuration: Conf): Connector = {
     configuration.getAs[Storage]("storage") match {
       case Some(s) =>
@@ -85,13 +85,13 @@ class ConnectorBuilder(val config: Option[Config],
   }
 
   /**
-    * Build a connector from a [[com.typesafe.config.Config]] object.
-    *
-    * the `Config` object must have a key `storage` and the parameters corresponding to the storage
-    *
-    * @param configuration a [[com.typesafe.config.Config]] object
-    * @return a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]]
-    */
+   * Build a connector from a [[com.typesafe.config.Config]] object.
+   *
+   * the `Config` object must have a key `storage` and the parameters corresponding to the storage
+   *
+   * @param configuration a [[com.typesafe.config.Config]] object
+   * @return a [[com.jcdecaux.datacorp.spark.storage.connector.Connector]]
+   */
   private[this] def buildConnectorWithConfig(configuration: Config): Connector = {
 
     TypesafeConfigUtils.getAs[Storage](configuration, "storage") match {

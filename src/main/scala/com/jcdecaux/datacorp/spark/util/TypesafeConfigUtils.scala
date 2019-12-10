@@ -84,4 +84,5 @@ object TypesafeConfigUtils {
   private[spark] trait ConfigGetter[T] {
     def get(config: Config, path: String): Option[T]
   }
+
 }
