@@ -5,10 +5,10 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.ml.Model
 
 /**
-  * A MLTransformer is a basic transformer with a ML model and ML-related functionality.
-  *
-  * @tparam T Data type of the transformer
-  */
+ * A MLTransformer is a basic transformer with a ML model and ML-related functionality.
+ *
+ * @tparam T Data type of the transformer
+ */
 @InterfaceStability.Evolving
 trait MLTransformer[T, M <: Model[_]] extends Transformer[T] {
 

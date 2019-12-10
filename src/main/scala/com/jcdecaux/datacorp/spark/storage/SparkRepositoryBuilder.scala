@@ -75,11 +75,11 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   // TODO : @Mounir: here we only handle parquet/csv/excel storage.
   //                 No changes will be made for cassandra and dynamodb connector if we set a suffix
   /**
-    * Only affect file storage system to get a specific path (exp : Reach -> suffix [Rome])
-    *
-    * @param pathSuffix suffix of the file
-    * @return
-    */
+   * Only affect file storage system to get a specific path (exp : Reach -> suffix [Rome])
+   *
+   * @param pathSuffix suffix of the file
+   * @return
+   */
   def setSuffix(pathSuffix: String): this.type = {
     config match {
       case Some(configuration) =>
@@ -153,10 +153,10 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   def setWorkbookPassword(pwd: String): this.type = set("workbookPassword", pwd)
 
   /**
-    * Build an object
-    *
-    * @return
-    */
+   * Build an object
+   *
+   * @return
+   */
   override def build(): SparkRepositoryBuilder.this.type = {
     log.debug(s"Build SparkRepository[${ru.typeOf[DataType]}]")
     if (connector == null) {
@@ -167,10 +167,10 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   }
 
   /**
-    * Create the connector according to the storage type
-    *
-    * @return [[Connector]]
-    */
+   * Create the connector according to the storage type
+   *
+   * @return [[Connector]]
+   */
   protected[this] def createConnector(): Connector = {
     // if a TypeSafe config is set, then return a corresponding connector
     config match {
@@ -201,9 +201,9 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   }
 
   /**
-    * Get the built spark repository
-    *
-    * @return [[SparkRepository]]
-    */
+   * Get the built spark repository
+   *
+   * @return [[SparkRepository]]
+   */
   override def get(): com.jcdecaux.datacorp.spark.storage.repository.SparkRepository[DataType] = this.sparkRepository
 }

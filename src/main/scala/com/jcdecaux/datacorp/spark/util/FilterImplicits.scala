@@ -20,12 +20,12 @@ object FilterImplicits extends Logging {
   implicit class ConditionsToRequest(conditions: Set[Condition]) {
 
     /**
-      * Convert a [[Set]] of [[com.jcdecaux.datacorp.spark.storage.Condition]] objects to a spark SQL query string
-      *
-      * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
-      *                                  an illegal argument exception will be thrown
-      * @return String
-      */
+     * Convert a [[Set]] of [[com.jcdecaux.datacorp.spark.storage.Condition]] objects to a spark SQL query string
+     *
+     * @throws IllegalArgumentException if a datetime/date filter doesn't have a value with correct format,
+     *                                  an illegal argument exception will be thrown
+     * @return String
+     */
     @throws[IllegalArgumentException]
     def toSqlRequest: String = {
       val query = conditions
@@ -36,4 +36,5 @@ object FilterImplicits extends Logging {
       query
     }
   }
+
 }

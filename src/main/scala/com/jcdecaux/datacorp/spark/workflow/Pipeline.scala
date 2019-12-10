@@ -10,8 +10,8 @@ import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * Pipeline is a complete data transformation workflow.
-  */
+ * Pipeline is a complete data transformation workflow.
+ */
 @InterfaceStability.Evolving
 class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable {
 
@@ -25,46 +25,46 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   def stages: Array[Stage] = this._stages.toArray
 
   /**
-    * Get the inspector of this pipeline
-    *
-    * @return
-    */
+   * Get the inspector of this pipeline
+   *
+   * @return
+   */
   def pipelineInspector: PipelineInspector = this._pipelineInspector
 
   /**
-    * Get the deliverable dispatcher of this pipeline
-    *
-    * @return
-    */
+   * Get the deliverable dispatcher of this pipeline
+   *
+   * @return
+   */
   def deliverableDispatcher: DeliverableDispatcher = this._deliverableDispatcher
 
   /**
-    * Boolean indicating if the pipeline will be optimized
-    *
-    * @return
-    */
+   * Boolean indicating if the pipeline will be optimized
+   *
+   * @return
+   */
   def optimization: Boolean = _pipelineOptimizer match {
     case Some(_) => true
     case _ => false
   }
 
   /**
-    * Optimise execution with an optimizer
-    *
-    * @param optimizer an implementation of pipeline optimizer
-    * @return this pipeline
-    */
+   * Optimise execution with an optimizer
+   *
+   * @param optimizer an implementation of pipeline optimizer
+   * @return this pipeline
+   */
   def optimization(optimizer: PipelineOptimizer): this.type = {
     this._pipelineOptimizer = Option(optimizer)
     this
   }
 
   /**
-    * Set to true to allow auto optimization of this pipeline. The default SimplePipelineOptimizer will be used.
-    *
-    * @param boolean true to allow optimization, otherwise false
-    * @return this pipeline
-    */
+   * Set to true to allow auto optimization of this pipeline. The default SimplePipelineOptimizer will be used.
+   *
+   * @param boolean true to allow optimization, otherwise false
+   * @return this pipeline
+   */
   def optimization(boolean: Boolean): this.type = {
     if (boolean) {
       optimization(new SimplePipelineOptimizer())
@@ -75,25 +75,25 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Put the Deliverable to the input pool of the pipeline
-    *
-    * @param deliverable Deliverable object
-    * @return
-    */
+   * Put the Deliverable to the input pool of the pipeline
+   *
+   * @param deliverable Deliverable object
+   * @return
+   */
   def setInput(deliverable: Deliverable[_]): this.type = {
     _deliverableDispatcher.addDeliverable(deliverable)
     this
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload    object to be delivered
-    * @param consumer   consumer of this payload
-    * @param deliveryId id of this delivery
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload    object to be delivered
+   * @param consumer   consumer of this payload
+   * @param deliveryId id of this delivery
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T,
                               consumer: Seq[Class[_ <: Factory[_]]],
                               deliveryId: String): this.type = {
@@ -102,15 +102,15 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload    object to be delivered
-    * @param consumer   consumer of this payload
-    * @param deliveryId id of this delivery
-    * @param consumers  other consumers of the payload
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload    object to be delivered
+   * @param consumer   consumer of this payload
+   * @param deliveryId id of this delivery
+   * @param consumers  other consumers of the payload
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T,
                               deliveryId: String,
                               consumer: Class[_ <: Factory[_]],
@@ -119,14 +119,14 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload   object to be delivered
-    * @param consumer  consumer of this payload
-    * @param consumers other consumers of the payload
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload   object to be delivered
+   * @param consumer  consumer of this payload
+   * @param consumers other consumers of the payload
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T,
                               consumer: Class[_ <: Factory[_]],
                               consumers: Class[_ <: Factory[_]]*): this.type = {
@@ -134,27 +134,27 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload  object to be delivered
-    * @param consumer consumer of this payload
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload  object to be delivered
+   * @param consumer consumer of this payload
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T,
                               consumer: Class[_ <: Factory[_]]): this.type = {
     setInput[T](payload, List(consumer), Deliverable.DEFAULT_ID)
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload    object to be delivered
-    * @param consumer   consumer of this payload
-    * @param deliveryId id of this delivery
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload    object to be delivered
+   * @param consumer   consumer of this payload
+   * @param deliveryId id of this delivery
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T,
                               consumer: Class[_ <: Factory[_]],
                               deliveryId: String): this.type = {
@@ -162,59 +162,59 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload object to be delivered
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload object to be delivered
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T): this.type = {
     setInput[T](payload, Seq.empty, Deliverable.DEFAULT_ID)
   }
 
   /**
-    * Set input of the pipeline
-    *
-    * @param payload    object to be delivered
-    * @param deliveryId id of this delivery
-    * @tparam T type of payload
-    * @return
-    */
+   * Set input of the pipeline
+   *
+   * @param payload    object to be delivered
+   * @param deliveryId id of this delivery
+   * @tparam T type of payload
+   * @return
+   */
   def setInput[T: ru.TypeTag](payload: T,
                               deliveryId: String): this.type = {
     setInput[T](payload, Seq.empty, deliveryId)
   }
 
   /**
-    * Add a new stage containing the given factory
-    *
-    * @param factory Factory to be executed
-    * @return
-    */
+   * Add a new stage containing the given factory
+   *
+   * @param factory Factory to be executed
+   * @return
+   */
   def addStage(factory: Factory[_]): this.type = addStage(new Stage().addFactory(factory))
 
   /**
-    * Add a new stage containing the given factory
-    *
-    * @param factory         Factory to be executed
-    * @param constructorArgs Arguments of the primary constructor of the factory
-    * @throws IllegalArgumentException this will be thrown if arguments don't match
-    * @return
-    */
+   * Add a new stage containing the given factory
+   *
+   * @param factory         Factory to be executed
+   * @param constructorArgs Arguments of the primary constructor of the factory
+   * @throws IllegalArgumentException this will be thrown if arguments don't match
+   * @return
+   */
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage(factory: Class[_ <: Factory[_]], constructorArgs: Object*): this.type = {
     addStage(new Stage().addFactory(factory, constructorArgs: _*))
   }
 
   /**
-    * Add a new stage containing the given factory
-    *
-    * @param constructorArgs Arguments of the primary constructor of the factory
-    * @param persistence     if set to true, then the `write` method of the factory will be called to persist the output.
-    * @tparam T Class of the Factory
-    * @throws IllegalArgumentException this will be thrown if arguments don't match
-    * @return
-    */
+   * Add a new stage containing the given factory
+   *
+   * @param constructorArgs Arguments of the primary constructor of the factory
+   * @param persistence     if set to true, then the `write` method of the factory will be called to persist the output.
+   * @tparam T Class of the Factory
+   * @throws IllegalArgumentException this will be thrown if arguments don't match
+   * @return
+   */
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage[T <: Factory[_] : ClassTag](constructorArgs: Array[Object] = Array.empty,
                                            persistence: Boolean = true): this.type = {
@@ -222,11 +222,11 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Add a new stage to the pipeline
-    *
-    * @param stage stage object
-    * @return
-    */
+   * Add a new stage to the pipeline
+   *
+   * @param stage stage object
+   * @return
+   */
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage ${_stageCounter}")
 
@@ -244,8 +244,8 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   def getStage(id: Int): Stage = _stages(id)
 
   /**
-    * Mark the last stage as a NON-end stage
-    */
+   * Mark the last stage as a NON-end stage
+   */
   private[this] def resetEndStage(): Unit = {
     if (_stages.nonEmpty) _stages.last.end = false
   }
@@ -278,13 +278,13 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Inspect the current pipeline if it has not been inspected
-    */
+   * Inspect the current pipeline if it has not been inspected
+   */
   private[this] def inspectPipeline(): Unit = if (!_pipelineInspector.inspected) forceInspectPipeline()
 
   /**
-    * Inspect the current pipeline
-    */
+   * Inspect the current pipeline
+   */
   private[this] def forceInspectPipeline(): Unit = {
     _pipelineInspector.inspect()
 
@@ -307,20 +307,20 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Get the output of the last factory of the last stage
-    *
-    * @return an object. it has to be convert to the according type manually.
-    */
+   * Get the output of the last factory of the last stage
+   *
+   * @return an object. it has to be convert to the according type manually.
+   */
   def getLastOutput: Any = {
     _stages.last.factories.last.get()
   }
 
   /**
-    * Get the output of a specific Factory
-    *
-    * @param cls class of the Factory
-    * @return
-    */
+   * Get the output of a specific Factory
+   *
+   * @param cls class of the Factory
+   * @return
+   */
   def getOutput[A](cls: Class[_ <: Factory[_]]): A = {
     val factory = _stages.flatMap(s => s.factories).find(f => f.getClass == cls)
 
@@ -331,11 +331,11 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   }
 
   /**
-    * Get the Deliverable of the given runtime Type
-    *
-    * @param t runtime type of the Deliverable's payload
-    * @return
-    */
+   * Get the Deliverable of the given runtime Type
+   *
+   * @param t runtime type of the Deliverable's payload
+   * @return
+   */
   def getDeliverable(t: ru.Type): Array[Deliverable[_]] = _deliverableDispatcher.findDeliverableByType(t)
 
 

@@ -10,38 +10,38 @@ import org.apache.spark.sql.{Column, DataFrame, Dataset, functions}
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * SchemaConverter will rename the column of a dataset/dataframe according to the given case class T.
-  *
-  * {{{
-  *   import com.jcdecaux.datacorp.spark.annotations.colName
-  *   case class MyObject(@colName("col1") column1: String, column2: String)
-  *
-  *   val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
-  *   // +-------+-------+
-  *   // |column1|column2|
-  *   // +-------+-------+
-  *   // |      a|      A|
-  *   // |      b|      B|
-  *   // +-------+-------+
-  *
-  *   val df = SchemaConverter.toDF(ds)
-  *   // +----+-------+
-  *   // |col1|column2|
-  *   // +----+-------+
-  *   // |   a|      A|
-  *   // |   b|      B|
-  *   // +----+-------+
-  *
-  *   val ds2 = SchemaConverter.fromDF[MyObject](df)
-  *   // +-------+-------+
-  *   // |column1|column2|
-  *   // +-------+-------+
-  *   // |      a|      A|
-  *   // |      b|      B|
-  *   // +-------+-------+
-  *
-  * }}}
-  */
+ * SchemaConverter will rename the column of a dataset/dataframe according to the given case class T.
+ *
+ * {{{
+ *   import com.jcdecaux.datacorp.spark.annotations.colName
+ *   case class MyObject(@colName("col1") column1: String, column2: String)
+ *
+ *   val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
+ *   // +-------+-------+
+ *   // |column1|column2|
+ *   // +-------+-------+
+ *   // |      a|      A|
+ *   // |      b|      B|
+ *   // +-------+-------+
+ *
+ *   val df = SchemaConverter.toDF(ds)
+ *   // +----+-------+
+ *   // |col1|column2|
+ *   // +----+-------+
+ *   // |   a|      A|
+ *   // |   b|      B|
+ *   // +----+-------+
+ *
+ *   val ds2 = SchemaConverter.fromDF[MyObject](df)
+ *   // +-------+-------+
+ *   // |column1|column2|
+ *   // +-------+-------+
+ *   // |      a|      A|
+ *   // |      b|      B|
+ *   // +-------+-------+
+ *
+ * }}}
+ */
 object SchemaConverter {
 
   private[this] val compoundKeySuffix: String = "_key"
@@ -56,12 +56,12 @@ object SchemaConverter {
 
 
   /**
-    * Convert a DataFrame to Dataset according to the annotations
-    *
-    * @param dataFrame input df
-    * @tparam T type of dataset
-    * @return
-    */
+   * Convert a DataFrame to Dataset according to the annotations
+   *
+   * @param dataFrame input df
+   * @tparam T type of dataset
+   * @return
+   */
   @throws[InvalidSchemaException]
   def fromDF[T: ru.TypeTag](dataFrame: DataFrame): Dataset[T] = {
     val encoder = ExpressionEncoder[T]
@@ -99,12 +99,12 @@ object SchemaConverter {
   }
 
   /**
-    * Convert a dataset to a DataFrame according to annotations
-    *
-    * @param dataset input dataset
-    * @tparam T type of dataset
-    * @return
-    */
+   * Convert a dataset to a DataFrame according to annotations
+   *
+   * @param dataset input dataset
+   * @tparam T type of dataset
+   * @return
+   */
   def toDF[T: ru.TypeTag](dataset: Dataset[T]): DataFrame = {
     val structType = StructAnalyser.analyseSchema[T]
 
@@ -116,33 +116,33 @@ object SchemaConverter {
   }
 
   /**
-    * {{{
-    *    import com.jcdecaux.datacorp.spark.annotations.ColumnName
-    *
-    *    case class MyObject(@ColumnName("col1") column1: String, column2: String)
-    *
-    *    convert
-    *    +----+-------+
-    *    |col1|column2|
-    *    +----+-------+
-    *    |   a|      A|
-    *    |   b|      B|
-    *    +----+-------+
-    *
-    *    to
-    *    +-------+-------+
-    *    |column1|column2|
-    *    +-------+-------+
-    *    |      a|      A|
-    *    |      b|      B|
-    *    +-------+-------+
-    *
-    * }}}
-    *
-    * @param structType
-    * @param dataFrame
-    * @return
-    */
+   * {{{
+   *    import com.jcdecaux.datacorp.spark.annotations.ColumnName
+   *
+   *    case class MyObject(@ColumnName("col1") column1: String, column2: String)
+   *
+   *    convert
+   *    +----+-------+
+   *    |col1|column2|
+   *    +----+-------+
+   *    |   a|      A|
+   *    |   b|      B|
+   *    +----+-------+
+   *
+   *    to
+   *    +-------+-------+
+   *    |column1|column2|
+   *    +-------+-------+
+   *    |      a|      A|
+   *    |      b|      B|
+   *    +-------+-------+
+   *
+   * }}}
+   *
+   * @param structType StrutType containing metadata of column name
+   * @param dataFrame  the raw DataFrame loaded from a data persistence store
+   * @return a new DataFrame with renamed columns
+   */
   def replaceDFColNameByFieldName(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
@@ -155,32 +155,32 @@ object SchemaConverter {
   }
 
   /**
-    * {{{
-    *    import com.jcdecaux.datacorp.spark.annotations.ColumnName
-    *
-    *    case class MyObject(@ColumnName("col1") column1: String, column2: String)
-    *
-    *    convert
-    *    +----+-------+
-    *    |col1|column2|
-    *    +----+-------+
-    *    |   a|      A|
-    *    |   b|      B|
-    *    +----+-------+
-    *
-    *    to
-    *    +-------+-------+
-    *    |column1|column2|
-    *    +-------+-------+
-    *    |      a|      A|
-    *    |      b|      B|
-    *    +-------+-------+
-    * }}}
-    *
-    * @param structType
-    * @param dataFrame
-    * @return
-    */
+   * {{{
+   *    import com.jcdecaux.datacorp.spark.annotations.ColumnName
+   *
+   *    case class MyObject(@ColumnName("col1") column1: String, column2: String)
+   *
+   *    convert
+   *    +-------+-------+
+   *    |column1|column2|
+   *    +-------+-------+
+   *    |      a|      A|
+   *    |      b|      B|
+   *    +-------+-------+
+   *
+   *    to
+   *    +----+-------+
+   *    |col1|column2|
+   *    +----+-------+
+   *    |   a|      A|
+   *    |   b|      B|
+   *    +----+-------+
+   * }}}
+   *
+   * @param structType StrutType containing metadata of column name
+   * @param dataFrame  the DataFrame to be saved into a data persistence store
+   * @return
+   */
   def replaceFieldNameByColumnName(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
       .filter(_.metadata.contains(ColumnName.toString()))
@@ -193,10 +193,8 @@ object SchemaConverter {
   }
 
   /**
-    * Drop all compound key columns
-    *
-    * @return
-    */
+   * Drop all compound key columns
+   */
   def dropCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
     val columnsToDrop = structType
@@ -209,32 +207,32 @@ object SchemaConverter {
   }
 
   /**
-    * {{{
-    *   import com.jcdecaux.datacorp.spark.annotations.CombinedKey
-    *   case class MyObject(@CombinedKey("primary", "2") column1: String,
-    *                       @CombinedKey("primary", "1") column2: String)
-    *
-    *   from
-    *   +-------+-------+
-    *   |column1|column2|
-    *   +-------+-------+
-    *   |      a|      A|
-    *   |      b|      B|
-    *   +-------+-------+
-    *
-    *   create
-    *   +-------+-------+------------+
-    *   |column1|column2|_primary_key|
-    *   +-------+-------+------------+
-    *   |      a|      A|         A-a|
-    *   |      b|      B|         B-b|
-    *   +-------+-------+------------+
-    * }}}
-    *
-    * @param structType
-    * @param dataFrame
-    * @return
-    */
+   * {{{
+   *   import com.jcdecaux.datacorp.spark.annotations.CombinedKey
+   *   case class MyObject(@CombinedKey("primary", "2") column1: String,
+   *                       @CombinedKey("primary", "1") column2: String)
+   *
+   *   from
+   *   +-------+-------+
+   *   |column1|column2|
+   *   +-------+-------+
+   *   |      a|      A|
+   *   |      b|      B|
+   *   +-------+-------+
+   *
+   *   create
+   *   +-------+-------+------------+
+   *   |column1|column2|_primary_key|
+   *   +-------+-------+------------+
+   *   |      a|      A|         A-a|
+   *   |      b|      B|         B-b|
+   *   +-------+-------+------------+
+   * }}}
+   *
+   * @param structType structType containing the meta-information of the source DataFrame
+   * @param dataFrame  the DataFrame to be saved into a data persistence store
+   * @return
+   */
   private[this] def addCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val keyColumns = structType
       .filter(_.metadata.contains(CompoundKey.toString()))
@@ -255,12 +253,12 @@ object SchemaConverter {
   }
 
   /**
-    * For column having the annotation @Compress(compressor), compress the column with the given compressor
-    *
-    * @param structType structType containing the meta-information of the source DataFrame
-    * @param dataFrame  DataFrame to be compressed
-    * @return a new DataFrame with compressed column(s)
-    */
+   * For column having the annotation @Compress(compressor), compress the column with the given compressor
+   *
+   * @param structType structType containing the meta-information of the source DataFrame
+   * @param dataFrame  DataFrame to be compressed
+   * @return a new DataFrame with compressed column(s)
+   */
   def compressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
     val columnToCompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
@@ -277,12 +275,12 @@ object SchemaConverter {
   }
 
   /**
-    * Decompress a DataFrame having compressed column(s)
-    *
-    * @param structType structType containing the meta-information of the target DataFrame
-    * @param dataFrame  DataFrame to be decompressed
-    * @return a DataFrame with column(s) decompressed
-    */
+   * Decompress a DataFrame having compressed column(s)
+   *
+   * @param structType structType containing the meta-information of the target DataFrame
+   * @param dataFrame  DataFrame to be decompressed
+   * @return a DataFrame with column(s) decompressed
+   */
   def decompressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
     val columnToDecompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))

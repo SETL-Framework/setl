@@ -29,28 +29,28 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   private[this] val connectorId: String => String = config => s"@cnnctr.$config"
 
   /**
-    * Get a SparkRepository[DT]. If the given config path hasn't been registered, then the repository will
-    * firstly be registered and then be returned.
-    *
-    * @param config path to spark repository configuration
-    * @tparam DT type of spark repository
-    * @return
-    */
+   * Get a SparkRepository[DT]. If the given config path hasn't been registered, then the repository will
+   * firstly be registered and then be returned.
+   *
+   * @param config path to spark repository configuration
+   * @tparam DT type of spark repository
+   * @return
+   */
   def getSparkRepository[DT: ru.TypeTag](config: String): SparkRepository[DT] = {
     setSparkRepository[DT](config)
     inputRegister.get(repositoryId(config)).payload.asInstanceOf[SparkRepository[DT]]
   }
 
   /**
-    * Force register a spark repository for the given config path. If there this config path has been registered,
-    * it will be updated
-    *
-    * @param config     path to spark repository configuration
-    * @param consumer   Seq of consumer
-    * @param deliveryId id of this delivery that will be used during the delivery matching
-    * @tparam DT type of spark repository
-    * @return
-    */
+   * Force register a spark repository for the given config path. If there this config path has been registered,
+   * it will be updated
+   *
+   * @param config     path to spark repository configuration
+   * @param consumer   Seq of consumer
+   * @param deliveryId id of this delivery that will be used during the delivery matching
+   * @tparam DT type of spark repository
+   * @return
+   */
   def resetSparkRepository[DT: ru.TypeTag](config: String,
                                            consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                            deliveryId: String = Deliverable.DEFAULT_ID,
@@ -62,15 +62,15 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   }
 
   /**
-    * Register a spark repository for the given config path. If there this config path has been registered,
-    * it will NOT be updated
-    *
-    * @param config     path to spark repository configuration
-    * @param consumer   Seq of consumer
-    * @param deliveryId id of this delivery that will be used during the delivery matching
-    * @tparam DT type of spark repository
-    * @return
-    */
+   * Register a spark repository for the given config path. If there this config path has been registered,
+   * it will NOT be updated
+   *
+   * @param config     path to spark repository configuration
+   * @param consumer   Seq of consumer
+   * @param deliveryId id of this delivery that will be used during the delivery matching
+   * @tparam DT type of spark repository
+   * @return
+   */
   def setSparkRepository[DT: ru.TypeTag](config: String,
                                          consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                          deliveryId: String = Deliverable.DEFAULT_ID,
@@ -80,81 +80,81 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   }
 
   /**
-    * Get a Connector. If the given config path hasn't been registered, then the connector will
-    * firstly be registered and then be returned.
-    *
-    * @param config path to connector configuration
-    * @tparam CN type of the connector
-    * @return
-    */
+   * Get a Connector. If the given config path hasn't been registered, then the connector will
+   * firstly be registered and then be returned.
+   *
+   * @param config path to connector configuration
+   * @tparam CN type of the connector
+   * @return
+   */
   def getConnector[CN <: Connector](config: String): CN = {
     new ConnectorBuilder(configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
   }
 
   /**
-    * Register a connector. As each connector must have an delivery ID, by default the config path will be used.
-    *
-    * <p>If there this config path has been registered, it will NOT be updated.</p>
-    *
-    * @param config path to connector configuration
-    * @return
-    */
+   * Register a connector. As each connector must have an delivery ID, by default the config path will be used.
+   *
+   * <p>If there this config path has been registered, it will NOT be updated.</p>
+   *
+   * @param config path to connector configuration
+   * @return
+   */
   def setConnector(config: String): this.type = this.setConnector(config, config)
 
   def setConnector[CN <: Connector : ru.TypeTag](config: String, cls: Class[CN]): this.type =
     this.setConnector(config, config, classOf[Connector])
 
   /**
-    * Register a connector.
-    *
-    * <p>If there this config path has been registered, it will NOT be updated.</p>
-    *
-    * @param config     path to connector configuration
-    * @param deliveryId delivery ID
-    * @return
-    */
+   * Register a connector.
+   *
+   * <p>If there this config path has been registered, it will NOT be updated.</p>
+   *
+   * @param config     path to connector configuration
+   * @param deliveryId delivery ID
+   * @return
+   */
   def setConnector(config: String, deliveryId: String): this.type = {
     if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId, classOf[Connector])
     this
   }
 
   /**
-    * Register a connector.
-    *
-    * <p>If there this config path has been registered, it will NOT be updated.</p>
-    *
-    * @param config     path to connector configuration
-    * @param deliveryId delivery ID
-    * @param cls        class of the Connector
-    * @tparam CN type of spark connector
-    * @return
-    */
+   * Register a connector.
+   *
+   * <p>If there this config path has been registered, it will NOT be updated.</p>
+   *
+   * @param config     path to connector configuration
+   * @param deliveryId delivery ID
+   * @param cls        class of the Connector
+   * @tparam CN type of spark connector
+   * @return
+   */
   def setConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
     if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId, cls)
     this
   }
 
   /**
-    * Force register a connector. As each connector must have an delivery ID, by default the config path will be used.
-    *
-    * <p>If there this config path has been registered, it will be updated.</p>
-    *
-    * @param config path to connector configuration
-    * @return
-    */
+   * Force register a connector. As each connector must have an delivery ID, by default the config path will be used.
+   *
+   * <p>If there this config path has been registered, it will be updated.</p>
+   *
+   * @param config path to connector configuration
+   * @return
+   */
   def resetConnector(config: String): this.type = this.resetConnector(config, config, classOf[Connector])
 
   /**
-    * Register a connector.
-    *
-    * <p>If there this config path has been registered, it will be updated.</p>
-    *
-    * @param config     path to connector configuration
-    * @param deliveryId delivery ID
-    * @param cls        class of the Connector
-    * @tparam CN type of spark connector
-    * @return
-    */
+   * Register a connector.
+   *
+   * <p>If there this config path has been registered, it will be updated.</p>
+   *
+   * @param config     path to connector configuration
+   * @param deliveryId delivery ID
+   * @param cls        class of the Connector
+   * @tparam CN type of spark connector
+   * @return
+   */
   def resetConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
     val payload = new ConnectorBuilder(configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
     val deliverable = new Deliverable(payload).setDeliveryId(deliveryId)
@@ -166,11 +166,11 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   def sparkSession: SparkSession = this.spark
 
   /**
-    * Create a new pipeline. All the registered repositories and connectors will be passed into the delivery pool
-    * of the pipeline.
-    *
-    * @return
-    */
+   * Create a new pipeline. All the registered repositories and connectors will be passed into the delivery pool
+   * of the pipeline.
+   *
+   * @return
+   */
   def newPipeline(): Pipeline = {
     val _pipe = new Pipeline
     pipelineRegister.put(_pipe.getUUID, _pipe)
@@ -180,16 +180,16 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   }
 
   /**
-    * Find a pipeline by its UUID
-    *
-    * @param uuid UUID of the target pipeline
-    * @return
-    */
+   * Find a pipeline by its UUID
+   *
+   * @param uuid UUID of the target pipeline
+   * @return
+   */
   def getPipeline(uuid: UUID): Pipeline = this.pipelineRegister.get(uuid)
 
   /**
-    * Stop the spark session
-    */
+   * Stop the spark session
+   */
   def stop(): Unit = {
     this.spark.stop()
   }
@@ -200,12 +200,13 @@ object DCContext {
   class Builder extends com.jcdecaux.datacorp.spark.Builder[DCContext] {
 
     private[this] var dcContext: DCContext = _
-    private[this] val fallbackContextConfiguration: String = "app.context"
     private[this] var contextConfiguration: Option[String] = None
     private[this] var configLoader: ConfigLoader = _
     private[this] var sparkConf: Option[SparkConf] = None
     private[this] var parallelism: Option[Int] = None
     private[this] var sparkMasterUrl: Option[String] = None
+
+    private[this] val fallbackContextConfiguration: String = "app.context"
 
     def setDCContextConfigPath(config: String): this.type = {
       contextConfiguration = Option(config)
@@ -232,10 +233,10 @@ object DCContext {
       this
     }
 
-    def withDefaultConfigLoader(configPath: String): this.type = {
+    def withDefaultConfigLoader(configFile: String): this.type = {
       this.configLoader = ConfigLoader.builder()
         .setAppName(sparkAppName)
-        .setConfigPath(configPath)
+        .setConfigPath(configFile)
         .getOrCreate()
       this
     }
@@ -271,13 +272,19 @@ object DCContext {
       val cassandraHost = configLoader.getOption(pathOf("cassandraHost"))
 
       val sparkSessionBuilder = new SparkSessionBuilder(usages: _*)
-        .setAppName(configLoader.appName)
-        .setEnv(configLoader.appEnv)
+        .setAppName(configLoader.appName) // Set the default app name
+        .setEnv(configLoader.appEnv) // Retrieve app env
 
+      // SparkConf has the highest priority
       configureSpark(sparkConf, sparkSessionBuilder.withSparkConf)
+
+      // Configure Spark with properties defined in the configuration file
       sparkSessionBuilder.set(sparkConfigurations)
+
+      // Overwrite configuration file's properties with those defined in the application
       configureSpark(cassandraHost, sparkSessionBuilder.setCassandraHost)
       configureSpark(sparkMasterUrl, sparkSessionBuilder.setSparkMaster)
+
       sparkSessionBuilder.getOrCreate()
     }
 
@@ -287,7 +294,6 @@ object DCContext {
         case _ =>
       }
     }
-
 
     /**
      * Build an object

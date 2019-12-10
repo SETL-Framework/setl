@@ -88,8 +88,8 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     var output: String = _
 
     /**
-      * Read data
-      */
+     * Read data
+     */
     override def read(): this.type = {
       if (v1 == null) v1 = "he"
       if (v2 == null) v2 = "ha"
@@ -97,21 +97,21 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     }
 
     /**
-      * Process data
-      */
+     * Process data
+     */
     override def process(): this.type = {
       output = v1 + v2
       this
     }
 
     /**
-      * Write data
-      */
+     * Write data
+     */
     override def write(): this.type = this
 
     /**
-      * Get the processed data
-      */
+     * Get the processed data
+     */
     override def get(): String = output
   }
 
@@ -379,23 +379,23 @@ object DeliverableDispatcherSuite {
     var arrayThree: Array[String] = _
 
     /**
-      * Read data
-      */
+     * Read data
+     */
     override def read(): MultipleInputFactory.this.type = this
 
     /**
-      * Process data
-      */
+     * Process data
+     */
     override def process(): MultipleInputFactory.this.type = this
 
     /**
-      * Write data
-      */
+     * Write data
+     */
     override def write(): MultipleInputFactory.this.type = this
 
     /**
-      * Get the processed data
-      */
+     * Get the processed data
+     */
     override def get(): Array[String] = arrayOne ++ arrayTwo ++ arrayThree
   }
 

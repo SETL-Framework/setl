@@ -10,32 +10,32 @@ import scala.reflect.runtime.universe.TypeTag
 object ImplicitRepositoryAdapter {
 
   /**
-    * SparkRepositoryAdapter is an implemented implicit RepositoryAdapter that provides 4 additional methods to an
-    * existing `SparkRepository[A]`.
-    *
-    * {{{
-    *   // Example:
-    *
-    *   implicit val converter = new DatasetConverter[A, B] {
-    *     // implementation
-    *   }
-    *
-    *   val defaultRepository: SparkRepository[A]  // a default repository that can save a Dataset[A]
-    *
-    *   import com.jcdecaux.datacorp.spark.storage.repository.ImplicitRepositoryAdapter._
-    *
-    *   // This will convert dsOfTypeA (a Dataset[A]) to a Dataset[B] by using the previous implicit converter, then
-    *   // save the converted dataset into the data store
-    *   defaultRepository.convertAndSave(dsOfTypeA)
-    *
-    *   defaultRepository.findAllAndConvert()
-    * }}}
-    *
-    * @param repository an existing repository
-    * @param converter  a DatasetConverter (should be implemented by user)
-    * @tparam A source type
-    * @tparam B target type
-    */
+   * SparkRepositoryAdapter is an implemented implicit RepositoryAdapter that provides 4 additional methods to an
+   * existing `SparkRepository[A]`.
+   *
+   * {{{
+   *   // Example:
+   *
+   *   implicit val converter = new DatasetConverter[A, B] {
+   *     // implementation
+   *   }
+   *
+   *   val defaultRepository: SparkRepository[A]  // a default repository that can save a Dataset[A]
+   *
+   *   import com.jcdecaux.datacorp.spark.storage.repository.ImplicitRepositoryAdapter._
+   *
+   *   // This will convert dsOfTypeA (a Dataset[A]) to a Dataset[B] by using the previous implicit converter, then
+   *   // save the converted dataset into the data store
+   *   defaultRepository.convertAndSave(dsOfTypeA)
+   *
+   *   defaultRepository.findAllAndConvert()
+   * }}}
+   *
+   * @param repository an existing repository
+   * @param converter  a DatasetConverter (should be implemented by user)
+   * @tparam A source type
+   * @tparam B target type
+   */
   implicit class SparkRepositoryAdapter[A: TypeTag, B: TypeTag]
   (override val repository: SparkRepository[A])
   (override implicit val converter: DatasetConverter[A, B]) extends RepositoryAdapter[Dataset[A], Dataset[B]] {

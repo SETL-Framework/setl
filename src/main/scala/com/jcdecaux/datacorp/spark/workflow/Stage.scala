@@ -10,9 +10,9 @@ import scala.collection.parallel.mutable.ParArray
 import scala.reflect.ClassTag
 
 /**
-  * A Stage is a collection of independent Factories. All the stages of a pipeline will be executed
-  * sequentially at runtime. Within a stage, all factories could be executed in parallel or in sequential order.
-  */
+ * A Stage is a collection of independent Factories. All the stages of a pipeline will be executed
+ * sequentially at runtime. Within a stage, all factories could be executed in parallel or in sequential order.
+ */
 @InterfaceStability.Evolving
 class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescription {
 
@@ -51,11 +51,11 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   }
 
   /**
-    * Set to true to run all factories of this stage in parallel. Otherwise they will be executed in sequential order
-    *
-    * @param boo true for parallel. otherwise false
-    * @return
-    */
+   * Set to true to run all factories of this stage in parallel. Otherwise they will be executed in sequential order
+   *
+   * @param boo true for parallel. otherwise false
+   * @return
+   */
   def parallel(boo: Boolean): this.type = {
     _parallel = boo
     this
@@ -64,12 +64,12 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   def optimization: Boolean = this._optimization
 
   /**
-    * Set to true to allow the PipelineOptimizer to optimize the execution order of factories within the stage. Default
-    * false
-    *
-    * @param boo true to allow optimization
-    * @return this stage
-    */
+   * Set to true to allow the PipelineOptimizer to optimize the execution order of factories within the stage. Default
+   * false
+   *
+   * @param boo true to allow optimization
+   * @return this stage
+   */
   def optimization(boo: Boolean): this.type = {
     _optimization = boo
     this

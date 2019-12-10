@@ -47,23 +47,23 @@ object TestClasses {
     }
 
     /**
-      * Read data
-      */
+     * Read data
+     */
     override def read(): TestFactory.this.type = this
 
     /**
-      * Process data
-      */
+     * Process data
+     */
     override def process(): TestFactory.this.type = this
 
     /**
-      * Write data
-      */
+     * Write data
+     */
     override def write(): TestFactory.this.type = this
 
     /**
-      * Get the processed data
-      */
+     * Get the processed data
+     */
     override def get(): String = "Product of TestFactory " + inputString1 + inputString2
   }
 

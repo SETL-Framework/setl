@@ -7,8 +7,8 @@ import com.jcdecaux.datacorp.spark.transformation.Factory
 sealed abstract class External extends Factory[External]
 
 /**
-  * Singleton for external data source
-  */
+ * Singleton for external data source
+ */
 object External {
   val NODE: Node = Node(
     classOf[External],

@@ -5,11 +5,11 @@ import com.jcdecaux.datacorp.spark.internal.{HasDescription, Logging}
 import com.jcdecaux.datacorp.spark.transformation.Factory
 
 /**
-  * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a
-  * Directed Acyclic Graph (DAG) with nodes (factories) and flows (data transfer flows)
-  *
-  * @param pipeline an instantiated pipeline
-  */
+ * PipelineInspector will inspect a given [[com.jcdecaux.datacorp.spark.workflow.Pipeline]] and create a
+ * Directed Acyclic Graph (DAG) with nodes (factories) and flows (data transfer flows)
+ *
+ * @param pipeline an instantiated pipeline
+ */
 @InterfaceStability.Evolving
 private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Logging with HasDescription {
 
@@ -17,10 +17,10 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   private[workflow] var flows: Set[Flow] = _
 
   /**
-    * Get a Directed Acyclic Graph from the given pipeline.
-    *
-    * @return a DAG object if the pipeline is already inspected, otherwise null
-    */
+   * Get a Directed Acyclic Graph from the given pipeline.
+   *
+   * @return a DAG object if the pipeline is already inspected, otherwise null
+   */
   def getDataFlowGraph: DAG = {
     require(nodes != null)
     require(flows != null)
@@ -28,18 +28,18 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   }
 
   /**
-    * Return true if the input pipeline is already inspected. False otherwise
-    *
-    * @return boolean
-    */
+   * Return true if the input pipeline is already inspected. False otherwise
+   *
+   * @return boolean
+   */
   def inspected: Boolean = if (nodes == null || flows == null) false else true
 
   /**
-    * Find the corresponding node of a factory in the pool
-    *
-    * @param factory a Factory object
-    * @return an option of Node
-    */
+   * Find the corresponding node of a factory in the pool
+   *
+   * @param factory a Factory object
+   * @return an option of Node
+   */
   def findNode(factory: Factory[_]): Option[Node] = nodes.find(_.factoryUUID == factory.getUUID)
 
   private[this] def createNodes(): Set[Node] = {
@@ -96,10 +96,10 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   }
 
   /**
-    * Inspect the pipeline and generate the corresponding flows and nodes
-    *
-    * @return
-    */
+   * Inspect the pipeline and generate the corresponding flows and nodes
+   *
+   * @return
+   */
   def inspect(): this.type = {
     nodes = createNodes()
     flows = createFlows()

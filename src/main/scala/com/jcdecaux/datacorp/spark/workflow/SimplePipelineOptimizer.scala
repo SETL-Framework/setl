@@ -88,7 +88,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
       case _ => flows.map(_.stage).max + 1
     }
 
-    log.debug(s"Max input stage of ${oldNode.getPrettyName}: ${maxInputStage}")
+    log.debug(s"Max input stage of ${oldNode.getPrettyName}: $maxInputStage")
 
     val validStage = validateStage(maxInputStage, dag)
 

@@ -8,35 +8,35 @@ import com.typesafe.config._
 
 
 /**
-  * <p>ConfigLoader loads configurations by using typesafe.com's config library.</p>
-  *
-  * <p>You should set the application environment, then ConfigLoad will read the configuration
-  * file <code>[app_env].conf</code> in your resources directory. </p>
-  *
-  * <p>Multiple solutions are possible to configure application environment:<br>
-  * <ul>
-  * <li>
-  * Otherwise you can set the JVM property `app.environment`. For example, by adding `-Dapp.environment=local` in your command,
-  * ConfigLoader will read the conf file `local.conf`
-  * </li>
-  * <li>
-  * You can also create `app.environment` in the default configuration file (example: application.conf,
-  *   application.properties)
-  * </li>
-  *
-  * <li>The last solution is to overwrite directly the value of `confPath` with the name of you configuration file.
-  * Then ConfigLoader will read directly the given file
-  * </li>
-  * </ul>
-  *
-  * <p>The priority of the above solution is:</p>
-  * {{{
-  *   configPath >> setAppEnv >> JVM property >> `app.environment` in default config file
-  * }}}
-  *
-  * <p>If none of the above parameters are set, ConfigLoader will try to read its fallback configuration file</p>
-  *
-  */
+ * <p>ConfigLoader loads configurations by using typesafe.com's config library.</p>
+ *
+ * <p>You should set the application environment, then ConfigLoad will read the configuration
+ * file <code>[app_env].conf</code> in your resources directory. </p>
+ *
+ * <p>Multiple solutions are possible to configure application environment:<br>
+ * <ul>
+ * <li>
+ * Otherwise you can set the JVM property `app.environment`. For example, by adding `-Dapp.environment=local` in your command,
+ * ConfigLoader will read the conf file `local.conf`
+ * </li>
+ * <li>
+ * You can also create `app.environment` in the default configuration file (example: application.conf,
+ *   application.properties)
+ * </li>
+ *
+ * <li>The last solution is to overwrite directly the value of `confPath` with the name of you configuration file.
+ * Then ConfigLoader will read directly the given file
+ * </li>
+ * </ul>
+ *
+ * <p>The priority of the above solution is:</p>
+ * {{{
+ *   configPath >> setAppEnv >> JVM property >> `app.environment` in default config file
+ * }}}
+ *
+ * <p>If none of the above parameters are set, ConfigLoader will try to read its fallback configuration file</p>
+ *
+ */
 @InterfaceStability.Evolving
 abstract class ConfigLoader extends Logging {
 
@@ -46,8 +46,8 @@ abstract class ConfigLoader extends Logging {
   val configPath: Option[String] = None
 
   /**
-    * Default configuration
-    */
+   * Default configuration
+   */
   private[this] val defaultConfig: Option[Config] = try {
     Option(ConfigFactory.load())
   } catch {
@@ -92,10 +92,10 @@ abstract class ConfigLoader extends Logging {
   def getAppEnvFromJvmProperties: Option[String] = Option(System.getProperty("app.environment"))
 
   /**
-    * Update application environment (default LOCAL) by searching in system variables.
-    *
-    * @return true if applicationEnvironment has been updated, false otherwise
-    */
+   * Update application environment (default LOCAL) by searching in system variables.
+   *
+   * @return true if applicationEnvironment has been updated, false otherwise
+   */
   private[this] def updateAppEnv(): Unit = {
     if (getAppEnvFromJvmProperties.isDefined) {
       log.debug(s"Find AppEnv=$getAppEnvFromJvmProperties in jvm properties")
@@ -109,8 +109,8 @@ abstract class ConfigLoader extends Logging {
   }
 
   /**
-    * Config loaded from filesystem
-    */
+   * Config loaded from filesystem
+   */
   lazy val config: Config = {
     log.debug("Before execution of beforeAll")
     this.beforeAll()
@@ -124,21 +124,21 @@ abstract class ConfigLoader extends Logging {
   }
 
   /**
-    * Get the value of a key
-    *
-    * @param key path expression
-    * @return the string value at the requested path
-    * @throws ConfigException.Missing   if value is absent or null
-    * @throws ConfigException.WrongType if value is not convertible to an Enum
-    */
+   * Get the value of a key
+   *
+   * @param key path expression
+   * @return the string value at the requested path
+   * @throws ConfigException.Missing   if value is absent or null
+   * @throws ConfigException.WrongType if value is not convertible to an Enum
+   */
   def get(key: String): String = config.getString(key)
 
   /**
-    * Get the value of a key
-    *
-    * @param key path expression
-    * @return Option[String] if the key exists, None otherwise
-    */
+   * Get the value of a key
+   *
+   * @param key path expression
+   * @return Option[String] if the key exists, None otherwise
+   */
   def getOption(key: String): Option[String] = {
     if (has(key)) {
       Option(get(key))
@@ -148,43 +148,43 @@ abstract class ConfigLoader extends Logging {
   }
 
   /**
-    * Get the value of a key
-    *
-    * @param key path expression
-    * @return the Array[String] value at the requested path
-    */
+   * Get the value of a key
+   *
+   * @param key path expression
+   * @return the Array[String] value at the requested path
+   */
   def getArray(key: String): Array[String] = {
     import scala.collection.JavaConverters._
     config.getStringList(key).asScala.toArray
   }
 
   /**
-    * Check if a key is presented in a config
-    *
-    * @param key path expression
-    * @return true if the config contains the key, otherwise false
-    */
+   * Check if a key is presented in a config
+   *
+   * @param key path expression
+   * @return true if the config contains the key, otherwise false
+   */
   def has(key: String): Boolean = config.hasPath(key)
 
   /**
-    * Get the value of a key
-    *
-    * @param key path expression
-    * @return the ConfigObject value at the requested path
-    */
+   * Get the value of a key
+   *
+   * @param key path expression
+   * @return the ConfigObject value at the requested path
+   */
   def getObject(key: String): ConfigObject = config.getObject(key)
 
   /**
-    * Get the value of a key
-    *
-    * @param key path expression
-    * @return the nested Config value at the requested path
-    */
+   * Get the value of a key
+   *
+   * @param key path expression
+   * @return the nested Config value at the requested path
+   */
   def getConfig(key: String): Config = config.getConfig(key)
 
   /**
-    * BeforeAll will be called before loading the typesafe config file. User can override it with property settings
-    */
+   * BeforeAll will be called before loading the typesafe config file. User can override it with property settings
+   */
   def beforeAll(): Unit = {}
 }
 
@@ -219,10 +219,10 @@ object ConfigLoader {
     }
 
     /**
-      * Build an object
-      *
-      * @return
-      */
+     * Build an object
+     *
+     * @return
+     */
     override def build(): Builder.this.type = {
 
       configLoader = new ConfigLoader() {

@@ -8,28 +8,28 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /**
-  * Configure and build new sparkSession according to given usages
-  *
-  * <br>Usage:
-  *
-  * {{{
-  *   // Auto-configure
-  *   val spark: SparkSession = new SparkSessionBuilder("cassandra", "postgres").build().get()
-  *
-  *   // Build with your own SparkConf
-  *   val spark: SparkSession = new SparkSessionBuilder().configure(yourSparkConf).build().get()
-  * }}}
-  *
-  * @param usages usages of the sparkSession, could be a list of the following elements:
-  *               <ul>
-  *               <li>cassandra</li>
-  *               <li>TODO</li>
-  *               </ul>
-  */
+ * Configure and build new sparkSession according to given usages
+ *
+ * <br>Usage:
+ *
+ * {{{
+ *   // Auto-configure
+ *   val spark: SparkSession = new SparkSessionBuilder("cassandra", "postgres").build().get()
+ *
+ *   // Build with your own SparkConf
+ *   val spark: SparkSession = new SparkSessionBuilder().configure(yourSparkConf).build().get()
+ * }}}
+ *
+ * @param usages usages of the sparkSession, could be a list of the following elements:
+ *               <ul>
+ *               <li>cassandra</li>
+ *               </ul>
+ */
 @InterfaceStability.Evolving
 class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   import SparkSessionBuilder._
+
   private[this] val properties: ConcurrentHashMap[String, String] = new ConcurrentHashMap()
   set(SPARK_APP_NAME, "SparkApplication")
 
@@ -47,10 +47,10 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   )
 
   /**
-    * Automatically build a SparkSession
-    *
-    * @return
-    */
+   * Automatically build a SparkSession
+   *
+   * @return
+   */
   def build(): this.type = {
 
     SparkSession.getActiveSession match {
@@ -86,19 +86,19 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Validate SparkConf according to the usage of spark session
-    */
+   * Validate SparkConf according to the usage of spark session
+   */
   private[this] def validateSparkConf(): Unit = {
     if (usages.contains("cassandra")) require(sparkConf.contains(CQL_HOST))
   }
 
   /**
-    * Add a new configuration into sparkConf. If the current key already exists in sparkConf, its value
-    * will NOT be updated.
-    *
-    * @param key   key of SparkConf
-    * @param value value of SparkConf
-    */
+   * Add a new configuration into sparkConf. If the current key already exists in sparkConf, its value
+   * will NOT be updated.
+   *
+   * @param key   key of SparkConf
+   * @param value value of SparkConf
+   */
   private[this] def updateSparkConf(key: String, value: String): Unit = {
     if (!sparkConf.contains(key)) {
       sparkConf.set(key, value)
@@ -108,10 +108,10 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Create or get a Spark Session
-    *
-    * @return
-    */
+   * Create or get a Spark Session
+   *
+   * @return
+   */
   private[this] def createSparkSession: SparkSession = {
     log.info(s"Spark session summarize: \n${sparkConf.toDebugString}")
     SparkSession
@@ -121,26 +121,26 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Get Spark Master URL
-    *
-    * @return
-    */
+   * Get Spark Master URL
+   *
+   * @return
+   */
   def sparkMasterUrl: String = get(SPARK_MASTER)
 
   /**
-    * Set Master URL for Spark
-    *
-    * @param url url of master
-    * @return
-    */
+   * Set Master URL for Spark
+   *
+   * @param url url of master
+   * @return
+   */
   def setSparkMaster(url: String): this.type = set(SPARK_MASTER, url)
 
   /**
-    * Set the name of spark application
-    *
-    * @param name name of app
-    * @return
-    */
+   * Set the name of spark application
+   *
+   * @param name name of app
+   * @return
+   */
   def setAppName(name: String): this.type = {
     log.debug(s"Set application name to $name")
     set(SPARK_APP_NAME, name)
@@ -148,29 +148,29 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Get Spark application name
-    *
-    * @return
-    */
+   * Get Spark application name
+   *
+   * @return
+   */
   def appName: String = get(SPARK_APP_NAME)
 
   /**
-    * Set application environment
-    *
-    * @param env LOCAL, DEV, PREPROD, PROD, EMR
-    * @return
-    */
+   * Set application environment
+   *
+   * @param env LOCAL, DEV, PREPROD, PROD, EMR
+   * @return
+   */
   def setEnv(env: String): this.type = {
     appEnv = env
     this
   }
 
   /**
-    * Set the application envir
-    *
-    * @param host cassandra host
-    * @return
-    */
+   * Set the application envir
+   *
+   * @param host cassandra host
+   * @return
+   */
   def setCassandraHost(host: String): this.type = {
     log.debug(s"Set cassandra host to $host")
     set(CQL_HOST, host)
@@ -178,25 +178,25 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Get cassandar host value
-    *
-    * @return
-    */
+   * Get cassandar host value
+   *
+   * @return
+   */
   def cassandraHost: String = get(CQL_HOST)
 
   /**
-    * Set spark.sql.shuffle.partitions
-    *
-    * @param par default number of partition
-    * @return
-    */
+   * Set spark.sql.shuffle.partitions
+   *
+   * @param par default number of partition
+   * @return
+   */
   def setParallelism(par: Int): this.type = set(SPARK_SHUFFLE_PARTITIONS, par.toString)
 
   /**
-    * Get spark.sql.shuffle.partitions
-    *
-    * @return
-    */
+   * Get spark.sql.shuffle.partitions
+   *
+   * @return
+   */
   def getParallelism: String = get(SPARK_SHUFFLE_PARTITIONS)
 
   def useKryo(boo: Boolean): this.type = set(SPARK_SERIALIZER, "org.apache.spark.serializer.KryoSerializer")
@@ -216,11 +216,11 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   def setKryoRegistrationRequired(boolean: Boolean): this.type = set(SPARK_KRYO_REGISTRATION_REQUIRED, boolean.toString)
 
   /**
-    * Override the existing configuration with an user defined configuration
-    *
-    * @param conf spark configuration
-    * @return
-    */
+   * Override the existing configuration with an user defined configuration
+   *
+   * @param conf spark configuration
+   * @return
+   */
   def withSparkConf(conf: SparkConf): this.type = {
     log.info("Set customized spark configuration")
     this.sparkConf = conf
@@ -229,11 +229,11 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Wrapper of withSparkConf
-    *
-    * @param conf spark configuration
-    * @return
-    */
+   * Wrapper of withSparkConf
+   *
+   * @param conf spark configuration
+   * @return
+   */
   def configure(conf: SparkConf): this.type = withSparkConf(conf)
 
   /**
@@ -265,10 +265,10 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   }
 
   /**
-    * Build a spark session with the current configuration
-    *
-    * @return spark session
-    */
+   * Build a spark session with the current configuration
+   *
+   * @return spark session
+   */
   def get(): SparkSession = this.spark.newSession()
 }
 
