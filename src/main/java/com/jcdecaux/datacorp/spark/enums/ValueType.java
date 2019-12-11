@@ -5,7 +5,8 @@ public enum ValueType {
     DATETIME("timestamp"),
     DATE("date"),
     NUMBER("number"),
-    SET("set");
+    SET("set"),
+    COLUMN("column");
 
     private final String value;
 

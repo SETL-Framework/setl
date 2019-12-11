@@ -6,6 +6,7 @@ import java.time.{LocalDate, LocalDateTime}
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.enums.ValueType
 import com.jcdecaux.datacorp.spark.util.DateUtils
+import org.apache.spark.sql.Column
 
 /**
  * Condition is used by [[com.jcdecaux.datacorp.spark.storage.repository.Repository]] to find data
@@ -17,6 +18,8 @@ import com.jcdecaux.datacorp.spark.util.DateUtils
  */
 @InterfaceStability.Evolving
 case class Condition(key: String, operator: String, value: Option[String], valueType: ValueType) {
+
+  private[this] val _key: String = s"`$key`"
 
   /**
    * Convert a [[com.jcdecaux.datacorp.spark.storage.Condition]] object to a spark SQL query string
@@ -31,24 +34,26 @@ case class Condition(key: String, operator: String, value: Option[String], value
       this.valueType match {
         case ValueType.DATETIME =>
           val t = DateUtils.reformatDateTimeString(this.value.get, withTime = true, end = if (this.operator.contains(">")) false else true)
-          s"${this.key} ${this.operator} cast('$t' as ${this.valueType.value})"
+          s"(${this._key} ${this.operator} cast('$t' as ${this.valueType.value}))"
 
         case ValueType.DATE =>
           val t = DateUtils.reformatDateTimeString(this.value.get, withTime = false, end = if (this.operator.contains(">")) false else true)
-          s"${this.key} ${this.operator} cast('$t' as ${this.valueType.value})"
+          s"(${this._key} ${this.operator} cast('$t' as ${this.valueType.value}))"
 
         case ValueType.STRING =>
-          s"${this.key} ${this.operator} '${this.value.get}'"
+          s"(${this._key} ${this.operator} '${this.value.get}')"
+
+        case ValueType.COLUMN =>
+          this.value.get
 
         case _ =>
-          s"${this.key} ${this.operator} ${this.value.get}"
+          s"(${this._key} ${this.operator} ${this.value.get})"
       }
     } else {
       null
     }
     query
   }
-
 }
 
 object Condition {
@@ -79,5 +84,9 @@ object Condition {
       case num => num.toString
     }
     Condition(key, operator, Some(reformatValue.mkString("(", ",", ")")), ValueType.SET)
+  }
+
+  def apply(column: Column): Condition = {
+    Condition(null, null, Some(column.expr.sql), ValueType.COLUMN)
   }
 }

@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.datacorp.spark.annotation.{ColumnName, Compress, InterfaceStability}
-import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter, StructAnalyser}
 import com.jcdecaux.datacorp.spark.storage.Condition
@@ -215,13 +215,32 @@ object SparkRepository {
             throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
           }
 
-          // if the current query column has an alias, we recreate a new condition and replace
-          // the current key by the column name alias
-          columnWithAlias.find(_.name == cond.key) match {
-            case Some(a) =>
-              cond.copy(key = a.metadata.getStringArray(ColumnName.toString()).head)
-            case _ => cond
+          cond.valueType match {
+
+            case ValueType.COLUMN =>
+              var sqlString = cond.value.get
+
+              columnWithAlias.foreach {
+                col =>
+                  val alias = col.metadata.getStringArray(ColumnName.toString()).headOption
+                  if (alias.nonEmpty) {
+                    sqlString = sqlString.replace(s"`${col.name}`", s"`${alias.get}`")
+                  }
+              }
+
+              cond.copy(value = Option(sqlString))
+
+            case _ =>
+              // if the current query column has an alias, we recreate a new condition and replace
+              // the current key by the column name alias
+              columnWithAlias.find(_.name == cond.key) match {
+                case Some(a) =>
+                  cond.copy(key = a.metadata.getStringArray(ColumnName.toString()).head)
+                case _ => cond
+              }
           }
+
+
       }
   }
 
