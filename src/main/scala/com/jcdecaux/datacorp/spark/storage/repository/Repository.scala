@@ -2,7 +2,7 @@ package com.jcdecaux.datacorp.spark.storage.repository
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
 import com.jcdecaux.datacorp.spark.storage.Condition
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{Column, Dataset}
 
 /**
  * The goal of Repository is to significantly reduce the amount of boilerplate code required to
@@ -28,6 +28,14 @@ trait Repository[DT] {
    * @return
    */
   def findBy(condition: Condition): DT = this.findBy(Set(condition))
+
+  /**
+   * Find data by giving a Spark sql column
+   *
+   * @param column a column object (could be chained)
+   * @return
+   */
+  def findBy(column: Column): DT = this.findBy(Condition(column))
 
   /**
    * Retrieve all data

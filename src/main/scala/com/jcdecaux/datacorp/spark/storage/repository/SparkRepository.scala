@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.datacorp.spark.annotation.{ColumnName, Compress, InterfaceStability}
-import com.jcdecaux.datacorp.spark.enums.Storage
+import com.jcdecaux.datacorp.spark.enums.{Storage, ValueType}
 import com.jcdecaux.datacorp.spark.exception.UnknownException
 import com.jcdecaux.datacorp.spark.internal.{Logging, SchemaConverter, StructAnalyser}
 import com.jcdecaux.datacorp.spark.storage.Condition
@@ -206,22 +206,58 @@ object SparkRepository {
     val columnWithAlias = schema.filter(_.metadata.contains(ColumnName.toString()))
     val binaryColumns = schema.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
 
+
+    val binaryColumnNames = binaryColumns.map(_.name)
+    val aliasBinaryColumns = binaryColumns
+      .filter(bc => columnWithAlias.map(_.name).contains(bc.name))
+      .map(bc => bc.metadata.getStringArray(ColumnName.toString()).head)
+
     conditions
       .map {
         cond =>
 
-          if (binaryColumns.map(_.name).contains(cond.key)) {
-            // TODO the following code doesn't handle the alias
-            throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
+          cond.valueType match {
+            case ValueType.COLUMN =>
+              var sqlString = cond.value.get
+
+              // Check if use is trying to filter an binary column
+              (binaryColumnNames ++ aliasBinaryColumns).toSet.foreach {
+                colName: String =>
+                  if (sqlString.contains(s"`$colName`")) {
+                    throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
+                  }
+              }
+
+              /*
+              If the current condition is of value type column,
+              then we try replacing columns that have alias name by their alias name
+              */
+              columnWithAlias.foreach {
+                col =>
+                  val alias = col.metadata.getStringArray(ColumnName.toString()).headOption
+                  if (alias.nonEmpty) {
+                    sqlString = sqlString.replace(s"`${col.name}`", s"`${alias.get}`")
+                  }
+              }
+              cond.copy(value = Option(sqlString))
+
+            case _ =>
+              // Check if use is trying to filter an binary column
+              if (binaryColumnNames.contains(cond.key) || aliasBinaryColumns.contains(cond.key)) {
+                throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
+              }
+
+              /* if the current query column has an alias, we recreate a new condition and replace
+              the current key by the column name alias
+              */
+              columnWithAlias.find(_.name == cond.key) match {
+                case Some(a) =>
+                  cond.copy(key = a.metadata.getStringArray(ColumnName.toString()).head)
+                case _ => cond
+              }
           }
 
-          // if the current query column has an alias, we recreate a new condition and replace
-          // the current key by the column name alias
-          columnWithAlias.find(_.name == cond.key) match {
-            case Some(a) =>
-              cond.copy(key = a.metadata.getStringArray(ColumnName.toString()).head)
-            case _ => cond
-          }
+
       }
   }
 
