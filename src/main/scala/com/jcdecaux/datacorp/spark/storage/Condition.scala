@@ -83,7 +83,7 @@ object Condition {
       case str: String => s"'$str'"
       case num => num.toString
     }
-    Condition(key, operator, Some(reformatValue.mkString("(", ",", ")")), ValueType.SET)
+    Condition(key, operator.toUpperCase(), Some(reformatValue.mkString("(", ", ", ")")), ValueType.SET)
   }
 
   def apply(column: Column): Condition = {

@@ -152,11 +152,11 @@ class SparkRepositorySuite extends AnyFunSuite {
     connector.delete()
   }
 
-  test("SparkRepository should handle column name changed by annotation") {
+  test("SparkRepository should handle column name changed by annotation while filtering") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
-    val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B")).toDS()
+    val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B"), MyObject("b", "BB"), MyObject("b", "BBB")).toDS()
     val path: String = "src/test/resources/test_spark_repository_colname_change"
     val connector = new CSVConnector(Map[String, String](
       "path" -> path,
@@ -165,15 +165,42 @@ class SparkRepositorySuite extends AnyFunSuite {
       "header" -> "true",
       "saveMode" -> "Overwrite"
     ))
+
     val condition = Condition("col1", "=", "a")
     val condition2 = Condition("column1", "=", "a")
+    val condition3 = Condition($"col1" === "a")
+    val condition4 = Condition($"column1" === "a")
     val repo = new SparkRepository[MyObject].setConnector(connector)
     repo.save(ds)
 
     val finded1 = repo.findBy(condition).collect()
     val finded2 = repo.findBy(condition2).collect()
+    val finded3 = repo.findBy(condition3).collect()
+    val finded4 = repo.findBy(condition4).collect()
+    val finded5 = repo.findBy($"column1" === "a").collect()
+    val finded6 = repo.findBy($"col1" === "a").collect()
 
     assert(finded1 === finded2)
+    assert(finded2 === finded3)
+    assert(finded3 === finded4)
+    assert(finded5 === finded4)
+    assert(finded5 === finded6)
+
+    val conditionBis = Set(Condition("col1", "=", "b"), Condition("_sort_key", "IN", Set("BBB-b", "BB-b")))
+    val conditionBis2 = Condition($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
+    val conditionBis3 = Set(Condition("col1", "=", "b"), Condition($"_sort_key".isInCollection(Set("BBB-b", "BB-b"))))
+
+    val findedBis1 = repo.findBy(conditionBis)
+    val findedBis2 = repo.findBy(conditionBis2)
+    val findedBis3 = repo.findBy(conditionBis3)
+    val findedBis4 = repo.findBy($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
+    val findedBis5 = repo.findBy($"column1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
+
+    assert(findedBis1.collect() === findedBis2.collect())
+    assert(findedBis2.collect() === findedBis3.collect())
+    assert(findedBis4.collect() === findedBis3.collect())
+    assert(findedBis4.collect() === findedBis5.collect())
+
     connector.delete()
   }
 
@@ -212,6 +239,9 @@ class SparkRepositorySuite extends AnyFunSuite {
 
     // Exception will be thrown when we try to filter a binary column
     assertThrows[IllegalArgumentException](repo.findBy(Condition("col4", "=", "test")))
+    assertThrows[IllegalArgumentException](repo.findBy(Set(Condition("col1", "=", "haha"), Condition("col4", "=", "test"))))
+    assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test"))
+    assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test" && $"col1" === "haha"))
     connector.delete()
   }
 
@@ -250,6 +280,9 @@ class SparkRepositorySuite extends AnyFunSuite {
 
     // Exception will be thrown when we try to filter a binary column
     assertThrows[IllegalArgumentException](repo.findBy(Condition("col4", "=", "test")))
+    assertThrows[IllegalArgumentException](repo.findBy(Set(Condition("col1", "=", "haha"), Condition("col4", "=", "test"))))
+    assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test"))
+    assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test" && $"col1" === "haha"))
     connector.delete()
   }
 
@@ -278,7 +311,7 @@ class SparkRepositorySuite extends AnyFunSuite {
     r1.show()
 
     val loads = (1 to 100).par.map {
-      i => profile(repo.findAll())
+      _ => profile(repo.findAll())
     }
 
     val avgCacheLoading = loads.map(_._2).sum / (1 to 100).length.toDouble
