@@ -17,6 +17,7 @@ import scala.reflect.runtime.{universe => ru}
 abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with HasDescription {
 
   private[this] val _consumers: Seq[Class[_ <: Factory[_]]] = Seq.empty
+  private[this] val _deliveryId: String = Deliverable.DEFAULT_ID
 
   private[this] var _persistence: Boolean = true
 
@@ -28,6 +29,8 @@ abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with Has
   def persist: Boolean = this._persistence
 
   def consumers: Seq[Class[_ <: Factory[_]]] = this._consumers
+
+  def deliveryId: String = this._deliveryId
 
   /**
    * Read data
@@ -52,7 +55,12 @@ abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with Has
   /**
    * Create a new Deliverable object
    */
-  def getDelivery: Deliverable[A] = new Deliverable[A](this.get()).setProducer(this.getClass).setConsumers(_consumers)
+  def getDelivery: Deliverable[A] = {
+    new Deliverable[A](this.get())
+      .setProducer(this.getClass)
+      .setConsumers(consumers)
+      .setDeliveryId(deliveryId)
+  }
 
   /**
    * Get the type of deliverable payload

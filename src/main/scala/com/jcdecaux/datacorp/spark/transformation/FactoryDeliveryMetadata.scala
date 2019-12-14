@@ -26,7 +26,7 @@ private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
                                                   optional: Boolean,
                                                   autoLoad: Boolean = false,
                                                   condition: String = "",
-                                                  id: String = "") {
+                                                  id: String = Deliverable.DEFAULT_ID) {
 
   /**
    * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
@@ -34,7 +34,7 @@ private[spark] case class FactoryDeliveryMetadata(factoryUUID: UUID,
    *
    * @return
    */
-  def getFactoryInputs: List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer))
+  def getFactoryInputs: List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer, id))
 
   def isDataset: List[Boolean] = argTypes.map {
     tp => tp.toString.startsWith(runtime.universe.typeOf[Dataset[_]].toString.dropRight(2))

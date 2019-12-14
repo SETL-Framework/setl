@@ -68,7 +68,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
                     .filter(n => n.stage > thisNode.stage)
                     .filter(n => thisNode.targetNode(n))
 
-                  targetNodes.map(targetNode => Flow(payloadType, thisNode, targetNode, stage.stageId))
+                  targetNodes.map(targetNode => Flow(payloadType, thisNode, targetNode, stage.stageId, f.deliveryId))
               }
               .toSet
           }
@@ -84,7 +84,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
         thisNode =>
           thisNode.input
             .filter(_.producer == classOf[External])
-            .map(nodeInput => Flow(nodeInput.runtimeType, External.NODE, thisNode, External.NODE.stage))
+            .map(nodeInput => Flow(nodeInput.runtimeType, External.NODE, thisNode, External.NODE.stage, nodeInput.deliveryId))
             .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
       }
   }

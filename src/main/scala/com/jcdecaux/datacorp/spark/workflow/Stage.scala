@@ -153,7 +153,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     _factories.map {
       fac =>
         val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
-        val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers)
+        val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers, deliveryId = fac.deliveryId)
 
         Node(fac.getClass, fac.getUUID, this.stageId, setter.toList, output)
     }.toArray

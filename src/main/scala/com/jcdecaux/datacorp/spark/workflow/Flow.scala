@@ -1,6 +1,7 @@
 package com.jcdecaux.datacorp.spark.workflow
 
 import com.jcdecaux.datacorp.spark.internal.HasDescription
+import com.jcdecaux.datacorp.spark.transformation.Deliverable
 
 import scala.reflect.runtime
 
@@ -15,12 +16,16 @@ import scala.reflect.runtime
 private[workflow] case class Flow(payload: runtime.universe.Type,
                                   from: Node,
                                   to: Node,
-                                  stage: Int) extends HasDescription {
+                                  stage: Int,
+                                  deliveryId: String = Deliverable.DEFAULT_ID) extends HasDescription {
   override def describe(): this.type = {
     println("Flow")
-    println(s"Stage     : $stage")
-    println(s"Direction : ${from.getPrettyName} ==> ${to.getPrettyName}")
-    println(s"PayLoad   : ${getPrettyName(payload)}")
+    if (deliveryId != Deliverable.DEFAULT_ID) {
+      println(s"Delivery id: $deliveryId")
+    }
+    println(s"Stage      : $stage")
+    println(s"Direction  : ${from.getPrettyName} ==> ${to.getPrettyName}")
+    println(s"PayLoad    : ${getPrettyName(payload)}")
     println("--------------------------------------")
     this
   }

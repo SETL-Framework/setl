@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.jcdecaux.datacorp.spark.exception.InvalidDeliveryException
 import com.jcdecaux.datacorp.spark.internal.{HasDescription, Identifiable, Logging}
-import com.jcdecaux.datacorp.spark.transformation.{Factory, FactoryDeliveryMetadata, FactoryInput, FactoryOutput}
+import com.jcdecaux.datacorp.spark.transformation._
 
 import scala.language.existentials
 import scala.reflect.runtime
@@ -30,13 +30,29 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
 
   def listInputProducers: List[Class[_]] = this.input.map(_.producer)
 
-  def findInputByType(t: runtime.universe.Type): List[FactoryInput] = input.filter(_.runtimeType == t)
+  def findInputByType(t: runtime.universe.Type, deliveryId: String): List[FactoryInput] = {
+    input.filter {
+      i => i.runtimeType == t && i.deliveryId == deliveryId
+    }
+  }
+
+  private[this] def formatDeliveryId(id: String): String = {
+    if (id != Deliverable.DEFAULT_ID) {
+      s" (delivery id: $id)"
+    } else {
+      ""
+    }
+  }
 
   override def describe(): this.type = {
     println(s"Node   : $getPrettyName")
     println(s"Stage  : $stage")
-    input.foreach(i => println(s"Input  : ${getPrettyName(i.runtimeType)}"))
-    println(s"Output : ${getPrettyName(output.runtimeType)}") //
+    input.foreach {
+      i =>
+        val deliveryId: String = formatDeliveryId(i.deliveryId)
+        println(s"Input  : ${getPrettyName(i.runtimeType)}$deliveryId")
+    }
+    println(s"Output : ${getPrettyName(output.runtimeType)}${formatDeliveryId(output.deliveryId)}") //
     println("--------------------------------------")
     this
   }
@@ -65,7 +81,9 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
 
     var validTarget: Boolean = false
 
-    val filteredInputs = next.findInputByType(this.output.runtimeType)
+    val filteredInputs = next.findInputByType(this.output.runtimeType, this.output.deliveryId)
+
+    println(filteredInputs.length)
 
     validTarget = filteredInputs.length match {
       case 0 => false
