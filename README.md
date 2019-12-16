@@ -1,5 +1,5 @@
-# DataCorp Spark Framework
-This project provides an easy-to-use and general-purpose framework for data transformation application.
+# SETL
+SETL (Spark ETL) is an open source ETL framework for Apache Spark.
 
 ## Use
 ### Create a new project
@@ -7,11 +7,10 @@ You can start working by cloning [this template project](https://git.jcdecaux.co
 
 ### Use in an existing project
 ```xml
-<!--JCDecaux Datacorp-->
 <dependency>
-  <groupId>com.jcdecaux.datacorp</groupId>
-  <artifactId>dc-spark-sdk_2.12</artifactId>
-  <version>0.3.5</version>
+  <groupId>com.jcdecaux.setl</groupId>
+  <artifactId>setl_2.11</artifactId>
+  <version>0.4.0</version>
 </dependency>
 ```
 

@@ -1,3 +1,8 @@
+## 0.4.0 (2019-12-17)
+- BREAKING CHANGE: Renamed **DCContext** to **Setl**
+- Changed the default application environment config path into **setl.environment**
+- Changed the default context config path into **setl.config**
+
 ## 0.3.5 (2019-12-16)
 - BREAKING CHANGE: replace the Spark compatible version by the Scala compatible version in the artifact ID. 
 The old artifact id **dc-spark-sdk_2.4** was changed to **dc-spark-sdk_2.11** (or **dc-spark-sdk_2.12**)
@@ -95,7 +100,7 @@ case class CompressionDemo(@Compress col1: Seq[Int],
 ## 0.2.7 (2019-06-21)
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 
 of `SparkRepositoryBuilder` to use the conf object
-- Changed package name `com.jcdecaux.datacorp.spark.annotations` to `com.jcdecaux.datacorp.spark.annotation`
+- Changed package name `com.jcdecaux.setl.annotations` to `com.jcdecaux.setl.annotation`
 
 ## 0.2.6 (2019-06-18)
 - Added annotation `ColumnName`, which could be used to replace the current column name 
