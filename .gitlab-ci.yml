@@ -7,7 +7,6 @@ stages:
 
 variables:
   MAVEN_CLI_OPTS: "--batch-mode"
-  MVN_CMD_CPT_OPTS: "-Pscala-2.12"
 
 build:2-11:
   stage: build
@@ -17,10 +16,9 @@ build:2-11:
 build:2-12:
   stage: build
   script:
-    - ls -lah
     - rm -rf pom.xml
-    - cp dev/pom.xml pom.xml
-    - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS compile
+    - cp dev/pom_2.12.xml pom.xml
+    - mvn clean $MAVEN_CLI_OPTS compile
 
 test:2-11:
   stage: test
@@ -35,8 +33,8 @@ test:2-12:
     - build:2-12
   script:
     - rm -rf pom.xml
-    - cp dev/pom.xml pom.xml
-    - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS test
+    - cp dev/pom_2.12.xml pom.xml
+    - mvn clean $MAVEN_CLI_OPTS test
 
 deploy:snapshot:2-11:
   stage: deploy
@@ -51,8 +49,8 @@ deploy:snapshot:2-12:
   stage: deploy
   script:
     - rm -rf pom.xml
-    - cp dev/pom.xml pom.xml
-    - mvn clean -DskipTests $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
+    - cp dev/pom_2.12.xml pom.xml
+    - mvn clean -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
     - test:2-12
   only:
@@ -72,8 +70,8 @@ deploy:release:2-12:manual:
   stage: deploy
   script:
     - rm -rf pom.xml
-    - cp dev/pom.xml pom.xml
-    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
+    - cp dev/pom_2.12.xml pom.xml
+    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
     - test:2-12
   only:
@@ -95,8 +93,8 @@ deploy:release:2-12:auto:
   stage: deploy
   script:
     - rm -rf pom.xml
-    - cp dev/pom.xml pom.xml
-    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS deploy
+    - cp dev/pom_2.12.xml pom.xml
+    - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
     - test:2-12
   only:
