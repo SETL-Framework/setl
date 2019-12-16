@@ -25,26 +25,6 @@ class CSVConnectorSuite extends AnyFunSuite {
     TestObject(3, "p3", "c3", 3L)
   )
 
-  //  test("Test S3") {
-  //    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-  //    val opt = Map(
-  //      "path" -> "s3a://jcd-prd-datacorp-singapore/singtel/dataspark-20191021",
-  //      "inferSchema" -> "true",
-  //      "delimiter" -> ",",
-  //      "header" -> "true",
-  //      "saveMode" -> "Append",
-  //      "filenamePattern" -> "(NetworkAgeOrientedStatsWeek).*",
-  //      "fs.s3a.aws.credentials.provider" -> "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
-  //      "fs.s3a.access.key" -> "",
-  //      "fs.s3a.secret.key" -> "",
-  //      "fs.s3a.session.token" -> ""
-  //    )
-  //
-  //    val connector = new CSVConnector(spark, opt)
-  //    connector.read().show()
-  //
-  //  }
-
   test("test CSV connector with different file path") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val csvConnector = new CSVConnector(options)

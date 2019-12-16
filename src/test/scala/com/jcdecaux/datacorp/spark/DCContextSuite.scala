@@ -172,7 +172,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
     val repo = context.getSparkRepository[TestObject]("csv_dc_context_consumer")
     val conn = repo.getConnector.asInstanceOf[FileConnector]
 
-    assert(conn.basePath.toString === "file:/Users/qin/IdeaProjects/dc-spark-sdk/src/test/resources/test_config_csv_dc_context_consumer")
+    assert(conn.basePath.toString === "src/test/resources/test_config_csv_dc_context_consumer")
     conn.delete()
   }
 
