@@ -83,8 +83,6 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
 
     val filteredInputs = next.findInputByType(this.output.runtimeType, this.output.deliveryId)
 
-    println(filteredInputs.length)
-
     validTarget = filteredInputs.length match {
       case 0 => false
       case 1 => handleOneSingleMatchedInput(filteredInputs.head, next) // Found only one matching type
