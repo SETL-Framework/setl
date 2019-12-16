@@ -95,7 +95,7 @@ case class CompressionDemo(@Compress col1: Seq[Int],
 ## 0.2.7 (2019-06-21)
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods 
 of `SparkRepositoryBuilder` to use the conf object
-- Changed package name `com.jcdecaux.datacorp.spark.annotations` to `com.jcdecaux.datacorp.spark.annotation`
+- Changed package name `com.jcdecaux.setl.annotations` to `com.jcdecaux.setl.annotation`
 
 ## 0.2.6 (2019-06-18)
 - Added annotation `ColumnName`, which could be used to replace the current column name 
