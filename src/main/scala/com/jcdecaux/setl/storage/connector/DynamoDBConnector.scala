@@ -64,7 +64,7 @@ class DynamoDBConnector(val region: String, // "eu-west-1"
     spark.read
       .option("region", region)
       .option("throughput", throughput)
-      .format("com.audienceproject.spark.dynamodb")
+      .format("com.audienceproject.spark.dynamodb.datasource")
   }
 
   override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
@@ -72,7 +72,7 @@ class DynamoDBConnector(val region: String, // "eu-west-1"
       .mode(saveMode)
       .option("region", region)
       .option("throughput", throughput)
-      .format("com.audienceproject.spark.dynamodb")
+      .format("com.audienceproject.spark.dynamodb.datasource")
   }
 
   override val storage: Storage = Storage.DYNAMODB
