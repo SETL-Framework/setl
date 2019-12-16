@@ -65,13 +65,12 @@ fabric.properties
 
 ### IntelliJ IDEA ###
 .idea
-*.iws
 *.iml
 *.ipr
 
 ### NetBeans ###
 /nbproject/private/
-/build/
+/dev/
 /nbbuild/
 /dist/
 /nbdist/
