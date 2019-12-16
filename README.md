@@ -9,8 +9,8 @@ You can start working by cloning [this template project](https://git.jcdecaux.co
 ```xml
 <dependency>
   <groupId>com.jcdecaux.setl</groupId>
-  <artifactId>setl_2.12</artifactId>
-  <version>0.3.5</version>
+  <artifactId>setl_2.11</artifactId>
+  <version>0.4.0</version>
 </dependency>
 ```
 
