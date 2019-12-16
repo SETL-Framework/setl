@@ -30,6 +30,7 @@ test:2-11:
 test:2-12:
   stage: test
   dependencies:
+    - test:2-11  # execute after the test of 2.11
     - build:2-12
   script:
     - rm -rf pom.xml
