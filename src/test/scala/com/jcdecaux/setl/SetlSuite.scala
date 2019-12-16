@@ -12,7 +12,7 @@ import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
+class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -36,9 +36,9 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   )
 
   test("DCContext should build a spark session") {
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
-      .setDCContextConfigPath("context")
+      .setSetlConfigPath("context")
       .getOrCreate()
 
     val ss = context.spark
@@ -51,9 +51,9 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DCContext should handle spark configuration") {
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
-      .setDCContextConfigPath("app.context")
+      .setSetlConfigPath("setl.config")
       .getOrCreate()
 
     val ss = context.spark
@@ -65,7 +65,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DCContext should handle spark configuration in non local environment (with default config path)") {
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .withDefaultConfigLoader("test_priority")
       .getOrCreate()
 
@@ -79,9 +79,9 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DCContext should handle spark configuration in non local environment (with specific config path)") {
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .withDefaultConfigLoader("test_priority")
-      .setDCContextConfigPath("app.context_2")
+      .setSetlConfigPath("setl.config_2")
       .getOrCreate()
 
     val ss = context.spark
@@ -94,9 +94,9 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DCContext should be able to create SparkRepository") {
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
-      .setDCContextConfigPath("context")
+      .setSetlConfigPath("context")
       .getOrCreate()
 
     val ss = context.spark
@@ -117,7 +117,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DCContext should be able to create a pipeline with all the registered spark repository") {
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
 
@@ -126,8 +126,8 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     context
       .newPipeline()
-      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
-      .addStage(classOf[DCContextSuite.MyFactory2], context.spark)
+      .addStage(classOf[SetlSuite.MyFactory], context.spark)
+      .addStage(classOf[SetlSuite.MyFactory2], context.spark)
       .run()
       .getLastOutput.asInstanceOf[Dataset[TestObject3]]
       .show()
@@ -146,7 +146,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("DCContext should be work with default config loader") {
 
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .withDefaultConfigLoader("myconf.conf")
       .getOrCreate()
 
@@ -159,7 +159,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("SparkException should be thrown when no master url is configured") {
     System.clearProperty("app.environment")
     System.setProperty("app.environment", "dev")
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .withDefaultConfigLoader("myconf.conf")
 
     assertThrows[SparkException](context.getOrCreate())
@@ -169,7 +169,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("User should be able to set master url") {
     System.clearProperty("app.environment")
     System.setProperty("app.environment", "dev")
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .withDefaultConfigLoader("myconf.conf")
       .setSparkMaster("local")
       .getOrCreate()
@@ -179,14 +179,14 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("User should be able to set config file") {
-    val context = DCContext.builder().withDefaultConfigLoader("test_priority.conf").getOrCreate()
+    val context = Setl.builder().withDefaultConfigLoader("test_priority.conf").getOrCreate()
     assert(context.configLoader.get("my.value") === "haha")
   }
 
   test("Default context config path (app.context) should be used") {
     System.clearProperty("app.environment")
     System.setProperty("app.environment", "dev")
-    val context = DCContext.builder().withDefaultConfigLoader("test_priority.conf").getOrCreate()
+    val context = Setl.builder().withDefaultConfigLoader("test_priority.conf").getOrCreate()
     assert(context.configLoader.get("my.value") === "haha")
     assert(context.spark.conf.get("spark.app.name") === "my_app_2")
     System.clearProperty("app.environment")
@@ -195,7 +195,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("Context builder should handle config file path with no extension") {
     System.clearProperty("app.environment")
     System.setProperty("app.environment", "dev")
-    val context = DCContext.builder().withDefaultConfigLoader("test_priority").getOrCreate()
+    val context = Setl.builder().withDefaultConfigLoader("test_priority").getOrCreate()
     assert(context.configLoader.get("my.value") === "haha")
     assert(context.spark.conf.get("spark.app.name") === "my_app_2")
     System.clearProperty("app.environment")
@@ -204,22 +204,22 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("SparkException should be thrown if there is no master url configuration") {
     System.clearProperty("app.environment")
     System.setProperty("app.environment", "dev")
-    val context = DCContext.builder().withDefaultConfigLoader("myconf.conf")
+    val context = Setl.builder().withDefaultConfigLoader("myconf.conf")
     assertThrows[SparkException](context.getOrCreate())
     System.clearProperty("app.environment")
   }
 
   test("DCContext set repository should be able to handle different consumer") {
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
 
-    context.setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]))
+    context.setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]))
     context.setSparkRepository[TestObject]("parquet_dc_context_consumer")
 
     context
       .newPipeline()
-      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(classOf[SetlSuite.MyFactory], context.spark)
       .run()
 
     val repo = context.getSparkRepository[TestObject]("csv_dc_context_consumer")
@@ -231,19 +231,19 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("DCContext should handle connectors with delivery id") {
 
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
 
     context
-      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
       .setConnector("csv_dc_context_consumer", "1")
 
-    val factory = new DCContextSuite.FactoryWithConnectorDeliveryVariable
+    val factory = new SetlSuite.FactoryWithConnectorDeliveryVariable
 
     context
       .newPipeline()
-      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(classOf[SetlSuite.MyFactory], context.spark)
       .addStage(factory)
       .describe()
       .run()
@@ -260,19 +260,19 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("DCContext should handle delivery annotated method with deliveryID") {
 
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
 
     context
-      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
       .setConnector("csv_dc_context_consumer", "1", classOf[CSVConnector])
 
-    val factory = new com.jcdecaux.setl.DCContextSuite.FactoryWithConnectorDeliveryMethod
+    val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorDeliveryMethod
 
     context
       .newPipeline()
-      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(classOf[SetlSuite.MyFactory], context.spark)
       .addStage(factory)
       .describe()
       .run()
@@ -289,19 +289,19 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("DCContext should throw exception when there overloaded delivery setter methods") {
 
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
 
     context
-      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[DCContextSuite.MyFactory]), readCache = true)
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
       .setConnector("csv_dc_context_consumer", "1")
 
-    val factory = new com.jcdecaux.setl.DCContextSuite.FactoryWithConnectorException
+    val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorException
 
     val pipeline = context
       .newPipeline()
-      .addStage(classOf[DCContextSuite.MyFactory], context.spark)
+      .addStage(classOf[SetlSuite.MyFactory], context.spark)
       .addStage(factory)
 
     assertThrows[NoSuchMethodException](pipeline.describe())
@@ -309,7 +309,7 @@ class DCContextSuite extends AnyFunSuite with BeforeAndAfterAll {
 
 }
 
-object DCContextSuite {
+object SetlSuite {
 
   class MyFactory(spark: SparkSession) extends Factory[Dataset[TestObject]] {
 

@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.workflow
 
-import com.jcdecaux.setl.DCContext
+import com.jcdecaux.setl.Setl
 import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.transformation.Factory
 import com.jcdecaux.setl.workflow.PipelineInspectorSuite.{LastFactory, MultipleInputFactory, WrongLastFactory}
@@ -10,7 +10,7 @@ class PipelineInspectorSuite extends AnyFunSuite {
 
   test("Pipeline inspector should handle multiple same-type-delivery with different IDs") {
 
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .withDefaultConfigLoader()
       .setSparkMaster("local")
       .getOrCreate()
@@ -36,7 +36,7 @@ class PipelineInspectorSuite extends AnyFunSuite {
   }
 
   test("Exception should be thrown when delivery id mis-matches") {
-    val context: DCContext = DCContext.builder()
+    val context: Setl = Setl.builder()
       .withDefaultConfigLoader()
       .setSparkMaster("local")
       .getOrCreate()

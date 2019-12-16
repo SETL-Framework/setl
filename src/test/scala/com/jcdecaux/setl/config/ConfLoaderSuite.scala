@@ -37,7 +37,7 @@ class ConfLoaderSuite extends AnyFunSuite {
   test("ConfigLoader builder should take into account the app.environment property in pom") {
     System.clearProperty("app.environment")
     val configLoader = ConfigLoader.builder().getOrCreate()
-    assert(configLoader.appEnv === ConfigFactory.load().getString("app.environment"))
+    assert(configLoader.appEnv === ConfigFactory.load().getString("setl.environment"))
     System.clearProperty("app.environment")
   }
 

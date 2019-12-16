@@ -18,7 +18,7 @@ import scala.reflect.runtime.{universe => ru}
 import scala.util.Random
 
 @InterfaceStability.Evolving
-abstract class DCContext(val configLoader: ConfigLoader) {
+abstract class Setl(val configLoader: ConfigLoader) {
 
   val spark: SparkSession
 
@@ -195,20 +195,20 @@ abstract class DCContext(val configLoader: ConfigLoader) {
   }
 }
 
-object DCContext {
+object Setl {
 
-  class Builder extends com.jcdecaux.setl.Builder[DCContext] {
+  class Builder extends com.jcdecaux.setl.Builder[Setl] {
 
-    private[this] var dcContext: DCContext = _
+    private[this] var setl: Setl = _
     private[this] var contextConfiguration: Option[String] = None
     private[this] var configLoader: ConfigLoader = _
     private[this] var sparkConf: Option[SparkConf] = None
     private[this] var parallelism: Option[Int] = None
     private[this] var sparkMasterUrl: Option[String] = None
 
-    private[this] val fallbackContextConfiguration: String = "app.context"
+    private[this] val fallbackContextConfiguration: String = "setl.config"
 
-    def setDCContextConfigPath(config: String): this.type = {
+    def setSetlConfigPath(config: String): this.type = {
       contextConfiguration = Option(config)
       this
     }
@@ -299,15 +299,15 @@ object DCContext {
      * @return
      */
     override def build(): Builder.this.type = {
-      dcContext = new DCContext(configLoader) {
+      setl = new Setl(configLoader) {
         override val spark: SparkSession = buildSparkSession()
       }
       this
     }
 
-    override def get(): DCContext = dcContext
+    override def get(): Setl = setl
   }
 
-  def builder(): DCContext.Builder = new DCContext.Builder()
+  def builder(): Setl.Builder = new Setl.Builder()
 
 }

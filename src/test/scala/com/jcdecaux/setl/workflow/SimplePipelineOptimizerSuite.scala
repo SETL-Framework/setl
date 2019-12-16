@@ -2,7 +2,7 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
-import com.jcdecaux.setl.{DCContext, SparkSessionBuilder}
+import com.jcdecaux.setl.{Setl, SparkSessionBuilder}
 import org.apache.spark.sql.Dataset
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -62,7 +62,7 @@ class SimplePipelineOptimizerSuite extends AnyFunSuite {
 
   test("Pipeline optimise should opt") {
     System.clearProperty("app.environment")
-    val context = DCContext.builder()
+    val context = Setl.builder()
       .withDefaultConfigLoader("myconf.conf")
       .getOrCreate()
 

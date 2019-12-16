@@ -42,7 +42,8 @@ abstract class ConfigLoader extends Logging {
 
   ConfigFactory.invalidateCaches()
 
-  private[this] val appEnvironmentConfigPath = "app.environment"
+  private[this] val appEnvironmentPropertyKey = "app.environment"
+  private[this] val setlEnvironmentConfigPath = "setl.environment"
 
   val appName: String = "APP"
   protected var applicationEnvironment: Option[String] = None
@@ -63,10 +64,10 @@ abstract class ConfigLoader extends Logging {
   private[this] val defaultConfigAppEnvironment: Option[String] = defaultConfig match {
     case Some(config) =>
       try {
-        Option(config.getString("app.environment"))
+        Option(config.getString(setlEnvironmentConfigPath))
       } catch {
         case _: ConfigException.Missing =>
-          log.debug("No app.environment was found in the default config file")
+          log.debug("No setl.environment was found in the default config file")
           None
         case e: Throwable => throw e
       }
@@ -87,7 +88,7 @@ abstract class ConfigLoader extends Logging {
     case _ => ConfigFactory.load()
   }
 
-  def getAppEnvFromJvmProperties: Option[String] = Option(System.getProperty(appEnvironmentConfigPath))
+  def getAppEnvFromJvmProperties: Option[String] = Option(System.getProperty(appEnvironmentPropertyKey))
 
   /**
    * Update application environment (default LOCAL) by searching in system variables.
@@ -100,7 +101,7 @@ abstract class ConfigLoader extends Logging {
       applicationEnvironment = getAppEnvFromJvmProperties
 
     } else if (defaultConfigAppEnvironment.isDefined) {
-      log.debug(s"Find app.environment=${defaultConfigAppEnvironment.get} in default config file")
+      log.debug(s"Find setl.environment=${defaultConfigAppEnvironment.get} in default config file")
       applicationEnvironment = defaultConfigAppEnvironment
 
     }
