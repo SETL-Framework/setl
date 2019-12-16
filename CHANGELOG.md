@@ -1,3 +1,8 @@
+## 0.4.0 (2019-12-17)
+- BREAKING CHANGE: Renamed **DCContext** to **Setl**
+- Changed the default application environment config path into **setl.environment**
+- Changed the default context config path into **setl.config**
+
 ## 0.3.5 (2019-12-16)
 - BREAKING CHANGE: replace the Spark compatible version by the Scala compatible version in the artifact ID. 
 The old artifact id **dc-spark-sdk_2.4** was changed to **dc-spark-sdk_2.11** (or **dc-spark-sdk_2.12**)
