@@ -17,6 +17,7 @@ build:2-11:
 build:2-12:
   stage: build
   script:
+    - ls -lah
     - rm -rf pom.xml
     - cp dev/pom.xml pom.xml
     - mvn clean $MAVEN_CLI_OPTS $MVN_CMD_CPT_OPTS compile
