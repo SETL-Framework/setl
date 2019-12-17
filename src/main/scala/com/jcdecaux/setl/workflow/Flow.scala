@@ -19,14 +19,13 @@ private[workflow] case class Flow(payload: runtime.universe.Type,
                                   stage: Int,
                                   deliveryId: String = Deliverable.DEFAULT_ID) extends HasDescription {
   override def describe(): this.type = {
-    println("Flow")
     if (deliveryId != Deliverable.DEFAULT_ID) {
-      println(s"Delivery id: $deliveryId")
+      println(s"Delivery id : $deliveryId")
     }
-    println(s"Stage      : $stage")
-    println(s"Direction  : ${from.getPrettyName} ==> ${to.getPrettyName}")
-    println(s"PayLoad    : ${getPrettyName(payload)}")
-    println("--------------------------------------")
+    println(s"Stage       : $stage")
+    println(s"Direction   : ${from.getPrettyName} ==> ${to.getPrettyName}")
+    println(s"PayLoad     : ${getPrettyName(payload)}")
+    println("----------------------------------------------------------")
     this
   }
 }

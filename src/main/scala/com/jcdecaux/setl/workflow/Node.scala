@@ -45,15 +45,15 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
   }
 
   override def describe(): this.type = {
-    println(s"Node   : $getPrettyName")
-    println(s"Stage  : $stage")
+    println(s"Factory : $getPrettyName")
+    println(s"Stage   : $stage")
     input.foreach {
       i =>
         val deliveryId: String = formatDeliveryId(i.deliveryId)
-        println(s"Input  : ${getPrettyName(i.runtimeType)}$deliveryId")
+        println(s"Input   : ${getPrettyName(i.runtimeType)}$deliveryId")
     }
-    println(s"Output : ${getPrettyName(output.runtimeType)}${formatDeliveryId(output.deliveryId)}") //
-    println("--------------------------------------")
+    println(s"Output  : ${getPrettyName(output.runtimeType)}${formatDeliveryId(output.deliveryId)}") //
+    println("----------------------------------------------------------")
     this
   }
 

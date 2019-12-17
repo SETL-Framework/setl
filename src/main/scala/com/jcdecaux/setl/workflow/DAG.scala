@@ -5,11 +5,11 @@ import com.jcdecaux.setl.transformation.{Factory, FactoryDeliveryMetadata}
 private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
 
   def describe(): Unit = {
-    println("----------   Nodes Summary  ----------")
+    println("-------------   Data Transformation Summary  -------------")
     checkEmpty(nodes)
     nodes.toList.sortBy(_.stage).foreach(_.describe())
 
-    println("----------   Flows Summary  ----------")
+    println("------------------   Data Flow Summary  ------------------")
     checkEmpty(flows)
     flows.toList.sortBy(_.stage).foreach(_.describe())
   }
