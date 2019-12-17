@@ -1,5 +1,5 @@
 # SETL
-SETL (Spark ETL) is an open source ETL framework for Apache Spark.
+SETL (Spark ETL, pronounced "settle") is an open source ETL framework for Apache Spark.
 
 ## Use
 ### Create a new project
