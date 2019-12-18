@@ -1,40 +1,31 @@
 package com.jcdecaux.setl.storage.connector
 
 import com.datastax.spark.connector.cql.{CassandraConnector => CC}
-import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
 import com.jcdecaux.setl.config.Properties
 import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-class CassandraConnectorSuite extends AnyFunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
 
 
-  import SparkTemplate.defaultConf
-
-  override def clearCache(): Unit = CC.evictCache()
-
-  //Sets up CassandraConfig and SparkContext
-  System.setProperty("test.cassandra.version", "3.11.4")
-  useCassandraConfig(Seq(YamlTransformations.Default))
-  //  useSparkConf(defaultConf)
-  val connector: CC = CC(defaultConf)
+  val connector: CC = CC(MockCassandra.cassandraConf)
 
   val keyspace = "test_space"
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     new MockCassandra(connector, "test_space")
+      .dropKeyspace()
       .generateKeyspace()
       .generateCountry("countries")
   }
 
   test("Manipulate cassandra table") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
-      //    .setCassandraHost("localhost")
       .build().get()
 
     val cqlConnector = new CassandraConnector(
@@ -69,10 +60,11 @@ class CassandraConnectorSuite extends AnyFunSuite with EmbeddedCassandra with Be
 
   test("Test with auxiliary cassandra connector constructor") {
 
+    println(System.getProperty("testtest", "default"))
+
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
-      //    .setCassandraHost("localhost")
       .build().get()
 
     val cqlConnector = new CassandraConnector(
