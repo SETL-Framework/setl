@@ -1,7 +1,7 @@
 package com.jcdecaux.datacorp.spark.storage.connector
 
 import com.jcdecaux.datacorp.spark.annotation.InterfaceStability
-import com.jcdecaux.datacorp.spark.config.Conf
+import com.jcdecaux.datacorp.spark.config.{Conf, DynamoDBConnectorConf}
 import com.jcdecaux.datacorp.spark.enums.Storage
 import com.jcdecaux.datacorp.spark.util.TypesafeConfigUtils
 import com.typesafe.config.Config
@@ -20,31 +20,31 @@ import org.apache.spark.sql._
  *   }
  * }}}
  *
- * @param region     region of AWS
- * @param table      table name
- * @param saveMode   save mode
- * @param throughput the desired read/write throughput to use
  */
 @InterfaceStability.Evolving
-class DynamoDBConnector(val region: String, // "eu-west-1"
-                        val table: String,
-                        val saveMode: SaveMode,
-                        val throughput: String
-                       ) extends DBConnector {
+class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
 
-  def this(config: Config) = this(
-    region = TypesafeConfigUtils.getAs[String](config, "region").get,
-    table = TypesafeConfigUtils.getAs[String](config, "table").get,
-    saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").getOrElse(SaveMode.ErrorIfExists.toString)),
-    throughput = TypesafeConfigUtils.getAs[String](config, "throughput").getOrElse("10000")
-  )
+  def this(conf: Map[String, String]) = this(new DynamoDBConnectorConf().set(conf))
 
-  def this(conf: Conf) = this(
-    region = conf.get("region").get,
-    table = conf.get("table").get,
-    saveMode = SaveMode.valueOf(conf.get("saveMode", SaveMode.ErrorIfExists.toString)),
-    throughput = conf.get("throughput", "10000")
-  )
+  def this(region: String,
+           table: String,
+           saveMode: SaveMode,
+           throughput: String) = {
+    this(
+      new DynamoDBConnectorConf().set(
+        Map(
+          DynamoDBConnectorConf.REGION -> region,
+          DynamoDBConnectorConf.TABLE -> table,
+          DynamoDBConnectorConf.Writer.UPDATE -> "true",
+          DynamoDBConnectorConf.THROUGHPUT -> throughput
+        )
+      )
+    )
+  }
+
+  def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
+
+  def this(conf: Conf) = this(conf.toMap)
 
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession,
@@ -59,31 +59,32 @@ class DynamoDBConnector(val region: String, // "eu-west-1"
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, conf: Conf) = this(conf)
 
+  private[this] val sourceName: String = "com.audienceproject.spark.dynamodb.datasource"
+
   override val reader: DataFrameReader = {
-    log.debug(s"DynamoDB connector read throughput $throughput")
+    log.debug(s"DynamoDB connector read throughput ${conf.get(DynamoDBConnectorConf.THROUGHPUT)}")
     spark.read
-      .option("region", region)
-      .option("throughput", throughput)
-      .format("com.audienceproject.spark.dynamodb.datasource")
+      .options(conf.getReaderConf)
+      .format(sourceName)
   }
 
   override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
     df.write
-      .mode(saveMode)
-      .option("region", region)
-      .option("throughput", throughput)
-      .format("com.audienceproject.spark.dynamodb.datasource")
+      .options(conf.getWriterConf)
+      .format(sourceName)
   }
 
   override val storage: Storage = Storage.DYNAMODB
 
   private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
+    conf.getWriterConf.foreach(log.debug)
     writer(df).option("tableName", tableName).save()
   }
 
   override def read(): DataFrame = {
-    log.debug(s"Reading DynamoDB table $table in $region")
-    reader.option("tableName", table).load()
+    log.debug(s"Reading DynamoDB table ${conf.getTable.get} in ${conf.getRegion.get}")
+    conf.getReaderConf.foreach(log.debug)
+    reader.option("tableName", conf.getTable.get).load()
   }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = {
@@ -104,6 +105,6 @@ class DynamoDBConnector(val region: String, // "eu-west-1"
   }
 
   override def write(t: DataFrame): Unit = {
-    writeDynamoDB(t, table)
+    writeDynamoDB(t, conf.getTable.get)
   }
 }
