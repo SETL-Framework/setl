@@ -14,13 +14,14 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   private[this] val _read: AtomicBoolean = new AtomicBoolean(false)
   private[this] val _source: String = s"JDBCRelation(${conf.getDbTable.get})"
 
-  def this(url: String, table: String, user: String, password: String) = {
+  def this(url: String, table: String, user: String, password: String, saveMode: SaveMode = SaveMode.ErrorIfExists) = {
     this(
       new JDBCConnectorConf()
         .setUrl(url)
         .setDbTable(table)
         .setUser(user)
         .setPassword(password)
+        .setSaveMode(saveMode)
     )
   }
 

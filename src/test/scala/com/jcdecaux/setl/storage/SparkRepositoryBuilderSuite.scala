@@ -5,7 +5,6 @@ import java.lang.reflect.InvocationTargetException
 import java.sql.{Date, Timestamp}
 
 import com.datastax.spark.connector.cql.CassandraConnector
-import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
 import com.jcdecaux.setl.config.Properties
 import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.UnknownException
@@ -17,21 +16,16 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   import SparkRepositorySuite.deleteRecursively
-  import SparkTemplate.defaultConf
 
-  override def clearCache(): Unit = CassandraConnector.evictCache()
-
-  var mockCassandra: MockCassandra = _
-  System.setProperty("test.cassandra.version", "3.11.4")
-  useCassandraConfig(Seq(YamlTransformations.Default))
-  val connector: CassandraConnector = CassandraConnector(defaultConf)
+  val connector: CassandraConnector = CassandraConnector(MockCassandra.cassandraConf)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    mockCassandra = new MockCassandra(connector, MockCassandra.keyspace)
+    new MockCassandra(connector, MockCassandra.keyspace)
+      .dropKeyspace()
       .generateKeyspace()
       .generateTraffic("traffic")
   }
@@ -51,7 +45,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   test("SparkRepository cassandra") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -83,7 +77,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   test("SparkRepository CSV") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -109,7 +103,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   test("SparkRepository JSON access") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -141,7 +135,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   test("SparkRepository Parquet") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -172,7 +166,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
 
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -210,7 +204,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   test("SparkRepository Customized connector") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -275,7 +269,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   test("SparkRepository throw exceptions") {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 
@@ -290,7 +284,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with EmbeddedCassandra wit
   private[this] def sparkRepositoryBuilderWithConfigTest(config: Config): Unit = {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
 

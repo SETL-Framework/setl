@@ -24,6 +24,9 @@
         <spark.compat.version>2.4</spark.compat.version>
         <dependencies.scope>provided</dependencies.scope>
         <app.environment>local</app.environment>
+        <setl.test.cassandra.host>localhost</setl.test.cassandra.host>
+        <setl.test.postgres.host>localhost</setl.test.postgres.host>
+        <setl.test.dynamodb.host>localhost</setl.test.dynamodb.host>
     </properties>
 
     <organization>
@@ -105,7 +108,7 @@
         <dependency>
             <groupId>com.audienceproject</groupId>
             <artifactId>spark-dynamodb_${scala.compat.version}</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
 
         <!-- TYPESAFE CONFIG -->
@@ -123,39 +126,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.datastax.spark</groupId>
-            <artifactId>spark-cassandra-connector-embedded_${scala.compat.version}</artifactId>
-            <version>2.4.2</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.9</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.cassandra</groupId>
-            <artifactId>cassandra-all</artifactId>
-            <version>3.11.4</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>log4j-over-slf4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>21.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.11</version>
-            <scope>test</scope>
-        </dependency>
+
     </dependencies>
 
     <build>
@@ -255,7 +231,7 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding}
+                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding} -Dsetl.test.cassandra.host=${setl.test.cassandra.host} -Dsetl.test.postgres.host=${setl.test.postgres.host} -Daws.dynamodb.endpoint=http://${setl.test.dynamodb.host}:8000
                     </argLine>
                     <parallel>false</parallel>
                 </configuration>

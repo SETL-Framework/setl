@@ -2,11 +2,18 @@ image: maven:3.6-jdk-8
 
 stages:
   - build
-  - test
+  - test-2.11
+  - test-2.12
   - deploy
 
 variables:
-  MAVEN_CLI_OPTS: "--batch-mode"
+  MAVEN_CLI_OPTS: "--batch-mode -Dsetl.test.cassandra.host=cassandra -Dsetl.test.postgres.host=postgres -Dsetl.test.dynamodb.host=amazon-dynamodb-local"
+  POSTGRES_DB: framework_dev
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  AWS_ACCESS_KEY_ID: fakeAccess
+  AWS_SECRET_ACCESS_KEY: fakeSecret
+  AWS_REGION: eu-west-1
 
 build:2-11:
   stage: build
@@ -20,17 +27,25 @@ build:2-12:
     - cp dev/pom_2.12.xml pom.xml
     - mvn clean $MAVEN_CLI_OPTS compile
 
-test:2-11:
-  stage: test
+test-2.11:
+  stage: test-2.11
+  services:
+    - cassandra
+    - postgres
+    - amazon/dynamodb-local
   dependencies:
     - build:2-11
   script:
     - mvn clean $MAVEN_CLI_OPTS test
 
-test:2-12:
-  stage: test
+test-2.12:
+  stage: test-2.12
+  services:
+    - cassandra
+    - postgres
+    - amazon/dynamodb-local
   dependencies:
-    - build:2-12
+    - test-2.11
   script:
     - rm -rf pom.xml
     - cp dev/pom_2.12.xml pom.xml
@@ -41,7 +56,7 @@ deploy:snapshot:2-11:
   script:
     - mvn clean -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:2-11
+    - test-2.12
   only:
     - master
 
@@ -52,7 +67,7 @@ deploy:snapshot:2-12:
     - cp dev/pom_2.12.xml pom.xml
     - mvn clean -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:2-12
+    - test-2.12
   only:
     - master
 
@@ -61,7 +76,7 @@ deploy:release:2-11:manual:
   script:
     - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:2-11
+    - test-2.12
   only:
     - master
   when: manual
@@ -73,7 +88,7 @@ deploy:release:2-12:manual:
     - cp dev/pom_2.12.xml pom.xml
     - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:2-12
+    - test-2.12
   only:
     - master
   when: manual
@@ -83,7 +98,7 @@ deploy:release:2-11:auto:
   script:
     - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:2-11
+    - test-2.12
   only:
     - /^v.*$/
   except:
@@ -96,7 +111,7 @@ deploy:release:2-12:auto:
     - cp dev/pom_2.12.xml pom.xml
     - mvn clean -Dchangelist= -DskipTests $MAVEN_CLI_OPTS deploy
   dependencies:
-    - test:2-12
+    - test-2.12
   only:
     - /^v.*$/
   except:

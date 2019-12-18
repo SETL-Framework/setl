@@ -3,7 +3,6 @@ package com.jcdecaux.setl.storage
 import java.io.File
 
 import com.datastax.spark.connector.cql.{CassandraConnector => CC}
-import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
 import com.jcdecaux.setl.config.{Conf, Properties}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.{ConfException, UnknownException}
@@ -14,16 +13,9 @@ import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with BeforeAndAfterAll {
+class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
-  import SparkTemplate.defaultConf
-
-  override def clearCache(): Unit = CC.evictCache()
-
-  //Sets up CassandraConfig and SparkContext
-  System.setProperty("test.cassandra.version", "3.11.4")
-  useCassandraConfig(Seq(YamlTransformations.Default))
-  val _connector: CC = CC(defaultConf)
+  val _connector: CC = CC(MockCassandra.cassandraConf)
 
   val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
@@ -40,7 +32,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("build cassandra connector") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()
@@ -60,7 +52,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("build csv connector") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()
@@ -80,7 +72,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("build parquet connector") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()
@@ -99,7 +91,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("build excel connector") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()
@@ -119,7 +111,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("build JSONConnector") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()
@@ -139,7 +131,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("wrong builder configuration") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()
@@ -160,7 +152,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with EmbeddedCassandra with Befo
 
   test("Connector builder with two configurations") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .build()
       .get()

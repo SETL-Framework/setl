@@ -1,0 +1,23 @@
+version: '3.2'
+services:
+  psql:
+    image: "postgres"
+    container_name: "postgres-unit-test"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=framework_dev
+    ports:
+      - "5432:5432"
+
+  cassandra:
+    image: "cassandra"
+    container_name: "cassandra-unit-test"
+    ports:
+      - "9042:9042"
+
+  dynamodb:
+    image: "amazon/dynamodb-local"
+    container_name: "dynamodb-unit-test"
+    ports:
+      - "8000:8000"

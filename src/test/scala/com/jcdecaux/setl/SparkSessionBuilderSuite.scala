@@ -1,7 +1,6 @@
 package com.jcdecaux.setl
 
 import com.datastax.spark.connector.cql.CassandraConnector
-import com.datastax.spark.connector.embedded.{EmbeddedCassandra, SparkTemplate, YamlTransformations}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.cassandra._
@@ -9,47 +8,34 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
 
 
-class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with SequentialNestedSuiteExecution with EmbeddedCassandra {
+class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with SequentialNestedSuiteExecution {
 
-  import SparkTemplate.defaultConf
-
-  override def clearCache(): Unit = CassandraConnector.evictCache()
-
-  //Sets up CassandraConfig and SparkContext
-  System.setProperty("test.cassandra.version", "3.11.4")
-  useCassandraConfig(Seq(YamlTransformations.Default))
-
-  val connector: CassandraConnector = CassandraConnector(defaultConf)
+  val connector: CassandraConnector = CassandraConnector(MockCassandra.cassandraConf)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-
     new MockCassandra(connector, MockCassandra.keyspace)
+      .dropKeyspace()
       .generateKeyspace()
       .generateCountry("countries")
   }
 
   test("Default instantiation") {
     val sparkSessionBuilder = new SparkSessionBuilder()
-
     assert(sparkSessionBuilder.appEnv === "local")
     assert(sparkSessionBuilder.appName === "SparkApplication")
     assert(sparkSessionBuilder.cassandraHost === null)
     assert(sparkSessionBuilder.sparkConf.getClass === classOf[SparkConf])
     assert(sparkSessionBuilder.initialization === true)
     assert(sparkSessionBuilder.spark === null)
-
     sparkSessionBuilder.build()
-
     assert(sparkSessionBuilder.spark != null)
   }
 
   test("Cassandra connection") {
-
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
-      .withSparkConf(SparkTemplate.defaultConf)
+      .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
-      //      .setCassandraHost("localhost")
       .build()
       .get()
 
@@ -58,11 +44,17 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
 
   test("Custom configuration") {
 
-    val sparkConf = SparkTemplate.defaultConf // new SparkConf()
+    val sparkConf = new SparkConf(true)
+      .set("spark.cassandra.connection.port", "9042")
+      .set("spark.cassandra.connection.keep_alive_ms", "5000")
+      .set("spark.cassandra.connection.timeout_ms", "30000")
+      .set("spark.ui.showConsoleProgress", "false")
+      .set("spark.ui.enabled", "false")
+      .set("spark.cleaner.ttl", "3600")
+      .set("spark.cassandra.connection.host", MockCassandra.host)
+      .set("myProperty", "hehehe")
       .setAppName("CustomConfigApp")
       .setMaster("local[*]")
-      .set("spark.cassandra.connection.host", "localhost")
-      .set("myProperty", "hehehe")
 
     val spark = new SparkSessionBuilder()
       .withSparkConf(sparkConf)
