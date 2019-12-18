@@ -22,23 +22,32 @@ abstract class Setl(val configLoader: ConfigLoader) {
 
   val spark: SparkSession
 
-  private[this] val inputRegister: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
+  private[setl] val inputRegister: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
   private[this] val pipelineRegister: ConcurrentHashMap[UUID, Pipeline] = new ConcurrentHashMap()
 
-  private[this] val repositoryId: String => String = config => s"@rpstry.$config"
-  private[this] val connectorId: String => String = config => s"@cnnctr.$config"
+  private[this] val repositoryIdOf: String => String = config => s"@rpstry.$config"
+  private[this] val connectorIdOf: String => String = config => s"@cnnctr.$config"
 
   /**
    * Get a SparkRepository[DT]. If the given config path hasn't been registered, then the repository will
    * firstly be registered and then be returned.
    *
-   * @param config path to spark repository configuration
+   * @param repositoryId path to spark repository configuration
    * @tparam DT type of spark repository
    * @return
    */
-  def getSparkRepository[DT: ru.TypeTag](config: String): SparkRepository[DT] = {
-    setSparkRepository[DT](config)
-    inputRegister.get(repositoryId(config)).payload.asInstanceOf[SparkRepository[DT]]
+  def getSparkRepository[DT: ru.TypeTag](repositoryId: String): SparkRepository[DT] = {
+    setSparkRepository[DT](repositoryId)
+    inputRegister.get(repositoryIdOf(repositoryId)).payload.asInstanceOf[SparkRepository[DT]]
+  }
+
+  def resetSparkRepository[DT: ru.TypeTag](repository: SparkRepository[DT],
+                                           consumer: Seq[Class[_ <: Factory[_]]],
+                                           deliveryId: String,
+                                           repositoryId: String): this.type = {
+    val deliverable = new Deliverable(repository).setConsumers(consumer).setDeliveryId(deliveryId)
+    inputRegister.put(repositoryIdOf(repositoryId), deliverable)
+    this
   }
 
   /**
@@ -56,8 +65,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
                                            deliveryId: String = Deliverable.DEFAULT_ID,
                                            readCache: Boolean = false): this.type = {
     val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).getOrCreate().persistReadData(readCache)
-    val deliverable = new Deliverable(repo).setConsumers(consumer).setDeliveryId(deliveryId)
-    inputRegister.put(repositoryId(config), deliverable)
+    resetSparkRepository(repo, consumer, deliveryId, config)
     this
   }
 
@@ -75,7 +83,19 @@ abstract class Setl(val configLoader: ConfigLoader) {
                                          consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                          deliveryId: String = Deliverable.DEFAULT_ID,
                                          readCache: Boolean = false): this.type = {
-    if (!inputRegister.contains(repositoryId(config))) resetSparkRepository[DT](config, consumer, deliveryId, readCache)
+    if (!inputRegister.contains(repositoryIdOf(config))) {
+      resetSparkRepository[DT](config, consumer, deliveryId, readCache)
+    }
+    this
+  }
+
+  def setSparkRepository[DT: ru.TypeTag](repository: SparkRepository[DT],
+                                         consumer: Seq[Class[_ <: Factory[_]]],
+                                         deliveryId: String,
+                                         repositoryId: String): this.type = {
+    if (!inputRegister.contains(repositoryIdOf(repositoryId))) {
+      resetSparkRepository[DT](repository, consumer, deliveryId, repositoryId)
+    }
     this
   }
 
@@ -83,12 +103,13 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * Get a Connector. If the given config path hasn't been registered, then the connector will
    * firstly be registered and then be returned.
    *
-   * @param config path to connector configuration
+   * @param connectorId id of connector (could be the config path)
    * @tparam CN type of the connector
    * @return
    */
-  def getConnector[CN <: Connector](config: String): CN = {
-    new ConnectorBuilder(configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
+  def getConnector[CN <: Connector](connectorId: String): CN = {
+    setConnector(connectorId)
+    inputRegister.get(connectorIdOf(connectorId)).payload.asInstanceOf[CN]
   }
 
   /**
@@ -101,9 +122,6 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def setConnector(config: String): this.type = this.setConnector(config, config)
 
-  def setConnector[CN <: Connector : ru.TypeTag](config: String, cls: Class[CN]): this.type =
-    this.setConnector(config, config, classOf[Connector])
-
   /**
    * Register a connector.
    *
@@ -114,9 +132,22 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @return
    */
   def setConnector(config: String, deliveryId: String): this.type = {
-    if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId, classOf[Connector])
+    if (!inputRegister.contains(connectorIdOf(config))) resetConnector[Connector](config, deliveryId, classOf[Connector])
     this
   }
+
+  /**
+   * Register a connector. As each connector must have an delivery ID, by default the config path will be used.
+   *
+   * <p>If there this config path has been registered, it will NOT be updated.</p>
+   *
+   * @param config path to connector configuration
+   * @tparam CN type of connector
+   * @return
+   */
+  def setConnector[CN <: Connector : ru.TypeTag](config: String, cls: Class[CN]): this.type =
+    this.setConnector[CN](config, config, cls)
+
 
   /**
    * Register a connector.
@@ -130,38 +161,59 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @return
    */
   def setConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
-    if (!inputRegister.contains(connectorId(config))) resetConnector(config, deliveryId, cls)
+    if (!inputRegister.contains(connectorIdOf(config))) resetConnector[CN](config, deliveryId, cls)
     this
   }
 
   /**
-   * Force register a connector. As each connector must have an delivery ID, by default the config path will be used.
+   * Register a connector.
    *
-   * <p>If there this config path has been registered, it will be updated.</p>
+   * <p>If there this config path has been registered, it will NOT be updated.</p>
    *
-   * @param config path to connector configuration
+   * @param connector   a connector
+   * @param deliveryId  delivery ID
+   * @param connectorId id of the Connector
+   * @tparam CN type of spark connector
    * @return
    */
-  def resetConnector(config: String): this.type = this.resetConnector(config, config, classOf[Connector])
+  def setConnector[CN <: Connector : ru.TypeTag](connector: CN, deliveryId: String, connectorId: String): this.type = {
+    if (!inputRegister.contains(connectorIdOf(connectorId))) {
+      resetConnector[CN](connector, deliveryId, connectorId)
+    }
+    this
+  }
 
   /**
    * Register a connector.
    *
    * <p>If there this config path has been registered, it will be updated.</p>
    *
-   * @param config     path to connector configuration
+   * @param configPath path to connector configuration
    * @param deliveryId delivery ID
    * @param cls        class of the Connector
    * @tparam CN type of spark connector
    * @return
    */
-  def resetConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
-    val payload = new ConnectorBuilder(configLoader.getConfig(config)).getOrCreate().asInstanceOf[CN]
-    val deliverable = new Deliverable(payload).setDeliveryId(deliveryId)
-    inputRegister.put(connectorId(config), deliverable)
-    this
+  def resetConnector[CN <: Connector : ru.TypeTag](configPath: String, deliveryId: String, cls: Class[CN]): this.type = {
+    val payload = new ConnectorBuilder(configLoader.getConfig(configPath)).getOrCreate().asInstanceOf[CN]
+    resetConnector[CN](payload, deliveryId, configPath)
   }
 
+  /**
+   * Register a connector.
+   *
+   * <p>If there this config path has been registered, it will be updated.</p>
+   *
+   * @param connector  a connector
+   * @param deliveryId delivery ID
+   * @tparam CN type of spark connector
+   * @return
+   */
+  def resetConnector[CN <: Connector : ru.TypeTag](connector: CN, deliveryId: String, connectorId: String): this.type = {
+    val deliverable = new Deliverable(connector).setDeliveryId(deliveryId)
+    inputRegister.put(connectorIdOf(connectorId), deliverable)
+    this
+  }
 
   def sparkSession: SparkSession = this.spark
 

@@ -2,9 +2,9 @@ package com.jcdecaux.setl
 
 import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.config.ConfigLoader
-import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, FileConnector}
 import com.jcdecaux.setl.storage.repository.SparkRepository
+import com.jcdecaux.setl.storage.{Condition, ConnectorBuilder, SparkRepositoryBuilder}
 import com.jcdecaux.setl.transformation.Factory
 import org.apache.spark.SparkException
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
@@ -258,7 +258,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     context.getConnector("csv_dc_context_consumer").asInstanceOf[FileConnector].delete()
   }
 
-  test("DCContext should handle delivery annotated method with deliveryID") {
+  test("Setl should handle delivery annotated method with deliveryID") {
 
     val context = Setl.builder()
       .setConfigLoader(configLoader)
@@ -267,6 +267,38 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     context
       .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
       .setConnector("csv_dc_context_consumer", "1", classOf[CSVConnector])
+
+    val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorDeliveryMethod
+
+    context
+      .newPipeline()
+      .addStage(classOf[SetlSuite.MyFactory], context.spark)
+      .addStage(factory)
+      .describe()
+      .run()
+
+    val output = factory.get()
+    output.show()
+    assert(output.count() === 2)
+    assert(output.collect() === Array(
+      TestObject(1, "a", "A", 1L),
+      TestObject(2, "b", "B", 2L)
+    ))
+    context.getConnector[FileConnector]("csv_dc_context_consumer").delete()
+  }
+
+  test("Setl should handle user instantiated repositories and connectors") {
+
+    val context = Setl.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    val repo = new SparkRepositoryBuilder[TestObject](context.configLoader.getConfig("csv_dc_context_consumer")).getOrCreate()
+    val connector = new ConnectorBuilder(context.configLoader.getConfig("csv_dc_context_consumer")).getOrCreate().asInstanceOf[CSVConnector]
+
+    context
+      .setSparkRepository[TestObject](repo, Seq(classOf[SetlSuite.MyFactory]), "", "repository1")
+      .setConnector(connector, "1", "connector1")
 
     val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorDeliveryMethod
 
