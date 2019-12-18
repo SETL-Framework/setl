@@ -11,6 +11,8 @@ The old artifact id **dc-spark-sdk_2.4** was changed to **dc-spark-sdk_2.11** (o
 - Added Scala 2.12 support
 - Removed **SparkSession** from Connector and SparkRepository constructor (old constructors are kept but now deprecated)
 - Added **Column** type support in FindBy method of **SparkRepository** and **Condition**
+- Added method **setConnector** and **setRepository** in **Setl** that accept 
+object of type Connector/SparkRepository
 
 ## 0.3.4 (2019-12-06)
 - Added read cache into spark repository to avoid consecutive disk IO.
