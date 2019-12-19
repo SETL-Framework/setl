@@ -1,7 +1,7 @@
 package com.jcdecaux.setl.storage.connector
 
 import com.jcdecaux.setl.annotation.InterfaceStability
-import com.jcdecaux.setl.config.{Conf, ConnectorConf}
+import com.jcdecaux.setl.config.{Conf, FileConnectorConf}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
@@ -11,9 +11,9 @@ import org.apache.spark.sql._
  * ParquetConnector contains functionality for transforming [[DataFrame]] into parquet files
  */
 @InterfaceStability.Evolving
-class ParquetConnector(override val options: ConnectorConf) extends FileConnector(options) {
+class ParquetConnector(override val options: FileConnectorConf) extends FileConnector(options) {
 
-  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+  def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
   def this(path: String, saveMode: SaveMode) = this(Map("path" -> path, "saveMode" -> saveMode.toString))
 
@@ -22,10 +22,10 @@ class ParquetConnector(override val options: ConnectorConf) extends FileConnecto
   def this(conf: Conf) = this(conf.toMap)
 
   @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: ConnectorConf) = this(options)
+  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
 
   @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+  def this(spark: SparkSession, options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, path: String, saveMode: SaveMode) = this(path, saveMode)

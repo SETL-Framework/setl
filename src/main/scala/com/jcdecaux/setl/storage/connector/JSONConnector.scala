@@ -3,7 +3,7 @@ package com.jcdecaux.setl.storage.connector
 import java.nio.charset.StandardCharsets
 
 import com.jcdecaux.setl.annotation.InterfaceStability
-import com.jcdecaux.setl.config.{Conf, ConnectorConf}
+import com.jcdecaux.setl.config.{Conf, FileConnectorConf}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
@@ -66,19 +66,19 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
  * </ul>
  **/
 @InterfaceStability.Evolving
-class JSONConnector(override val options: ConnectorConf) extends FileConnector(options) {
+class JSONConnector(override val options: FileConnectorConf) extends FileConnector(options) {
 
-  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+  def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
   def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
 
   def this(conf: Conf) = this(conf.toMap)
 
   @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: ConnectorConf) = this(options)
+  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
 
   @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: Map[String, String]) = this(spark, ConnectorConf.fromMap(options))
+  def this(spark: SparkSession, options: Map[String, String]) = this(spark, FileConnectorConf.fromMap(options))
 
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))

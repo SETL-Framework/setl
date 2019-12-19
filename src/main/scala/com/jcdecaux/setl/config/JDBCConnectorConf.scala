@@ -2,7 +2,7 @@ package com.jcdecaux.setl.config
 
 import org.apache.spark.sql.SaveMode
 
-class JDBCConnectorConf extends Conf {
+class JDBCConnectorConf extends ConnectorConf {
 
   import JDBCConnectorConf._
 
@@ -58,12 +58,12 @@ class JDBCConnectorConf extends Conf {
 
   def getFormat: Option[String] = Option(FORMAT)
 
-  def getReaderConf: Map[String, String] = {
+  override def getReaderConf: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap - BATCH_SIZE - TRUNCATE - SAVEMODE - FORMAT
   }
 
-  def getWriterConf: Map[String, String] = {
+  override def getWriterConf: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap - FETCH_SIZE - FORMAT - SAVEMODE - PARTITION_COLUMN - LOWER_BOUND - UPPER_BOUND
   }

@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
-import com.jcdecaux.setl.config.ConnectorConf
+import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.util.HasSparkSession
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
@@ -18,12 +18,12 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val options: ConnectorConf) extends Connector with HasSparkSession {
+abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasSparkSession {
 
-  def this(options: Map[String, String]) = this(ConnectorConf.fromMap(options))
+  def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
   @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: ConnectorConf) = this(options)
+  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
 
   // Note: this constructor was added to keep the backward compatibility
   @deprecated("use the constructor with no spark session", "0.3.4")
@@ -391,7 +391,7 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
   }
 
   @inline private[this] def initReader(): DataFrameReader = {
-    this.spark.read.options(options.getDataFrameReaderOptions)
+    this.spark.read.options(options.getReaderConf)
   }
 
   /**
@@ -410,7 +410,7 @@ abstract class FileConnector(val options: ConnectorConf) extends Connector with 
 
     reOrderedDf.write
       .mode(options.getSaveMode)
-      .options(options.getDataFrameWriterOptions)
+      .options(options.getWriterConf)
       .partitionBy(partition: _*)
   }
 

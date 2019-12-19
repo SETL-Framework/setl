@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.config
 
-class DynamoDBConnectorConf extends Conf {
+class DynamoDBConnectorConf extends ConnectorConf {
 
   import DynamoDBConnectorConf._
 
@@ -12,12 +12,12 @@ class DynamoDBConnectorConf extends Conf {
 
   def getReadPartitions: Option[String] = get(Reader.READ_PARTITIONS)
 
-  def getReaderConf: Map[String, String] = {
+  override def getReaderConf: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap - Writer.WRITE_BATCH_SIZE - Writer.UPDATE - TABLE
   }
 
-  def getWriterConf: Map[String, String] = {
+  override def getWriterConf: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap -
       Reader.READ_PARTITIONS -
