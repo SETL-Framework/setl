@@ -30,7 +30,7 @@ Otherwise, add to your `pom.xml`
 ```
 
 ## Documentation
-[Click here](https://git.jcdecaux.com/DataCorp/dc-spark-sdk/wikis/home)
+[Click here](https://github.com/JCDecaux/setl)
 
 ## Development
 All the modifications in the master branche will be deployed to the snapshot repository.
