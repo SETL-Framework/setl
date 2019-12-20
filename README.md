@@ -20,8 +20,6 @@ You can start working by cloning [this template project](https://github.com/qxzz
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)
 
-## Development
-All the modifications in the master branche will be deployed to the snapshot repository.
-
-All the tags starting with `v` will be deployed to the release repository.
+## Contributing to SETL
+[Check our contributing guide](https://github.com/JCDecaux/setl/blob/master/CONTRIBUTING.md)
 
