@@ -22,3 +22,11 @@ docker-compose -f ./dev/docker-compose.yml up
 ```
 
 Then you can start the unit test with `mvn clean test`
+
+## Styleguide
+
+### Commit styleguide
+Please refer to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
+
+### Scala styleguide
+Please refer to [Databricks Scala Guide](https://github.com/databricks/scala-style-guide)
