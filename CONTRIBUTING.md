@@ -1,6 +1,6 @@
 # Contributing to SETL
 
-Thanks a lot for taking time to contribute :+1:
+Thanks a looooot for taking time to contribute :+1:
 
 ## Bug report
 When you are creating a bug report, please include as many details as possible. 
