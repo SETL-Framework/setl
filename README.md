@@ -2,6 +2,9 @@
 SETL (Spark ETL, pronounced "settle") is an open source ETL framework for Apache Spark.
 
 ## Use
+
+**The framework will be available in Maven Central Repository very soon!** For instance, run `mvn clear install -DskipTests` on local to install the package.
+
 ### Create a new project
 You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
 
