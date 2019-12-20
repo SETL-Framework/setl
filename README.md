@@ -3,7 +3,7 @@ SETL (Spark ETL, pronounced "settle") is an open source ETL framework for Apache
 
 ## Use
 ### Create a new project
-You can start working by cloning [this template project](https://github.com/JCDecaux/setl).
+You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
 
 ### Use in an existing project
 ```xml
