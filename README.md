@@ -17,21 +17,6 @@ You can start working by cloning [this template project](https://github.com/qxzz
 </dependency>
 ```
 
-Make sure that you have already added **nexus.jcdecaux.com** into the project repositories. 
-Otherwise, add to your `pom.xml`
-```xml
-<repositories>
-  <repository>
-    <id>nexus-datacorp-snapshots</id>
-    <url>http://nexus.jcdecaux.com/repository/snapshots-DATACORP/</url>
-  </repository>
-  <repository>
-    <id>nexus-datacorp-releases</id>
-    <url>http://nexus.jcdecaux.com/repository/releases-DATACORP/</url>
-  </repository>
-</repositories>
-```
-
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)
 
