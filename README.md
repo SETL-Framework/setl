@@ -3,7 +3,7 @@ SETL (Spark ETL, pronounced "settle") is an open source ETL framework for Apache
 
 ## Use
 ### Create a new project
-You can start working by cloning [this template project](https://git.jcdecaux.com/qin/spark-framework-template).
+You can start working by cloning [this template project](https://github.com/JCDecaux/setl).
 
 ### Use in an existing project
 ```xml
@@ -30,7 +30,7 @@ Otherwise, add to your `pom.xml`
 ```
 
 ## Documentation
-[Click here](https://github.com/JCDecaux/setl)
+[Click here](https://git.jcdecaux.com/DataCorp/dc-spark-sdk/wikis/home)
 
 ## Development
 All the modifications in the master branche will be deployed to the snapshot repository.
