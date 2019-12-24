@@ -13,12 +13,14 @@ phases:
       docker: 18
   pre_build:
     commands:
-      - echo Nothing to do in the pre_build phase...
+      - echo starting services
       - docker version
       - docker-compose -f ./dev/docker-compose.yml up -d
   build:
     commands:
-      - mvn clean test
+#      - mvn clean package
+      - echo ${AWS_ACCESS_KEY_ID}
+      - echo ${MY_VAR}
   post_build:
     commands:
       - echo Build completed on `date`
