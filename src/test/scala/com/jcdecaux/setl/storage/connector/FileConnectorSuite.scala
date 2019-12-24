@@ -107,7 +107,14 @@ class FileConnectorSuite extends AnyFunSuite {
   test("File connector functionality") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
-    assert(connector2(spark).getSize === 624)
+    val targetSizeBytes = if (System.getProperty("line.separator").length() == 2) {
+      665  // windows line separator
+    } else {
+      624  // otherwise
+    }
+
+    assert(connector2(spark).getSize === targetSizeBytes)
+
   }
 
   test("FileConnector should throw exception with we try add suffix to an already-saved non-suffix directory") {
