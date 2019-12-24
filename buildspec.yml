@@ -18,8 +18,7 @@ phases:
       - docker-compose -f ./dev/docker-compose.yml up -d
   build:
     commands:
-      - chmod +x ./mvnw
-      - ./mvnw clean test
+      - mvn clean test
   post_build:
     commands:
       - echo Build completed on `date`
