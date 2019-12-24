@@ -15,7 +15,8 @@ phases:
     commands:
       - echo Nothing to do in the pre_build phase...
       - docker version
-      - docker-compose -f ./dev/docker-compose.yml up
+      - docker-compose -f ./dev/docker-compose.yml up -d
+      - sleep 30s
   build:
     commands:
       - ./mvnw clean test
