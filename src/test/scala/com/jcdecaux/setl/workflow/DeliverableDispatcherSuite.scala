@@ -81,9 +81,9 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
   class Test extends Factory[String] {
 
     @Delivery(producer = classOf[P1], optional = true)
-    var v1: String = _
+    private[workflow] var v1: String = _
     @Delivery(producer = classOf[P2], optional = true)
-    var v2: String = _
+    private[workflow] var v2: String = _
 
     var output: String = _
 

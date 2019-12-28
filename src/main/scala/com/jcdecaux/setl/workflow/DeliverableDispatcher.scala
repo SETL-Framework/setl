@@ -289,13 +289,14 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
             log.debug(s"Invoke ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
             val consumerClass = consumer.getClass
             val consumerSetter = try {
-              consumerClass.getMethod(deliveryMeta.name, args.map(_.payloadClass): _*)
+              consumerClass.getDeclaredMethod(deliveryMeta.name, args.map(_.payloadClass): _*)
             } catch {
               case _: NoSuchMethodException =>
                 log.debug("Can't invoke setter method. Retry with assignable class")
-                getMethodWithAssignableType(consumerClass, deliveryMeta, args)
+                getDeclaredMethodWithAssignableType(consumerClass, deliveryMeta, args)
             }
 
+            consumerSetter.setAccessible(true)
             consumerSetter.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
           }
       }
@@ -303,7 +304,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
   }
 
   /**
-   * In the case where getMethod(name, argsParameterTypes) fails, this method will be called. It will match
+   * In the case where getDeclaredMethod(name, argsParameterTypes) fails, this method will be called. It will match
    * the consumerClass's method by looking at the name and the parameter types, which are assignable from the
    * given arguments types. In other words, the parameters of the setter methods should be the super-class of
    * the input arguments.
@@ -313,10 +314,10 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
    * @param deliverable      list of deliverable for this delivery
    * @return
    */
-  private[this] def getMethodWithAssignableType(consumerClass: Class[_ <: Factory[_]],
-                                                deliveryMetadata: FactoryDeliveryMetadata,
-                                                deliverable: Seq[Deliverable[_]]): java.lang.reflect.Method = {
-    val availableMethods = consumerClass.getMethods.filter { method =>
+  private[this] def getDeclaredMethodWithAssignableType(consumerClass: Class[_ <: Factory[_]],
+                                                        deliveryMetadata: FactoryDeliveryMetadata,
+                                                        deliverable: Seq[Deliverable[_]]): java.lang.reflect.Method = {
+    val availableMethods = consumerClass.getDeclaredMethods.filter { method =>
 
       val deliveryPresent = if (method.getName.endsWith("_$eq")) {
         // Do not check isAnnotationPresent here because the setter method
