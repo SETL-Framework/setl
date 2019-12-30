@@ -300,7 +300,7 @@ object PipelineSuite {
 
   class ProductFactory extends Factory[Product1] {
     @Delivery
-    private var id: String = _
+    private[this] var id: String = _
     private[this] var output: Product1 = _
 
     override def read(): ProductFactory.this.type = this

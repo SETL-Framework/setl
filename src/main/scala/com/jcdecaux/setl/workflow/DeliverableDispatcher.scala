@@ -1,5 +1,7 @@
 package com.jcdecaux.setl.workflow
 
+import java.lang.reflect.{Field, Method}
+
 import com.jcdecaux.setl.annotation.{Delivery, InterfaceStability}
 import com.jcdecaux.setl.exception.{AlreadyExistsException, InvalidDeliveryException}
 import com.jcdecaux.setl.internal.{HasUUIDRegistry, Logging}
@@ -289,19 +291,51 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
             log.debug(s"Invoke ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
             val consumerClass = consumer.getClass
             val consumerSetter = try {
-              consumerClass.getDeclaredMethod(deliveryMeta.name, args.map(_.payloadClass): _*)
+              getFieldOrMethod(consumerClass, deliveryMeta, args.map(_.payloadClass))
             } catch {
               case _: NoSuchMethodException =>
                 log.debug("Can't invoke setter method. Retry with assignable class")
-                getDeclaredMethodWithAssignableType(consumerClass, deliveryMeta, args)
+                Right(getDeclaredMethodWithAssignableType(consumerClass, deliveryMeta, args))
+              case e: Throwable => throw e
             }
 
-            consumerSetter.setAccessible(true)
-            consumerSetter.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
+            consumerSetter match {
+              case Left(field) =>
+                field.setAccessible(true)
+                field.set(consumer, args.head.get.asInstanceOf[Object])
+
+              case Right(method) =>
+                method.setAccessible(true)
+                method.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
+            }
           }
       }
     this
   }
+
+  @throws[NoSuchMethodException]
+  @throws[NoSuchFieldException]
+  @throws[SecurityException]
+  private[this] def getFieldOrMethod(consumerClass: Class[_ <: Factory[_]],
+                                     deliveryMeta: FactoryDeliveryMetadata,
+                                     argClass: Seq[Class[_]]): Either[Field, Method] = {
+    if (deliveryMeta.symbol.isMethod) {
+      Right(consumerClass.getDeclaredMethod(deliveryMeta.name, argClass: _*))
+    } else {
+      Left(consumerClass.getDeclaredField(deliveryMeta.name))
+    }
+  }
+
+  /**
+   * For two seq of classes, check if each element of the first seq is assignable from the element of the same
+   * index in the second seq
+   */
+  private[this] val isAssignable: (Seq[Class[_]], Seq[Class[_]]) => Boolean = (paramTypes, argTypes) => {
+    argTypes.zip(paramTypes).map {
+      case (arg, param) => param.isAssignableFrom(arg)
+    }.forall(_ == true)
+  }
+
 
   /**
    * In the case where getDeclaredMethod(name, argsParameterTypes) fails, this method will be called. It will match
@@ -316,7 +350,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
    */
   private[this] def getDeclaredMethodWithAssignableType(consumerClass: Class[_ <: Factory[_]],
                                                         deliveryMetadata: FactoryDeliveryMetadata,
-                                                        deliverable: Seq[Deliverable[_]]): java.lang.reflect.Method = {
+                                                        deliverable: Seq[Deliverable[_]]): Method = {
     val availableMethods = consumerClass.getDeclaredMethods.filter { method =>
 
       val deliveryPresent = if (method.getName.endsWith("_$eq")) {
@@ -332,12 +366,6 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
 
     if (availableMethods.isEmpty) throw new NoSuchMethodException(s"No method ${deliveryMetadata.name} was found")
     log.debug(s"Find ${availableMethods.length} methods having the name ${deliveryMetadata.name}")
-
-    val isAssignable: (Seq[Class[_]], Seq[Class[_]]) => Boolean = (paramTypes, argTypes) => {
-      argTypes.zip(paramTypes).map {
-        case (arg, param) => param.isAssignableFrom(arg)
-      }.forall(_ == true)
-    }
 
     val argTypes = deliverable.map(_.payloadClass)
     val matchedSetters = availableMethods.filter(method => isAssignable(method.getParameterTypes, argTypes))

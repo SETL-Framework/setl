@@ -13,20 +13,22 @@ import scala.reflect.runtime
  * argument types, the producer and optional
  *
  * @param factoryUUID UUID of factory
- * @param name        name of the method
+ * @param symbol        symbol of the method
  * @param argTypes    type of each argument
  * @param producer    the producer class for the given data
  * @param optional    true if optional
  */
 @InterfaceStability.Evolving
 private[setl] case class FactoryDeliveryMetadata(factoryUUID: UUID,
-                                                 name: String,
+                                                 symbol: runtime.universe.Symbol,
                                                  argTypes: List[runtime.universe.Type],
                                                  producer: Class[_ <: Factory[_]],
                                                  optional: Boolean,
                                                  autoLoad: Boolean = false,
                                                  condition: String = "",
                                                  id: String = Deliverable.DEFAULT_ID) {
+
+  def name: String = symbol.name.toString.trim
 
   /**
    * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
@@ -85,6 +87,7 @@ private[setl] object FactoryDeliveryMetadata {
       metadata = symbolsWithDeliveryAnnotation.map {
         symbol =>
           val delivery: Delivery = if (symbol.isMethod) {
+            log.debug(s"Find method `${symbol.name}` in ${cls.getSimpleName} to be delivered")
             val methods = cls
               .getDeclaredMethods
               .filter(mth => mth.getName == symbol.name.toString && mth.isAnnotationPresent(classOf[Delivery]))
@@ -94,18 +97,10 @@ private[setl] object FactoryDeliveryMetadata {
 
             methods.head.getAnnotation(classOf[Delivery])
           } else {
+            log.debug(s"Find field `${symbol.name}` in ${cls.getSimpleName} to be delivered")
             cls
               .getDeclaredField(symbol.name.toString.trim)
               .getAnnotation(classOf[Delivery])
-          }
-
-          val name = if (symbol.isMethod) {
-            log.debug(s"Find annotated method `${symbol.name}` in ${cls.getSimpleName}")
-            symbol.name.toString
-          } else {
-            // If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-            log.debug(s"Find annotated variable `${symbol.name.toString.trim}` in ${cls.getSimpleName}")
-            symbol.name.toString.trim + "_$eq"
           }
 
           val argTypes = if (symbol.isMethod) {
@@ -116,7 +111,7 @@ private[setl] object FactoryDeliveryMetadata {
 
           FactoryDeliveryMetadata(
             factoryUUID = factoryUUID,
-            name = name,
+            symbol = symbol,
             argTypes = argTypes,
             producer = getDeliveryParameter[Class[_ <: Factory[_]]](delivery, "producer"),
             optional = getDeliveryParameter[Boolean](delivery, "optional"),

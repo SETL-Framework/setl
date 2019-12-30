@@ -34,7 +34,7 @@ class NodeSuite extends AnyFunSuite {
 
   val testMetadata: FactoryDeliveryMetadata = FactoryDeliveryMetadata(
     UUID.randomUUID(),
-    name = "setterMethodName",
+    symbol = null,
     argTypes = List(runtime.universe.typeOf[Int]),
     producer = null,
     optional = false
