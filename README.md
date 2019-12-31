@@ -1,9 +1,21 @@
 # SETL
-SETL (Spark ETL, pronounced "settle") is an open source ETL framework for Apache Spark.
+SETL (Spark ETL, pronounced "settle") is an open-source Spark ETL framework that helps developers to structure ETL projects, modularize data transformation components and speed up the development.
 
 ## Use
 
-**The framework will be available in Maven Central Repository very soon!** For instance, run `mvn clean install -DskipTests -Dchangelist=` on local to install the package.
+**Currently, only the SNAPSHOT version is available. The release version will be available very soon in the Central Repository** 
+
+To use the SNAPSHOT version: 
+
+Add Sonatype snapshot repository to your `pom.xml`
+```xml
+<repositories>
+  <repository>
+    <id>ossrh-snapshots</id>
+    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+  </repository>
+</repositories>
+```
 
 ### Create a new project
 You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
@@ -13,7 +25,7 @@ You can start working by cloning [this template project](https://github.com/qxzz
 <dependency>
   <groupId>com.jcdecaux.setl</groupId>
   <artifactId>setl_2.11</artifactId>
-  <version>0.4.0</version>
+  <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
