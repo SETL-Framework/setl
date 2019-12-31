@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "[SETL-XXXX] Feature request title"
+title: "Feature request title"
 labels: enhancement
 assignees: ''
 
