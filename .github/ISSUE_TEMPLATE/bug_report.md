@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: "[SETL-XXXX] Issue title"
+title: "Issue title"
 labels: bug
 assignees: ''
 
