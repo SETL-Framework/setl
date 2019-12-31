@@ -3,6 +3,8 @@
 - Changed the default application environment config path into **setl.environment**
 - Changed the default context config path into **setl.config**
 - Fixed issue of DynamoDBConnector that doesn't take user configuration
+- Optimized **DeliverableDispatcher**
+- Added support for private variable delivery
 
 ## 0.3.5 (2019-12-16)
 - BREAKING CHANGE: replace the Spark compatible version by the Scala compatible version in the artifact ID. 
