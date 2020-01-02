@@ -1,6 +1,7 @@
 package com.jcdecaux.setl.internal
 
 import com.jcdecaux.setl.SparkSessionBuilder
+import com.jcdecaux.setl.annotation.{ColumnName, CompoundKey}
 import com.jcdecaux.setl.exception.InvalidSchemaException
 import com.jcdecaux.setl.internal.TestClasses._
 import org.apache.spark.sql.types.BinaryType
@@ -125,6 +126,47 @@ class SchemaConverterSuite extends AnyFunSuite {
     decompressed2.show()
     assert(test.head === decompressed2.head)
   }
+
+  test("SchemaConverter should only keep the columns defined in the case class") {
+    import SchemaConverterSuite._
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val dataWithInferedSchema = spark.read
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("src/test/resources/test_schema_converter.csv")
+
+    assert(SchemaConverter.fromDF[TestClass1](dataWithInferedSchema).columns.length === 4)
+    assert(SchemaConverter.fromDF[TestClass2](dataWithInferedSchema).columns.length === 3)
+    assert(SchemaConverter.fromDF[TestClass3](dataWithInferedSchema).columns === Array("column1", "column3", "column4"))
+    assert(
+      SchemaConverter.fromDF[TestClass4](dataWithInferedSchema).columns === Array("column3", "column1", "column4"),
+    "columns should be re-ordered"
+    )
+
+
+    SchemaConverter.fromDF[TestClass5](dataWithInferedSchema).show()
+  }
+
+}
+
+object SchemaConverterSuite {
+
+  case class TestClass1(col1: Double, col2: Int, col3: String, col4: String)
+
+  case class TestClass2(col1: Double, col3: String, col4: String)
+
+  case class TestClass3(@ColumnName("col1") column1: Double,
+                        @ColumnName("col3") column3: String,
+                        @ColumnName("col4") column4: String)
+
+  case class TestClass4(@ColumnName("col3") column3: String,
+                        @ColumnName("col1") column1: Double,
+                        @ColumnName("col4") column4: String)
+
+  case class TestClass5(@CompoundKey("test", "1") @ColumnName("col3") column3: String,
+                        @ColumnName("col1") column1: Double,
+                        @ColumnName("col4") column4: String)
 
 }
 

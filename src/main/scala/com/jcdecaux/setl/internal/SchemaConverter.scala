@@ -42,7 +42,7 @@ import scala.reflect.runtime.{universe => ru}
  *
  * }}}
  */
-object SchemaConverter {
+object SchemaConverter extends Logging {
 
   private[this] val compoundKeySuffix: String = "_key"
   private[this] val compoundKeyPrefix: String = "_"
@@ -201,6 +201,10 @@ object SchemaConverter {
       .filter(_.metadata.contains(CompoundKey.toString()))
       .map(_.metadata.getStringArray(CompoundKey.toString())(0))
       .toSet
+
+    if (columnsToDrop.nonEmpty && dataFrame.columns.intersect(columnsToDrop.toSeq).isEmpty) {
+      log.warn("Some compound key columns are missing in the data source")
+    }
 
     columnsToDrop
       .foldLeft(dataFrame)((df, col) => df.drop(compoundKeyName(col)))
