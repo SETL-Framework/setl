@@ -9,7 +9,7 @@ import org.apache.spark.sql.types.{MetadataBuilder, StructField, StructType}
 
 import scala.reflect.runtime.{universe => ru}
 
-object StructAnalyser {
+object StructAnalyser extends Logging {
 
   /**
    * Analyse the metadata of the generic type T. Fetch information for its annotated fields.
@@ -28,7 +28,7 @@ object StructAnalyser {
       case (field, index) =>
 
         val schema = ScalaReflection.schemaFor(field.typeSignature)
-        val sparkType = schema.dataType
+        val dataType = schema.dataType
         var nullable = schema.nullable
 
         // Black magic from here:
@@ -60,7 +60,7 @@ object StructAnalyser {
         val metadataBuilder = new MetadataBuilder()
         annotations.foreach(annoData => metadataBuilder.putStringArray(annoData._1, annoData._2))
 
-        StructField(field.name.toString, sparkType, nullable, metadataBuilder.build())
+        StructField(field.name.toString, dataType, nullable, metadataBuilder.build())
     }
 
     StructType(sparkFields)
