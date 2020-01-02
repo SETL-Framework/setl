@@ -42,7 +42,7 @@ import scala.reflect.runtime.{universe => ru}
  *
  * }}}
  */
-object SchemaConverter {
+object SchemaConverter extends Logging {
 
   private[this] val compoundKeySuffix: String = "_key"
   private[this] val compoundKeyPrefix: String = "_"
@@ -77,6 +77,8 @@ object SchemaConverter {
           } else {
             false
           }
+
+          // add an empty column only if the DF contains neither the field nor the field's alias
           (!dfContainsFieldName) && (!dfContainsFieldAlias)
       }
 
@@ -149,9 +151,7 @@ object SchemaConverter {
       .map(x => x.metadata.getStringArray(ColumnName.toString())(0) -> x.name)
       .toMap
 
-    val newColumns = dataFrame.columns.map(columnName => changes.getOrElse(columnName, columnName))
-
-    dataFrame.toDF(newColumns: _*)
+    dataFrame.transform(renameColumnsOfDataFrame(changes))
   }
 
   /**
@@ -187,9 +187,14 @@ object SchemaConverter {
       .map(x => x.name -> x.metadata.getStringArray(ColumnName.toString())(0))
       .toMap
 
-    val newColumns = dataFrame.columns.map(columnName => changes.getOrElse(columnName, columnName))
+    dataFrame.transform(renameColumnsOfDataFrame(changes))
+  }
 
-    dataFrame.toDF(newColumns: _*)
+  private[this] def renameColumnsOfDataFrame(mapping: Map[String, String])
+                                            (dataFrame: DataFrame): DataFrame = {
+    mapping.foldLeft(dataFrame) {
+      (df, change) => df.withColumnRenamed(change._1, change._2)
+    }
   }
 
   /**
@@ -201,6 +206,10 @@ object SchemaConverter {
       .filter(_.metadata.contains(CompoundKey.toString()))
       .map(_.metadata.getStringArray(CompoundKey.toString())(0))
       .toSet
+
+    if (columnsToDrop.nonEmpty && dataFrame.columns.intersect(columnsToDrop.toSeq.map(compoundKeyName)).isEmpty) {
+      log.warn("Some compound key columns are missing in the data source")
+    }
 
     columnsToDrop
       .foldLeft(dataFrame)((df, col) => df.drop(compoundKeyName(col)))
