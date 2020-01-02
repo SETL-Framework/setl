@@ -1,5 +1,6 @@
 package com.jcdecaux.setl.transformation
 
+import java.lang.reflect.{Field, Method}
 import java.util.UUID
 
 import com.jcdecaux.setl.annotation.{Delivery, InterfaceStability}
@@ -13,20 +14,23 @@ import scala.reflect.runtime
  * argument types, the producer and optional
  *
  * @param factoryUUID UUID of factory
- * @param name        name of the method
+ * @param symbol        symbol of the method
  * @param argTypes    type of each argument
  * @param producer    the producer class for the given data
  * @param optional    true if optional
  */
 @InterfaceStability.Evolving
 private[setl] case class FactoryDeliveryMetadata(factoryUUID: UUID,
-                                                 name: String,
+                                                 symbol: runtime.universe.Symbol,
+                                                 deliverySetter: Either[Field, Method],
                                                  argTypes: List[runtime.universe.Type],
                                                  producer: Class[_ <: Factory[_]],
                                                  optional: Boolean,
                                                  autoLoad: Boolean = false,
                                                  condition: String = "",
                                                  id: String = Deliverable.DEFAULT_ID) {
+
+  def name: String = FactoryDeliveryMetadata.nameOf(symbol)
 
   /**
    * As a setter method may have multiple arguments (even though it's rare), this method will return a list of
@@ -73,9 +77,10 @@ private[setl] object FactoryDeliveryMetadata {
 
     override def build(): this.type = {
 
-      log.debug(s"Search Deliveries of ${cls.getSimpleName}")
+      log.debug(s"Look for Deliveries of ${cls.getSimpleName}")
 
-      val classSymbol = runtime.universe.runtimeMirror(getClass.getClassLoader).classSymbol(cls)
+      val runtimeMirror = runtime.universe.runtimeMirror(getClass.getClassLoader)
+      val classSymbol = runtimeMirror.classSymbol(cls)
       val symbolsWithDeliveryAnnotation = classSymbol.info.decls.filter {
         x => x.annotations.exists(y => y.tree.tpe =:= runtime.universe.typeOf[Delivery])
       }
@@ -84,29 +89,7 @@ private[setl] object FactoryDeliveryMetadata {
 
       metadata = symbolsWithDeliveryAnnotation.map {
         symbol =>
-          val delivery: Delivery = if (symbol.isMethod) {
-            val methods = cls
-              .getDeclaredMethods
-              .filter(mth => mth.getName == symbol.name.toString && mth.isAnnotationPresent(classOf[Delivery]))
-
-            if (methods.length > 1) throw new NoSuchMethodException("Found multiple methods with save name")
-            if (methods.isEmpty) throw new NoSuchElementException("Can't find any method")
-
-            methods.head.getAnnotation(classOf[Delivery])
-          } else {
-            cls
-              .getDeclaredField(symbol.name.toString.trim)
-              .getAnnotation(classOf[Delivery])
-          }
-
-          val name = if (symbol.isMethod) {
-            log.debug(s"Find annotated method `${symbol.name}` in ${cls.getSimpleName}")
-            symbol.name.toString
-          } else {
-            // If an annotated value was found, then return the default setter created by compiler, which is {valueName}_$eq.
-            log.debug(s"Find annotated variable `${symbol.name.toString.trim}` in ${cls.getSimpleName}")
-            symbol.name.toString.trim + "_$eq"
-          }
+          log.debug(s"Retrieve metadata of delivery `${nameOf(symbol)}`")
 
           val argTypes = if (symbol.isMethod) {
             symbol.typeSignature.paramLists.head.map(_.typeSignature)
@@ -114,9 +97,18 @@ private[setl] object FactoryDeliveryMetadata {
             List(symbol.typeSignature)
           }
 
+          val argClasses: Seq[Class[_]] = argTypes.map(t => runtimeMirror.runtimeClass(t))
+          val deliverySetter = getFieldOrMethod(cls, symbol, argClasses)
+
+          val delivery: Delivery = deliverySetter match {
+            case Left(field) => field.getAnnotation(classOf[Delivery])
+            case Right(method) => method.getAnnotation(classOf[Delivery])
+          }
+
           FactoryDeliveryMetadata(
             factoryUUID = factoryUUID,
-            name = name,
+            symbol = symbol,
+            deliverySetter = deliverySetter,
             argTypes = argTypes,
             producer = getDeliveryParameter[Class[_ <: Factory[_]]](delivery, "producer"),
             optional = getDeliveryParameter[Boolean](delivery, "optional"),
@@ -132,6 +124,21 @@ private[setl] object FactoryDeliveryMetadata {
     override def get(): Iterable[FactoryDeliveryMetadata] = metadata
   }
 
+  @throws[NoSuchMethodException]
+  @throws[NoSuchFieldException]
+  @throws[SecurityException]
+  private[this] def getFieldOrMethod(consumerClass: Class[_ <: Factory[_]],
+                                     symbol: runtime.universe.Symbol,
+                                     argClass: Seq[Class[_]]): Either[Field, Method] = {
+    val symbolName = nameOf(symbol)
+    if (symbol.isMethod) {
+      Right(consumerClass.getDeclaredMethod(symbolName, argClass: _*))
+    } else {
+      Left(consumerClass.getDeclaredField(symbolName))
+    }
+  }
+
+  protected def nameOf(symbol: runtime.universe.Symbol): String = symbol.name.toString.trim
 
   /**
    * DeliverySetterMetadata Builder will create a [[com.jcdecaux.setl.transformation.FactoryDeliveryMetadata]]
