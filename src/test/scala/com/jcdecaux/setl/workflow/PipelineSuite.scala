@@ -45,6 +45,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.pipelineInspector.nodes.size === 4)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "Container2Factory").get.input.length === 2)
     assert(pipeline.pipelineInspector.flows.size === 4)
+    assert(f3.get().content.x === "id_of_product1")
 
   }
 
@@ -299,8 +300,8 @@ object PipelineSuite {
 
   class ProductFactory extends Factory[Product1] {
     @Delivery
-    var id: String = _
-    var output: Product1 = _
+    private[this] val id: String = null
+    private[this] var output: Product1 = _
 
     override def read(): ProductFactory.this.type = this
 
