@@ -350,7 +350,7 @@ object SetlSuite {
     import spark.implicits._
 
     @Delivery
-    var repo: SparkRepository[TestObject] = _
+    private[this] val repo = SparkRepository[TestObject]
     var output: Dataset[TestObject] = Seq(
       TestObject(1, "a", "A", 1L),
       TestObject(2, "b", "B", 2L)
@@ -372,7 +372,7 @@ object SetlSuite {
     @Delivery
     var input: Dataset[TestObject] = _
     @Delivery
-    var repo: SparkRepository[TestObject3] = _
+    val repo: SparkRepository[TestObject3] = SparkRepository[TestObject3]
     var output: Dataset[TestObject3] = _
 
     override def read(): MyFactory2.this.type = this
@@ -449,8 +449,8 @@ object SetlSuite {
   class FactoryWithConnectorException extends Factory[Dataset[TestObject]] {
 
     @Delivery(id = "1")
-    var deliveryConnector: Connector = _
-    var testObjectConnector: Connector = _
+    private[this] val deliveryConnector = Connector.empty
+    private[this] var testObjectConnector = Connector.empty
 
     @Delivery(id = "1") def deliveryConnector(c: Connector): Unit = {
       testObjectConnector = c

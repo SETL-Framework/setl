@@ -192,6 +192,8 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
 
 object SparkRepository {
 
+  def apply[T: TypeTag]: SparkRepository[T] = new SparkRepository[T]
+
   /**
    * Change the column name according to DataType schema's annotation (@ColumnName)
    *
