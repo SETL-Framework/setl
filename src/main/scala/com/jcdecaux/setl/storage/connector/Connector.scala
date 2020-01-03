@@ -35,3 +35,15 @@ trait Connector extends Logging {
 
   def write(t: DataFrame): Unit
 }
+
+object Connector {
+  def empty: Connector = new Connector {
+    override val spark: SparkSession = null
+    override val storage: Storage = null
+    override val reader: DataFrameReader = null
+    override val writer: DataFrame => DataFrameWriter[Row] = null
+    override def read(): DataFrame = null
+    override def write(t: DataFrame, suffix: Option[String]): Unit = {}
+    override def write(t: DataFrame): Unit = {}
+  }
+}
