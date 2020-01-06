@@ -3,7 +3,7 @@ package com.jcdecaux.setl.workflow
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.exception.AlreadyExistsException
 import com.jcdecaux.setl.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
-import com.jcdecaux.setl.transformation.{Deliverable, Factory, FactoryDeliveryMetadata, FactoryOutput}
+import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
@@ -149,13 +149,8 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   }
 
   private[workflow] def createDAGNodes(): Array[Node] = {
-
     _factories.map {
-      fac =>
-        val setter = FactoryDeliveryMetadata.builder().setFactory(fac).getOrCreate()
-        val output = FactoryOutput(runtimeType = fac.deliveryType(), consumer = fac.consumers, deliveryId = fac.deliveryId)
-
-        Node(fac.getClass, fac.getUUID, this.stageId, setter.toList, output)
+      fac => new Node(factory = fac, this.stageId)
     }.toArray
   }
 

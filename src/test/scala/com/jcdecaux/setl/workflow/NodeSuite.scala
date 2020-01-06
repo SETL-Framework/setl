@@ -37,7 +37,7 @@ class NodeSuite extends AnyFunSuite {
     symbol = null,
     deliverySetter = null,
     argTypes = List(runtime.universe.typeOf[Int]),
-    producer = null,
+    producer = classOf[External],
     optional = false
   )
 
@@ -316,6 +316,87 @@ class NodeSuite extends AnyFunSuite {
     assert(node11.targetNode(node2) === true)
     assert(node11.targetNode(node3) === false)
     assert(node11.targetNode(node3String) === false)
+  }
+
+  test("[SETL-25] Node should handle multiple input of the same type with different delivery id") {
+
+    val node1 = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[String]),
+          id = "id_1"
+        )
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[Producer1], Seq.empty, "id_2")
+    )
+
+    val node1Bis = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[String]),
+          id = "id_1"
+        )
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[Producer1], Seq.empty, "id_wrong")
+    )
+
+    val node2 = Node(
+      factoryClass = classOf[ProducerContainer1],
+      factoryUUID = uuid2,
+      stage = 1,
+      setters = List(
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[Producer1]),
+          id = "id_2"
+        )
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[ProducerContainer1], Seq.empty, "id_3")
+    )
+
+    val node2Bis = Node(
+      factoryClass = classOf[ProducerContainer1],
+      factoryUUID = uuid2,
+      stage = 1,
+      setters = List(
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[Producer1]),
+          id = "id_wrong"
+        )
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[ProducerContainer1], Seq.empty, "id_3")
+    )
+
+    val node2Ter = Node(
+      factoryClass = classOf[ProducerContainer1],
+      factoryUUID = uuid2,
+      stage = 1,
+      setters = List(
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[Producer1]),
+          id = "id_wrong"
+        ),
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[Producer1]),
+          id = "id_2"
+        )
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[ProducerContainer1], Seq.empty, "id_3")
+    )
+
+    assert(node1.targetNode(node2))
+    assert(node1Bis.targetNode(node2Bis))
+    assert(!node1.targetNode(node2Bis))
+    assert(!node1Bis.targetNode(node2))
+
+    assert(node1.targetNode(node2Ter))
+
+
   }
 
 }

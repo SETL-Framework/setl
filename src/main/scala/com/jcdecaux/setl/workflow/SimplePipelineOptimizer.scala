@@ -54,7 +54,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
 
     val startingFlows = dag.flows
       .filter(_.from == oldNode)
-      .map(_.copy(stage = newNode.stage, from = newNode))
+      .map(_.copy(from = newNode))
 
     val endingFlows = dag.flows
       .filter(_.to == oldNode)
