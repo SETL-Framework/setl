@@ -324,7 +324,7 @@ class PipelineSuite extends AnyFunSuite {
 
 
     new Pipeline()
-      .setInput(repo1, "delivery1")
+      .setInput(repo1, "delivery1", consumer = classOf[FactoryWithMultipleAutoLoad])
       .setInput(repo2, "delivery2")
       .addStage(factoryWithAutoLoad)
       .describe()

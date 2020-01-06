@@ -88,7 +88,6 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
                 val node = External.NODE.copy(
                   output = FactoryOutput(nodeInput.runtimeType, Seq.empty, nodeInput.deliveryId)
                 )
-//                Flow(nodeInput.runtimeType, External.NODE, thisNode, External.NODE.stage, nodeInput.deliveryId)
                 Flow(node, thisNode)
             }
             .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
