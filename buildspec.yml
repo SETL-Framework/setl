@@ -1,0 +1,27 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_ACCESS_KEY_ID: fakeAccess
+    AWS_SECRET_ACCESS_KEY: fakeSecret
+    AWS_REGION: eu-west-1
+    MVN_CHANGELIST: "-SNAPSHOT"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto8
+      docker: 18
+  pre_build:
+    commands:
+      - echo starting services
+      - docker version
+      - docker-compose -f ./dev/docker-compose.yml up -d
+  build:
+    commands:
+      - docker container ls
+      - echo ${MVN_CHANGELIST}
+#      - mvn clean package -Dchangelist=${MVN_CHANGELIST}
+  post_build:
+    commands:
+      - echo Build completed on `date`
