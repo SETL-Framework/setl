@@ -346,6 +346,19 @@ class NodeSuite extends AnyFunSuite {
       output = FactoryOutput(runtime.universe.typeOf[Producer1], Seq.empty, "id_wrong")
     )
 
+    val node1Ter = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(
+          argTypes = List(runtime.universe.typeOf[String]),
+          id = "id_1"
+        )
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[Producer1], Seq.empty, "nothing")
+    )
+
     val node2 = Node(
       factoryClass = classOf[ProducerContainer1],
       factoryUUID = uuid2,
@@ -391,11 +404,13 @@ class NodeSuite extends AnyFunSuite {
 
     assert(node1.targetNode(node2))
     assert(node1Bis.targetNode(node2Bis))
+
     assert(!node1.targetNode(node2Bis))
     assert(!node1Bis.targetNode(node2))
 
     assert(node1.targetNode(node2Ter))
-
+    assert(node1Bis.targetNode(node2Ter))
+    assert(!node1Ter.targetNode(node2Ter))
 
   }
 
