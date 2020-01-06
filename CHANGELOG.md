@@ -5,6 +5,7 @@
 - Fixed issue of DynamoDBConnector that doesn't take user configuration
 - Optimized **DeliverableDispatcher**
 - Added support for private variable delivery
+- Added empty SparkRepository as placeholder
 
 ## 0.3.5 (2019-12-16)
 - BREAKING CHANGE: replace the Spark compatible version by the Scala compatible version in the artifact ID. 
