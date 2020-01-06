@@ -24,13 +24,15 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
                                   setters: List[FactoryDeliveryMetadata],
                                   output: FactoryOutput) extends Identifiable with Logging with HasDescription {
 
-  def this(factory: Factory[_], stage: Int) = this(
-    factoryClass = factory.getClass,
-    factoryUUID = factory.getUUID,
-    stage = stage,
-    setters = FactoryDeliveryMetadata.builder().setFactory(factory).getOrCreate().toList,
-    output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId)
-  )
+  def this(factory: Factory[_], stage: Int) {
+    this(
+      factoryClass = factory.getClass,
+      factoryUUID = factory.getUUID,
+      stage = stage,
+      setters = FactoryDeliveryMetadata.builder().setFactory(factory).getOrCreate().toList,
+      output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId)
+    )
+  }
 
   override def getPrettyName: String = getPrettyName(factoryClass)
 

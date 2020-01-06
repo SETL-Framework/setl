@@ -205,7 +205,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
       Some(
         new Deliverable(
           deliverable
-            .payload
+            .getPayload
             .asInstanceOf[Dataset[Row]]
             .filter(condition)
             .asInstanceOf[D]
@@ -248,7 +248,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
 
       matchedRepo match {
         case Some(deliverable) =>
-          val repo = deliverable.payload.asInstanceOf[SparkRepository[_]]
+          val repo = deliverable.getPayload.asInstanceOf[SparkRepository[_]]
           val data = if (condition != "") {
             repo.findAll().filter(condition)
           } else {
@@ -296,7 +296,6 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
               ) match {
                 case Some(deliverable) =>
                   // If we find some delivery, then return it if non null
-                  require(deliverable.payload != null, "Deliverable is null")
                   handleDeliveryCondition(deliveryMeta.condition, deliverable)
 
                 case _ =>
@@ -335,11 +334,11 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
               case Left(field) =>
                 log.debug(s"Set value of ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
                 field.setAccessible(true)
-                field.set(consumer, args.head.get.asInstanceOf[Object])
+                field.set(consumer, args.head.getPayload.asInstanceOf[Object])
               case Right(method) =>
                 log.debug(s"Invoke ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
                 method.setAccessible(true)
-                method.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
+                method.invoke(consumer, args.map(_.getPayload.asInstanceOf[Object]): _*)
             }
           }
       }

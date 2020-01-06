@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.jcdecaux.setl.transformation.Factory
 
-sealed abstract class External extends Factory[External]
+sealed abstract class External private extends Factory[External]
 
 /**
  * Singleton for external data source
