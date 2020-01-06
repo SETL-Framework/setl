@@ -189,6 +189,15 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
     s"$sparkRepo[$thisArgType]"
   }
 
+  /**
+   * If the deliverable object is a Dataset and if a condition is defined in the @Delivery annotation, then filter
+   * the input Dataset with this condition. Otherwise, return the input deliverable
+   *
+   * @param condition condition string
+   * @param deliverable deliverable object
+   * @tparam D input type
+   * @return `Option[Deliverable[D]]`
+   */
   private[this] def handleDeliveryCondition[D: ru.TypeTag](condition: String,
                                                            deliverable: Deliverable[D]): Option[Deliverable[D]] = {
     if (condition != "" && deliverable.payloadClass.isAssignableFrom(classOf[Dataset[Row]])) {
@@ -207,6 +216,18 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
     }
   }
 
+  /**
+   * For a given type, if it is a Dataset of type `T`, then find its corresponding `SparkRepository[T]` and use it
+   * to load data from the data store.
+   *
+   * @param argType    input type
+   * @param deliveryId delivery id
+   * @param consumer   consumer of the input
+   * @param condition  loading condition
+   * @param optional   if set to true, then no exception will be thrown when there is no available SparkRepository,
+   *                   false otherwise
+   * @return `Option[Deliverable[T]]`
+   */
   private[this] def handleAutoLoad(argType: ru.Type,
                                    deliveryId: String,
                                    consumer: Factory[_],
