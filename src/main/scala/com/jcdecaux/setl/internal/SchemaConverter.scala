@@ -44,6 +44,10 @@ import scala.reflect.runtime.{universe => ru}
  */
 object SchemaConverter extends Logging {
 
+  private[setl] val COMPOUND_KEY: String = StructAnalyser.COMPOUND_KEY
+  private[setl] val COLUMN_NAME: String = StructAnalyser.COLUMN_NAME
+  private[setl] val COMPRESS: String = StructAnalyser.COMPRESS
+
   private[this] val compoundKeySuffix: String = "_key"
   private[this] val compoundKeyPrefix: String = "_"
   private[this] val compoundKeySeparator: String = "-"
@@ -72,8 +76,8 @@ object SchemaConverter extends Logging {
       .filter {
         field =>
           val dfContainsFieldName = dfColumns.contains(field.name)
-          val dfContainsFieldAlias = if (field.metadata.contains(ColumnName.toString())) {
-            dfColumns.contains(field.metadata.getStringArray(ColumnName.toString()).head)
+          val dfContainsFieldAlias = if (field.metadata.contains(COLUMN_NAME)) {
+            dfColumns.contains(field.metadata.getStringArray(COLUMN_NAME).head)
           } else {
             false
           }
@@ -147,8 +151,8 @@ object SchemaConverter extends Logging {
    */
   def replaceDFColNameByFieldName(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
-      .filter(_.metadata.contains(ColumnName.toString()))
-      .map(x => x.metadata.getStringArray(ColumnName.toString())(0) -> x.name)
+      .filter(_.metadata.contains(COLUMN_NAME))
+      .map(x => x.metadata.getStringArray(COLUMN_NAME)(0) -> x.name)
       .toMap
 
     dataFrame.transform(renameColumnsOfDataFrame(changes))
@@ -183,8 +187,8 @@ object SchemaConverter extends Logging {
    */
   def replaceFieldNameByColumnName(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val changes = structType
-      .filter(_.metadata.contains(ColumnName.toString()))
-      .map(x => x.name -> x.metadata.getStringArray(ColumnName.toString())(0))
+      .filter(_.metadata.contains(COLUMN_NAME))
+      .map(x => x.name -> x.metadata.getStringArray(COLUMN_NAME)(0))
       .toMap
 
     dataFrame.transform(renameColumnsOfDataFrame(changes))
@@ -201,10 +205,9 @@ object SchemaConverter extends Logging {
    * Drop all compound key columns
    */
   def dropCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
-
     val columnsToDrop = structType
-      .filter(_.metadata.contains(CompoundKey.toString()))
-      .map(_.metadata.getStringArray(CompoundKey.toString())(0))
+      .filter(_.metadata.contains(COMPOUND_KEY))
+      .map(_.metadata.getStringArray(COMPOUND_KEY)(0))
       .toSet
 
     if (columnsToDrop.nonEmpty && dataFrame.columns.intersect(columnsToDrop.toSeq.map(compoundKeyName)).isEmpty) {
@@ -244,15 +247,26 @@ object SchemaConverter extends Logging {
    */
   private[this] def addCompoundKeyColumns(structType: StructType)(dataFrame: DataFrame): DataFrame = {
     val keyColumns = structType
-      .filter(_.metadata.contains(CompoundKey.toString()))
-      .groupBy(_.metadata.getStringArray(CompoundKey.toString())(0))
-      .map {
-        row =>
-          val sortedCols = row._2
-            .sortBy(_.metadata.getStringArray(CompoundKey.toString())(1).toInt)
-            .map(n => functions.col(n.name))
-          (row._1, sortedCols)
+      .filter(_.metadata.contains(COMPOUND_KEY))
+      .flatMap {
+        structField =>
+          structField.metadata
+            .getStringArray(COMPOUND_KEY)
+            .map {
+              data =>
+                val compoundKey = CompoundKey.deserialize(data)
+                (structField.name, compoundKey)
+            }
       }
+      .groupBy(_._2.id)
+      .map {
+        case (key, fields) =>
+          val sortedColumns = fields.sortBy(_._2.position).map {
+            case (colname, _) => functions.col(colname)
+          }
+
+          (key, sortedColumns)
+      }.toList.sortBy(_._1)
 
     // For each element in keyColumns, add a new column to the input dataFrame
     keyColumns
@@ -270,12 +284,12 @@ object SchemaConverter extends Logging {
    */
   def compressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
-    val columnToCompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
+    val columnToCompress = structType.filter(_.metadata.contains(COMPRESS))
 
     columnToCompress
       .foldLeft(dataFrame) {
         (df, sf) =>
-          val compressorName = sf.metadata.getStringArray(classOf[Compress].getCanonicalName).head
+          val compressorName = sf.metadata.getStringArray(COMPRESS).head
           val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
           val compress: String => Array[Byte] = input => compressor.compress(input)
           val compressUDF = functions.udf(compress)
@@ -292,12 +306,12 @@ object SchemaConverter extends Logging {
    */
   def decompressColumn(structType: StructType)(dataFrame: DataFrame): DataFrame = {
 
-    val columnToDecompress = structType.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
+    val columnToDecompress = structType.filter(_.metadata.contains(COMPRESS))
 
     columnToDecompress
       .foldLeft(dataFrame) {
         (df, sf) => {
-          val compressorName = sf.metadata.getStringArray(classOf[Compress].getCanonicalName).head
+          val compressorName = sf.metadata.getStringArray(COMPRESS).head
           val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
           val decompress: Array[Byte] => String = input => compressor.decompress(input)
           val decompressUDF = functions.udf(decompress)

@@ -6,6 +6,12 @@ import com.jcdecaux.setl.transformation.Factory
 
 object TestClasses {
 
+  case class WrongClass(@ColumnName("1") @ColumnName("2") col1: String)
+
+  case class MultipleCompoundKeyTest(@CompoundKey("sort", "1") @CompoundKey("part", "1") col1: String,
+                                     @CompoundKey("sort", "2") col2: String,
+                                     @CompoundKey("part", "2") @ColumnName("COLUMN_3") col3: String)
+
   case class InnerClass(innerCol1: String, innerCol2: String)
 
   case class TestCompression(@ColumnName("dqsf") col1: String,
