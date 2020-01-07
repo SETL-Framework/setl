@@ -24,6 +24,16 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
                                   setters: List[FactoryDeliveryMetadata],
                                   output: FactoryOutput) extends Identifiable with Logging with HasDescription {
 
+  def this(factory: Factory[_], stage: Int) {
+    this(
+      factoryClass = factory.getClass,
+      factoryUUID = factory.getUUID,
+      stage = stage,
+      setters = FactoryDeliveryMetadata.builder().setFactory(factory).getOrCreate().toList,
+      output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId)
+    )
+  }
+
   override def getPrettyName: String = getPrettyName(factoryClass)
 
   def input: List[FactoryInput] = setters.flatMap(s => s.getFactoryInputs)
@@ -65,25 +75,29 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
   def targetNode(next: Node): Boolean = {
 
     val validNodeUUID = if (this.getUUID == next.getUUID) {
-      log.warn("The two nodes have the same UUID")
+      log.debug("The two nodes have the same UUID")
       false
-    } else true
+    } else {
+      true
+    }
 
     val validClassUUID = if (this.factoryUUID == next.factoryUUID) {
-      log.warn("The two nodes are representing one same factory")
+      log.debug("The two nodes are representing one same factory")
       false
-    } else true
+    } else {
+      true
+    }
 
     val validStage = if (this.stage >= next.stage) {
-      log.warn("The two nodes are in the same stage")
+      log.debug("The two nodes are in the same stage")
       false
-    } else true
-
-    var validTarget: Boolean = false
+    } else {
+      true
+    }
 
     val filteredInputs = next.findInputByType(this.output.runtimeType, this.output.deliveryId)
 
-    validTarget = filteredInputs.length match {
+    val validTarget = filteredInputs.length match {
       case 0 => false
       case 1 => handleOneSingleMatchedInput(filteredInputs.head, next) // Found only one matching type
       case _ => handleMultipleMatchedInputs(filteredInputs, next) // Multiple variables of the same type were found in the next node
