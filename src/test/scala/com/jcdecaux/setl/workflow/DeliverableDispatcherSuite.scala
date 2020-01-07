@@ -296,6 +296,47 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     assertThrows[NoSuchElementException](dispatcher.testDispatch(multipleInputFactory))
   }
 
+  test("[SETL-25] DeliveryDispatcher should handle multiple autoLoad with the same type and different id") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val repo1 = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setPath("src/test/resources/csv_test_multiple_auto_load_1")
+      .getOrCreate()
+
+    val repo2 = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setPath("src/test/resources/csv_test_multiple_auto_load_2")
+      .getOrCreate()
+
+    val ds1 = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDS
+
+    val ds2 = Seq(
+      Product2("A", "11")
+    ).toDS
+
+    repo1.save(ds1)
+    repo2.save(ds2)
+
+    val dispatchManager = new DeliverableDispatcher
+    dispatchManager
+      .addDeliverable(new Deliverable(repo1).setDeliveryId("delivery1"))
+      .addDeliverable(new Deliverable(repo2).setDeliveryId("delivery2"))
+
+    val factoryWithAutoLoad = new FactoryWithMultipleAutoLoad
+
+    dispatchManager.testDispatch(factoryWithAutoLoad)
+    assert(factoryWithAutoLoad.input.count() === 3)
+    assert(factoryWithAutoLoad.input2.count() === 1)
+
+    factoryWithAutoLoad.process()
+
+    repo1.getConnector.asInstanceOf[FileConnector].delete()
+    repo2.getConnector.asInstanceOf[FileConnector].delete()
+  }
 }
 
 object DeliverableDispatcherSuite {
@@ -374,6 +415,27 @@ object DeliverableDispatcherSuite {
     override def read(): FactoryWithAutoLoad.this.type = this
     override def process(): FactoryWithAutoLoad.this.type = this
     override def write(): FactoryWithAutoLoad.this.type = this
+    override def get(): Dataset[Product2] = input
+
+  }
+
+  class FactoryWithMultipleAutoLoad extends Factory[Dataset[Product2]] {
+
+    @Delivery(autoLoad = true, id = "delivery1")
+    var input: Dataset[Product2] = _
+
+    @Delivery(autoLoad = true, id = "delivery2")
+    var input2: Dataset[Product2] = _
+
+    override def read(): FactoryWithMultipleAutoLoad.this.type = this
+    override def process(): FactoryWithMultipleAutoLoad.this.type = {
+      input.show()
+      input2.show()
+
+      this
+    }
+
+    override def write(): FactoryWithMultipleAutoLoad.this.type = this
     override def get(): Dataset[Product2] = input
 
   }

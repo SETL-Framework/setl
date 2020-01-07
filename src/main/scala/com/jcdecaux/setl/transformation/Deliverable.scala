@@ -14,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
  * @tparam T type of the payload
  */
 @InterfaceStability.Evolving
-class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasType {
+class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false
   private[this] var _producer: Class[_ <: Factory[_]] = classOf[External]
@@ -36,14 +36,20 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
    * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
    * type, it will select the correct deliverable by looking at the consumer
    */
-
   def consumer: List[Class[_ <: Factory[_]]] = _consumer.toList
 
   override val runtimeType: ru.Type = ru.typeTag[T].tpe
 
   def payloadType: ru.Type = runtimeType
 
-  def get: T = payload
+  @throws[NoSuchElementException]("Thrown when the Payload is null")
+  def getPayload: T = {
+    if (payload == null) {
+      throw new NoSuchElementException(s"Payload of type ${this.runtimeType} is not set.")
+    } else {
+      payload
+    }
+  }
 
   /**
    * Compare the type of two deliverable
