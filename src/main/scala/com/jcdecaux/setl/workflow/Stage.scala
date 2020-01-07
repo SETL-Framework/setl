@@ -1,9 +1,9 @@
 package com.jcdecaux.setl.workflow
 
-import com.jcdecaux.setl.annotation.InterfaceStability
+import com.jcdecaux.setl.annotation.{Benchmark, InterfaceStability}
 import com.jcdecaux.setl.exception.AlreadyExistsException
-import com.jcdecaux.setl.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
-import com.jcdecaux.setl.transformation.{Deliverable, Factory}
+import com.jcdecaux.setl.internal.{BenchmarkInvocationHandler, HasDescription, HasUUIDRegistry, Identifiable, Logging}
+import com.jcdecaux.setl.transformation.{AbstractFactory, Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
@@ -132,11 +132,41 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
 
   private[this] val runFactory: Factory[_] => Deliverable[_] = {
     factory: Factory[_] =>
-      factory.read().process()
-      if (this.persist && factory.persist) {
-        log.debug(s"Persist output of ${factory.getPrettyName}")
-        factory.write()
+
+      val writeData = this.persist && factory.persist
+      val factoryName = factory.getClass.getSimpleName
+
+      if (factory.getClass.isAnnotationPresent(classOf[Benchmark])) {
+
+        log.info(s"Start benchmarking $factoryName")
+        val start = System.nanoTime()
+
+        val proxyFactory = java.lang.reflect.Proxy.newProxyInstance(
+          getClass.getClassLoader, Array(classOf[AbstractFactory[_]]), new BenchmarkInvocationHandler(factory)
+        ).asInstanceOf[AbstractFactory[_]]
+
+        proxyFactory.read()
+        proxyFactory.process()
+
+        if (writeData) {
+          log.debug(s"Persist output of ${factory.getPrettyName}")
+          proxyFactory.write()
+        }
+
+        val elapsed = System.nanoTime() - start
+        log.info(s"Execution of $factoryName finished in $elapsed ns")
+
+      } else {
+
+        factory.read().process()
+
+        if (writeData) {
+          log.debug(s"Persist output of ${factory.getPrettyName}")
+          factory.write()
+        }
+
       }
+
       factory.getDelivery
   }
 
