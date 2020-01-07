@@ -38,7 +38,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def getSparkRepository[DT: ru.TypeTag](repositoryId: String): SparkRepository[DT] = {
     setSparkRepository[DT](repositoryId)
-    inputRegister.get(repositoryIdOf(repositoryId)).payload.asInstanceOf[SparkRepository[DT]]
+    inputRegister.get(repositoryIdOf(repositoryId)).getPayload.asInstanceOf[SparkRepository[DT]]
   }
 
   def resetSparkRepository[DT: ru.TypeTag](repository: SparkRepository[DT],
@@ -109,7 +109,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def getConnector[CN <: Connector](connectorId: String): CN = {
     setConnector(connectorId)
-    inputRegister.get(connectorIdOf(connectorId)).payload.asInstanceOf[CN]
+    inputRegister.get(connectorIdOf(connectorId)).getPayload.asInstanceOf[CN]
   }
 
   /**

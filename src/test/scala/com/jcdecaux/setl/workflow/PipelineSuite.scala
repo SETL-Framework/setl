@@ -2,8 +2,12 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.SparkSessionBuilder
 import com.jcdecaux.setl.annotation.Delivery
+import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.AlreadyExistsException
+import com.jcdecaux.setl.storage.SparkRepositoryBuilder
+import com.jcdecaux.setl.storage.connector.FileConnector
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
+import com.jcdecaux.setl.workflow.DeliverableDispatcherSuite.FactoryWithMultipleAutoLoad
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -39,7 +43,7 @@ class PipelineSuite extends AnyFunSuite {
 
     //    pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
     assert(pipeline.deliverableDispatcher.deliverablePool.length === 5)
-    assert(pipeline.getDeliverable(ru.typeOf[Container2[Product2]]).head.get == Container2(Product2("a", "b")))
+    assert(pipeline.getDeliverable(ru.typeOf[Container2[Product2]]).head.getPayload == Container2(Product2("a", "b")))
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 4)
@@ -289,6 +293,48 @@ class PipelineSuite extends AnyFunSuite {
   test("Pipeline should be able to describe with empty flow and node") {
     val pipeline = new Pipeline
     pipeline.describe()
+  }
+
+  test("[SETL-25] Pipeline should be able to delivery multiple autoLoad deliveries with same type but different id") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val repo1 = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setPath("src/test/resources/csv_test_multiple_auto_load_1")
+      .getOrCreate()
+
+    val repo2 = new SparkRepositoryBuilder[Product2](Storage.CSV)
+      .setPath("src/test/resources/csv_test_multiple_auto_load_2")
+      .getOrCreate()
+
+    val ds1 = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDS
+
+    val ds2 = Seq(
+      Product2("A", "11")
+    ).toDS
+
+    repo1.save(ds1)
+    repo2.save(ds2)
+
+    val factoryWithAutoLoad = new FactoryWithMultipleAutoLoad
+
+
+    new Pipeline()
+      .setInput(repo1, "delivery1", consumer = classOf[FactoryWithMultipleAutoLoad])
+      .setInput(repo2, "delivery2")
+      .addStage(factoryWithAutoLoad)
+      .describe()
+      .run()
+
+    assert(factoryWithAutoLoad.input.count() === 3)
+    assert(factoryWithAutoLoad.input2.count() === 1)
+
+    repo1.getConnector.asInstanceOf[FileConnector].delete()
+    repo2.getConnector.asInstanceOf[FileConnector].delete()
   }
 }
 

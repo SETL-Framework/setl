@@ -2,7 +2,7 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal.{HasDescription, Logging}
-import com.jcdecaux.setl.transformation.Factory
+import com.jcdecaux.setl.transformation.{Factory, FactoryOutput}
 
 /**
  * PipelineInspector will inspect a given [[com.jcdecaux.setl.workflow.Pipeline]] and create a
@@ -63,12 +63,11 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
               .flatMap {
                 f =>
                   val thisNode = findNode(f).get
-                  val payloadType = f.deliveryType()
                   val targetNodes = nodes
                     .filter(n => n.stage > thisNode.stage)
                     .filter(n => thisNode.targetNode(n))
 
-                  targetNodes.map(targetNode => Flow(payloadType, thisNode, targetNode, stage.stageId, f.deliveryId))
+                  targetNodes.map(targetNode => Flow(thisNode, targetNode))
               }
               .toSet
           }
@@ -84,7 +83,13 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
         thisNode =>
           thisNode.input
             .filter(_.producer == classOf[External])
-            .map(nodeInput => Flow(nodeInput.runtimeType, External.NODE, thisNode, External.NODE.stage, nodeInput.deliveryId))
+            .map{
+              nodeInput =>
+                val node = External.NODE.copy(
+                  output = FactoryOutput(nodeInput.runtimeType, Seq.empty, nodeInput.deliveryId)
+                )
+                Flow(node, thisNode)
+            }
             .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
       }
   }
