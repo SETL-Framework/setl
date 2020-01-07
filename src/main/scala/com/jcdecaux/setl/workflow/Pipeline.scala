@@ -1,8 +1,9 @@
 package com.jcdecaux.setl.workflow
 
+import com.jcdecaux.setl.BenchmarkResult
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.exception.AlreadyExistsException
-import com.jcdecaux.setl.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
+import com.jcdecaux.setl.internal.{HasBenchmark, HasDescription, HasUUIDRegistry, Identifiable, Logging}
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -13,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
  * Pipeline is a complete data transformation workflow.
  */
 @InterfaceStability.Evolving
-class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable {
+class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable with HasBenchmark {
 
   private[this] var _stageCounter: Int = 0
   private[this] var _executionPlan: DAG = _
@@ -21,6 +22,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   private[this] val _stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   private[this] val _pipelineInspector: PipelineInspector = new PipelineInspector(this)
   private[this] var _pipelineOptimizer: Option[PipelineOptimizer] = None
+  private[this] var _benchmarkResult: Array[BenchmarkResult] = Array.empty
 
   def stages: Array[Stage] = this._stages.toArray
 
@@ -258,8 +260,8 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
 
   def run(): this.type = {
     inspectPipeline()
-    _stages
-      .foreach {
+    _benchmarkResult = _stages
+      .flatMap {
         stage =>
           // Describe current stage
           stage.describe()
@@ -269,10 +271,27 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
             stage.factories.foreach(_deliverableDispatcher.dispatch)
           }
 
+          // Disable benchmark if benchmark is false
+          this.benchmark match {
+            case Some(boo) =>
+              if (!boo) {
+                log.debug("Disable benchmark")
+                stage.benchmark(false)
+              }
+            case _ =>
+          }
+          if (!this.benchmark.getOrElse(false)) {
+            stage.benchmark(false)
+          }
+
           // run the stage
           stage.run()
           stage.factories.foreach(_deliverableDispatcher.collectDeliverable)
-      }
+
+          // retrieve benchmark result
+          stage.getBenchmarkResult
+
+      }.toArray
 
     this
   }
@@ -338,5 +357,6 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
    */
   def getDeliverable(t: ru.Type): Array[Deliverable[_]] = _deliverableDispatcher.findDeliverableByType(t)
 
+  override def getBenchmarkResult: Array[BenchmarkResult] = _benchmarkResult
 
 }

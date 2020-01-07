@@ -1,5 +1,6 @@
 package com.jcdecaux.setl.internal;
 
+import com.jcdecaux.setl.BenchmarkResult;
 import com.jcdecaux.setl.annotation.Benchmark;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -15,6 +16,8 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
 
     private final Map<String, Method> methods = new HashMap<>();
 
+    private Map<String, Long> benchmarkResult = new HashMap<>();
+
     private static Logger logger = LogManager.getLogger(BenchmarkInvocationHandler.class);
 
     public BenchmarkInvocationHandler(Object target) {
@@ -27,6 +30,8 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
         }
     }
 
+    public Map<String, Long> getBenchmarkResult() { return benchmarkResult; }
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
@@ -37,6 +42,8 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
             long start = System.nanoTime();
             result = targetMethod.invoke(target, args);
             long elapsed = System.nanoTime() - start;
+
+            this.benchmarkResult.put(targetMethod.getName(), elapsed);
 
             logger.info("Executing " + target.getClass().getSimpleName() + "." +
                     method.getName() + " finished in " + elapsed + " ns");

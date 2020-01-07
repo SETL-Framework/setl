@@ -1,8 +1,9 @@
 package com.jcdecaux.setl.workflow
 
+import com.jcdecaux.setl.BenchmarkResult
 import com.jcdecaux.setl.annotation.{Benchmark, InterfaceStability}
 import com.jcdecaux.setl.exception.AlreadyExistsException
-import com.jcdecaux.setl.internal.{BenchmarkInvocationHandler, HasDescription, HasUUIDRegistry, Identifiable, Logging}
+import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{AbstractFactory, Deliverable, Factory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -14,8 +15,9 @@ import scala.reflect.ClassTag
  * sequentially at runtime. Within a stage, all factories could be executed in parallel or in sequential order.
  */
 @InterfaceStability.Evolving
-class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescription {
+class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescription with HasBenchmark {
 
+  this._benchmark = Some(true)
   private[this] var _optimization: Boolean = false
   private[this] var _end: Boolean = true
   private[this] var _parallel: Boolean = true
@@ -23,6 +25,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
   private[this] val _factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
   private[this] var _deliverable: Array[Deliverable[_]] = _
   private[this] var _persistence: Boolean = true
+  private[this] val _benchmarkResult: ArrayBuffer[BenchmarkResult] = ArrayBuffer.empty
 
   private[workflow] def end: Boolean = _end
 
@@ -130,37 +133,54 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
     this
   }
 
+  private[this] def handleBenchmark(factory: Factory[_]): BenchmarkResult = {
+    val factoryName = factory.getClass.getSimpleName
+
+    val benchmarkInvocationHandler = new BenchmarkInvocationHandler(factory)
+
+    log.info(s"Start benchmarking $factoryName")
+    val start = System.nanoTime()
+
+    val proxyFactory = java.lang.reflect.Proxy.newProxyInstance(
+      getClass.getClassLoader, Array(classOf[AbstractFactory[_]]), benchmarkInvocationHandler
+    ).asInstanceOf[AbstractFactory[_]]
+
+    proxyFactory.read()
+    proxyFactory.process()
+
+    if (this.persist && factory.persist) {
+      log.debug(s"Persist output of ${factory.getPrettyName}")
+      proxyFactory.write()
+    }
+
+    val elapsed = System.nanoTime() - start
+    log.info(s"Execution of $factoryName finished in $elapsed ns")
+
+    val result = benchmarkInvocationHandler.getBenchmarkResult
+
+    BenchmarkResult(
+      factory.getClass.getSimpleName,
+      result.getOrDefault("read", 0L),
+      result.getOrDefault("process", 0L),
+      result.getOrDefault("write", 0L),
+      result.getOrDefault("get", 0L),
+      elapsed
+    )
+  }
+
   private[this] val runFactory: Factory[_] => Deliverable[_] = {
     factory: Factory[_] =>
 
-      val writeData = this.persist && factory.persist
-      val factoryName = factory.getClass.getSimpleName
+      if (this.benchmark.getOrElse(false) && factory.getClass.isAnnotationPresent(classOf[Benchmark])) {
 
-      if (factory.getClass.isAnnotationPresent(classOf[Benchmark])) {
-
-        log.info(s"Start benchmarking $factoryName")
-        val start = System.nanoTime()
-
-        val proxyFactory = java.lang.reflect.Proxy.newProxyInstance(
-          getClass.getClassLoader, Array(classOf[AbstractFactory[_]]), new BenchmarkInvocationHandler(factory)
-        ).asInstanceOf[AbstractFactory[_]]
-
-        proxyFactory.read()
-        proxyFactory.process()
-
-        if (writeData) {
-          log.debug(s"Persist output of ${factory.getPrettyName}")
-          proxyFactory.write()
-        }
-
-        val elapsed = System.nanoTime() - start
-        log.info(s"Execution of $factoryName finished in $elapsed ns")
+        val factoryBench = handleBenchmark(factory)
+        _benchmarkResult.append(factoryBench)
 
       } else {
 
         factory.read().process()
 
-        if (writeData) {
+        if (this.persist && factory.persist) {
           log.debug(s"Persist output of ${factory.getPrettyName}")
           factory.write()
         }
@@ -183,5 +203,7 @@ class Stage extends Logging with Identifiable with HasUUIDRegistry with HasDescr
       fac => new Node(factory = fac, this.stageId)
     }.toArray
   }
+
+  override def getBenchmarkResult: Array[BenchmarkResult] = _benchmarkResult.toArray
 
 }
