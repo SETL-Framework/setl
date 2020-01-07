@@ -293,6 +293,9 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
 
       }.toArray
 
+    // Show benchmark message
+    this.getBenchmarkResult.foreach(println)
+
     this
   }
 
