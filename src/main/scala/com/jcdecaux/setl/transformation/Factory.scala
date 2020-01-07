@@ -14,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
  * @tparam A the type of object that the factory is supposed to produce
  */
 @InterfaceStability.Evolving
-abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with HasDescription {
+abstract class Factory[A: ru.TypeTag] extends AbstractFactory[A] with Logging with Identifiable with HasDescription {
 
   private[this] val _consumers: Seq[Class[_ <: Factory[_]]] = Seq.empty
   private[this] val _deliveryId: String = Deliverable.DEFAULT_ID
@@ -35,22 +35,22 @@ abstract class Factory[A: ru.TypeTag] extends Logging with Identifiable with Has
   /**
    * Read data
    */
-  def read(): this.type
+  override def read(): this.type
 
   /**
    * Process data
    */
-  def process(): this.type
+  override def process(): this.type
 
   /**
    * Write data
    */
-  def write(): this.type
+  override def write(): this.type
 
   /**
    * Get the processed data
    */
-  def get(): A
+  override def get(): A
 
   /**
    * Create a new Deliverable object
