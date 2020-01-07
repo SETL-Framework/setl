@@ -205,14 +205,14 @@ object SparkRepository {
    */
   private[repository] def handleConditions(conditions: Set[Condition], schema: StructType): Set[Condition] = {
 
-    val columnWithAlias = schema.filter(_.metadata.contains(ColumnName.toString()))
-    val binaryColumns = schema.filter(_.metadata.contains(classOf[Compress].getCanonicalName))
+    val columnWithAlias = schema.filter(_.metadata.contains(SchemaConverter.COLUMN_NAME))
+    val binaryColumns = schema.filter(_.metadata.contains(SchemaConverter.COMPRESS))
 
 
     val binaryColumnNames = binaryColumns.map(_.name)
     val aliasBinaryColumns = binaryColumns
       .filter(bc => columnWithAlias.map(_.name).contains(bc.name))
-      .map(bc => bc.metadata.getStringArray(ColumnName.toString()).head)
+      .map(bc => bc.metadata.getStringArray(SchemaConverter.COLUMN_NAME).head)
 
     conditions
       .map {
@@ -236,7 +236,7 @@ object SparkRepository {
               */
               columnWithAlias.foreach {
                 col =>
-                  val alias = col.metadata.getStringArray(ColumnName.toString()).headOption
+                  val alias = col.metadata.getStringArray(SchemaConverter.COLUMN_NAME).headOption
                   if (alias.nonEmpty) {
                     sqlString = sqlString.replace(s"`${col.name}`", s"`${alias.get}`")
                   }
@@ -254,7 +254,7 @@ object SparkRepository {
               */
               columnWithAlias.find(_.name == cond.key) match {
                 case Some(a) =>
-                  cond.copy(key = a.metadata.getStringArray(ColumnName.toString()).head)
+                  cond.copy(key = a.metadata.getStringArray(SchemaConverter.COLUMN_NAME).head)
                 case _ => cond
               }
           }

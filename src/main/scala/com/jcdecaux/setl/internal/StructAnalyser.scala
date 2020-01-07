@@ -11,6 +11,10 @@ import scala.reflect.runtime.{universe => ru}
 
 object StructAnalyser extends Logging {
 
+  private[setl] val COMPOUND_KEY: String = classOf[CompoundKey].getCanonicalName
+  private[setl] val COLUMN_NAME: String = classOf[ColumnName].getCanonicalName
+  private[setl] val COMPRESS: String = classOf[Compress].getCanonicalName
+
   /**
    * Analyse the metadata of the generic type T. Fetch information for its annotated fields.
    *
@@ -40,25 +44,31 @@ object StructAnalyser extends Logging {
             val value = columnName.tree.children.tail.collectFirst {
               case ru.Literal(ru.Constant(name)) => name.toString
             }
-            (ColumnName.toString(), Array(value.get)) // (ColumnName, ["alias"])
+            (COLUMN_NAME, Array(value.get)) // (ColumnName, ["alias"])
 
           // Case where the field has annotation `CompoundKey`
           case compoundKey: ru.AnnotationApi if compoundKey.tree.tpe =:= ru.typeOf[CompoundKey] =>
-            val attributes = Some(compoundKey.tree.children.tail.collect {
-              case ru.Literal(ru.Constant(attribute)) => attribute.toString
-            })
+            val attribute = CompoundKey.serialize(compoundKey)
             // All compound key column should not be nullable
             nullable = false
-            (CompoundKey.toString(), attributes.get.toArray) // (ColumnName, ["id", "position"])
+            (COMPOUND_KEY, Array(attribute)) // (ColumnName, ["id", "position"])
 
           case compress: ru.AnnotationApi if compress.tree.tpe =:= ru.typeOf[Compress] =>
             val compressor = columnToBeCompressed.find(_._1 == index).get._2.getCanonicalName
-            (classOf[Compress].getCanonicalName, Array(compressor)) // (com.jcdecaux.setl.xxxx, ["compressor_canonical_name"])
+            (COMPRESS, Array(compressor)) // (com.jcdecaux.setl.xxxx, ["compressor_canonical_name"])
 
-        }.toMap
+        }
+          .groupBy(_._1)
+          .map {
+            case (group, elements) => (group, elements.flatMap(_._2))
+          }
 
         val metadataBuilder = new MetadataBuilder()
-        annotations.foreach(annoData => metadataBuilder.putStringArray(annoData._1, annoData._2))
+        annotations.foreach {
+          annotationData =>
+            verifyAnnotation(annotationData._1, annotationData._2)
+            metadataBuilder.putStringArray(annotationData._1, annotationData._2.toArray)
+        }
 
         StructField(field.name.toString, dataType, nullable, metadataBuilder.build())
     }
@@ -84,6 +94,14 @@ object StructAnalyser extends Logging {
         val compressorMethod = compressAnnotation.annotationType().getDeclaredMethod("compressor")
         val compressor = compressorMethod.invoke(compressAnnotation).asInstanceOf[Class[_ <: Compressor]]
         (index, compressor)
+    }
+  }
+
+  private[this] def verifyAnnotation(annotation: String, data: List[String]): Unit = {
+    if (annotation == COLUMN_NAME) {
+      require(data.length == 1, "There should not be more than one ColumnName annotation")
+    } else if (annotation == COMPRESS) {
+      require(data.length == 1, "There should not be more than one Compress annotation")
     }
   }
 
