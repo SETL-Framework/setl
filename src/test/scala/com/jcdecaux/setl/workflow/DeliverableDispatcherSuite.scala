@@ -73,48 +73,6 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
 
   }
 
-
-  abstract class P1 extends Factory[External]
-
-  abstract class P2 extends Factory[External]
-
-  class Test extends Factory[String] {
-
-    @Delivery(producer = classOf[P1], optional = true)
-    private[workflow] var v1: String = _
-    @Delivery(producer = classOf[P2], optional = true)
-    private[workflow] var v2: String = _
-
-    var output: String = _
-
-    /**
-     * Read data
-     */
-    override def read(): this.type = {
-      if (v1 == null) v1 = "he"
-      if (v2 == null) v2 = "ha"
-      this
-    }
-
-    /**
-     * Process data
-     */
-    override def process(): this.type = {
-      output = v1 + v2
-      this
-    }
-
-    /**
-     * Write data
-     */
-    override def write(): this.type = this
-
-    /**
-     * Get the processed data
-     */
-    override def get(): String = output
-  }
-
   test("Test DispatchManager optional input") {
 
     val test = new Test
@@ -142,32 +100,6 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     val del = new Deliverable[String]("hehehe")
     assertThrows[AlreadyExistsException](dispatchManager.addDeliverable(del).addDeliverable(del))
 
-  }
-
-  class Factory1 extends Factory[String] {
-    override def read(): Factory1.this.type = this
-
-    override def process(): Factory1.this.type = this
-
-    override def write(): Factory1.this.type = this
-
-    override def get(): String = "factory 1"
-  }
-
-  class Factory2 extends Factory[String] {
-
-    @Delivery(producer = classOf[Factory1])
-    var input1: String = _
-    @Delivery(producer = classOf[Factory1])
-    var input2: String = _
-
-    override def read(): Factory2.this.type = this
-
-    override def process(): Factory2.this.type = this
-
-    override def write(): Factory2.this.type = this
-
-    override def get(): String = "factory 2"
   }
 
   test("DispatchManager should throw InvalidDeliveryException when there are multiple " +
@@ -363,6 +295,7 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     val multipleInputFactory = new MultipleInputFactory
     assertThrows[NoSuchElementException](dispatcher.testDispatch(multipleInputFactory))
   }
+
 }
 
 object DeliverableDispatcherSuite {
@@ -378,25 +311,11 @@ object DeliverableDispatcherSuite {
     @Delivery
     var arrayThree: Array[String] = _
 
-    /**
-     * Read data
-     */
     override def read(): MultipleInputFactory.this.type = this
-
-    /**
-     * Process data
-     */
     override def process(): MultipleInputFactory.this.type = this
-
-    /**
-     * Write data
-     */
     override def write(): MultipleInputFactory.this.type = this
-
-    /**
-     * Get the processed data
-     */
     override def get(): Array[String] = arrayOne ++ arrayTwo ++ arrayThree
+
   }
 
   class MyFactory extends Factory[Container[Product23]] {
@@ -417,12 +336,10 @@ object DeliverableDispatcherSuite {
     }
 
     override def read(): MyFactory.this.type = this
-
     override def process(): MyFactory.this.type = this
-
     override def write(): MyFactory.this.type = this
-
     override def get(): Container[Product23] = output
+
   }
 
   class MyFactory2 extends Factory[Dataset[Product23]] with Serializable {
@@ -443,64 +360,59 @@ object DeliverableDispatcherSuite {
     }
 
     override def read(): this.type = this
-
     override def process(): this.type = this
-
     override def write(): this.type = this
-
     override def get(): Dataset[Product23] = output
+
   }
 
   class FactoryWithAutoLoad extends Factory[Dataset[Product2]] {
+
     @Delivery(autoLoad = true)
     var input: Dataset[Product2] = _
 
     override def read(): FactoryWithAutoLoad.this.type = this
-
     override def process(): FactoryWithAutoLoad.this.type = this
-
     override def write(): FactoryWithAutoLoad.this.type = this
-
     override def get(): Dataset[Product2] = input
+
   }
 
   class FactoryWithAutoLoadWithCondition extends Factory[Dataset[Product2]] {
+
     @Delivery(autoLoad = true, condition = "x = 'a'")
     var input: Dataset[Product2] = _
 
     override def read(): FactoryWithAutoLoadWithCondition.this.type = this
-
     override def process(): FactoryWithAutoLoadWithCondition.this.type = this
-
     override def write(): FactoryWithAutoLoadWithCondition.this.type = {
-
       println(input.getClass)
-
       this
     }
 
     override def get(): Dataset[Product2] = input
+
   }
 
   class FactoryWithAutoLoadWithConditionDF extends Factory[DataFrame] {
+
     @Delivery(autoLoad = true, condition = "x = 'a'")
     var input: DataFrame = _
 
     override def read(): FactoryWithAutoLoadWithConditionDF.this.type = this
-
     override def process(): FactoryWithAutoLoadWithConditionDF.this.type = this
 
     override def write(): FactoryWithAutoLoadWithConditionDF.this.type = {
-
       println(input.getClass)
-
       this
     }
 
     override def get(): DataFrame = input
+
   }
 
   class FactoryWithAutoLoadException extends Factory[Dataset[Product2]] {
+
     @Delivery(autoLoad = true)
     var input: Dataset[Product2] = _
 
@@ -508,15 +420,14 @@ object DeliverableDispatcherSuite {
     var product23: Dataset[Product23] = _
 
     override def read(): FactoryWithAutoLoadException.this.type = this
-
     override def process(): FactoryWithAutoLoadException.this.type = this
-
     override def write(): FactoryWithAutoLoadException.this.type = this
-
     override def get(): Dataset[Product2] = input
+
   }
 
   class FactoryWithAutoLoadOptional extends Factory[Dataset[Product2]] {
+
     @Delivery(autoLoad = true)
     var input: Dataset[Product2] = _
 
@@ -524,12 +435,62 @@ object DeliverableDispatcherSuite {
     var product23: Dataset[Product23] = _
 
     override def read(): FactoryWithAutoLoadOptional.this.type = this
-
     override def process(): FactoryWithAutoLoadOptional.this.type = this
-
     override def write(): FactoryWithAutoLoadOptional.this.type = this
-
     override def get(): Dataset[Product2] = input
+
+  }
+
+  abstract class P1 extends Factory[External]
+
+  abstract class P2 extends Factory[External]
+
+  class Test extends Factory[String] {
+
+    @Delivery(producer = classOf[P1], optional = true)
+    private[workflow] var v1: String = _
+    @Delivery(producer = classOf[P2], optional = true)
+    private[workflow] var v2: String = _
+
+    var output: String = _
+
+    override def read(): this.type = {
+      if (v1 == null) v1 = "he"
+      if (v2 == null) v2 = "ha"
+      this
+    }
+
+    override def process(): this.type = {
+      output = v1 + v2
+      this
+    }
+
+    override def write(): this.type = this
+    override def get(): String = output
+
+  }
+
+  class Factory1 extends Factory[String] {
+
+    override def read(): Factory1.this.type = this
+    override def process(): Factory1.this.type = this
+    override def write(): Factory1.this.type = this
+    override def get(): String = "factory 1"
+
+  }
+
+  class Factory2 extends Factory[String] {
+
+    @Delivery(producer = classOf[Factory1])
+    var input1: String = _
+    @Delivery(producer = classOf[Factory1])
+    var input2: String = _
+
+    override def read(): Factory2.this.type = this
+    override def process(): Factory2.this.type = this
+    override def write(): Factory2.this.type = this
+    override def get(): String = "factory 2"
+
   }
 
 }
