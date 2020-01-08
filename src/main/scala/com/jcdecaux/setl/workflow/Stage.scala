@@ -59,11 +59,11 @@ class Stage extends Logging
    * @param persistence if set to true, then the write method of the factory will be invoked
    * @return
    */
-  @deprecated("To avoid misunderstanding, use writable()")
+  @deprecated("To avoid misunderstanding, use writable()", "0.4.0")
   def persist(persistence: Boolean): this.type = this.writable(persistence)
 
   /** Return true if the write method will be invoked by the pipeline */
-  @deprecated("To avoid misunderstanding, use writable")
+  @deprecated("To avoid misunderstanding, use writable", "0.4.0")
   def persist: Boolean = writable
 
   /**
@@ -122,7 +122,7 @@ class Stage extends Logging
                                               persistence: Boolean = true
                                             ): this.type = {
     val cls = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
-    addFactory(instantiateFactory(cls, constructorArgs).persist(persistence))
+    addFactory(instantiateFactory(cls, constructorArgs).writable(persistence))
   }
 
   @throws[AlreadyExistsException]
@@ -176,7 +176,7 @@ class Stage extends Logging
     proxyFactory.read()
     proxyFactory.process()
 
-    if (this.persist && factory.persist) {
+    if (this.writable && factory.writable) {
       log.debug(s"Persist output of ${factory.getPrettyName}")
       proxyFactory.write()
     }
@@ -208,7 +208,7 @@ class Stage extends Logging
 
         factory.read().process()
 
-        if (this.persist && factory.persist) {
+        if (this.writable && factory.writable) {
           log.debug(s"Persist output of ${factory.getPrettyName}")
           factory.write()
         }

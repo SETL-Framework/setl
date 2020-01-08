@@ -54,7 +54,7 @@ class StageSuite extends AnyFunSuite {
     )
 
     val connector = new CSVConnector(connectorOptions)
-    val stage = new Stage().persist(false)
+    val stage = new Stage().writable(false)
 
     stage
       .addFactory[PersistenceTest](Array(connector), persistence = true)
@@ -75,7 +75,7 @@ class StageSuite extends AnyFunSuite {
     )
 
     val connector = new CSVConnector(connectorOptions)
-    val stage = new Stage().persist(true)
+    val stage = new Stage().writable(true)
 
     stage
       .addFactory[PersistenceTest](Array(connector), persistence = true)

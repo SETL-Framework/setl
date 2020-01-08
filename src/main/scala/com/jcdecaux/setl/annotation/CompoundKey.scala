@@ -12,18 +12,19 @@ import scala.annotation.StaticAnnotation
 @InterfaceStability.Stable
 final case class CompoundKey(id: String, position: String) extends StaticAnnotation
 
-object CompoundKey {
+private[setl] object CompoundKey {
   private[this] val separator: String = "!@"
   import scala.reflect.runtime.{universe => ru}
-  def serialize(compoundKey: ru.AnnotationApi): String = {
 
+  /** To be used to handle the scala reflect annotation api of compound key */
+  def serialize(compoundKey: ru.AnnotationApi): String = {
     val attributes = compoundKey.tree.children.tail.collect {
       case ru.Literal(ru.Constant(attribute)) => attribute.toString
     }
-
     attributes.mkString(separator)
   }
 
+  /** Deserialize the string of compound key into an object of CompoundKey */
   def deserialize(str: String): CompoundKey = {
     val data = str.split(separator)
     CompoundKey(data(0), data(1))

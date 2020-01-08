@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.internal
 
-import com.jcdecaux.setl.annotation.{ColumnName, CompoundKey, Compress}
+import com.jcdecaux.setl.annotation.CompoundKey
 import com.jcdecaux.setl.exception.InvalidSchemaException
 import com.jcdecaux.setl.storage.Compressor
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
