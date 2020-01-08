@@ -15,6 +15,7 @@ trait HasDescription {
 
   def getPrettyName: String = getPrettyName(this.getClass)
 
+  /** Describe the current class */
   def describe(): this.type
 
 }

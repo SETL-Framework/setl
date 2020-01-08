@@ -42,6 +42,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
    */
   def findNode(factory: Factory[_]): Option[Node] = nodes.find(_.factoryUUID == factory.getUUID)
 
+  /** Return a list of node representing this pipeline */
   private[this] def createNodes(): Set[Node] = {
     pipeline
       .stages
@@ -49,6 +50,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
       .toSet
   }
 
+  /** Return a set of flows representing the internal data transfer */
   private[this] def createInternalFlows(): Set[Flow] = {
     pipeline
       .stages
@@ -75,6 +77,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
       .toSet
   }
 
+  /** Return a set of flows representing the external data transfer */
   private[this] def createExternalFlows(internalFlows: Set[Flow]): Set[Flow] = {
     require(nodes != null)
 
@@ -94,23 +97,21 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
       }
   }
 
+  /** Return a set of flows representing the complete data transfer of this pipeline */
   private[this] def createFlows(): Set[Flow] = {
     val internalFlows = createInternalFlows()
     val externalFlows = createExternalFlows(internalFlows)
     internalFlows ++ externalFlows
   }
 
-  /**
-   * Inspect the pipeline and generate the corresponding flows and nodes
-   *
-   * @return
-   */
+  /** Inspect the pipeline and generate the corresponding flows and nodes */
   def inspect(): this.type = {
     nodes = createNodes()
     flows = createFlows()
     this
   }
 
+  /** Describe the pipeline */
   override def describe(): this.type = {
     println("========== Pipeline Summary ==========\n")
     getDataFlowGraph.describe()
