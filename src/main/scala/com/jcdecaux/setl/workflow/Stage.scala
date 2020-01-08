@@ -92,6 +92,12 @@ class Stage extends Logging
     this
   }
 
+  /**
+   * Instantiate a factory with its class and its constructor arguments
+   * @param cls class of the factory to be instantiated
+   * @param constructorArgs arguments of the factory's primary constructor
+   * @return an object of type Factory[_]
+   */
   private[this] def instantiateFactory(cls: Class[_ <: Factory[_]],
                                        constructorArgs: Array[Object]): Factory[_] = {
     val primaryConstructor = cls.getConstructors.head
@@ -105,6 +111,13 @@ class Stage extends Logging
     newFactory.asInstanceOf[Factory[_]]
   }
 
+  /**
+   * Add a new factory by providing its class and the constructor arguments
+   * @param factory class of the factory to be added
+   * @param constructorArgs arguments of the primary constructor of the factory
+   * @throws AlreadyExistsException if the factory to be added exists already, this exception will be thrown
+   * @return this stage with the added factory
+   */
   @throws[IllegalArgumentException](
     "Exception will be thrown if the length of constructor arguments are not correct"
   )
@@ -113,15 +126,29 @@ class Stage extends Logging
     addFactory(instantiateFactory(factory, constructorArgs.toArray))
   }
 
+  /**
+   * Add a new factory by providing its class and the constructor arguments
+   * @param constructorArgs arguments of the primary constructor of the factory
+   * @param writable should the `write` method of the factory be invoked by the pipeline?
+   * @tparam T class of the factory to be instantiated
+   * @throws AlreadyExistsException if the factory to be added exists already, this exception will be thrown
+   * @return this stage with the added factory
+   */
   @throws[IllegalArgumentException](
     "Exception will be thrown if the length of constructor arguments are not correct"
   )
   def addFactory[T <: Factory[_] : ClassTag](constructorArgs: Array[Object] = Array.empty,
-                                             persistence: Boolean = true): this.type = {
+                                             writable: Boolean = true): this.type = {
     val cls = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
-    addFactory(instantiateFactory(cls, constructorArgs).writable(persistence))
+    addFactory(instantiateFactory(cls, constructorArgs).writable(writable))
   }
 
+  /**
+   * Add a new factory to this stage
+   * @param factory a factory object
+   * @throws AlreadyExistsException if the factory to be added exists already, this exception will be thrown
+   * @return this stage with the added factory
+   */
   @throws[AlreadyExistsException]
   def addFactory(factory: Factory[_]): this.type = {
     if (registerNewItem(factory)) {
@@ -135,12 +162,14 @@ class Stage extends Logging
     this
   }
 
+  /** Describe the current stage */
   override def describe(): this.type = {
     log.info(s"Stage $stageId contains ${_factories.length} factories")
     _factories.foreach(_.describe())
     this
   }
 
+  /** Execute the stage */
   def run(): this.type = {
     _deliverable = parallelFactories match {
       case Left(par) =>
