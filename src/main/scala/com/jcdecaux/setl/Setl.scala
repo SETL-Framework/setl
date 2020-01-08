@@ -34,13 +34,24 @@ abstract class Setl(val configLoader: ConfigLoader) {
    *
    * @param repositoryId path to spark repository configuration
    * @tparam DT type of spark repository
-   * @return
+   * @return the added repository
    */
   def getSparkRepository[DT: ru.TypeTag](repositoryId: String): SparkRepository[DT] = {
     setSparkRepository[DT](repositoryId)
     inputRegister.get(repositoryIdOf(repositoryId)).getPayload.asInstanceOf[SparkRepository[DT]]
   }
 
+  /**
+   * Force register a spark repository with an object of SparkRepository and its id. If a repository having
+   * the same ID was already registered, it will be overwritten by this one.
+   *
+   * @param repository an object of SparkRepository[T]
+   * @param consumer consumer of this spark repository
+   * @param deliveryId id of this delivery
+   * @param repositoryId id to be used for the repository registration
+   * @tparam DT data type of the repository
+   * @return the current SETL context with the added repository
+   */
   def resetSparkRepository[DT: ru.TypeTag](repository: SparkRepository[DT],
                                            consumer: Seq[Class[_ <: Factory[_]]],
                                            deliveryId: String,
@@ -58,7 +69,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param consumer   Seq of consumer
    * @param deliveryId id of this delivery that will be used during the delivery matching
    * @tparam DT type of spark repository
-   * @return
+   * @return the current SETL context with the added repository
    */
   def resetSparkRepository[DT: ru.TypeTag](config: String,
                                            consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
@@ -77,7 +88,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param consumer   Seq of consumer
    * @param deliveryId id of this delivery that will be used during the delivery matching
    * @tparam DT type of spark repository
-   * @return
+   * @return the current SETL context with the added repository
    */
   def setSparkRepository[DT: ru.TypeTag](config: String,
                                          consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
@@ -89,6 +100,17 @@ abstract class Setl(val configLoader: ConfigLoader) {
     this
   }
 
+  /**
+   * Register a spark repository with an object of SparkRepository and its id. If a repository having
+   * the same ID was already registered, it will NOT be overwritten by this one.
+   *
+   * @param repository an object of SparkRepository[T]
+   * @param consumer consumer of this spark repository
+   * @param deliveryId id of this delivery
+   * @param repositoryId id to be used for the repository registration
+   * @tparam DT data type of the repository
+   * @return the current SETL context with the added repository
+   */
   def setSparkRepository[DT: ru.TypeTag](repository: SparkRepository[DT],
                                          consumer: Seq[Class[_ <: Factory[_]]],
                                          deliveryId: String,
@@ -105,7 +127,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    *
    * @param connectorId id of connector (could be the config path)
    * @tparam CN type of the connector
-   * @return
+   * @return the registered connector
    */
   def getConnector[CN <: Connector](connectorId: String): CN = {
     setConnector(connectorId)
@@ -129,7 +151,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    *
    * @param config     path to connector configuration
    * @param deliveryId delivery ID
-   * @return
+   * @return the current SETL context with the added connector
    */
   def setConnector(config: String, deliveryId: String): this.type = {
     if (!inputRegister.contains(connectorIdOf(config))) resetConnector[Connector](config, deliveryId, classOf[Connector])
@@ -143,7 +165,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    *
    * @param config path to connector configuration
    * @tparam CN type of connector
-   * @return
+   * @return the current SETL context with the added repository
    */
   def setConnector[CN <: Connector : ru.TypeTag](config: String, cls: Class[CN]): this.type =
     this.setConnector[CN](config, config, cls)
@@ -158,7 +180,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param deliveryId delivery ID
    * @param cls        class of the Connector
    * @tparam CN type of spark connector
-   * @return
+   * @return the current SETL context with the added repository
    */
   def setConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
     if (!inputRegister.contains(connectorIdOf(config))) resetConnector[CN](config, deliveryId, cls)
@@ -174,7 +196,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param deliveryId  delivery ID
    * @param connectorId id of the Connector
    * @tparam CN type of spark connector
-   * @return
+   * @return the current SETL context with the added repository
    */
   def setConnector[CN <: Connector : ru.TypeTag](connector: CN, deliveryId: String, connectorId: String): this.type = {
     if (!inputRegister.contains(connectorIdOf(connectorId))) {
@@ -192,7 +214,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param deliveryId delivery ID
    * @param cls        class of the Connector
    * @tparam CN type of spark connector
-   * @return
+   * @return the current SETL context with the added repository
    */
   def resetConnector[CN <: Connector : ru.TypeTag](configPath: String, deliveryId: String, cls: Class[CN]): this.type = {
     val payload = new ConnectorBuilder(configLoader.getConfig(configPath)).getOrCreate().asInstanceOf[CN]
@@ -207,7 +229,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param connector  a connector
    * @param deliveryId delivery ID
    * @tparam CN type of spark connector
-   * @return
+   * @return the current SETL context with the added repository
    */
   def resetConnector[CN <: Connector : ru.TypeTag](connector: CN, deliveryId: String, connectorId: String): this.type = {
     val deliverable = new Deliverable(connector).setDeliveryId(deliveryId)
@@ -215,13 +237,14 @@ abstract class Setl(val configLoader: ConfigLoader) {
     this
   }
 
+  /** Return the current spark session */
   def sparkSession: SparkSession = this.spark
 
   /**
    * Create a new pipeline. All the registered repositories and connectors will be passed into the delivery pool
    * of the pipeline.
    *
-   * @return
+   * @return a newly instantiated pipeline object
    */
   def newPipeline(): Pipeline = {
     val _pipe = new Pipeline
@@ -239,9 +262,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def getPipeline(uuid: UUID): Pipeline = this.pipelineRegister.get(uuid)
 
-  /**
-   * Stop the spark session
-   */
+  /** Stop the spark session */
   def stop(): Unit = {
     this.spark.stop()
   }
@@ -260,31 +281,61 @@ object Setl {
 
     private[this] val fallbackContextConfiguration: String = "setl.config"
 
+    /**
+     * Define the config path of SETL
+     * @param config config path
+     * @return the current builder
+     */
     def setSetlConfigPath(config: String): this.type = {
       contextConfiguration = Option(config)
       this
     }
 
+    /**
+     * Define a user-defined SparkConf
+     * @param sparkConf SparkConf object
+     * @return the current builder
+     */
     def setSparkConf(sparkConf: SparkConf): this.type = {
       this.sparkConf = Option(sparkConf)
       this
     }
 
+    /**
+     * Overwrite the default Spark parallelism (200)
+     * @param par value of parallelism
+     * @return the current builder
+     */
     def setParallelism(par: Int): this.type = {
       this.parallelism = Some(par)
       this
     }
 
+    /**
+     * Provide a user-defined config loader
+     * @param configLoader ConfigLoader object
+     * @return the current builder
+     */
     def setConfigLoader(configLoader: ConfigLoader): this.type = {
       this.configLoader = configLoader
       this
     }
 
+    /**
+     * Set the master URL of Spark
+     * @param url master URL of spark
+     * @return the current builder
+     */
     def setSparkMaster(url: String): this.type = {
       this.sparkMasterUrl = Option(url)
       this
     }
 
+    /**
+     * Use the default config loader and load both the default application.conf and the given configuration file
+     * @param configFile file path string of the configuration file
+     * @return the current builder
+     */
     def withDefaultConfigLoader(configFile: String): this.type = {
       this.configLoader = ConfigLoader.builder()
         .setAppName(sparkAppName)
@@ -293,6 +344,11 @@ object Setl {
       this
     }
 
+    /**
+     * Use the default config loader and load the default configuration file (application.conf) and an additional
+     * configuration file (according to the value of setl.environment in application.conf)
+     * @return the current builder
+     */
     def withDefaultConfigLoader(): this.type = {
       this.configLoader = ConfigLoader.builder()
         .setAppName(sparkAppName)
@@ -302,6 +358,10 @@ object Setl {
 
     private[this] val sparkAppName: String = s"spark_app_${Random.alphanumeric.take(10).mkString("")}"
 
+    /**
+     * Instantiate a SparkSession object
+     * @return
+     */
     private[this] def buildSparkSession(): SparkSession = {
       val pathOf: String => String = (s: String) => s"${contextConfiguration.getOrElse(fallbackContextConfiguration)}.$s"
 
@@ -345,11 +405,7 @@ object Setl {
       }
     }
 
-    /**
-     * Build an object
-     *
-     * @return
-     */
+    /** Build SETL */
     override def build(): Builder.this.type = {
       setl = new Setl(configLoader) {
         override val spark: SparkSession = buildSparkSession()
@@ -360,6 +416,7 @@ object Setl {
     override def get(): Setl = setl
   }
 
+  /** Create a builder to build SETL */
   def builder(): Setl.Builder = new Setl.Builder()
 
 }

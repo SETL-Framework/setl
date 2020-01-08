@@ -36,7 +36,7 @@ class StageSuite extends AnyFunSuite {
     val connector = new CSVConnector(connectorOptions)
 
     new Stage()
-      .addFactory[PersistenceTest](Array(connector), persistence = false)
+      .addFactory[PersistenceTest](Array(connector), writable = false)
       .run()
 
     assertThrows[java.io.FileNotFoundException](connector.read(), "Output should not be persisted")
@@ -54,10 +54,10 @@ class StageSuite extends AnyFunSuite {
     )
 
     val connector = new CSVConnector(connectorOptions)
-    val stage = new Stage().persist(false)
+    val stage = new Stage().writable(false)
 
     stage
-      .addFactory[PersistenceTest](Array(connector), persistence = true)
+      .addFactory[PersistenceTest](Array(connector), writable = true)
       .run()
 
     assertThrows[java.io.FileNotFoundException](connector.read(), "Output should not be persisted")
@@ -75,10 +75,10 @@ class StageSuite extends AnyFunSuite {
     )
 
     val connector = new CSVConnector(connectorOptions)
-    val stage = new Stage().persist(true)
+    val stage = new Stage().writable(true)
 
     stage
-      .addFactory[PersistenceTest](Array(connector), persistence = true)
+      .addFactory[PersistenceTest](Array(connector), writable = true)
       .run()
 
     assert(connector.read().count() === 2, "Output should not be persisted")

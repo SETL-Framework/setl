@@ -1,6 +1,5 @@
 package com.jcdecaux.setl.internal;
 
-import com.jcdecaux.setl.BenchmarkResult;
 import com.jcdecaux.setl.annotation.Benchmark;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -10,6 +9,10 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * BenchmarkInvocationHandler is used to handle the `@Benchmark` annotation. It measure the elapsed time of the method
+ * having the annotation.
+ */
 public class BenchmarkInvocationHandler implements InvocationHandler {
 
     private Object target;
@@ -39,6 +42,7 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
         Object result;
 
         if (targetMethod.isAnnotationPresent(Benchmark.class)) {
+            // Measure the elapsed time if the method has @Benchmark annotation
             long start = System.nanoTime();
             result = targetMethod.invoke(target, args);
             long elapsed = System.nanoTime() - start;
@@ -48,6 +52,7 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
             logger.info("Executing " + target.getClass().getSimpleName() + "." +
                     method.getName() + " finished in " + elapsed + " ns");
         } else {
+            // if the method doesn't have the Benchmark annotation, run it without measuring the elapsed time
             result = targetMethod.invoke(target, args);
         }
 

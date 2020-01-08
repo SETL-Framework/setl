@@ -4,6 +4,9 @@ import java.util.UUID
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 
+/**
+ * Identifiable generates an UUID for any object that implement the trait
+ */
 @InterfaceStability.Evolving
 trait Identifiable {
 

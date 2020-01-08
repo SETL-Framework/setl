@@ -14,7 +14,11 @@ import scala.reflect.runtime.{universe => ru}
  * Pipeline is a complete data transformation workflow.
  */
 @InterfaceStability.Evolving
-class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable with HasBenchmark {
+class Pipeline extends Logging
+  with HasUUIDRegistry
+  with HasDescription
+  with Identifiable
+  with HasBenchmark {
 
   private[this] var _stageCounter: Int = 0
   private[this] var _executionPlan: DAG = _
@@ -24,6 +28,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   private[this] var _pipelineOptimizer: Option[PipelineOptimizer] = None
   private[this] var _benchmarkResult: Array[BenchmarkResult] = Array.empty
 
+  /** Return all the stages of this pipeline */
   def stages: Array[Stage] = this._stages.toArray
 
   /**
@@ -245,19 +250,19 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
 
   def getStage(id: Int): Stage = _stages(id)
 
-  /**
-   * Mark the last stage as a NON-end stage
-   */
+  /** Mark the last stage as a NON-end stage */
   private[this] def resetEndStage(): Unit = {
     if (_stages.nonEmpty) _stages.last.end = false
   }
 
+  /** Describe the pipeline */
   override def describe(): this.type = {
     inspectPipeline()
     _executionPlan.describe()
     this
   }
 
+  /** Execute the pipeline */
   def run(): this.type = {
     inspectPipeline()
     _benchmarkResult = _stages
@@ -299,14 +304,10 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     this
   }
 
-  /**
-   * Inspect the current pipeline if it has not been inspected
-   */
+  /** Inspect the current pipeline if it has not been inspected */
   private[this] def inspectPipeline(): Unit = if (!_pipelineInspector.inspected) forceInspectPipeline()
 
-  /**
-   * Inspect the current pipeline
-   */
+  /** Force the inspection of the current pipeline */
   private[this] def forceInspectPipeline(): Unit = {
     _pipelineInspector.inspect()
 
@@ -323,6 +324,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     _deliverableDispatcher.setDataFlowGraph(_executionPlan)
   }
 
+  /** Clear the current stages and replace it with the given stages */
   private[this] def resetStages(stages: Array[Stage]): Unit = {
     _stages.clear()
     _stages ++= stages
@@ -360,6 +362,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
    */
   def getDeliverable(t: ru.Type): Array[Deliverable[_]] = _deliverableDispatcher.findDeliverableByType(t)
 
+  /** Get the aggregated benchmark result. */
   override def getBenchmarkResult: Array[BenchmarkResult] = _benchmarkResult
 
 }
