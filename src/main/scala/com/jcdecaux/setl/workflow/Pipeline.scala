@@ -28,6 +28,7 @@ class Pipeline extends Logging
   private[this] var _pipelineOptimizer: Option[PipelineOptimizer] = None
   private[this] var _benchmarkResult: Array[BenchmarkResult] = Array.empty
 
+  /** Return all the stages of this pipeline */
   def stages: Array[Stage] = this._stages.toArray
 
   /**
