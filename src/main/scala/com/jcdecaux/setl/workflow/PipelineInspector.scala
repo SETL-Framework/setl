@@ -45,7 +45,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
   private[this] def createNodes(): Set[Node] = {
     pipeline
       .stages
-      .flatMap(stage => stage.createDAGNodes())
+      .flatMap(stage => stage.createNodes())
       .toSet
   }
 

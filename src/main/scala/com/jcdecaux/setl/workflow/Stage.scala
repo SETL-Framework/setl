@@ -77,6 +77,7 @@ class Stage extends Logging
     this
   }
 
+  /** Return true if the pipeline execution will be optimized by the given optimizer */
   def optimization: Boolean = this._optimization
 
   /**
@@ -91,10 +92,8 @@ class Stage extends Logging
     this
   }
 
-  private[this] def instantiateFactory(
-                                        cls: Class[_ <: Factory[_]],
-                                        constructorArgs: Array[Object]
-                                      ): Factory[_] = {
+  private[this] def instantiateFactory(cls: Class[_ <: Factory[_]],
+                                       constructorArgs: Array[Object]): Factory[_] = {
     val primaryConstructor = cls.getConstructors.head
 
     val newFactory = if (primaryConstructor.getParameterCount == 0) {
@@ -117,10 +116,8 @@ class Stage extends Logging
   @throws[IllegalArgumentException](
     "Exception will be thrown if the length of constructor arguments are not correct"
   )
-  def addFactory[T <: Factory[_] : ClassTag](
-                                              constructorArgs: Array[Object] = Array.empty,
-                                              persistence: Boolean = true
-                                            ): this.type = {
+  def addFactory[T <: Factory[_] : ClassTag](constructorArgs: Array[Object] = Array.empty,
+                                             persistence: Boolean = true): this.type = {
     val cls = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
     addFactory(instantiateFactory(cls, constructorArgs).writable(persistence))
   }
@@ -157,6 +154,15 @@ class Stage extends Logging
     this
   }
 
+  /**
+   * Execute a factory with the benchmarking. <br>
+   *
+   * This method doesn't return the deliverable of factory. It just invokes the read, process and write method
+   * of the factory. To retrieve the result
+   *
+   * @param factory The factory to be executed.
+   * @return the benchmark result of the factory
+   */
   private[this] def handleBenchmark(factory: Factory[_]): BenchmarkResult = {
     val factoryName = factory.getClass.getSimpleName
 
@@ -165,6 +171,7 @@ class Stage extends Logging
     log.info(s"Start benchmarking $factoryName")
     val start = System.nanoTime()
 
+    // Create the factory proxy
     val proxyFactory = java.lang.reflect.Proxy
       .newProxyInstance(
         getClass.getClassLoader,
@@ -176,7 +183,7 @@ class Stage extends Logging
     proxyFactory.read()
     proxyFactory.process()
 
-    if (this.writable && factory.writable) {
+    if (shouldWrite(factory)) {
       log.debug(s"Persist output of ${factory.getPrettyName}")
       proxyFactory.write()
     }
@@ -196,19 +203,21 @@ class Stage extends Logging
     )
   }
 
+  /** Execute a factory and return the deliverable of this factory */
   private[this] val runFactory: Factory[_] => Deliverable[_] = {
     factory: Factory[_] =>
-      if (this.benchmark.getOrElse(false) && factory.getClass
-        .isAnnotationPresent(classOf[Benchmark])) {
 
+      if (this.benchmark.getOrElse(false) && factory.getClass.isAnnotationPresent(classOf[Benchmark])) {
+
+        // Benchmark the factory
         val factoryBench = handleBenchmark(factory)
         _benchmarkResult.append(factoryBench)
 
       } else {
 
+        // Without benchmarking
         factory.read().process()
-
-        if (this.writable && factory.writable) {
+        if (shouldWrite(factory)) {
           log.debug(s"Persist output of ${factory.getPrettyName}")
           factory.write()
         }
@@ -218,8 +227,13 @@ class Stage extends Logging
       factory.getDelivery
   }
 
-  private[this] def parallelFactories
-  : Either[ParArray[Factory[_]], Array[Factory[_]]] = {
+  /** Return true if both this stage and the factory are writable, otherwise false */
+  private[this] val shouldWrite: Factory[_] => Boolean = factory => {
+    this.writable && factory.writable
+  }
+
+  /** According to the parallel setting of this stage, return either a ParArray or an Array of factories */
+  private[this] def parallelFactories: Either[ParArray[Factory[_]], Array[Factory[_]]] = {
     if (_parallel) {
       Left(_factories.par)
     } else {
@@ -227,12 +241,17 @@ class Stage extends Logging
     }
   }
 
-  private[workflow] def createDAGNodes(): Array[Node] = {
+  /** Return an array of Node representing the factories of this stage */
+  private[workflow] def createNodes(): Array[Node] = {
     _factories.map { fac =>
       new Node(factory = fac, this.stageId)
     }.toArray
   }
 
+  /**
+   * Get the aggregated benchmark result.
+   * @return an array of BenchmarkResult
+   */
   override def getBenchmarkResult: Array[BenchmarkResult] =
     _benchmarkResult.toArray
 
