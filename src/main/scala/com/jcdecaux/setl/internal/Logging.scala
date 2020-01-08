@@ -3,7 +3,9 @@ package com.jcdecaux.setl.internal
 import com.jcdecaux.setl.annotation.InterfaceStability
 import org.apache.log4j.{LogManager, Logger}
 
-
+/**
+ * Logging provide logging features for the class that extends this trait
+ */
 @InterfaceStability.Evolving
 private[setl] trait Logging {
 
