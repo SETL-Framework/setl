@@ -1,4 +1,8 @@
 # SETL
+
+![](https://codebuild.eu-west-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiWEJ3TXdNTUVsaUgveFE0V01xM1AvMkZaamVId1JFRGY0MDRuVWN1dEdmNkFKaFpmdmNlZXlTNFpGWjlXODFVQUNXdEIvc2tacXZuc3MySGpFU2gwVnk4PSIsIml2UGFyYW1ldGVyU3BlYyI6ImVqTmtldXdCWVlyd2JnMW0iLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
+
+
 SETL (Spark ETL, pronounced "settle") is an open-source Spark ETL framework that helps developers to structure ETL projects, modularize data transformation components and speed up the development.
 
 ## Use
