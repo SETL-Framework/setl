@@ -166,4 +166,6 @@ class CassandraConnector(val keyspace: String,
       .where(query)
       .deleteFromCassandra(keyspace, table)
   }
+
+  override def drop(): Unit = {}
 }

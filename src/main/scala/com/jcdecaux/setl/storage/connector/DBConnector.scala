@@ -12,4 +12,6 @@ abstract class DBConnector extends Connector with HasSparkSession {
   def create(t: DataFrame): Unit
 
   def delete(query: String): Unit
+
+  def drop(): Unit
 }

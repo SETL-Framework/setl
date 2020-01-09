@@ -103,6 +103,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
     }
 
     writer(t).save()
-
   }
+
+  override def drop(): Unit = {}
 }
