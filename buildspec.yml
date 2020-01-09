@@ -14,7 +14,6 @@ phases:
       java: corretto8
       docker: 18
     commands:
-      - yum update
       - yum install -y ca-certificates
       - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SETTINGS} > /root/.m2/settings.xml; fi
       - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SECURITY} > /root/.m2/settings-security.xml; fi
