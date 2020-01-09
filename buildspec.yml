@@ -14,10 +14,9 @@ phases:
       java: corretto8
       docker: 18
     commands:
-      - yum install -y ca-certificates
       - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SETTINGS} > /root/.m2/settings.xml; fi
       - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SECURITY} > /root/.m2/settings-security.xml; fi
-      - if [ "$DEPLOY" = "true" ]; then echo ${GPG_KEY} > /root/ossrh_gpg.key; fi
+      - if [ "$DEPLOY" = "true" ]; then echo ${GPG_KEY} > /root/ossrh_gpg_base64; base64 -D /root/ossrh_gpg_base64 > /root/ossrh_gpg.key; fi
       - cat /root/ossrh_gpg.key
       - gpg --version
       - gpg --list-keys
