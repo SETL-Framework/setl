@@ -5,7 +5,7 @@ env:
     AWS_ACCESS_KEY_ID: fakeAccess
     AWS_SECRET_ACCESS_KEY: fakeSecret
     AWS_REGION: eu-west-1
-    MVN_CHANGELIST: "-SNAPSHOT"
+    MVN_OPT: --batch-mode clean test
 
 phases:
   install:
@@ -20,8 +20,7 @@ phases:
   build:
     commands:
       - docker container ls
-      - echo ${MVN_CHANGELIST}
-#      - mvn clean package -Dchangelist=${MVN_CHANGELIST}
+      - mvn ${MVN_OPT}
   post_build:
     commands:
       - echo Build completed on `date`
