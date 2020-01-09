@@ -21,7 +21,7 @@ phases:
     commands:
       - docker container ls
       - echo ${MVN_CHANGELIST}
-#      - mvn clean package -Dchangelist=${MVN_CHANGELIST}
+      - mvn clean package -Dchangelist=${MVN_CHANGELIST}
   post_build:
     commands:
       - echo Build completed on `date`
