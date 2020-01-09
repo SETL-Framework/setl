@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.ConfigLoader
+import com.jcdecaux.setl.internal.HasRegistry
 import com.jcdecaux.setl.storage.connector.Connector
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.storage.{ConnectorBuilder, SparkRepositoryBuilder}
@@ -18,15 +19,14 @@ import scala.reflect.runtime.{universe => ru}
 import scala.util.Random
 
 @InterfaceStability.Evolving
-abstract class Setl(val configLoader: ConfigLoader) {
+abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline] {
 
   val spark: SparkSession
 
-  private[setl] val inputRegister: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
-  private[this] val pipelineRegister: ConcurrentHashMap[UUID, Pipeline] = new ConcurrentHashMap()
-
+  private[this] val externalInputRegistry: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
   private[this] val repositoryIdOf: String => String = config => s"@rpstry.$config"
   private[this] val connectorIdOf: String => String = config => s"@cnnctr.$config"
+  private[this] def hasExternalInput(id: String): Boolean = externalInputRegistry.contains(id)
 
   /**
    * Get a SparkRepository[DT]. If the given config path hasn't been registered, then the repository will
@@ -38,7 +38,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def getSparkRepository[DT: ru.TypeTag](repositoryId: String): SparkRepository[DT] = {
     setSparkRepository[DT](repositoryId)
-    inputRegister.get(repositoryIdOf(repositoryId)).getPayload.asInstanceOf[SparkRepository[DT]]
+    externalInputRegistry.get(repositoryIdOf(repositoryId)).getPayload.asInstanceOf[SparkRepository[DT]]
   }
 
   /**
@@ -57,7 +57,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
                                            deliveryId: String,
                                            repositoryId: String): this.type = {
     val deliverable = new Deliverable(repository).setConsumers(consumer).setDeliveryId(deliveryId)
-    inputRegister.put(repositoryIdOf(repositoryId), deliverable)
+    externalInputRegistry.put(repositoryIdOf(repositoryId), deliverable)
     this
   }
 
@@ -94,7 +94,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
                                          consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                          deliveryId: String = Deliverable.DEFAULT_ID,
                                          readCache: Boolean = false): this.type = {
-    if (!inputRegister.contains(repositoryIdOf(config))) {
+    if (!hasExternalInput(repositoryIdOf(config))) {
       resetSparkRepository[DT](config, consumer, deliveryId, readCache)
     }
     this
@@ -115,7 +115,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
                                          consumer: Seq[Class[_ <: Factory[_]]],
                                          deliveryId: String,
                                          repositoryId: String): this.type = {
-    if (!inputRegister.contains(repositoryIdOf(repositoryId))) {
+    if (!hasExternalInput(repositoryIdOf(repositoryId))) {
       resetSparkRepository[DT](repository, consumer, deliveryId, repositoryId)
     }
     this
@@ -131,7 +131,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def getConnector[CN <: Connector](connectorId: String): CN = {
     setConnector(connectorId)
-    inputRegister.get(connectorIdOf(connectorId)).getPayload.asInstanceOf[CN]
+    externalInputRegistry.get(connectorIdOf(connectorId)).getPayload.asInstanceOf[CN]
   }
 
   /**
@@ -154,7 +154,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @return the current SETL context with the added connector
    */
   def setConnector(config: String, deliveryId: String): this.type = {
-    if (!inputRegister.contains(connectorIdOf(config))) resetConnector[Connector](config, deliveryId, classOf[Connector])
+    if (!hasExternalInput(connectorIdOf(config))) resetConnector[Connector](config, deliveryId, classOf[Connector])
     this
   }
 
@@ -183,7 +183,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @return the current SETL context with the added repository
    */
   def setConnector[CN <: Connector : ru.TypeTag](config: String, deliveryId: String, cls: Class[CN]): this.type = {
-    if (!inputRegister.contains(connectorIdOf(config))) resetConnector[CN](config, deliveryId, cls)
+    if (!hasExternalInput(connectorIdOf(config))) resetConnector[CN](config, deliveryId, cls)
     this
   }
 
@@ -199,7 +199,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @return the current SETL context with the added repository
    */
   def setConnector[CN <: Connector : ru.TypeTag](connector: CN, deliveryId: String, connectorId: String): this.type = {
-    if (!inputRegister.contains(connectorIdOf(connectorId))) {
+    if (!hasExternalInput(connectorIdOf(connectorId))) {
       resetConnector[CN](connector, deliveryId, connectorId)
     }
     this
@@ -233,7 +233,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def resetConnector[CN <: Connector : ru.TypeTag](connector: CN, deliveryId: String, connectorId: String): this.type = {
     val deliverable = new Deliverable(connector).setDeliveryId(deliveryId)
-    inputRegister.put(connectorIdOf(connectorId), deliverable)
+    externalInputRegistry.put(connectorIdOf(connectorId), deliverable)
     this
   }
 
@@ -248,9 +248,10 @@ abstract class Setl(val configLoader: ConfigLoader) {
    */
   def newPipeline(): Pipeline = {
     val _pipe = new Pipeline
-    pipelineRegister.put(_pipe.getUUID, _pipe)
+    super.registerNewItem(_pipe)
+
     import scala.collection.JavaConverters._
-    inputRegister.asScala.foreach { case (_, del) => _pipe.setInput(del) }
+    externalInputRegistry.asScala.foreach { case (_, del) => _pipe.setInput(del) }
     _pipe
   }
 
@@ -260,7 +261,7 @@ abstract class Setl(val configLoader: ConfigLoader) {
    * @param uuid UUID of the target pipeline
    * @return
    */
-  def getPipeline(uuid: UUID): Pipeline = this.pipelineRegister.get(uuid)
+  def getPipeline(uuid: UUID): Option[Pipeline] = super.getRegisteredItem(uuid)
 
   /** Stop the spark session */
   def stop(): Unit = {
