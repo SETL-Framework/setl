@@ -17,6 +17,8 @@ phases:
       - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SETTINGS} > /root/.m2/settings.xml; fi
       - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SECURITY} > /root/.m2/settings-security.xml; fi
       - if [ "$DEPLOY" = "true" ]; then echo ${GPG_KEY} > /root/ossrh_gpg.key; fi
+      - gpg --version
+      - gpg --list-keys
       - if [ "$DEPLOY" = "true" ]; then gpg --import /root/ossrh_gpg.key; fi
   pre_build:
     commands:
