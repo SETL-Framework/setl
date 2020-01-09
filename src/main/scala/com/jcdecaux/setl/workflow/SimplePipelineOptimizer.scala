@@ -27,7 +27,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
     }
   }
 
-  override def optimize(stages: ArrayBuffer[Stage]): Array[Stage] = {
+  override def optimize(stages: Iterable[Stage]): Array[Stage] = {
     val factories = stages.flatMap(_.factories)
 
     optExecutionPlan.nodes.groupBy(_.stage).map {

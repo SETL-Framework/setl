@@ -42,7 +42,7 @@ class PipelineSuite extends AnyFunSuite {
       .run()
 
     //    pipeline.dispatchManagers.deliveries.foreach(x => println(x.get))
-    assert(pipeline.deliverableDispatcher.deliverablePool.length === 5)
+    assert(pipeline.deliverableDispatcher.getRegistryLength === 5)
     assert(pipeline.getDeliverable(ru.typeOf[Container2[Product2]]).head.getPayload == Container2(Product2("a", "b")))
 
     // Check inspector
