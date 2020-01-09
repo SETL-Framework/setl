@@ -6,12 +6,18 @@ env:
     AWS_SECRET_ACCESS_KEY: fakeSecret
     AWS_REGION: eu-west-1
     MVN_OPT: --batch-mode clean test
+    DEPLOY: "false"
 
 phases:
   install:
     runtime-versions:
       java: corretto8
       docker: 18
+    commands:
+      - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SETTINGS} > /root/.m2/settings.xml; fi
+      - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SECURITY} > /root/.m2/settings-security.xml; fi
+      - if [ "$DEPLOY" = "true" ]; then echo ${GPG_KEY} > /root/ossrh_gpg.key; fi
+      - if [ "$DEPLOY" = "true" ]; then gpg --import /root/ossrh_gpg.key; fi
   pre_build:
     commands:
       - echo starting services
