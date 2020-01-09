@@ -17,7 +17,7 @@ import scala.reflect.ClassTag
 @InterfaceStability.Evolving
 class Stage extends Logging
   with Identifiable
-  with HasUUIDRegistry
+  with HasRegistry[Factory[_]]
   with HasDescription
   with HasBenchmark
   with Writable {
@@ -27,7 +27,6 @@ class Stage extends Logging
   private[this] var _end: Boolean = true
   private[this] var _parallel: Boolean = true
   private[this] var _stageId: Int = _
-  private[this] val _factories: ArrayBuffer[Factory[_]] = ArrayBuffer()
   private[this] var _deliverable: Array[Deliverable[_]] = _
   private[this] val _benchmarkResult: ArrayBuffer[BenchmarkResult] = ArrayBuffer.empty
 
@@ -45,7 +44,7 @@ class Stage extends Logging
   }
 
   /** Return all the factories of this stage */
-  def factories: ArrayBuffer[Factory[_]] = this._factories
+  def factories: Array[Factory[_]] = this.getRegistry.values.toArray
 
   /** Return all the deliverable of this stage */
   def deliverable: Array[Deliverable[_]] = this._deliverable
@@ -151,21 +150,14 @@ class Stage extends Logging
    */
   @throws[AlreadyExistsException]
   def addFactory(factory: Factory[_]): this.type = {
-    if (registerNewItem(factory)) {
-      _factories += factory
-    } else {
-      throw new AlreadyExistsException(
-        s"The current factory ${factory.getCanonicalName} (${factory.getUUID.toString})" +
-          s"already exists"
-      )
-    }
+    registerNewItem(factory)
     this
   }
 
   /** Describe the current stage */
   override def describe(): this.type = {
-    log.info(s"Stage $stageId contains ${_factories.length} factories")
-    _factories.foreach(_.describe())
+    log.info(s"Stage $stageId contains ${getRegistryLength} factories")
+    factories.foreach(_.describe())
     this
   }
 
@@ -264,17 +256,17 @@ class Stage extends Logging
   /** According to the parallel setting of this stage, return either a ParArray or an Array of factories */
   private[this] def parallelFactories: Either[ParArray[Factory[_]], Array[Factory[_]]] = {
     if (_parallel) {
-      Left(_factories.par)
+      Left(factories.par)
     } else {
-      Right(_factories.toArray)
+      Right(factories)
     }
   }
 
   /** Return an array of Node representing the factories of this stage */
   private[workflow] def createNodes(): Array[Node] = {
-    _factories.map { fac =>
+    factories.map { fac =>
       new Node(factory = fac, this.stageId)
-    }.toArray
+    }
   }
 
   /**
