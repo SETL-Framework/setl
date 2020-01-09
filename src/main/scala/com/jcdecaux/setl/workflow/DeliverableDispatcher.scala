@@ -2,7 +2,7 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.exception.{AlreadyExistsException, InvalidDeliveryException}
-import com.jcdecaux.setl.internal.{HasUUIDRegistry, Logging}
+import com.jcdecaux.setl.internal.{HasRegistry, Logging}
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
 import org.apache.spark.sql.{Dataset, Row}
@@ -23,9 +23,9 @@ import scala.reflect.runtime.{universe => ru}
  * </ul>
  */
 @InterfaceStability.Evolving
-private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
+private[setl] class DeliverableDispatcher extends Logging
+  with HasRegistry[Deliverable[_]] {
 
-  private[workflow] val deliverablePool: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
   private[this] var graph: DAG = _
 
   def setDataFlowGraph(graph: DAG): this.type = {
@@ -45,12 +45,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
    */
   private[workflow] def addDeliverable(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
-
-    if (registerNewItem(v)) {
-      deliverablePool.append(v)
-    } else {
-      throw new AlreadyExistsException(s"The current deliverable ${v.getUUID} already exists")
-    }
+    registerNewItem(v)
     this
   }
 
@@ -117,7 +112,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
   }
 
   private[workflow] def findDeliverableBy(condition: Deliverable[_] => Boolean): Array[Deliverable[_]] = {
-    deliverablePool.filter(d => condition(d)).toArray
+    this.getRegistry.values.filter(d => condition(d)).toArray
   }
 
   /**
@@ -193,7 +188,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
    * If the deliverable object is a Dataset and if a condition is defined in the @Delivery annotation, then filter
    * the input Dataset with this condition. Otherwise, return the input deliverable
    *
-   * @param condition condition string
+   * @param condition   condition string
    * @param deliverable deliverable object
    * @tparam D input type
    * @return `Option[Deliverable[D]]`
