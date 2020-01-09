@@ -5,7 +5,7 @@ env:
     AWS_ACCESS_KEY_ID: fakeAccess
     AWS_SECRET_ACCESS_KEY: fakeSecret
     AWS_REGION: eu-west-1
-    MVN_OPT: clean test
+    MVN_OPT: --batch-mode clean test
 
 phases:
   install:
