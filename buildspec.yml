@@ -15,7 +15,7 @@ phases:
       docker: 18
     commands:
       - |
-        if [ "$DEPLOY" != "false" ]; then
+        if [[ "$DEPLOY" != "false" ]]; then
            echo ${MVN_SETTINGS} > /root/.m2/settings.xml;
            echo ${MVN_SECURITY} > /root/.m2/settings-security.xml;
            gpg --list-keys;
@@ -32,14 +32,12 @@ phases:
   post_build: # Deployment
     commands:
       - |
-        if [ "$DEPLOY" = "SNAPSHOT" ]; then
+        if [[ "$DEPLOY" = "SNAPSHOT" ]]; then
            echo Deploy to the snapshot repository;
            mvn --batch-mode deploy -DskipTests -Pprovided;
-
-        else if [ "$DEPLOY" = "RELEASE" ]; then
+        elif [[ "$DEPLOY" = "RELEASE" ]]; then
            echo Deploy to the stagging repository;
            mvn --batch-mode deploy -DskipTests -Prelease;
-
         else
            echo No deployment;
         fi
