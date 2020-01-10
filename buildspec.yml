@@ -14,33 +14,35 @@ phases:
       java: corretto8
       docker: 18
     commands:
-      - gpg --list-keys
-      - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SETTINGS} > /root/.m2/settings.xml; fi
-      - if [ "$DEPLOY" = "true" ]; then echo ${MVN_SECURITY} > /root/.m2/settings-security.xml; fi
-      - if [ "$DEPLOY" = "true" ]; then echo ${GPG_KEY} | base64 -d > /root/ossrh_gpg.key; fi
-      - if [ "$DEPLOY" = "true" ]; then gpg --import /root/ossrh_gpg.key; fi
-  pre_build:
+      - |
+        if [ "$DEPLOY" != "false" ]; then
+           echo ${MVN_SETTINGS} > /root/.m2/settings.xml;
+           echo ${MVN_SECURITY} > /root/.m2/settings-security.xml;
+           gpg --list-keys;
+           echo ${GPG_KEY} | base64 -d | gpg --import;
+        fi
+  pre_build: # Services
     commands:
-      - echo starting services
       - docker version
       - docker-compose -f ./dev/docker-compose.yml up -d
-  build:
+  build: # Test and Reports
     commands:
       - docker container ls
       - mvn ${MVN_OPT}
-  post_build:
+  post_build: # Deployment
     commands:
       - |
         if [ "$DEPLOY" = "SNAPSHOT" ]; then
-           echo Deploy to the snapshot repository
-           mvn --batch-mode deploy -DskipTests -Pprovided
+           echo Deploy to the snapshot repository;
+           mvn --batch-mode deploy -DskipTests -Pprovided;
 
         else if [ "$DEPLOY" = "RELEASE" ]; then
-           echo Deploy to the stagging repository
-           mvn --batch-mode deploy -DskipTests -Prelease
+           echo Deploy to the stagging repository;
+           mvn --batch-mode deploy -DskipTests -Prelease;
 
         else
-           echo No deployment
+           echo No deployment;
+        fi
       - echo Build completed on `date`
 
 reports:
