@@ -65,5 +65,5 @@ class JDBCConnectorSuite extends AnyFunSuite {
 }
 
 object JDBCConnectorSuite {
-  val psqlHost: String = System.getProperty("setl.test.postgres.host", "localhost")
+  val psqlHost: String = "localhost"  // System.getProperty("setl.test.postgres.host", "localhost")
 }
