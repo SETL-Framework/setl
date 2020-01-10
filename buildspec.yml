@@ -30,6 +30,17 @@ phases:
       - mvn ${MVN_OPT}
   post_build:
     commands:
+      - |
+        if [ "$DEPLOY" = "SNAPSHOT" ]; then
+           echo Deploy to the snapshot repository
+           mvn --batch-mode deploy -DskipTests -Pprovided
+
+        else if [ "$DEPLOY" = "RELEASE" ]; then
+           echo Deploy to the stagging repository
+           mvn --batch-mode deploy -DskipTests -Prelease
+
+        else
+           echo No deployment
       - echo Build completed on `date`
 
 reports:
