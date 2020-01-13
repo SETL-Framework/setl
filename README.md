@@ -92,7 +92,9 @@ We will create our `Dataset[TestObject]` inside a `Factory[Dataset[TestObject]]`
 
 ```scala
 class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
-
+  
+  import spark.implicits._
+    
   // A repository is needed for writing data. It will be delivered by the pipeline
   @Delivery 
   private[this] val repo = SparkRepository[TestObject]
@@ -105,12 +107,11 @@ class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
   }
 
   override def process(): MyFactory.this.type = {
-    import spark.implicits._
     output = Seq(
       TestObject(1, "a", "A", 1L),
       TestObject(2, "b", "B", 2L)
     ).toDS()
-  this
+    this
   }
 
   override def write(): MyFactory.this.type = {
