@@ -34,7 +34,7 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
   <dependency>
     <groupId>com.jcdecaux.setl</groupId>
     <artifactId>setl_2.11</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.4.1-SNAPSHOT</version>
   </dependency>
 </dependencies>
 ```
