@@ -6,7 +6,6 @@ import com.jcdecaux.setl.exception.InvalidDeliveryException
 import com.jcdecaux.setl.internal.{HasDescription, HasDiagram, Identifiable, Logging}
 import com.jcdecaux.setl.transformation._
 import com.jcdecaux.setl.util.ReflectUtils
-import org.apache.spark.sql.Dataset
 
 import scala.language.existentials
 import scala.reflect.runtime
@@ -30,13 +29,13 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
     with HasDescription
     with HasDiagram {
 
-  def this(factory: Factory[_], stage: Int) {
+  def this(factory: Factory[_], stage: Int, finalNode: Boolean) {
     this(
       factoryClass = factory.getClass,
       factoryUUID = factory.getUUID,
       stage = stage,
       setters = FactoryDeliveryMetadata.builder().setFactory(factory).getOrCreate().toList,
-      output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId)
+      output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId, finalNode)
     )
   }
 
@@ -154,18 +153,26 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
     validConsumer && validProducer
   }
 
+  override def diagramId: String = this.getPrettyName.replaceAll("[\\[\\]]", "_")
+
   override def toDiagram: String = {
 
     val fields = this.input.map {
       i => s"+${ReflectUtils.getPrettyName(i.runtimeType)}"
     }.mkString("\n  ")
 
-    s"""
-       |class ${this.getPrettyName} {
-       |  <<Factory[${ReflectUtils.getPrettyName(this.output.runtimeType)}]>>
-       |  $fields
-       |}
-       |""".stripMargin
+    val thisDiagramString =
+      s"""class ${this.diagramId} {
+         |  <<Factory[${ReflectUtils.getPrettyName(this.output.runtimeType)}]>>
+         |  $fields
+         |}
+         |""".stripMargin
+
+    val link = s"${this.output.diagramId} <|.. ${this.diagramId} : Output"
+
+    s"""$thisDiagramString
+       |${this.output.toDiagram}
+       |$link""".stripMargin
   }
 
 }

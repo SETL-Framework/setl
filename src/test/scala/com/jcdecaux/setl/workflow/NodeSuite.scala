@@ -441,21 +441,8 @@ class NodeSuite extends AnyFunSuite {
 
   test("Node should be able to generate a Mermaid diagram string") {
 
-//    val node1 = Node(
-//      factoryClass = classOf[Producer1],
-//      factoryUUID = uuid1,
-//      stage = 0,
-//      setters = List(
-//        testMetadata.copy(
-//          argTypes = List(runtime.universe.typeOf[String]),
-//          id = "id_1"
-//        )
-//      ),
-//      output = FactoryOutput(runtime.universe.typeOf[Producer1], Seq.empty, "id_2")
-//    )
-
     val factory = new ConcreteProducer1
-    val node = new Node(factory, 0)
+    val node = new Node(factory, 0, true)
 
     println(node.toDiagram)
 

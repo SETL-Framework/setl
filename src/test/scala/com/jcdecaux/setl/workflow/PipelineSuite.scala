@@ -288,6 +288,8 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory3").get.input.length === 3)
     assert(pipeline.pipelineInspector.flows.size === 7)
+
+    println(pipeline.toDiagram)
   }
 
   test("Pipeline should be able to describe with empty flow and node") {

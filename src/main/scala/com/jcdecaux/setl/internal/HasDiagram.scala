@@ -4,4 +4,6 @@ trait HasDiagram {
 
   def toDiagram: String
 
+  def diagramId: String
+
 }

@@ -1,8 +1,9 @@
 package com.jcdecaux.setl.workflow
 
+import com.jcdecaux.setl.internal.HasDiagram
 import com.jcdecaux.setl.transformation.{Factory, FactoryDeliveryMetadata}
 
-private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
+private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends HasDiagram {
 
   def describe(): Unit = {
     println("-------------   Data Transformation Summary  -------------")
@@ -28,13 +29,16 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
     nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
   }
 
-  def toMermaidDiagram: String = {
+  override def toDiagram: String = {
 
+    val nodeDiagrams = nodes.map(_.toDiagram).mkString("\n")
+    val flowDiagrams = flows.map(_.toDiagram).mkString("\n")
 
-    ""
+    s"""classDiagram
+       |$nodeDiagrams
+       |$flowDiagrams
+       |""".stripMargin
   }
 
-  def saveAsMermaid(filePath: Option[String]): Unit = {
-
-  }
+  override def diagramId: String = throw new NotImplementedError("DAG doesn't have diagram id")
 }
