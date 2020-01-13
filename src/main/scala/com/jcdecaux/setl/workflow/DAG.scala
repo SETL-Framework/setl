@@ -27,4 +27,14 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
   def findDeliveryMetadata(factory: Factory[_]): List[FactoryDeliveryMetadata] = {
     nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
   }
+
+  def toMermaidDiagram: String = {
+
+
+    ""
+  }
+
+  def saveAsMermaid(filePath: Option[String]): Unit = {
+
+  }
 }

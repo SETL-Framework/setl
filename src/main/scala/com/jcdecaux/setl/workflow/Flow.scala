@@ -2,6 +2,7 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.internal.HasDescription
 import com.jcdecaux.setl.transformation.Deliverable
+import com.jcdecaux.setl.util.ReflectUtils
 
 import scala.reflect.runtime
 
@@ -25,7 +26,7 @@ private[workflow] case class Flow(from: Node, to: Node) extends HasDescription {
     }
     println(s"Stage       : $stage")
     println(s"Direction   : ${from.getPrettyName} ==> ${to.getPrettyName}")
-    println(s"PayLoad     : ${getPrettyName(payload)}")
+    println(s"PayLoad     : ${ReflectUtils.getPrettyName(payload)}")
     println("----------------------------------------------------------")
     this
   }
