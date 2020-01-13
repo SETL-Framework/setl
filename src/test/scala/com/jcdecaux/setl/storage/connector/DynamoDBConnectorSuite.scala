@@ -94,6 +94,6 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
 
 object DynamoDBConnectorSuite {
 
-  val host: String = System.getProperty("aws.dynamodb.endpoint", "http://localhost:8000")
+  val host: String = "http://localhost:8000"  // System.getProperty("aws.dynamodb.endpoint", "http://localhost:8000")
 
 }

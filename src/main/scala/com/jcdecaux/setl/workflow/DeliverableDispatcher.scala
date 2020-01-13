@@ -1,8 +1,8 @@
 package com.jcdecaux.setl.workflow
 
-import com.jcdecaux.setl.annotation.{Delivery, InterfaceStability}
+import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.exception.{AlreadyExistsException, InvalidDeliveryException}
-import com.jcdecaux.setl.internal.{HasUUIDRegistry, Logging}
+import com.jcdecaux.setl.internal.{HasRegistry, Logging}
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
 import org.apache.spark.sql.{Dataset, Row}
@@ -23,9 +23,9 @@ import scala.reflect.runtime.{universe => ru}
  * </ul>
  */
 @InterfaceStability.Evolving
-private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
+private[setl] class DeliverableDispatcher extends Logging
+  with HasRegistry[Deliverable[_]] {
 
-  private[workflow] val deliverablePool: ArrayBuffer[Deliverable[_]] = ArrayBuffer()
   private[this] var graph: DAG = _
 
   def setDataFlowGraph(graph: DAG): this.type = {
@@ -45,12 +45,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
    */
   private[workflow] def addDeliverable(v: Deliverable[_]): this.type = {
     log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
-
-    if (registerNewItem(v)) {
-      deliverablePool.append(v)
-    } else {
-      throw new AlreadyExistsException(s"The current deliverable ${v.getUUID} already exists")
-    }
+    registerNewItem(v)
     this
   }
 
@@ -117,7 +112,7 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
   }
 
   private[workflow] def findDeliverableBy(condition: Deliverable[_] => Boolean): Array[Deliverable[_]] = {
-    deliverablePool.filter(d => condition(d)).toArray
+    this.getRegistry.values.filter(d => condition(d)).toArray
   }
 
   /**
@@ -190,6 +185,84 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
   }
 
   /**
+   * If the deliverable object is a Dataset and if a condition is defined in the @Delivery annotation, then filter
+   * the input Dataset with this condition. Otherwise, return the input deliverable
+   *
+   * @param condition   condition string
+   * @param deliverable deliverable object
+   * @tparam D input type
+   * @return `Option[Deliverable[D]]`
+   */
+  private[this] def handleDeliveryCondition[D: ru.TypeTag](condition: String,
+                                                           deliverable: Deliverable[D]): Option[Deliverable[D]] = {
+    if (condition != "" && deliverable.payloadClass.isAssignableFrom(classOf[Dataset[Row]])) {
+      log.debug("Find data frame filtering condition to be applied")
+      Some(
+        new Deliverable(
+          deliverable
+            .getPayload
+            .asInstanceOf[Dataset[Row]]
+            .filter(condition)
+            .asInstanceOf[D]
+        )
+      )
+    } else {
+      Option(deliverable)
+    }
+  }
+
+  /**
+   * For a given type, if it is a Dataset of type `T`, then find its corresponding `SparkRepository[T]` and use it
+   * to load data from the data store.
+   *
+   * @param argType    input type
+   * @param deliveryId delivery id
+   * @param consumer   consumer of the input
+   * @param condition  loading condition
+   * @param optional   if set to true, then no exception will be thrown when there is no available SparkRepository,
+   *                   false otherwise
+   * @return `Option[Deliverable[T]]`
+   */
+  private[this] def handleAutoLoad(argType: ru.Type,
+                                   deliveryId: String,
+                                   consumer: Factory[_],
+                                   condition: String,
+                                   optional: Boolean): Option[Deliverable[_]] = {
+    // check if the input argType is a dataset
+    val isDataset = argType.toString.startsWith(ru.typeOf[Dataset[_]].toString.dropRight(2))
+
+    if (isDataset) {
+      val repoName = getRepositoryNameFromDataset(argType)
+      log.info("Auto load enabled, looking for repository")
+
+      val availableRepos = findDeliverableBy {
+        deliverable => deliverable.hasSamePayloadType(repoName) && deliverable.deliveryId == deliveryId
+      }
+
+      val matchedRepo = getDeliverable(availableRepos, consumer.getClass, classOf[External])
+
+      matchedRepo match {
+        case Some(deliverable) =>
+          val repo = deliverable.getPayload.asInstanceOf[SparkRepository[_]]
+          val data = if (condition != "") {
+            repo.findAll().filter(condition)
+          } else {
+            repo.findAll()
+          }
+          Option(new Deliverable(data))
+        case _ =>
+          if (!optional) {
+            // throw exception if there's no deliverable and the current delivery is not optional
+            throw new NoSuchElementException(s"Can not find $repoName from DeliverableDispatcher")
+          }
+          None
+      }
+    } else {
+      None
+    }
+  }
+
+  /**
    * Dispatch the right deliverable object to the corresponding methods
    * (denoted by the @Delivery annotation) of a factory
    *
@@ -218,55 +291,21 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
               ) match {
                 case Some(deliverable) =>
                   // If we find some delivery, then return it if non null
-                  require(deliverable.payload != null, "Deliverable is null")
-
-                  if (deliveryMeta.condition != "" && deliverable.payloadClass.isAssignableFrom(classOf[Dataset[Row]])) {
-                    log.debug("Find data frame filtering condition to be applied")
-                    Some(
-                      new Deliverable(
-                        deliverable
-                          .payload
-                          .asInstanceOf[Dataset[Row]]
-                          .filter(deliveryMeta.condition)
-                      )
-                    )
-                  } else {
-                    Some(deliverable)
-                  }
+                  handleDeliveryCondition(deliveryMeta.condition, deliverable)
 
                 case _ =>
                   /*
                    if there's no delivery, then check if autoLoad is set to true.
                    if true, then we will try to find the corresponding repository of the input type and load the data
                   */
-                  val isDataset = argType.toString.startsWith(ru.typeOf[Dataset[_]].toString.dropRight(2)) // check if the input argType is a dataset
-
-                  if (deliveryMeta.autoLoad && isDataset) {
-                    val repoName = getRepositoryNameFromDataset(argType)
-                    log.info("Find auto load enabled, looking for repository")
-
-                    val availableRepos = findDeliverableBy {
-                      deliverable => deliverable.hasSamePayloadType(repoName) && deliverable.deliveryId == deliveryMeta.id
-                    }
-
-                    val matchedRepo = getDeliverable(availableRepos, consumer.getClass, classOf[External])
-
-                    matchedRepo match {
-                      case Some(deliverable) =>
-                        val repo = deliverable.payload.asInstanceOf[SparkRepository[_]]
-                        val data = if (deliveryMeta.condition != "") {
-                          repo.findAll().filter(deliveryMeta.condition)
-                        } else {
-                          repo.findAll()
-                        }
-                        Option(new Deliverable(data))
-                      case _ =>
-                        if (!deliveryMeta.optional) {
-                          // throw exception if there's no deliverable and the current delivery is not optional
-                          throw new NoSuchElementException(s"Can not find $repoName from DeliverableDispatcher")
-                        }
-                        None
-                    }
+                  if (deliveryMeta.autoLoad) {
+                    handleAutoLoad(
+                      argType,
+                      deliveryMeta.id,
+                      consumer,
+                      deliveryMeta.condition,
+                      deliveryMeta.optional
+                    )
                   } else {
                     None
                   }
@@ -290,11 +329,11 @@ private[setl] class DeliverableDispatcher extends Logging with HasUUIDRegistry {
               case Left(field) =>
                 log.debug(s"Set value of ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
                 field.setAccessible(true)
-                field.set(consumer, args.head.get.asInstanceOf[Object])
+                field.set(consumer, args.head.getPayload.asInstanceOf[Object])
               case Right(method) =>
                 log.debug(s"Invoke ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
                 method.setAccessible(true)
-                method.invoke(consumer, args.map(_.get.asInstanceOf[Object]): _*)
+                method.invoke(consumer, args.map(_.getPayload.asInstanceOf[Object]): _*)
             }
           }
       }

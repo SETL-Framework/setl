@@ -133,7 +133,7 @@ class SchemaConverterSuite extends AnyFunSuite {
 
     val df = SchemaConverter.toDF(ds)
     df.show()
-    assert(df.columns === Array("a", "b", "c", "_sort_key", "_primary_key"))
+    assert(df.columns.toSet === Set("a", "b", "c", "_sort_key", "_primary_key"))
     assert(df.collect().map(_.getAs[String]("_primary_key")) === Array("a-1", "b-2", "c-3"))
     assert(df.filter($"_primary_key" === "c-3").collect().length === 1)
 
@@ -142,6 +142,23 @@ class SchemaConverterSuite extends AnyFunSuite {
     assert(ds2.columns sameElements Array("a", "b", "c"))
     assert(df.count() === ds2.count())
 
+  }
+
+  test("[SETL-34] SchemaConverter should handle multi CompoundKeys on the same field") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val ds = Seq(
+      MultipleCompoundKeyTest("a", "1", "A"),
+      MultipleCompoundKeyTest("b", "2", "B"),
+      MultipleCompoundKeyTest("c", "3", "C")
+    ).toDS()
+
+    val df = SchemaConverter.toDF(ds)
+
+    assert(df.columns === Array("col1", "col2", "COLUMN_3", "_part_key", "_sort_key"))
+    assert(df.select($"_part_key".as[String]).collect() === Array("a-A", "b-B", "c-C"))
+    assert(df.select($"_sort_key".as[String]).collect() === Array("a-1", "b-2", "c-3"))
   }
 
   test("Schema converter should add missing nullable columns in the DF-DS conversion") {

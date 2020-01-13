@@ -27,7 +27,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
     }
   }
 
-  override def optimize(stages: ArrayBuffer[Stage]): Array[Stage] = {
+  override def optimize(stages: Iterable[Stage]): Array[Stage] = {
     val factories = stages.flatMap(_.factories)
 
     optExecutionPlan.nodes.groupBy(_.stage).map {
@@ -54,7 +54,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
 
     val startingFlows = dag.flows
       .filter(_.from == oldNode)
-      .map(_.copy(stage = newNode.stage, from = newNode))
+      .map(_.copy(from = newNode))
 
     val endingFlows = dag.flows
       .filter(_.to == oldNode)

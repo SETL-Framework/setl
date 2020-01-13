@@ -1,15 +1,50 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_ACCESS_KEY_ID: fakeAccess
+    AWS_SECRET_ACCESS_KEY: fakeSecret
+    AWS_REGION: eu-west-1
+    MVN_OPT: --batch-mode clean:clean scoverage:report scala:doc
+    DEPLOY: "false"
+
 phases:
   install:
     runtime-versions:
       java: corretto8
-  pre_build:
+      docker: 18
     commands:
-      - echo Nothing to do in the pre_build phase...
-  build:
+      - |
+        if [[ "$DEPLOY" != "false" ]]; then
+           echo ${MVN_SETTINGS} > /root/.m2/settings.xml;
+           echo ${MVN_SECURITY} > /root/.m2/settings-security.xml;
+           gpg --list-keys;
+           echo ${GPG_KEY} | base64 -d | gpg --import;
+        fi
+  pre_build: # Services
     commands:
-      - echo Build started on `date`
-  post_build:
+      - docker version
+      - docker-compose -f ./dev/docker-compose.yml up -d
+  build: # Test and Reports
     commands:
+      - docker container ls
+      - mvn ${MVN_OPT}
+  post_build: # Deployment
+    commands:
+      - |
+        if [[ "$DEPLOY" = "SNAPSHOT" ]]; then
+           echo Deploy to the snapshot repository;
+           mvn --batch-mode deploy -DskipTests -Pprovided;
+        elif [[ "$DEPLOY" = "RELEASE" ]]; then
+           echo Deploy to the stagging repository;
+           mvn --batch-mode deploy -DskipTests -Prelease;
+        else
+           echo No deployment;
+        fi
       - echo Build completed on `date`
+
+reports:
+  SurefireReports: # CodeBuild will create a report group called "SurefireReports".
+    files: #Store all of the files
+      - '**/*'
+    base-directory: 'target/surefire-reports' # Location of the reports

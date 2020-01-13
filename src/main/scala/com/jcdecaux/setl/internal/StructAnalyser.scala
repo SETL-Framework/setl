@@ -9,7 +9,14 @@ import org.apache.spark.sql.types.{MetadataBuilder, StructField, StructType}
 
 import scala.reflect.runtime.{universe => ru}
 
+/**
+ * StructAnalyser will analyse the schema for a given case class. It will register the information about
+ */
 object StructAnalyser extends Logging {
+
+  private[setl] val COMPOUND_KEY: String = classOf[CompoundKey].getCanonicalName
+  private[setl] val COLUMN_NAME: String = classOf[ColumnName].getCanonicalName
+  private[setl] val COMPRESS: String = classOf[Compress].getCanonicalName
 
   /**
    * Analyse the metadata of the generic type T. Fetch information for its annotated fields.
@@ -35,30 +42,38 @@ object StructAnalyser extends Logging {
         // https://stackoverflow.com/questions/23046958/accessing-an-annotation-value-in-scala
         val annotations = field.annotations.collect {
 
-          // Case where the field has annotation 'ColumnName'
+          // Case where the field has the annotation 'ColumnName'
           case columnName: ru.AnnotationApi if columnName.tree.tpe =:= ru.typeOf[ColumnName] =>
+
             val value = columnName.tree.children.tail.collectFirst {
               case ru.Literal(ru.Constant(name)) => name.toString
             }
-            (ColumnName.toString(), Array(value.get)) // (ColumnName, ["alias"])
+            (COLUMN_NAME, Array(value.get)) // (ColumnName, ["alias"])
 
-          // Case where the field has annotation `CompoundKey`
+          // Case where the field has the annotation `CompoundKey`
           case compoundKey: ru.AnnotationApi if compoundKey.tree.tpe =:= ru.typeOf[CompoundKey] =>
-            val attributes = Some(compoundKey.tree.children.tail.collect {
-              case ru.Literal(ru.Constant(attribute)) => attribute.toString
-            })
-            // All compound key column should not be nullable
-            nullable = false
-            (CompoundKey.toString(), attributes.get.toArray) // (ColumnName, ["id", "position"])
 
+            val attribute = CompoundKey.serialize(compoundKey)
+            nullable = false // All compound key column should not be nullable
+            (COMPOUND_KEY, Array(attribute)) // (ColumnName, ["id", "position"])
+
+          // Case where the field has the annotation `Compress`
           case compress: ru.AnnotationApi if compress.tree.tpe =:= ru.typeOf[Compress] =>
             val compressor = columnToBeCompressed.find(_._1 == index).get._2.getCanonicalName
-            (classOf[Compress].getCanonicalName, Array(compressor)) // (com.jcdecaux.setl.xxxx, ["compressor_canonical_name"])
+            (COMPRESS, Array(compressor)) // (com.jcdecaux.setl.xxxx, ["compressor_canonical_name"])
 
-        }.toMap
+        }
+          .groupBy(_._1)
+          .map {
+            case (group, elements) => (group, elements.flatMap(_._2))
+          }
 
         val metadataBuilder = new MetadataBuilder()
-        annotations.foreach(annoData => metadataBuilder.putStringArray(annoData._1, annoData._2))
+        annotations.foreach {
+          annotationData =>
+            verifyAnnotation(annotationData._1, annotationData._2)
+            metadataBuilder.putStringArray(annotationData._1, annotationData._2.toArray)
+        }
 
         StructField(field.name.toString, dataType, nullable, metadataBuilder.build())
     }
@@ -84,6 +99,23 @@ object StructAnalyser extends Logging {
         val compressorMethod = compressAnnotation.annotationType().getDeclaredMethod("compressor")
         val compressor = compressorMethod.invoke(compressAnnotation).asInstanceOf[Class[_ <: Compressor]]
         (index, compressor)
+    }
+  }
+
+  /**
+   * Verify the annotations of a field with the following conditions:
+   *
+   * <p>A field should not have more than one @ColumnName annotation</p>
+   * <p>A field should not have more than one @Compress annotation</p>
+   *
+   * @param annotation name of the annotation
+   * @param data       attribute of the annotation
+   */
+  private[this] def verifyAnnotation(annotation: String, data: List[String]): Unit = {
+    if (annotation == COLUMN_NAME) {
+      require(data.length == 1, "There should not be more than one ColumnName annotation")
+    } else if (annotation == COMPRESS) {
+      require(data.length == 1, "There should not be more than one Compress annotation")
     }
   }
 

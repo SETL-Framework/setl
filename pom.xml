@@ -47,7 +47,7 @@
     </scm>
 
     <properties>
-        <revision>0.4.0</revision>
+        <revision>0.4.1</revision>
         <changelist>-SNAPSHOT</changelist>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -57,11 +57,10 @@
         <scala.compat.version>2.11</scala.compat.version>
         <spark.version>2.4.4</spark.version>
         <spark.compat.version>2.4</spark.compat.version>
+        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
+        <site.plugin.version>3.7.1</site.plugin.version>
         <dependencies.scope>provided</dependencies.scope>
         <app.environment>local</app.environment>
-        <setl.test.cassandra.host>localhost</setl.test.cassandra.host>
-        <setl.test.postgres.host>localhost</setl.test.postgres.host>
-        <setl.test.dynamodb.host>localhost</setl.test.dynamodb.host>
     </properties>
 
     <dependencies>
@@ -248,7 +247,9 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding} -Dsetl.test.cassandra.host=${setl.test.cassandra.host} -Dsetl.test.postgres.host=${setl.test.postgres.host} -Daws.dynamodb.endpoint=http://${setl.test.dynamodb.host}:8000
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    <junitxml>.</junitxml>
+                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding} -Daws.dynamodb.endpoint=http://localhost:8000
                     </argLine>
                     <parallel>false</parallel>
                 </configuration>
@@ -287,6 +288,25 @@
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <aggregateOnly>true</aggregateOnly>
+                    <!-- other parameters -->
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>${site.plugin.version}</version>
+                <configuration>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>

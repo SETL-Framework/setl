@@ -14,7 +14,7 @@ import scala.reflect.runtime.{universe => ru}
  * @tparam T type of the payload
  */
 @InterfaceStability.Evolving
-class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasType {
+class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false
   private[this] var _producer: Class[_ <: Factory[_]] = classOf[External]
@@ -23,10 +23,13 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
 
   private[setl] def isEmpty: Boolean = empty
 
+  /** Return the producer of this deliverable */
   def producer: Class[_ <: Factory[_]] = _producer
 
+  /** Return the ID of this delivery */
   def deliveryId: String = _deliveryId
 
+  /** Set the delivery ID for this delivery */
   def setDeliveryId(id: String): this.type = {
     _deliveryId = id
     this
@@ -36,14 +39,23 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
    * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
    * type, it will select the correct deliverable by looking at the consumer
    */
-
   def consumer: List[Class[_ <: Factory[_]]] = _consumer.toList
 
+  /** The Scala runtime type of this deliverable's payload */
   override val runtimeType: ru.Type = ru.typeTag[T].tpe
 
+  /** The Scala runtime type of this deliverable's payload */
   def payloadType: ru.Type = runtimeType
 
-  def get: T = payload
+  /** Get the payload */
+  @throws[NoSuchElementException]("Thrown when the Payload is null")
+  def getPayload: T = {
+    if (payload == null) {
+      throw new NoSuchElementException(s"Payload of type ${this.runtimeType} is not set.")
+    } else {
+      payload
+    }
+  }
 
   /**
    * Compare the type of two deliverable
@@ -53,16 +65,37 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
    */
   def hasSamePayloadType(deliverable: Deliverable[_]): Boolean = this.payloadType =:= deliverable.payloadType
 
+  /**
+   * Compare the type of two deliverable
+   *
+   * @param deliverable the payload type of the deliverable to be compared
+   * @return
+   */
   def hasSamePayloadType(deliverable: ru.Type): Boolean = this.payloadType =:= deliverable
 
+  /**
+   * Compare the type of two deliverable
+   *
+   * @param deliverableType the string of the payload type of the deliverable to be compared
+   * @return
+   */
   def hasSamePayloadType(deliverableType: String): Boolean = this.payloadType.toString.equals(deliverableType)
 
+  /**
+   * Return true if:
+   * <ul>
+   * <li>This deliverable has the same payload type as the other deliverable</li>
+   * <li>Both of them have the same consumers</li>
+   * <li>Both of them have the same producer</li>
+   * </ul>
+   */
   def hasSameContent(deliverable: Deliverable[_]): Boolean = {
     this.hasSamePayloadType(deliverable) &&
       this.consumer.intersect(deliverable.consumer).nonEmpty &&
       this.producer == deliverable.producer
   }
 
+  /** Get the payload class */
   def payloadClass: Class[_] = payload.getClass
 
   /**
@@ -98,6 +131,7 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
     this
   }
 
+  /** Describe this deliverable  */
   def describe(): Unit = {
     println(s"Deliverable: $payloadType")
     println(s" From: ${producer.toString}")
@@ -108,8 +142,10 @@ class Deliverable[T: ru.TypeTag](val payload: T) extends Identifiable with HasTy
 
 object Deliverable {
 
+  /** Default delivery id of a deliverable object */
   val DEFAULT_ID: String = ""
 
+  /** Return an empty deliverable to be used as placeholder */
   def empty(): Deliverable[Option[Nothing]] = {
     val emptyDelivery = new Deliverable[Option[Nothing]](None)
     emptyDelivery.empty = true

@@ -2,7 +2,7 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal.{HasDescription, Logging}
-import com.jcdecaux.setl.transformation.Factory
+import com.jcdecaux.setl.transformation.{Factory, FactoryOutput}
 
 /**
  * PipelineInspector will inspect a given [[com.jcdecaux.setl.workflow.Pipeline]] and create a
@@ -42,13 +42,15 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
    */
   def findNode(factory: Factory[_]): Option[Node] = nodes.find(_.factoryUUID == factory.getUUID)
 
+  /** Return a list of node representing this pipeline */
   private[this] def createNodes(): Set[Node] = {
     pipeline
       .stages
-      .flatMap(stage => stage.createDAGNodes())
+      .flatMap(stage => stage.createNodes())
       .toSet
   }
 
+  /** Return a set of flows representing the internal data transfer */
   private[this] def createInternalFlows(): Set[Flow] = {
     pipeline
       .stages
@@ -63,12 +65,11 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
               .flatMap {
                 f =>
                   val thisNode = findNode(f).get
-                  val payloadType = f.deliveryType()
                   val targetNodes = nodes
                     .filter(n => n.stage > thisNode.stage)
                     .filter(n => thisNode.targetNode(n))
 
-                  targetNodes.map(targetNode => Flow(payloadType, thisNode, targetNode, stage.stageId, f.deliveryId))
+                  targetNodes.map(targetNode => Flow(thisNode, targetNode))
               }
               .toSet
           }
@@ -76,6 +77,7 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
       .toSet
   }
 
+  /** Return a set of flows representing the external data transfer */
   private[this] def createExternalFlows(internalFlows: Set[Flow]): Set[Flow] = {
     require(nodes != null)
 
@@ -84,28 +86,32 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
         thisNode =>
           thisNode.input
             .filter(_.producer == classOf[External])
-            .map(nodeInput => Flow(nodeInput.runtimeType, External.NODE, thisNode, External.NODE.stage, nodeInput.deliveryId))
+            .map{
+              nodeInput =>
+                val node = External.NODE.copy(
+                  output = FactoryOutput(nodeInput.runtimeType, Seq.empty, nodeInput.deliveryId)
+                )
+                Flow(node, thisNode)
+            }
             .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
       }
   }
 
+  /** Return a set of flows representing the complete data transfer of this pipeline */
   private[this] def createFlows(): Set[Flow] = {
     val internalFlows = createInternalFlows()
     val externalFlows = createExternalFlows(internalFlows)
     internalFlows ++ externalFlows
   }
 
-  /**
-   * Inspect the pipeline and generate the corresponding flows and nodes
-   *
-   * @return
-   */
+  /** Inspect the pipeline and generate the corresponding flows and nodes */
   def inspect(): this.type = {
     nodes = createNodes()
     flows = createFlows()
     this
   }
 
+  /** Describe the pipeline */
   override def describe(): this.type = {
     println("========== Pipeline Summary ==========\n")
     getDataFlowGraph.describe()

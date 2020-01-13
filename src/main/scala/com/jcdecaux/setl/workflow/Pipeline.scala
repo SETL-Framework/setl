@@ -1,11 +1,10 @@
 package com.jcdecaux.setl.workflow
 
+import com.jcdecaux.setl.BenchmarkResult
 import com.jcdecaux.setl.annotation.InterfaceStability
-import com.jcdecaux.setl.exception.AlreadyExistsException
-import com.jcdecaux.setl.internal.{HasDescription, HasUUIDRegistry, Identifiable, Logging}
+import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 
@@ -13,16 +12,21 @@ import scala.reflect.runtime.{universe => ru}
  * Pipeline is a complete data transformation workflow.
  */
 @InterfaceStability.Evolving
-class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Identifiable {
+class Pipeline extends Logging
+  with HasRegistry[Stage]
+  with HasDescription
+  with Identifiable
+  with HasBenchmark {
 
   private[this] var _stageCounter: Int = 0
   private[this] var _executionPlan: DAG = _
   private[this] val _deliverableDispatcher: DeliverableDispatcher = new DeliverableDispatcher
-  private[this] val _stages: ArrayBuffer[Stage] = ArrayBuffer[Stage]()
   private[this] val _pipelineInspector: PipelineInspector = new PipelineInspector(this)
   private[this] var _pipelineOptimizer: Option[PipelineOptimizer] = None
+  private[this] var _benchmarkResult: Array[BenchmarkResult] = Array.empty
 
-  def stages: Array[Stage] = this._stages.toArray
+  /** Return all the stages of this pipeline */
+  def stages: List[Stage] = this.getRegistry.values.toList
 
   /**
    * Get the inspector of this pipeline
@@ -230,68 +234,81 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage ${_stageCounter}")
 
-    if (registerNewItem(stage)) {
-      resetEndStage()
-      _stages += stage.setStageId(_stageCounter)
-      _stageCounter += 1
-    } else {
-      throw new AlreadyExistsException("Stage already exists")
-    }
+    registerNewItem(stage.setStageId(_stageCounter))
+    resetEndStage()
+    _stageCounter += 1
 
     this
   }
 
-  def getStage(id: Int): Stage = _stages(id)
+  def getStage(id: Int): Option[Stage] = this.stages.find(s => s.stageId == id)
 
-  /**
-   * Mark the last stage as a NON-end stage
-   */
-  private[this] def resetEndStage(): Unit = {
-    if (_stages.nonEmpty) _stages.last.end = false
+  /** Mark the last stage as a NON-end stage */
+  private[this] def resetEndStage(): Unit = this.lastRegisteredItem match {
+    case Some(stage) => stage.end = false
+    case _ =>
   }
 
+  /** Describe the pipeline */
   override def describe(): this.type = {
     inspectPipeline()
     _executionPlan.describe()
     this
   }
 
+  /** Execute the pipeline */
   def run(): this.type = {
     inspectPipeline()
-    _stages
-      .foreach {
+    _benchmarkResult = stages
+      .flatMap {
         stage =>
           // Describe current stage
           stage.describe()
 
           // dispatch only if deliverable pool is not empty
-          if (_deliverableDispatcher.deliverablePool.nonEmpty) {
+          if (_deliverableDispatcher.getRegistry.nonEmpty) {
             stage.factories.foreach(_deliverableDispatcher.dispatch)
+          }
+
+          // Disable benchmark if benchmark is false
+          this.benchmark match {
+            case Some(boo) =>
+              if (!boo) {
+                log.debug("Disable benchmark")
+                stage.benchmark(false)
+              }
+            case _ =>
+          }
+          if (!this.benchmark.getOrElse(false)) {
+            stage.benchmark(false)
           }
 
           // run the stage
           stage.run()
           stage.factories.foreach(_deliverableDispatcher.collectDeliverable)
-      }
+
+          // retrieve benchmark result
+          stage.getBenchmarkResult
+
+      }.toArray
+
+    // Show benchmark message
+    this.getBenchmarkResult.foreach(println)
 
     this
   }
 
-  /**
-   * Inspect the current pipeline if it has not been inspected
-   */
+  /** Inspect the current pipeline if it has not been inspected */
   private[this] def inspectPipeline(): Unit = if (!_pipelineInspector.inspected) forceInspectPipeline()
 
-  /**
-   * Inspect the current pipeline
-   */
+  /** Force the inspection of the current pipeline */
   private[this] def forceInspectPipeline(): Unit = {
     _pipelineInspector.inspect()
 
     _executionPlan = _pipelineOptimizer match {
       case Some(optimiser) =>
         optimiser.setExecutionPlan(_pipelineInspector.getDataFlowGraph)
-        val newStages = optimiser.optimize(_stages)
+        val newStages = optimiser.optimize(stages)
         this.resetStages(newStages)
         optimiser.getOptimizedExecutionPlan
 
@@ -301,9 +318,10 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
     _deliverableDispatcher.setDataFlowGraph(_executionPlan)
   }
 
+  /** Clear the current stages and replace it with the given stages */
   private[this] def resetStages(stages: Array[Stage]): Unit = {
-    _stages.clear()
-    _stages ++= stages
+    super.clearRegistry()
+    super.registerNewItems(stages)
   }
 
   /**
@@ -312,7 +330,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
    * @return an object. it has to be convert to the according type manually.
    */
   def getLastOutput: Any = {
-    _stages.last.factories.last.get()
+    this.lastRegisteredItem.get.factories.last.get()
   }
 
   /**
@@ -322,7 +340,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
    * @return
    */
   def getOutput[A](cls: Class[_ <: Factory[_]]): A = {
-    val factory = _stages.flatMap(s => s.factories).find(f => f.getClass == cls)
+    val factory = stages.flatMap(s => s.factories).find(f => f.getClass == cls)
 
     factory match {
       case Some(x) => x.get().asInstanceOf[A]
@@ -338,5 +356,7 @@ class Pipeline extends Logging with HasUUIDRegistry with HasDescription with Ide
    */
   def getDeliverable(t: ru.Type): Array[Deliverable[_]] = _deliverableDispatcher.findDeliverableByType(t)
 
+  /** Get the aggregated benchmark result. */
+  override def getBenchmarkResult: Array[BenchmarkResult] = _benchmarkResult
 
 }
