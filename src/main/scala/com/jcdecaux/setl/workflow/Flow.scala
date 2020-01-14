@@ -33,7 +33,7 @@ private[workflow] case class Flow(from: Node, to: Node) extends HasDescription w
 
   override def toDiagram: String = {
     if (from.factoryClass == classOf[External]) {
-      s"${to.diagramId} <|-- ${from.output.diagramId}_external : Input"
+      s"${to.diagramId} <|-- ${from.output.diagramId}External : Input"
     } else {
       s"${to.diagramId} <|-- ${from.output.diagramId} : Input"
     }

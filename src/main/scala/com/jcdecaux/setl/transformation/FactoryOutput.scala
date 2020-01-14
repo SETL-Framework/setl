@@ -13,34 +13,35 @@ private[setl] case class FactoryOutput(override val runtimeType: runtime.univers
 
   override def diagramId: String = {
     val finalSuffix = if (finalOutput) {
-      "final"
+      "Final"
     } else {
       ""
     }
-    ReflectUtils.getPrettyName(this.runtimeType).replaceAll("[\\[\\]]", "_") + deliveryId + finalSuffix
+    super.formatDiagramId(ReflectUtils.getPrettyName(runtimeType), deliveryId, finalSuffix)
+  }
+
+  private[this] def payloadField: List[String] = {
+    val isDataset = this.runtimeType.baseClasses.head.asClass == runtime.universe.symbolOf[Dataset[_]].asClass
+
+    if (isDataset) {
+      val datasetTypeArgFields = super.getTypeArgList(this.runtimeType.typeArgs.head)
+
+      datasetTypeArgFields.map {
+        i => s">${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
+      }
+
+    } else {
+      val typeArgFields = super.getTypeArgList(this.runtimeType)
+
+      typeArgFields.map {
+        i => s"-${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
+      }
+    }
   }
 
   override def toDiagram: String = {
 
-    val isDataset = this.runtimeType.baseClasses.head.asClass == runtime.universe.symbolOf[Dataset[_]].asClass
-
-    val fields = if (isDataset) {
-      val constructorArgList = this.runtimeType
-        .typeArgs.head
-        .baseClasses.head
-        .asClass
-        .primaryConstructor
-        .typeSignature
-        .paramLists
-        .head
-
-      constructorArgList.map {
-        i => s"+${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
-      }.mkString("\n  ")
-
-    } else {
-      ""
-    }
+    val fields = this.payloadField.mkString("\n  ")
 
     s"""class ${this.diagramId} {
        |  <<${ReflectUtils.getPrettyName(this.runtimeType)}>>
