@@ -4,6 +4,8 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](https://raw.githubusercontent.com/JCDecaux/setl/master/LICENSE)
 [![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Scoverage](https://img.shields.io/static/v1?label=coverage&message=Scoverage&color=ff69b4)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scoverage/)
+[![Scaladocs](https://img.shields.io/static/v1?label=doc&message=scaladocs&color=9cf)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scaladocs/#com.jcdecaux.setl.Setl)
 
 SETL (Spark ETL, pronounced "settle") is an open-source Spark ETL framework that helps developers to structure ETL projects, modularize data transformation components and speed up the development.
 
