@@ -2,6 +2,7 @@ package com.jcdecaux.setl.transformation
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal.{HasDescription, Identifiable, Logging, Writable}
+import com.jcdecaux.setl.util.ReflectUtils
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -67,7 +68,7 @@ abstract class Factory[A: ru.TypeTag] extends AbstractFactory[A]
 
   /** Describe the */
   override def describe(): this.type = {
-    log.info(s"$getPrettyName will produce a ${getPrettyName(deliveryType())}")
+    log.info(s"$getPrettyName will produce a ${ReflectUtils.getPrettyName(deliveryType())}")
     this
   }
 

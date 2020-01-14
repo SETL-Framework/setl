@@ -8,7 +8,7 @@ import com.jcdecaux.setl.storage.SparkRepositoryBuilder
 import com.jcdecaux.setl.storage.connector.FileConnector
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 import com.jcdecaux.setl.workflow.DeliverableDispatcherSuite.FactoryWithMultipleAutoLoad
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, SparkSession, functions}
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.runtime.{universe => ru}
@@ -85,7 +85,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(f3.get().count() === 2)
     assert(f3.get().filter($"x" === "pd1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
-    assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+    assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "produced_by_datasetFactory2"))
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 3)
@@ -120,7 +120,11 @@ class PipelineSuite extends AnyFunSuite {
     assert(f3.get().count() === 2)
     assert(f3.get().filter($"x" === "pd1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
-    assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+
+    assert(
+      f3.get().filter($"x" === "id_of_product1").collect().head ===
+        Product2("id_of_product1", "produced_by_datasetFactory2")
+    )
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 3)
@@ -157,7 +161,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
     assert(
       pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
-        Product2("id_of_product1", "c2")
+        Product2("id_of_product1", "produced_by_datasetFactory2")
     )
 
     // Test get[A](cls) method
@@ -166,7 +170,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).filter($"x" === "pd1").count() === 1)
     assert(
       pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2])
-        .filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2")
+        .filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "produced_by_datasetFactory2")
     )
   }
 
@@ -199,7 +203,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").count() === 1)
     assert(
       pipeline.getLastOutput.asInstanceOf[Dataset[Product2]].filter($"x" === "id_of_product1").collect().head ===
-        Product2("id_of_product1", "c2")
+        Product2("id_of_product1", "produced_by_datasetFactory2")
     )
 
     // Test get[A](cls)
@@ -208,7 +212,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2]).filter($"x" === "pd1").count() === 1)
     assert(
       pipeline.getOutput[Dataset[Product2]](classOf[DatasetFactory2])
-        .filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2")
+        .filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "produced_by_datasetFactory2")
     )
 
     // Test inspector
@@ -281,13 +285,15 @@ class PipelineSuite extends AnyFunSuite {
     assert(dsFactory3.get().count() === 4)
     assert(dsFactory3.get().filter($"x" === "pd1").count() === 2)
     assert(dsFactory3.get().filter($"x" === "id_of_product1").count() === 2)
-    assert(dsFactory3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+    assert(dsFactory3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "produced_by_datasetFactory2"))
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 4)
+    assert(pipeline.pipelineInspector.flows.size === 8)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory3").get.input.length === 3)
-    assert(pipeline.pipelineInspector.flows.size === 7)
+
+    println(pipeline.toDiagram)
   }
 
   test("Pipeline should be able to describe with empty flow and node") {
@@ -450,7 +456,10 @@ object PipelineSuite {
 
     override def process(): DatasetFactory2.this.type = {
       import spark.implicits._
-      output = ds.join(ds2, Seq("x")).as[Product2]
+      output = Seq(
+        ds.withColumn("y", functions.lit("produced_by_datasetFactory2")).as[Product2].head,
+        ds2.collect().last
+      ).toDS()
       this
     }
 
@@ -463,10 +472,13 @@ object PipelineSuite {
 
     @Delivery
     var p1: Product1 = _
+
     @Delivery(producer = classOf[DatasetFactory2])
     var ds: Dataset[Product2] = _
+
     @Delivery
     var ds2: Dataset[Product2] = _
+
     var output: Dataset[Product2] = _
 
     override def read(): DatasetFactory3.this.type = this

@@ -3,8 +3,9 @@ package com.jcdecaux.setl.workflow
 import java.util.UUID
 
 import com.jcdecaux.setl.exception.InvalidDeliveryException
-import com.jcdecaux.setl.internal.{HasDescription, Identifiable, Logging}
+import com.jcdecaux.setl.internal.{HasDescription, HasDiagram, Identifiable, Logging}
 import com.jcdecaux.setl.transformation._
+import com.jcdecaux.setl.util.ReflectUtils
 
 import scala.language.existentials
 import scala.reflect.runtime
@@ -22,19 +23,29 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
                                   factoryUUID: UUID,
                                   stage: Int,
                                   setters: List[FactoryDeliveryMetadata],
-                                  output: FactoryOutput) extends Identifiable with Logging with HasDescription {
+                                  output: FactoryOutput)
+  extends Identifiable
+    with Logging
+    with HasDescription
+    with HasDiagram {
 
-  def this(factory: Factory[_], stage: Int) {
+  def this(factory: Factory[_], stage: Int, finalNode: Boolean) {
     this(
       factoryClass = factory.getClass,
       factoryUUID = factory.getUUID,
       stage = stage,
       setters = FactoryDeliveryMetadata.builder().setFactory(factory).getOrCreate().toList,
-      output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId)
+      output = FactoryOutput(
+        factory.deliveryType(),
+        factory.consumers,
+        factory.deliveryId,
+        finalNode
+        // this constructor will never be used to generate an external node
+      )
     )
   }
 
-  override def getPrettyName: String = getPrettyName(factoryClass)
+  override def getPrettyName: String = ReflectUtils.getPrettyName(factoryClass)
 
   def input: List[FactoryInput] = setters.flatMap(s => s.getFactoryInputs)
 
@@ -60,9 +71,9 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
     input.foreach {
       i =>
         val deliveryId: String = formatDeliveryId(i.deliveryId)
-        println(s"Input   : ${getPrettyName(i.runtimeType)}$deliveryId")
+        println(s"Input   : ${ReflectUtils.getPrettyName(i.runtimeType)}$deliveryId")
     }
-    println(s"Output  : ${getPrettyName(output.runtimeType)}${formatDeliveryId(output.deliveryId)}") //
+    println(s"Output  : ${ReflectUtils.getPrettyName(output.runtimeType)}${formatDeliveryId(output.deliveryId)}") //
     println("----------------------------------------------------------")
     this
   }
@@ -148,5 +159,26 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
     validConsumer && validProducer
   }
 
+  override def diagramId: String = this.getPrettyName.replaceAll("[\\[\\]]", "_")
+
+  override def toDiagram: String = {
+
+    val fields = this.input.map {
+      i => s"+${ReflectUtils.getPrettyName(i.runtimeType)}"
+    }.mkString("\n  ")
+
+    val thisDiagramString =
+      s"""class ${this.diagramId} {
+         |  <<Factory[${ReflectUtils.getPrettyName(this.output.runtimeType)}]>>
+         |  $fields
+         |}
+         |""".stripMargin
+
+    val link = s"${this.output.diagramId} <|.. ${this.diagramId} : Output"
+
+    s"""$thisDiagramString
+       |${this.output.toDiagram}
+       |$link""".stripMargin
+  }
 
 }

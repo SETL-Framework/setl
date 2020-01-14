@@ -1,8 +1,9 @@
 package com.jcdecaux.setl.workflow
 
+import com.jcdecaux.setl.internal.HasDiagram
 import com.jcdecaux.setl.transformation.{Factory, FactoryDeliveryMetadata}
 
-private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
+private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends HasDiagram {
 
   def describe(): Unit = {
     println("-------------   Data Transformation Summary  -------------")
@@ -27,4 +28,20 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) {
   def findDeliveryMetadata(factory: Factory[_]): List[FactoryDeliveryMetadata] = {
     nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
   }
+
+  override def toDiagram: String = {
+
+    val nodeDiagrams = nodes.map(_.toDiagram).mkString("\n")
+    val flowDiagrams = flows.map(_.toDiagram).mkString("\n")
+    val externalNodeDiagrams = flows.filter(_.from.factoryClass == classOf[External])
+      .map(_.from.output.toDiagram).mkString("\n")
+
+    s"""classDiagram
+       |$nodeDiagrams
+       |$externalNodeDiagrams
+       |$flowDiagrams
+       |""".stripMargin
+  }
+
+  override def diagramId: String = throw new NotImplementedError("DAG doesn't have diagram id")
 }

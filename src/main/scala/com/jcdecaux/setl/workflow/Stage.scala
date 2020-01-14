@@ -265,7 +265,7 @@ class Stage extends Logging
   /** Return an array of Node representing the factories of this stage */
   private[workflow] def createNodes(): Array[Node] = {
     factories.map { fac =>
-      new Node(factory = fac, this.stageId)
+      new Node(factory = fac, this.stageId, end)
     }
   }
 

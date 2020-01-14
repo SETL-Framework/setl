@@ -2,13 +2,17 @@ package com.jcdecaux.setl.workflow
 
 import java.util.UUID
 
+import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.exception.InvalidDeliveryException
 import com.jcdecaux.setl.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
+import org.apache.spark.sql.Dataset
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.runtime
 
 object NodeSuite {
+
+  case class ComplexProduct(arg1: String, arg2: Option[Int], arg3: Seq[Product1])
 
   abstract class Producer1 extends Factory[Product1]
 
@@ -21,6 +25,27 @@ object NodeSuite {
   abstract class ProducerContainer2 extends Factory[Container[Product2]]
 
   abstract class ProducerContainer23 extends Factory[Container[Product23]]
+
+  class ConcreteProducer1 extends Factory[Dataset[ComplexProduct]] {
+
+    @Delivery
+    private[this] val input1: String = ""
+
+    @Delivery
+    private[this] val input2: Array[Int] = Array.empty
+
+    /** Read data */
+    override def read(): ConcreteProducer1.this.type = this
+
+    /** Process data */
+    override def process(): ConcreteProducer1.this.type = this
+
+    /** Write data */
+    override def write(): ConcreteProducer1.this.type = this
+
+    /** Get the processed data */
+    override def get(): Dataset[ComplexProduct] = null
+  }
 
 }
 
@@ -412,6 +437,27 @@ class NodeSuite extends AnyFunSuite {
     assert(node1Bis.targetNode(node2Ter))
     assert(!node1Ter.targetNode(node2Ter))
 
+  }
+
+  test("Node should be able to generate a Mermaid diagram string") {
+    val factory = new ConcreteProducer1
+    val node = new Node(factory, 0, true)
+
+    val expectedOutput = """class ConcreteProducer1 {
+                           |  <<Factory[Dataset[ComplexProduct]]>>
+                           |  +String
+                           |  +Array[Int]
+                           |}
+                           |
+                           |class DatasetComplexProductFinal {
+                           |  <<Dataset[ComplexProduct]>>
+                           |  >arg1: String
+                           |  >arg2: Option[Int]
+                           |  >arg3: Seq[Product1]
+                           |}
+                           |
+                           |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output""".stripMargin
+    assert(node.toDiagram === expectedOutput)
   }
 
 }
