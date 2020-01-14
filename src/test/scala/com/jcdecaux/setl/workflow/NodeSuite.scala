@@ -440,12 +440,24 @@ class NodeSuite extends AnyFunSuite {
   }
 
   test("Node should be able to generate a Mermaid diagram string") {
-
     val factory = new ConcreteProducer1
     val node = new Node(factory, 0, true)
 
-    println(node.toDiagram)
-
+    val expectedOutput = """class ConcreteProducer1 {
+                           |  <<Factory[Dataset[ComplexProduct]]>>
+                           |  +String
+                           |  +Array[Int]
+                           |}
+                           |
+                           |class DatasetComplexProductFinal {
+                           |  <<Dataset[ComplexProduct]>>
+                           |  >arg1: String
+                           |  >arg2: Option[Int]
+                           |  >arg3: Seq[Product1]
+                           |}
+                           |
+                           |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output""".stripMargin
+    assert(node.toDiagram === expectedOutput)
   }
 
 }

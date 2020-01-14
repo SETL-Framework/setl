@@ -62,11 +62,14 @@ object PipelineInspectorSuite {
     @Delivery(id = "1") var str1: String = _
     @Delivery(id = "2") var str2: String = _
 
-    val output: String = "haha"
+    var output: String = ""
 
     override def read(): MultipleInputFactory.this.type = this
 
-    override def process(): MultipleInputFactory.this.type = this
+    override def process(): MultipleInputFactory.this.type = {
+      output = "haha" + str1 + str2
+      this
+    }
 
     override def write(): MultipleInputFactory.this.type = {
       println(output)

@@ -35,7 +35,13 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
       factoryUUID = factory.getUUID,
       stage = stage,
       setters = FactoryDeliveryMetadata.builder().setFactory(factory).getOrCreate().toList,
-      output = FactoryOutput(factory.deliveryType(), factory.consumers, factory.deliveryId, finalNode)
+      output = FactoryOutput(
+        factory.deliveryType(),
+        factory.consumers,
+        factory.deliveryId,
+        finalNode
+        // this constructor will never be used to generate an external node
+      )
     )
   }
 
