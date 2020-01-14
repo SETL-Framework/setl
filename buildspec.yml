@@ -35,15 +35,17 @@ phases:
         if [[ "$DEPLOY" = "SNAPSHOT" ]]; then
            echo Deploy to the snapshot repository;
            mvn --batch-mode deploy -DskipTests -Pprovided;
-           aws s3 sync ./target/site s3://jcd-datacorp-setl/snapshot;
         elif [[ "$DEPLOY" = "RELEASE" ]]; then
            echo Deploy to the stagging repository;
            mvn --batch-mode deploy -DskipTests -Prelease;
-           aws s3 sync ./target/site s3://jcd-datacorp-setl/release;
         else
            echo No deployment;
         fi
       - echo Build completed on `date`
+
+artifacts:
+  files:
+    - 'target/site/**/*'
 
 reports:
   SurefireReports: # CodeBuild will create a report group called "SurefireReports".
