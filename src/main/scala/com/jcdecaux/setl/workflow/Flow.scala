@@ -32,14 +32,7 @@ private[workflow] case class Flow(from: Node, to: Node) extends HasDescription w
   }
 
   override def toDiagram: String = {
-    val externalInput = if (from.factoryClass == classOf[External]) {
-      from.output.toDiagram
-    } else {
-      ""
-    }
-
-    s"""$externalInput
-       |${to.diagramId} <|-- ${from.output.diagramId} : Input""".stripMargin
+    s"${to.diagramId} <|-- ${from.output.diagramId} : Input".stripMargin
   }
 
   override def diagramId: String = ""

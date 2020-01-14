@@ -33,9 +33,12 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends Has
 
     val nodeDiagrams = nodes.map(_.toDiagram).mkString("\n")
     val flowDiagrams = flows.map(_.toDiagram).mkString("\n")
+    val externalNodeDiagrams = flows.filter(_.from.factoryClass == classOf[External])
+      .map(_.from.output.toDiagram).mkString("\n")
 
     s"""classDiagram
        |$nodeDiagrams
+       |$externalNodeDiagrams
        |$flowDiagrams
        |""".stripMargin
   }

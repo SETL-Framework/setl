@@ -28,16 +28,9 @@ class FlowSuite extends AnyFunSuite {
     val flowExternal = Flow(externalNode, nodeProductFactory)
 
     val expectedDiagram =
-      """
-        |Product2Factory <|-- Product1 : Input""".stripMargin.replace(" ", "")
+      """Product2Factory <|-- Product1 : Input""".stripMargin.replace(" ", "")
 
-    val expectedExternalFlowDiagram =
-      """class StringExternal {
-        |  <<String>>
-        |
-        |}
-        |
-        |ProductFactory <|-- StringExternal : Input""".stripMargin.replace(" ", "")
+    val expectedExternalFlowDiagram = "ProductFactory <|-- StringExternal : Input".replace(" ", "")
 
     assert(flow.toDiagram.replace(" ", "") === expectedDiagram)
     assert(flowExternal.toDiagram.replace(" ", "") === expectedExternalFlowDiagram)
