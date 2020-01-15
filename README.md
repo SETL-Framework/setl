@@ -101,10 +101,10 @@ class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
   @Delivery 
   private[this] val repo = SparkRepository[TestObject]
 
-  private[this] var output: Dataset[TestObject] = _
+  private[this] var output = spark.emptyDataset[TestObject]
 
   override def read(): MyFactory.this.type = {
-    // we don't need to read any data
+    // in our demo we don't need to read any data
     this
   }
 
@@ -141,8 +141,32 @@ val pipeline = setl
 ```scala
 pipeline.describe().run()
 ```
-
 The dataset will be saved into `src/main/resources/test_csv`
+
+#### What's more?
+As our `MyFactory` produces a `Dataset[TestObject]`, it can be used by other factories of the same pipeline.
+
+```scala
+class AnotherFactory extends Factory[String] with HasSparkSession {
+
+  import spark.implicit._
+ 
+  @Delivery
+  val outputOfMyFactory = spark.emptyDataset[TestObject]
+
+  override def read(): AnotherFactory.this.type = ???
+  
+  override def process(): AnotherFactory.this.type = ???
+  
+  override def write(): AnotherFactory.this.type = {
+    outputOfMyFactory.show()
+    this
+  }
+  
+  override def get(): String = ???
+
+}
+```
 
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)
