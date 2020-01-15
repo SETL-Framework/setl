@@ -362,5 +362,7 @@ class Pipeline extends Logging
 
   override def toDiagram: String = this._executionPlan.toDiagram
 
+  def showDiagram: String = this._executionPlan.showDiagram
+
   override def diagramId: String = throw new NotImplementedError("Pipeline doesn't have diagram id")
 }

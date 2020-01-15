@@ -118,7 +118,7 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     assertThrows[InvalidDeliveryException](dispatchManager.testDispatch(factory2))
   }
 
-  test("Deliverabl dispatcher should handle auto loading") {
+  test("Deliverable dispatcher should handle auto loading") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
@@ -143,7 +143,7 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
 
-  test("Deliverabl dispatcher should handle auto loading with condition when no DS is available") {
+  test("Deliverable dispatcher should handle auto loading with condition when no DS is available") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
@@ -169,7 +169,7 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
 
-  test("Deliverabl dispatcher should handle auto loading with condition when a DS is available") {
+  test("Deliverable dispatcher should handle auto loading with condition when a DS is available") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
@@ -189,7 +189,7 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     assert(factoryWithAutoLoad.get().getClass.isAssignableFrom(classOf[Dataset[Product2]]))
   }
 
-  test("Deliverabl dispatcher should handle auto loading with condition when a data frame is available") {
+  test("Deliverable dispatcher should handle auto loading with condition when a data frame is available") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
