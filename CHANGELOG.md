@@ -1,5 +1,8 @@
 ## 0.4.1 (2020-01-15)
+New features:
 - Added [Mermaid](https://mermaidjs.github.io/#/) diagram generation to **Pipeline** (#51)
+- Added `showDiagram()` method to **Pipeline** that prints the Mermaid code and generates the 
+  live editor URL 🎩🐰✨ (#52)
 - Added **Codecov** report and **Scala API doc** 
 
 ## 0.4.0 (2020-01-09)
