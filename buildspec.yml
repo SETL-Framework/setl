@@ -42,7 +42,7 @@ phases:
       - |
         if [[ "$DEPLOY" != "false" ]]; then
            mvn --batch-mode deploy -DskipTests ${MVN_PROFILE};
-           bash <(curl -s https://codecov.io/bash);
+           curl -s https://codecov.io/bash | bash;
         else
            echo No deployment;
         fi
