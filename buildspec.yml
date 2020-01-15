@@ -34,10 +34,15 @@ phases:
       - |
         if [[ "$DEPLOY" = "SNAPSHOT" ]]; then
            echo Deploy to the snapshot repository;
-           mvn --batch-mode deploy -DskipTests -Pprovided;
+           export MVN_PROFILE="-Pprovided";
         elif [[ "$DEPLOY" = "RELEASE" ]]; then
            echo Deploy to the stagging repository;
-           mvn --batch-mode deploy -DskipTests -Prelease;
+           export MVN_PROFILE="-Prelease";
+        fi
+      - |
+        if [[ "$DEPLOY" != "false" ]]; then
+           mvn --batch-mode deploy -DskipTests ${MVN_PROFILE};
+           bash <(curl -s https://codecov.io/bash);
         else
            echo No deployment;
         fi
