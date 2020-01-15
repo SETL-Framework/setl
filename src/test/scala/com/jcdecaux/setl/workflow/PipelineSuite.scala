@@ -293,7 +293,7 @@ class PipelineSuite extends AnyFunSuite {
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory2").get.input.length === 3)
     assert(pipeline.pipelineInspector.nodes.find(_.getPrettyName === "DatasetFactory3").get.input.length === 3)
 
-    println(pipeline.toDiagram)
+    pipeline.showDiagram()
   }
 
   test("Pipeline should be able to describe with empty flow and node") {
@@ -327,7 +327,6 @@ class PipelineSuite extends AnyFunSuite {
     repo2.save(ds2)
 
     val factoryWithAutoLoad = new FactoryWithMultipleAutoLoad
-
 
     new Pipeline()
       .setInput(repo1, "delivery1", consumer = classOf[FactoryWithMultipleAutoLoad])

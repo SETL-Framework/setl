@@ -456,7 +456,8 @@ class NodeSuite extends AnyFunSuite {
                            |  >arg3: Seq[Product1]
                            |}
                            |
-                           |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output""".stripMargin
+                           |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output
+                           |""".stripMargin
     assert(node.toDiagram === expectedOutput)
   }
 

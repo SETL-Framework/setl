@@ -1,12 +1,29 @@
-## 0.4.0 (2019-12-17)
+## 0.4.1 (2020-01-15)
+New features:
+- Added [Mermaid](https://mermaidjs.github.io/#/) diagram generation to **Pipeline** (#51)
+- Added `showDiagram()` method to **Pipeline** that prints the Mermaid code and generates the 
+  live editor URL 🎩🐰✨ (#52)
+- Added **Codecov** report and **Scala API doc** 
+
+## 0.4.0 (2020-01-09)
+Changes: 
 - BREAKING CHANGE: Renamed **DCContext** to **Setl**
 - Changed the default application environment config path into **setl.environment**
 - Changed the default context config path into **setl.config**
+
+Fixes:
 - Fixed issue of DynamoDBConnector that doesn't take user configuration
+- Fixed issue of CompoundKey annotation. Now SparkRepository handles correctly columns having 
+  multiple compound keys. (#36)
+
+New features:
+- Added support for private variable delivery (#24)
+- Added empty SparkRepository as placeholder (#30)
+- Added annotation **Benchmark** that could be used on methods of an **AbstractFactory** (#35)
+
+Others:
 - Optimized **DeliverableDispatcher**
-- Added support for private variable delivery
-- Added empty SparkRepository as placeholder
-- Added annotation **Benchmark** that could be used on methods of an **AbstractFactory**
+- Optimized **PipelineInspector** (#33)
 
 ## 0.3.5 (2019-12-16)
 - BREAKING CHANGE: replace the Spark compatible version by the Scala compatible version in the artifact ID. 

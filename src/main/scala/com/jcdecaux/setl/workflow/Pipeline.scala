@@ -360,9 +360,12 @@ class Pipeline extends Logging
   /** Get the aggregated benchmark result. */
   override def getBenchmarkResult: Array[BenchmarkResult] = _benchmarkResult
 
+  /** Generate the diagram */
   override def toDiagram: String = this._executionPlan.toDiagram
 
-  def showDiagram: String = this._executionPlan.showDiagram
+  /** Display the diagram */
+  override def showDiagram(): Unit = this._executionPlan.showDiagram()
 
+  /** Get the diagram ID */
   override def diagramId: String = throw new NotImplementedError("Pipeline doesn't have diagram id")
 }

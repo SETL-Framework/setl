@@ -159,8 +159,10 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
     validConsumer && validProducer
   }
 
+  /** Get the diagram ID */
   override def diagramId: String = this.getPrettyName.replaceAll("[\\[\\]]", "_")
 
+  /** Generate the diagram */
   override def toDiagram: String = {
 
     val fields = this.input.map {
@@ -178,7 +180,8 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
 
     s"""$thisDiagramString
        |${this.output.toDiagram}
-       |$link""".stripMargin
+       |$link
+       |""".stripMargin
   }
 
 }

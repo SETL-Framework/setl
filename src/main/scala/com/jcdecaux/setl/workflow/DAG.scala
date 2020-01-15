@@ -30,8 +30,8 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends Has
     nodes.find(n => n.factoryUUID == factory.getUUID).get.setters
   }
 
+  /** Generate the diagram */
   override def toDiagram: String = {
-
     val nodeDiagrams = nodes.map(_.toDiagram).mkString("\n")
     val flowDiagrams = flows.map(_.toDiagram).mkString("\n")
     val externalNodeDiagrams = flows.filter(_.from.factoryClass == classOf[External])
@@ -44,11 +44,9 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends Has
        |""".stripMargin
   }
 
-  def showDiagram: String = {
+  /** Display the diagram */
+  override def showDiagram(): Unit = MermaidUtils.printMermaid(this.toDiagram)
 
-    val mermaidDiagram = this.toDiagram
-    MermaidUtils.printMermaid(mermaidDiagram)
-  }
-
+  /** Get the diagram ID */
   override def diagramId: String = throw new NotImplementedError("DAG doesn't have diagram id")
 }
