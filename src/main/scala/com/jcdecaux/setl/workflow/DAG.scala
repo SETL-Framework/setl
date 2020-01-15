@@ -2,6 +2,7 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.internal.HasDiagram
 import com.jcdecaux.setl.transformation.{Factory, FactoryDeliveryMetadata}
+import com.jcdecaux.setl.util.MermaidUtils
 
 private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends HasDiagram {
 
@@ -41,6 +42,12 @@ private[workflow] case class DAG(nodes: Set[Node], flows: Set[Flow]) extends Has
        |$externalNodeDiagrams
        |$flowDiagrams
        |""".stripMargin
+  }
+
+  def showDiagram: String = {
+
+    val mermaidDiagram = this.toDiagram
+    MermaidUtils.printMermaid(mermaidDiagram)
   }
 
   override def diagramId: String = throw new NotImplementedError("DAG doesn't have diagram id")
