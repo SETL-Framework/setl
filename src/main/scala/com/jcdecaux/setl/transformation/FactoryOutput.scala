@@ -1,7 +1,7 @@
 package com.jcdecaux.setl.transformation
 
 import com.jcdecaux.setl.internal.{HasDiagram, HasType}
-import com.jcdecaux.setl.util.ReflectUtils
+import com.jcdecaux.setl.util.{MermaidUtils, ReflectUtils}
 import org.apache.spark.sql.Dataset
 
 import scala.reflect.runtime
@@ -53,10 +53,13 @@ private[setl] case class FactoryOutput(override val runtimeType: runtime.univers
 
     val fields = this.payloadField.mkString("\n  ")
 
-    s"""class ${this.diagramId} {
+    val mermaidDiagram = s"""class ${this.diagramId} {
        |  <<${ReflectUtils.getPrettyName(this.runtimeType)}>>
        |  $fields
        |}
        |""".stripMargin
+
+
+    MermaidUtils.mermaidPrint(mermaidDiagram)
   }
 }
