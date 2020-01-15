@@ -16,7 +16,8 @@ class Pipeline extends Logging
   with HasRegistry[Stage]
   with HasDescription
   with Identifiable
-  with HasBenchmark {
+  with HasBenchmark
+  with HasDiagram {
 
   private[this] var _stageCounter: Int = 0
   private[this] var _executionPlan: DAG = _
@@ -234,8 +235,8 @@ class Pipeline extends Logging
   def addStage(stage: Stage): this.type = {
     log.debug(s"Add stage ${_stageCounter}")
 
-    registerNewItem(stage.setStageId(_stageCounter))
     resetEndStage()
+    registerNewItem(stage.setStageId(_stageCounter))
     _stageCounter += 1
 
     this
@@ -359,4 +360,7 @@ class Pipeline extends Logging
   /** Get the aggregated benchmark result. */
   override def getBenchmarkResult: Array[BenchmarkResult] = _benchmarkResult
 
+  override def toDiagram: String = this._executionPlan.toDiagram
+
+  override def diagramId: String = throw new NotImplementedError("Pipeline doesn't have diagram id")
 }

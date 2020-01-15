@@ -43,6 +43,11 @@ phases:
         fi
       - echo Build completed on `date`
 
+artifacts:
+  files:
+    - '**/*'
+  base-directory: 'target/site'
+
 reports:
   SurefireReports: # CodeBuild will create a report group called "SurefireReports".
     files: #Store all of the files

@@ -4,6 +4,8 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](https://raw.githubusercontent.com/JCDecaux/setl/master/LICENSE)
 [![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Scoverage](https://img.shields.io/static/v1?label=coverage&message=Scoverage&color=ff69b4)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scoverage/)
+[![Scaladocs](https://img.shields.io/static/v1?label=doc&message=scaladocs&color=9cf)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scaladocs/#com.jcdecaux.setl.Setl)
 
 SETL (Spark ETL, pronounced "settle") is an open-source Spark ETL framework that helps developers to structure ETL projects, modularize data transformation components and speed up the development.
 
@@ -99,10 +101,10 @@ class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
   @Delivery 
   private[this] val repo = SparkRepository[TestObject]
 
-  private[this] var output: Dataset[TestObject] = _
+  private[this] var output = spark.emptyDataset[TestObject]
 
   override def read(): MyFactory.this.type = {
-    // we don't need to read any data
+    // in our demo we don't need to read any data
     this
   }
 
@@ -139,8 +141,32 @@ val pipeline = setl
 ```scala
 pipeline.describe().run()
 ```
-
 The dataset will be saved into `src/main/resources/test_csv`
+
+#### What's more?
+As our `MyFactory` produces a `Dataset[TestObject]`, it can be used by other factories of the same pipeline.
+
+```scala
+class AnotherFactory extends Factory[String] with HasSparkSession {
+
+  import spark.implicit._
+ 
+  @Delivery
+  val outputOfMyFactory = spark.emptyDataset[TestObject]
+
+  override def read(): AnotherFactory.this.type = ???
+  
+  override def process(): AnotherFactory.this.type = ???
+  
+  override def write(): AnotherFactory.this.type = {
+    outputOfMyFactory.show()
+    this
+  }
+  
+  override def get(): String = ???
+
+}
+```
 
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)

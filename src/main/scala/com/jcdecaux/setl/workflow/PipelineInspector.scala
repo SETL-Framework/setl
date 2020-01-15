@@ -1,8 +1,10 @@
 package com.jcdecaux.setl.workflow
 
+import java.util.UUID
+
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal.{HasDescription, Logging}
-import com.jcdecaux.setl.transformation.{Factory, FactoryOutput}
+import com.jcdecaux.setl.transformation.{Factory, FactoryInput, FactoryOutput}
 
 /**
  * PipelineInspector will inspect a given [[com.jcdecaux.setl.workflow.Pipeline]] and create a
@@ -84,17 +86,40 @@ private[workflow] class PipelineInspector(val pipeline: Pipeline) extends Loggin
     nodes
       .flatMap {
         thisNode =>
-          thisNode.input
-            .filter(_.producer == classOf[External])
-            .map{
-              nodeInput =>
-                val node = External.NODE.copy(
-                  output = FactoryOutput(nodeInput.runtimeType, Seq.empty, nodeInput.deliveryId)
-                )
-                Flow(node, thisNode)
-            }
-            .filter(thisFlow => !internalFlows.exists(f => f.payload == thisFlow.payload && f.to == thisNode))
+          thisNode.input.groupBy(_.runtimeType).flatMap {
+            case (_, inputs) =>
+              inputs.collect {
+                /*
+                 if there are multiple delivery with the same type, they should be distinguishable.
+                 - When there is one single input, it should not have a defnined producer (producer == External) and
+                   There should not be any factory that satisfies this input
+
+                 - if there are two inputs, at least one of them should have either delivery id or producer.
+                   If they have the same delivery id, then there should be only 1 internal flows that satisfy this node.
+                   (n is the number of inputs having the same type)
+                   If they have different delivery ids, then this rule become the first one.
+
+                 - If there are more than two inputs, at least n - 1 of them should have a user defined producer or delivery id
+                   If they have the same delivery id, then there should be only n - 1 internal flows that satisfy this node.
+                   If they have different delivery ids, then this rule become the first one.
+                 */
+                case input if internalFlows.count(f => this.possibleInternalFlows(f, input, thisNode.factoryUUID)) ==
+                  (inputs.count(_.deliveryId == input.deliveryId) - 1) &&
+                  input.producer == classOf[External] =>
+
+                  val fromExternalNode = External.NODE.copy(
+                    output = FactoryOutput(input.runtimeType, Seq.empty, input.deliveryId, external = true)
+                  )
+                  Flow(fromExternalNode, thisNode)
+              }
+          }
       }
+  }
+
+  private[this] def possibleInternalFlows(flow: Flow, input: FactoryInput, inputFactoryUUID: UUID): Boolean = {
+    flow.payload == input.runtimeType &&
+      flow.to.factoryUUID == inputFactoryUUID &&
+      flow.deliveryId == input.deliveryId
   }
 
   /** Return a set of flows representing the complete data transfer of this pipeline */

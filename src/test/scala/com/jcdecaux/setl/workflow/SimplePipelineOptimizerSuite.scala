@@ -52,12 +52,12 @@ class SimplePipelineOptimizerSuite extends AnyFunSuite {
     assert(dsFactory3.get().count() === 4)
     assert(dsFactory3.get().filter($"x" === "pd1").count() === 2)
     assert(dsFactory3.get().filter($"x" === "id_of_product1").count() === 2)
-    assert(dsFactory3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "c2"))
+    assert(dsFactory3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "produced_by_datasetFactory2"))
     assert(dsFactory4.get() === 2)
 
     // Check inspector
     assert(pipeline.pipelineInspector.nodes.size === 5)
-    assert(pipeline.pipelineInspector.flows.size === 8)
+    assert(pipeline.pipelineInspector.flows.size === 9)
   }
 
   test("Pipeline optimise should opt") {

@@ -1,7 +1,8 @@
 package com.jcdecaux.setl.workflow
 
-import com.jcdecaux.setl.internal.HasDescription
+import com.jcdecaux.setl.internal.{HasDescription, HasDiagram}
 import com.jcdecaux.setl.transformation.Deliverable
+import com.jcdecaux.setl.util.ReflectUtils
 
 import scala.reflect.runtime
 
@@ -11,7 +12,7 @@ import scala.reflect.runtime
  * @param from    origin node of the transfer
  * @param to      destination node of the transfer
  */
-private[workflow] case class Flow(from: Node, to: Node) extends HasDescription {
+private[workflow] case class Flow(from: Node, to: Node) extends HasDescription with HasDiagram {
 
   def payload: runtime.universe.Type = from.output.runtimeType
 
@@ -25,8 +26,14 @@ private[workflow] case class Flow(from: Node, to: Node) extends HasDescription {
     }
     println(s"Stage       : $stage")
     println(s"Direction   : ${from.getPrettyName} ==> ${to.getPrettyName}")
-    println(s"PayLoad     : ${getPrettyName(payload)}")
+    println(s"PayLoad     : ${ReflectUtils.getPrettyName(payload)}")
     println("----------------------------------------------------------")
     this
   }
+
+  override def toDiagram: String = {
+    s"${to.diagramId} <|-- ${from.output.diagramId} : Input".stripMargin
+  }
+
+  override def diagramId: String = ""
 }
