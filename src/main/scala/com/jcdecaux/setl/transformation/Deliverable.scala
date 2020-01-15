@@ -36,7 +36,7 @@ class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
   }
 
   /**
-   * Class of the consumer of this deliverable. When DispatchManager finds multiple dileverable with the same
+   * Class of the consumer of this deliverable. When DispatchManager finds multiple deliverable with the same
    * type, it will select the correct deliverable by looking at the consumer
    */
   def consumer: List[Class[_ <: Factory[_]]] = _consumer.toList
