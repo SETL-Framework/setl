@@ -1,13 +1,12 @@
 package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.annotation.InterfaceStability
-import com.jcdecaux.setl.exception.{AlreadyExistsException, InvalidDeliveryException}
+import com.jcdecaux.setl.exception.InvalidDeliveryException
 import com.jcdecaux.setl.internal.{HasRegistry, Logging}
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.transformation.{Deliverable, Factory, FactoryDeliveryMetadata}
 import org.apache.spark.sql.{Dataset, Row}
 
-import scala.collection.mutable.ArrayBuffer
 import scala.language.existentials
 import scala.reflect.runtime.{universe => ru}
 

@@ -26,6 +26,7 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
   private[this] val externalInputRegistry: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
   private[this] val repositoryIdOf: String => String = config => s"@rpstry.$config"
   private[this] val connectorIdOf: String => String = config => s"@cnnctr.$config"
+
   private[this] def hasExternalInput(id: String): Boolean = externalInputRegistry.contains(id)
 
   /**
@@ -45,9 +46,9 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
    * Force register a spark repository with an object of SparkRepository and its id. If a repository having
    * the same ID was already registered, it will be overwritten by this one.
    *
-   * @param repository an object of SparkRepository[T]
-   * @param consumer consumer of this spark repository
-   * @param deliveryId id of this delivery
+   * @param repository   an object of SparkRepository[T]
+   * @param consumer     consumer of this spark repository
+   * @param deliveryId   id of this delivery
    * @param repositoryId id to be used for the repository registration
    * @tparam DT data type of the repository
    * @return the current SETL context with the added repository
@@ -104,9 +105,9 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
    * Register a spark repository with an object of SparkRepository and its id. If a repository having
    * the same ID was already registered, it will NOT be overwritten by this one.
    *
-   * @param repository an object of SparkRepository[T]
-   * @param consumer consumer of this spark repository
-   * @param deliveryId id of this delivery
+   * @param repository   an object of SparkRepository[T]
+   * @param consumer     consumer of this spark repository
+   * @param deliveryId   id of this delivery
    * @param repositoryId id to be used for the repository registration
    * @tparam DT data type of the repository
    * @return the current SETL context with the added repository
@@ -284,6 +285,7 @@ object Setl {
 
     /**
      * Define the config path of SETL
+     *
      * @param config config path
      * @return the current builder
      */
@@ -294,6 +296,7 @@ object Setl {
 
     /**
      * Define a user-defined SparkConf
+     *
      * @param sparkConf SparkConf object
      * @return the current builder
      */
@@ -304,6 +307,7 @@ object Setl {
 
     /**
      * Overwrite the default Spark parallelism (200)
+     *
      * @param par value of parallelism
      * @return the current builder
      */
@@ -314,6 +318,7 @@ object Setl {
 
     /**
      * Provide a user-defined config loader
+     *
      * @param configLoader ConfigLoader object
      * @return the current builder
      */
@@ -324,6 +329,7 @@ object Setl {
 
     /**
      * Set the master URL of Spark
+     *
      * @param url master URL of spark
      * @return the current builder
      */
@@ -334,6 +340,7 @@ object Setl {
 
     /**
      * Use the default config loader and load both the default application.conf and the given configuration file
+     *
      * @param configFile file path string of the configuration file
      * @return the current builder
      */
@@ -348,6 +355,7 @@ object Setl {
     /**
      * Use the default config loader and load the default configuration file (application.conf) and an additional
      * configuration file (according to the value of setl.environment in application.conf)
+     *
      * @return the current builder
      */
     def withDefaultConfigLoader(): this.type = {
@@ -361,6 +369,7 @@ object Setl {
 
     /**
      * Instantiate a SparkSession object
+     *
      * @return
      */
     private[this] def buildSparkSession(): SparkSession = {

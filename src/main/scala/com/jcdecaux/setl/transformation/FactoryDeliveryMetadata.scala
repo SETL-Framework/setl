@@ -14,7 +14,7 @@ import scala.reflect.runtime
  * argument types, the producer and optional
  *
  * @param factoryUUID UUID of factory
- * @param symbol        symbol of the method
+ * @param symbol      symbol of the method
  * @param argTypes    type of each argument
  * @param producer    the producer class for the given data
  * @param optional    true if optional

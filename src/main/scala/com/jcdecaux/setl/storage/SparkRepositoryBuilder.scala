@@ -8,7 +8,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.storage.repository.SparkRepository
-import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
+import com.typesafe.config.Config
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
@@ -70,30 +70,6 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
 
   def getAs[T](key: String)(implicit converter: Serializer[T]): Option[T] = {
     conf.getAs[T](key)
-  }
-
-  // TODO : @Mounir: here we only handle parquet/csv/excel storage.
-  //                 No changes will be made for cassandra and dynamodb connector if we set a suffix
-  /**
-   * Only affect file storage system to get a specific path (exp : Reach -> suffix [Rome])
-   *
-   * @param pathSuffix suffix of the file
-   * @return
-   */
-  def setSuffix(pathSuffix: String): this.type = {
-    config match {
-      case Some(configuration) =>
-        try {
-          config = Some(configuration.withValue("path", ConfigValueFactory.fromAnyRef(configuration.getString("path") + "/" + pathSuffix)))
-        } catch {
-          case missing: ConfigException.Missing => log.error("To use suffix please make sure you have a path in your configuration")
-          case e: Throwable => throw e
-        }
-      case _ =>
-        log.debug("No connector configuration was found. Setting suffix variable")
-        set("path", s"${getAs[String]("path").get}/$pathSuffix")
-    }
-    this
   }
 
   @deprecated("This method has no effect as SparkSession is removed from SparkRepositoryBuilder", "0.3.4")

@@ -9,8 +9,8 @@ import scala.reflect.runtime
 /**
  * Flow is a representation of the data transfer in a Pipeline.
  *
- * @param from    origin node of the transfer
- * @param to      destination node of the transfer
+ * @param from origin node of the transfer
+ * @param to   destination node of the transfer
  */
 private[workflow] case class Flow(from: Node, to: Node) extends HasDescription with HasDiagram {
 

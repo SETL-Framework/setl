@@ -7,11 +7,11 @@ case class BenchmarkResult(cls: String, read: Long, process: Long, write: Long, 
     val formatter = java.text.NumberFormat.getNumberInstance
 
     s"Benchmark class: $cls\n" +
-    s"Total elapsed time: ${formatter.format(total)} ns\n" +
-    s"read: ${formatter.format(read)} ns\n" +
-    s"process: ${formatter.format(process)} ns\n" +
-    s"write: ${formatter.format(write)} ns\n" +
-    "================="
+      s"Total elapsed time: ${formatter.format(total)} ns\n" +
+      s"read: ${formatter.format(read)} ns\n" +
+      s"process: ${formatter.format(process)} ns\n" +
+      s"write: ${formatter.format(write)} ns\n" +
+      "================="
   }
 
 }

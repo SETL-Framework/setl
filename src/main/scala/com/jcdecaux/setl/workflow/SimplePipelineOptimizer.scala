@@ -4,7 +4,6 @@ import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal.Logging
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
 
 @InterfaceStability.Unstable
 class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimizer with Logging {

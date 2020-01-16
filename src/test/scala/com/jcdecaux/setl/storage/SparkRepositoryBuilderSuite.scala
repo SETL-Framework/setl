@@ -10,9 +10,9 @@ import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.storage.connector.{ExcelConnector, ParquetConnector}
 import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -37,9 +37,54 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     builder.setPath("my/test/path")
     assert(builder.getAs[String]("path").get === "my/test/path")
 
-    builder.setSuffix("adp")
-    assert(builder.getAs[String]("path").get === "my/test/path/adp")
+    val builder2 = new SparkRepositoryBuilder[TestObject]()
+    assertThrows[com.jcdecaux.setl.exception.UnknownException.Storage](builder2.build())
+  }
 
+  test("SparkRepository configuration setters") {
+    val builder2 = new SparkRepositoryBuilder[TestObject]()
+
+    assert(builder2.getAs[String]("delimiter").get === ";")
+    assert(builder2.getAs[Boolean]("inferSchema").get === true)
+    assert(builder2.getAs[Boolean]("useHeader").get === true)
+    assert(builder2.getAs[Boolean]("header").get === true)
+    assert(builder2.getAs[String]("saveMode").get === "Overwrite")
+    assert(builder2.getAs[String]("dataAddress").get === "A1")
+    assert(builder2.getAs[Boolean]("treatEmptyValuesAsNulls").get === true)
+    assert(builder2.getAs[Boolean]("addColorColumns").get === false)
+    assert(builder2.getAs[String]("timestampFormat").get === "yyyy-mm-dd hh:mm:ss.000")
+    assert(builder2.getAs[String]("dateFormat").get === "yyyy-mm-dd")
+    assert(builder2.getAs[Long]("excerptSize").get === 10L)
+
+    builder2.setDelimiter("|")
+    builder2.setInferSchema(false)
+    builder2.setUseHeader(false)
+    builder2.setHeader(false)
+    builder2.setSaveMode(SaveMode.ErrorIfExists)
+    builder2.setDataAddress("B")
+    builder2.setTreatEmptyValuesAsNulls(false)
+    builder2.setAddColorColumns(true)
+    builder2.setTimestampFormat("yyyy-MM-dd hh:mm:ss")
+    builder2.setDateFormat("MM-yyyy-dd")
+    builder2.setExcerptSize(100L)
+    assert(builder2.getAs[String]("delimiter") === Some("|"))
+    assert(builder2.getAs[Boolean]("inferSchema").get === false)
+    assert(builder2.getAs[Boolean]("useHeader").get === false)
+    assert(builder2.getAs[Boolean]("header").get === false)
+    assert(builder2.getAs[String]("saveMode").get === "ErrorIfExists")
+    assert(builder2.getAs[String]("dataAddress").get === "B")
+    assert(builder2.getAs[Boolean]("treatEmptyValuesAsNulls").get === false)
+    assert(builder2.getAs[Boolean]("addColorColumns").get === true)
+    assert(builder2.getAs[String]("timestampFormat").get === "yyyy-MM-dd hh:mm:ss")
+    assert(builder2.getAs[String]("dateFormat").get === "MM-yyyy-dd")
+    assert(builder2.getAs[Long]("excerptSize").get === 100L)
+
+  }
+
+  test("SparkRepository build with typesafe config") {
+    val conf = ConfigFactory.load("test_priority.conf")
+    val builder = new SparkRepositoryBuilder[TestObject](conf)
+    assertThrows[UnknownException.Storage](builder.build())
   }
 
   test("SparkRepository cassandra") {

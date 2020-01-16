@@ -5,6 +5,7 @@ import com.typesafe.config.{Config, ConfigException}
 
 object TypesafeConfigUtils {
 
+  @throws[com.typesafe.config.ConfigException]
   def getAs[T](config: Config, path: String)(implicit getter: ConfigGetter[T]): Option[T] = getter.get(config, path)
 
   private[this] def _get[T](path: String): (String => T) => Option[T] = (fun: String => T) => {

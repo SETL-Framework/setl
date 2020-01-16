@@ -84,7 +84,14 @@ class FilterImplicitsSuite extends AnyFunSuite {
     val df = ds.toDF()
     import FilterImplicits.DatasetFilterByCondition
     assert(ds.filter(Condition("col1", "=", "a")).count() === 1)
+    assert(ds.filter(Set(Condition("col1", "=", "a"))).count() === 1)
     assert(df.filter(Condition("col1", "=", "a")).count() === 1)
+    assert(ds.filter(Set(Condition("col1", "=", "a"), Condition("col2", "=", "A"))).count() === 1)
+    assert(ds.filter(Set(Condition("col1", "=", "a"), Condition("col2", "=", "B"))).count() === 0)
+
+    assert(ds.filter(Condition($"col1" === "a")).count() === 1)
+    assertThrows[org.apache.spark.sql.AnalysisException](ds.filter(Condition($"col1" contains "a")).show())
+
   }
 }
 
