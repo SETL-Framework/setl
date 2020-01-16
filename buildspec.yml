@@ -41,10 +41,10 @@ phases:
         if [[ "$DEPLOY" != "false" ]]; then
            echo Deploy to the $DEPLOY repository;
            mvn --batch-mode deploy -DskipTests ${MVN_PROFILE};
-           curl -s https://codecov.io/bash | bash
         else
            echo No deployment;
         fi
+      - curl -s https://codecov.io/bash | bash
       - echo Build completed on `date`
 
 artifacts:
