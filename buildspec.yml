@@ -33,19 +33,18 @@ phases:
     commands:
       - |
         if [[ "$DEPLOY" = "SNAPSHOT" ]]; then
-           echo Deploy to the snapshot repository;
            export MVN_PROFILE="-Pprovided";
         elif [[ "$DEPLOY" = "RELEASE" ]]; then
-           echo Deploy to the stagging repository;
            export MVN_PROFILE="-Prelease";
         fi
       - |
         if [[ "$DEPLOY" != "false" ]]; then
+           echo Deploy to the $DEPLOY repository;
            mvn --batch-mode deploy -DskipTests ${MVN_PROFILE};
-           curl -s https://codecov.io/bash | bash;
         else
            echo No deployment;
         fi
+      - curl -s https://codecov.io/bash | bash
       - echo Build completed on `date`
 
 artifacts:
