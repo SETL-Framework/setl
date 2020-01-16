@@ -1,8 +1,14 @@
 package com.jcdecaux.setl.util
 
 import java.util.Base64
+import org.json4s.jackson.Serialization
 
 private[setl] object MermaidUtils {
+
+  /**
+    * Needed to convert a Map object into JSON String
+    */
+  implicit val formats: org.json4s.DefaultFormats.type = org.json4s.DefaultFormats
 
   /**
     * Mermaid diagram code header for pretty print
@@ -27,7 +33,10 @@ private[setl] object MermaidUtils {
     * @return the Base64 of the diagram code
     */
   def encodeMermaid(mermaidDiagram: String): String = {
-    val jsonString = s"""{"code":"${mermaidDiagram.replace("\n", "\\n")}","mermaid":{"theme":"default"}}"""
+    val mermaidString = mermaidDiagram.replace("\r", "")
+    val mermaidMap = Map("code" -> mermaidString, "mermaid" -> Map("theme" -> "default"))
+    val jsonString = Serialization.write(mermaidMap)
+
     val encoded = Base64.getUrlEncoder.encode(jsonString.getBytes())
     new String(encoded)
   }
