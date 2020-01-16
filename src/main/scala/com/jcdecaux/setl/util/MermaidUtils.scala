@@ -33,11 +33,9 @@ private[setl] object MermaidUtils {
     * @return the Base64 of the diagram code
     */
   def encodeMermaid(mermaidDiagram: String): String = {
-    val mermaidString = mermaidDiagram.replace("\r", "")
-    val mermaidMap = Map("code" -> mermaidString, "mermaid" -> Map("theme" -> "default"))
+    val mermaidMap = Map("code" -> mermaidDiagram, "mermaid" -> Map("theme" -> "default"))
     val jsonString = Serialization.write(mermaidMap)
-
-    val encoded = Base64.getUrlEncoder.encode(jsonString.getBytes())
+    val encoded = Base64.getUrlEncoder.encode(jsonString.getBytes()).replace("\r", "")
     new String(encoded)
   }
 
