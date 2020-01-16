@@ -1,7 +1,6 @@
 package com.jcdecaux.setl.util
 
 import java.io.ByteArrayOutputStream
-
 import org.scalatest.funsuite.AnyFunSuite
 
 class MermaidUtilsSuite extends AnyFunSuite{
@@ -14,7 +13,7 @@ class MermaidUtilsSuite extends AnyFunSuite{
 
     val expectedCode = "eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5DbGFzczAxIDx8LS0gQXZlcnlMb25nQ2xhc3MgOiBDb29sXG48PGludGVyZmFjZT4-IENsYXNzMDFcbkNsYXNzMDkgLS0-IEMyIDogV2hlcmUgYW0gaT9cbkNsYXNzMDkgLS0qIEMzXG5DbGFzczA5IC0tfD4gQ2xhc3MwN1xuQ2xhc3MwNyA6IGVxdWFscygpXG5DbGFzczA3IDogT2JqZWN0W10gZWxlbWVudERhdGFcbkNsYXNzMDEgOiBzaXplKClcbkNsYXNzMDEgOiBpbnQgY2hpbXBcbkNsYXNzMDEgOiBpbnQgZ29yaWxsYVxuY2xhc3MgQ2xhc3MxMCB7XG4gID4-c2VydmljZT4-XG4gIGludCBpZFxuICBzaXplKClcbn0iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9fQ"
 
-    assert(encoded == expectedCode )
+    assert(encoded == expectedCode)
   }
 
   test("GenerateLinkMessage") {
@@ -56,6 +55,7 @@ class MermaidUtilsSuite extends AnyFunSuite{
 
     assert(output.toString.trim() == expectedOutput)
   }
+
 }
 
 object MermaidUtilsSuite {
