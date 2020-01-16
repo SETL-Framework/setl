@@ -8,12 +8,14 @@ class MermaidUtilsSuite extends AnyFunSuite{
   import MermaidUtils._
 
   test("EncodeMermaidDiagram") {
-    // Use dropRight because encoding adds "==" at the end
-    val encoded = encodeMermaid(MermaidUtilsSuite.diagram).dropRight(2)
-
+    val encoded = encodeMermaid(MermaidUtilsSuite.diagram)
     val expectedCode = "eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5DbGFzczAxIDx8LS0gQXZlcnlMb25nQ2xhc3MgOiBDb29sXG48PGludGVyZmFjZT4-IENsYXNzMDFcbkNsYXNzMDkgLS0-IEMyIDogV2hlcmUgYW0gaT9cbkNsYXNzMDkgLS0qIEMzXG5DbGFzczA5IC0tfD4gQ2xhc3MwN1xuQ2xhc3MwNyA6IGVxdWFscygpXG5DbGFzczA3IDogT2JqZWN0W10gZWxlbWVudERhdGFcbkNsYXNzMDEgOiBzaXplKClcbkNsYXNzMDEgOiBpbnQgY2hpbXBcbkNsYXNzMDEgOiBpbnQgZ29yaWxsYVxuY2xhc3MgQ2xhc3MxMCB7XG4gID4-c2VydmljZT4-XG4gIGludCBpZFxuICBzaXplKClcbn0iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9fQ"
-
-    assert(encoded == expectedCode)
+    if (encoded.endsWith("==")) {
+      // Use dropRight because encoding adds "==" at the end
+      assert(encoded.dropRight(2) == expectedCode)
+    } else {
+      assert(encoded == expectedCode)
+    }
   }
 
   test("GenerateLinkMessage") {
