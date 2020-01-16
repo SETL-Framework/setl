@@ -1,8 +1,14 @@
 package com.jcdecaux.setl.util
 
 import java.util.Base64
+import org.json4s.jackson.Serialization
 
 private[setl] object MermaidUtils {
+
+  /**
+    * Needed to convert a Map object into JSON String
+    */
+  implicit val formats: org.json4s.DefaultFormats.type = org.json4s.DefaultFormats
 
   /**
     * Mermaid diagram code header for pretty print
@@ -27,21 +33,20 @@ private[setl] object MermaidUtils {
     * @return the Base64 of the diagram code
     */
   def encodeMermaid(mermaidDiagram: String): String = {
-    val jsonString = s"""{"code":"${mermaidDiagram.replace("\n", "\\n")}","mermaid":{"theme":"default"}}"""
+    val mermaidMap = Map("code" -> mermaidDiagram, "mermaid" -> Map("theme" -> "default"))
+    val jsonString = Serialization.write(mermaidMap)
     val encoded = Base64.getUrlEncoder.encode(jsonString.getBytes())
-    new String(encoded)
+    new String(encoded).replace("\r", "")
   }
 
   /**
     * Message to be printed for live editor preview
     *
-    * @param message Message before live editor preview link
-    * @param prefix  link prefix
     * @param code    diagram base64 code
     * @return Full message for live editor preview
     */
-  def mermaidDiagramLink(message: String, prefix: String, code: String): String = {
-    message + prefix + code
+  def mermaidDiagramLink(code: String): String = {
+    this.liveEditorMessage + this.linkPrefix + code
   }
 
   /**
@@ -52,7 +57,7 @@ private[setl] object MermaidUtils {
     */
   def printMermaid(mermaidDiagram: String): Unit = {
     val encoded = this.encodeMermaid(mermaidDiagram)
-    val linkMessage = this.mermaidDiagramLink(this.liveEditorMessage, this.linkPrefix, encoded)
+    val linkMessage = this.mermaidDiagramLink(encoded)
 
     println(
       s"""$mermaidHeader
