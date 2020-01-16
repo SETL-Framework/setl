@@ -25,6 +25,9 @@ class ParquetConnectorSuite extends AnyFunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
 
+    // test legacy constructor
+    new ParquetConnector(spark, path, SaveMode.Overwrite)
+
     val repository = new SparkRepository[TestObject].setConnector(parquetConnector).persistReadData(true)
     import spark.implicits._
 
@@ -96,6 +99,9 @@ class ParquetConnectorSuite extends AnyFunSuite {
     import spark.implicits._
 
     val connector = new ParquetConnector(Properties.parquetConfig)
+
+    // test legacy constructor
+    new  ParquetConnector(spark, Properties.parquetConfig)
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
