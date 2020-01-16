@@ -33,7 +33,9 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
         }
     }
 
-    public Map<String, Long> getBenchmarkResult() { return benchmarkResult; }
+    public Map<String, Long> getBenchmarkResult() {
+        return benchmarkResult;
+    }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {

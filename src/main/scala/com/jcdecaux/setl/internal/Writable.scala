@@ -9,6 +9,7 @@ trait Writable {
 
   /**
    * Whether invoke the write method or not
+   *
    * @param write if set to true, then the write method of the factory will be invoked
    * @return
    */

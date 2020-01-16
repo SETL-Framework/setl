@@ -42,6 +42,7 @@ trait HasRegistry[T <: Identifiable] {
 
   /**
    * Register multiple items
+   *
    * @param items an [[com.jcdecaux.setl.internal.Identifiable]] object
    */
   protected def registerNewItems(items: Iterable[T]): Unit = items.foreach(this.registerNewItem)
@@ -67,6 +68,7 @@ trait HasRegistry[T <: Identifiable] {
 
   /**
    * For a given UUID, return the corresponding registered item
+   *
    * @param uuid uuid
    * @return
    */
@@ -80,12 +82,13 @@ trait HasRegistry[T <: Identifiable] {
 
   /**
    * Return the last registered item
+   *
    * @return if the registry is empty, None will be returned
    */
   def lastRegisteredItem: Option[T] = if (isRegistryEmpty) {
-      None
-    } else {
-      Option(registry.last._2)
-    }
+    None
+  } else {
+    Option(registry.last._2)
+  }
 
 }

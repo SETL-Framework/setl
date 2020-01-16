@@ -13,7 +13,9 @@ import scala.annotation.StaticAnnotation
 final case class CompoundKey(id: String, position: String) extends StaticAnnotation
 
 private[setl] object CompoundKey {
+
   private[this] val separator: String = "!@"
+
   import scala.reflect.runtime.{universe => ru}
 
   /** To be used to handle the scala reflect annotation api of compound key */
@@ -29,4 +31,5 @@ private[setl] object CompoundKey {
     val data = str.split(separator)
     CompoundKey(data(0), data(1))
   }
+
 }

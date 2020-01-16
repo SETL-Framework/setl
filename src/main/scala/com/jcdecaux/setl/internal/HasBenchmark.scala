@@ -11,12 +11,14 @@ trait HasBenchmark {
 
   /**
    * True if the benchmark will be measured, otherwise false
+   *
    * @return boolean
    */
   def benchmark: Option[Boolean] = _benchmark
 
   /**
    * Set to true to enable the benchmarking
+   *
    * @param boo true to enable benchmarking
    * @return this object
    */
@@ -27,6 +29,7 @@ trait HasBenchmark {
 
   /**
    * Get the aggregated benchmark result.
+   *
    * @return an array of BenchmarkResult
    */
   def getBenchmarkResult: Array[BenchmarkResult]

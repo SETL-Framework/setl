@@ -1,8 +1,6 @@
 package com.jcdecaux.setl.util
 
-import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.time.ZoneId
 import java.util.TimeZone
 
 import org.scalatest.funsuite.AnyFunSuite
@@ -58,7 +56,7 @@ class DateUtilsSuite extends AnyFunSuite {
     val formatter = new SimpleDateFormat("yyyy-MM-dd")
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"))
 
-    val test = DateUtils.getDateFromString("1990-11-11", "yyyy-MM-dd", "UTC")
+    val test = DateUtils.getDateFromString("1990-11-11")
     assert(formatter.format(test) === "1990-11-11")
   }
 
@@ -66,15 +64,15 @@ class DateUtilsSuite extends AnyFunSuite {
     val formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"))
 
-    val test = DateUtils.getDatetimeFromString("1990-11-11", "yyyy-MM-dd", "UTC")
+    val test = DateUtils.getDatetimeFromString("1990-11-11", "yyyy-MM-dd")
     val test2 = DateUtils.getDatetimeFromString("1990-11-11", "yyyy-MM-dd", "Europe/Paris")
     assert(formatter.format(test) === "1990-11-11 00:00:00")
     assert(formatter.format(test2) === "1990-11-10 23:00:00")
   }
 
   test("DateUtils.getFirstMinuteOfHour") {
-    val test = DateUtils.getFirstMinuteOfHour("1990-11-11", "yyyy-MM-dd", "UTC")
-    val test2 = DateUtils.getFirstMinuteOfHour("1990-11-11 00:12:21", "yyyy-MM-dd HH:mm:ss", "UTC")
+    val test = DateUtils.getFirstMinuteOfHour("1990-11-11", "yyyy-MM-dd")
+    val test2 = DateUtils.getFirstMinuteOfHour("1990-11-11 00:12:21", "yyyy-MM-dd HH:mm:ss")
     val test3 = DateUtils.getFirstMinuteOfHour("1990-11-11 01:12:21", "yyyy-MM-dd HH:mm:ss", "Europe/Paris")
 
     assert(test === test2)

@@ -93,7 +93,8 @@ class Stage extends Logging
 
   /**
    * Instantiate a factory with its class and its constructor arguments
-   * @param cls class of the factory to be instantiated
+   *
+   * @param cls             class of the factory to be instantiated
    * @param constructorArgs arguments of the factory's primary constructor
    * @return an object of type Factory[_]
    */
@@ -112,7 +113,8 @@ class Stage extends Logging
 
   /**
    * Add a new factory by providing its class and the constructor arguments
-   * @param factory class of the factory to be added
+   *
+   * @param factory         class of the factory to be added
    * @param constructorArgs arguments of the primary constructor of the factory
    * @throws AlreadyExistsException if the factory to be added exists already, this exception will be thrown
    * @return this stage with the added factory
@@ -127,8 +129,9 @@ class Stage extends Logging
 
   /**
    * Add a new factory by providing its class and the constructor arguments
+   *
    * @param constructorArgs arguments of the primary constructor of the factory
-   * @param writable should the `write` method of the factory be invoked by the pipeline?
+   * @param writable        should the `write` method of the factory be invoked by the pipeline?
    * @tparam T class of the factory to be instantiated
    * @throws AlreadyExistsException if the factory to be added exists already, this exception will be thrown
    * @return this stage with the added factory
@@ -144,6 +147,7 @@ class Stage extends Logging
 
   /**
    * Add a new factory to this stage
+   *
    * @param factory a factory object
    * @throws AlreadyExistsException if the factory to be added exists already, this exception will be thrown
    * @return this stage with the added factory
@@ -271,6 +275,7 @@ class Stage extends Logging
 
   /**
    * Get the aggregated benchmark result.
+   *
    * @return an array of BenchmarkResult
    */
   override def getBenchmarkResult: Array[BenchmarkResult] =

@@ -3,7 +3,7 @@ package com.jcdecaux.setl.storage.repository
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import java.util.concurrent.locks.ReentrantLock
 
-import com.jcdecaux.setl.annotation.{ColumnName, Compress, InterfaceStability}
+import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.internal.{Logging, SchemaConverter, StructAnalyser}

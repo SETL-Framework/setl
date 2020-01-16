@@ -8,7 +8,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.storage.repository.SparkRepository
-import com.typesafe.config.{Config, ConfigException, ConfigValueFactory}
+import com.typesafe.config.Config
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
