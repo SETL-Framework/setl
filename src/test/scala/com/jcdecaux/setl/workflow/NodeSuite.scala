@@ -458,7 +458,7 @@ class NodeSuite extends AnyFunSuite {
                            |
                            |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output
                            |""".stripMargin
-    assert(node.toDiagram === expectedOutput)
+    assert(node.toDiagram.replaceAll("\n|\r\n|\r", System.getProperty("line.separator")) === expectedOutput)
   }
 
 }
