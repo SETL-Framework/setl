@@ -44,13 +44,11 @@ private[setl] object MermaidUtils {
   /**
     * Message to be printed for live editor preview
     *
-    * @param message Message before live editor preview link
-    * @param prefix  link prefix
     * @param code    diagram base64 code
     * @return Full message for live editor preview
     */
-  def mermaidDiagramLink(message: String, prefix: String, code: String): String = {
-    message + prefix + code
+  def mermaidDiagramLink(code: String): String = {
+    this.liveEditorMessage + this.linkPrefix + code
   }
 
   /**
@@ -61,7 +59,7 @@ private[setl] object MermaidUtils {
     */
   def printMermaid(mermaidDiagram: String): Unit = {
     val encoded = this.encodeMermaid(mermaidDiagram)
-    val linkMessage = this.mermaidDiagramLink(this.liveEditorMessage, this.linkPrefix, encoded)
+    val linkMessage = this.mermaidDiagramLink(encoded)
 
     println(
       s"""$mermaidHeader
