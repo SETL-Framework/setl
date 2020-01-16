@@ -7,7 +7,7 @@ class MermaidUtilsSuite extends AnyFunSuite{
 
   import MermaidUtils._
 
-  test("EncodeMermaidDiagram") {
+  test("MermaidUtils should encode the diagram with base64 url standard") {
     val encoded = encodeMermaid(MermaidUtilsSuite.diagram)
     val expectedCode = "eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5DbGFzczAxIDx8LS0gQXZlcnlMb25nQ2xhc3MgOiBDb29sXG48PGludGVyZmFjZT4-IENsYXNzMDFcbkNsYXNzMDkgLS0-IEMyIDogV2hlcmUgYW0gaT9cbkNsYXNzMDkgLS0qIEMzXG5DbGFzczA5IC0tfD4gQ2xhc3MwN1xuQ2xhc3MwNyA6IGVxdWFscygpXG5DbGFzczA3IDogT2JqZWN0W10gZWxlbWVudERhdGFcbkNsYXNzMDEgOiBzaXplKClcbkNsYXNzMDEgOiBpbnQgY2hpbXBcbkNsYXNzMDEgOiBpbnQgZ29yaWxsYVxuY2xhc3MgQ2xhc3MxMCB7XG4gID4-c2VydmljZT4-XG4gIGludCBpZFxuICBzaXplKClcbn0iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9fQ"
     if (encoded.endsWith("==")) {
@@ -18,7 +18,7 @@ class MermaidUtilsSuite extends AnyFunSuite{
     }
   }
 
-  test("GenerateLinkMessage") {
+  test("MermaidUtils should generate the correct message") {
     val code = "base64code"
     val linkMessage = mermaidDiagramLink(code)
 
@@ -27,7 +27,7 @@ class MermaidUtilsSuite extends AnyFunSuite{
     assert(linkMessage == expectedLinkMessage)
   }
 
-  test("MermaidURLOutput") {
+  test("MermaidUtils should generate correctly the logging message") {
     val output = new ByteArrayOutputStream
     Console.withOut(output)(printMermaid(MermaidUtilsSuite.diagram))
 
