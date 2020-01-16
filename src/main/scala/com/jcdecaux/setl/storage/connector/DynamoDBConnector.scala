@@ -60,6 +60,9 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
 
   private[this] val sourceName: String = "com.audienceproject.spark.dynamodb.datasource"
 
+  require(conf.getTable.nonEmpty, "DynamoDB table is not defined")
+  require(conf.getRegion.nonEmpty, "DynamoDB region is not defined")
+
   override val reader: DataFrameReader = {
     log.debug(s"DynamoDB connector read throughput ${conf.get(DynamoDBConnectorConf.THROUGHPUT)}")
     spark.read

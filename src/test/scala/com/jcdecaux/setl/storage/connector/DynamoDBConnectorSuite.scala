@@ -4,8 +4,10 @@ import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
+import com.jcdecaux.setl.config.{Conf, DynamoDBConnectorConf}
+import com.typesafe.config.ConfigFactory
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
 class DynamoDBConnectorSuite extends AnyFunSuite {
@@ -88,6 +90,51 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
 
     val readData = connector.read()
     assert(readData.collect().length === input.length)
+
+    val connector2 = new DynamoDBConnector("eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
+    val connector3 = new DynamoDBConnector(spark, "eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
+    assert(connector2.read().collect().length === input.length)
+    assert(connector3.read().collect().length === input.length)
+
+
+    val dynamoDBConnectorConf = new DynamoDBConnectorConf()
+      .setTable("test-table")
+      .set(DynamoDBConnectorConf.REGION, "eu-west-1")
+      .set(DynamoDBConnectorConf.THROUGHPUT, "1000")
+
+    val connector4 = new DynamoDBConnector(dynamoDBConnectorConf)
+    val connector4b = new DynamoDBConnector(spark, dynamoDBConnectorConf)
+    assert(connector4.read().collect().length === input.length)
+    assert(connector4b.read().collect().length === input.length)
+
+    val dynamoConf = new Conf()
+      .set(DynamoDBConnectorConf.TABLE, "test-table")
+      .set(DynamoDBConnectorConf.REGION, "eu-west-1")
+      .set(DynamoDBConnectorConf.THROUGHPUT, "1000")
+    val connector5 = new DynamoDBConnector(dynamoConf)
+    val connector5b = new DynamoDBConnector(spark, dynamoConf)
+    assert(connector5.read().collect().length === input.length)
+    assert(connector5b.read().collect().length === input.length)
+
+    val config = ConfigFactory.load("dynamodb.conf")
+    assertThrows[IllegalArgumentException](new DynamoDBConnector(config))
+
+
+    val connector7 = new DynamoDBConnector(config.getConfig("dynamodb.connector"))
+    val connector7b = new DynamoDBConnector(spark, config.getConfig("dynamodb.connector"))
+    assert(connector7.read().collect().length === input.length)
+    assert(connector7b.read().collect().length === input.length)
+
+  }
+
+  test("DynamoDB Connector un-implemented methods") {
+    val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    import spark.implicits._
+
+    val connector = new DynamoDBConnector(conf)
+    val data = input.toDF("col1", "col2")
+    connector.delete("")
+    connector.create(data)
   }
 
 }
