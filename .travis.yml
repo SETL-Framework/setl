@@ -12,6 +12,10 @@ cache:
   directories:
     - ${HOME}/.m2
 
+branches:
+  only:
+    - master
+
 env:
   - MVN_OPT="--batch-mode clean:clean scoverage:report" AWS_ACCESS_KEY_ID="fakeAccess" AWS_SECRET_ACCESS_KEY="fakeSecret" AWS_REGION="eu-west-1"
 
@@ -27,5 +31,5 @@ script:
   - mvn ${MVN_OPT}
 
 after_script:
-#  - bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
   - echo Build completed on `date`
