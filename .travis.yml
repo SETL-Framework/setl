@@ -13,10 +13,7 @@ cache:
     - ${HOME}/.m2
 
 env:
-  - MAV_OPT=--batch-mode clean:clean scoverage:report
-  - AWS_ACCESS_KEY_ID=fakeAccess
-  - AWS_SECRET_ACCESS_KEY=fakeSecret
-  - AWS_REGION=eu-west-1
+  - MVN_OPT="--batch-mode clean:clean scoverage:report" AWS_ACCESS_KEY_ID="fakeAccess" AWS_SECRET_ACCESS_KEY="fakeSecret" AWS_REGION="eu-west-1"
 
 install:
   - echo start install
@@ -27,7 +24,7 @@ install:
 script:
   - echo start build
   - docker container ls
-  - mvn ${MAV_OPT}
+  - mvn ${MVN_OPT}
 
 after_script:
 #  - bash <(curl -s https://codecov.io/bash)
