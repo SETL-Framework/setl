@@ -183,5 +183,6 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
        |$link
        |""".stripMargin
   }
+  "test"
 
 }
