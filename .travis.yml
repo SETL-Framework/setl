@@ -22,7 +22,6 @@ env:
 install:
   - echo start install
   - mvn ${MAV_OPT} install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-  - docker version
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
@@ -31,5 +30,5 @@ script:
   - mvn ${MVN_OPT}
 
 after_script:
-  - bash <(curl -s https://codecov.io/bash)
+  - curl -s https://codecov.io/bash | bash
   - echo Build completed on `date`
