@@ -30,5 +30,10 @@ script:
   - mvn ${MVN_OPT}
 
 after_script:
-  - curl -s https://codecov.io/bash | bash
+  - |  # Upload the report only if triggered by a PR
+    if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+      echo No coverage report will be uploaded
+    else
+      curl -s https://codecov.io/bash | bash
+    fi
   - echo Build completed on `date`
