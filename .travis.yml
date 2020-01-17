@@ -1,0 +1,31 @@
+sudo: required
+
+language: java
+
+jdk:
+  - openjdk8
+
+services:
+  - docker
+
+cache:
+  directories:
+    - ${HOME}/.m2
+
+env:
+  - MAV_OPT=--batch-mode
+
+install:
+  - echo start install
+  - mvn ${MAV_OPT} install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - docker version
+  - docker-compose -f ./dev/docker-compose.yml up -d
+
+script:
+  - echo start build
+  - docker container ls
+  - mvn --batch-mode clean:clean scoverage:report
+
+after_script:
+  - bash <(curl -s https://codecov.io/bash)
+  - echo Build completed on `date`
