@@ -1,8 +1,8 @@
 # SETL
 
+[![Build Status](https://travis-ci.com/JCDecaux/setl.svg?branch=master)](https://travis-ci.com/JCDecaux/setl)
 ![AWS CodeBuild](https://codebuild.eu-west-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiWEJ3TXdNTUVsaUgveFE0V01xM1AvMkZaamVId1JFRGY0MDRuVWN1dEdmNkFKaFpmdmNlZXlTNFpGWjlXODFVQUNXdEIvc2tacXZuc3MySGpFU2gwVnk4PSIsIml2UGFyYW1ldGVyU3BlYyI6ImVqTmtldXdCWVlyd2JnMW0iLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
-[![License](http://img.shields.io/:license-Apache%202-red.svg)](https://raw.githubusercontent.com/JCDecaux/setl/master/LICENSE)
 [![codecov](https://codecov.io/gh/JCDecaux/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/JCDecaux/setl)
 [![Scaladocs](https://img.shields.io/static/v1?label=doc&message=scaladocs&color=9cf)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scaladocs/#com.jcdecaux.setl.Setl)
 [![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)

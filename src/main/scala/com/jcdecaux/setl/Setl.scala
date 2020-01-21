@@ -267,6 +267,8 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
   /** Stop the spark session */
   def stop(): Unit = {
     this.spark.stop()
+    SparkSession.clearDefaultSession()
+    SparkSession.clearActiveSession()
   }
 }
 
@@ -278,7 +280,7 @@ object Setl {
     private[this] var contextConfiguration: Option[String] = None
     private[this] var configLoader: Option[ConfigLoader] = None
     private[this] var sparkConf: Option[SparkConf] = None
-    private[this] var parallelism: Option[Int] = None
+    private[this] var shufflePartitions: Option[Int] = None
     private[this] var sparkMasterUrl: Option[String] = None
     private[this] var sparkSession: Option[SparkSession] = None
 
@@ -312,10 +314,13 @@ object Setl {
      * @param par value of parallelism
      * @return the current builder
      */
-    def setParallelism(par: Int): this.type = {
-      this.parallelism = Some(par)
+    def setShufflePartitions(par: Int): this.type = {
+      this.shufflePartitions = Some(par)
       this
     }
+
+    @deprecated("To avoid ambiguity, use setShufflePartitions", "0.4.1")
+    def setParallelism(par: Int): this.type = this.setShufflePartitions(par)
 
     /**
      * Provide a user-defined config loader
@@ -420,6 +425,7 @@ object Setl {
           // Overwrite configuration file's properties with those defined in the application
           configureSpark(cassandraHost, sparkSessionBuilder.setCassandraHost)
           configureSpark(sparkMasterUrl, sparkSessionBuilder.setSparkMaster)
+          configureSpark(shufflePartitions, sparkSessionBuilder.setShufflePartitions)
 
           sparkSessionBuilder.getOrCreate()
 
@@ -438,7 +444,9 @@ object Setl {
     override def build(): Builder.this.type = {
       val _spark = sparkSession match {
         case Some(ss) => ss
-        case _ => buildSparkSession()
+        case _ =>
+          log.debug("Build new spark session")
+          buildSparkSession()
       }
 
       setl = this.configLoader match {
