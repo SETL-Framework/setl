@@ -267,6 +267,8 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
   /** Stop the spark session */
   def stop(): Unit = {
     this.spark.stop()
+    SparkSession.clearDefaultSession()
+    SparkSession.clearActiveSession()
   }
 }
 
@@ -274,12 +276,13 @@ object Setl {
 
   class Builder extends com.jcdecaux.setl.Builder[Setl] {
 
-    private[this] var setl: Setl = _
+    private[this] var setl: Option[Setl] = None
     private[this] var contextConfiguration: Option[String] = None
-    private[this] var configLoader: ConfigLoader = _
+    private[this] var configLoader: Option[ConfigLoader] = None
     private[this] var sparkConf: Option[SparkConf] = None
-    private[this] var parallelism: Option[Int] = None
+    private[this] var shufflePartitions: Option[Int] = None
     private[this] var sparkMasterUrl: Option[String] = None
+    private[this] var sparkSession: Option[SparkSession] = None
 
     private[this] val fallbackContextConfiguration: String = "setl.config"
 
@@ -311,10 +314,13 @@ object Setl {
      * @param par value of parallelism
      * @return the current builder
      */
-    def setParallelism(par: Int): this.type = {
-      this.parallelism = Some(par)
+    def setShufflePartitions(par: Int): this.type = {
+      this.shufflePartitions = Some(par)
       this
     }
+
+    @deprecated("To avoid ambiguity, use setShufflePartitions", "0.4.1")
+    def setParallelism(par: Int): this.type = this.setShufflePartitions(par)
 
     /**
      * Provide a user-defined config loader
@@ -323,7 +329,7 @@ object Setl {
      * @return the current builder
      */
     def setConfigLoader(configLoader: ConfigLoader): this.type = {
-      this.configLoader = configLoader
+      this.configLoader = Option(configLoader)
       this
     }
 
@@ -339,16 +345,28 @@ object Setl {
     }
 
     /**
+     * Set a user-provided SparkSession
+     *
+     * @param sparkSession use-defined SparkSession
+     * @return
+     */
+    def setSparkSession(sparkSession: SparkSession): this.type = {
+      this.sparkSession = Option(sparkSession)
+      this
+    }
+
+    /**
      * Use the default config loader and load both the default application.conf and the given configuration file
      *
      * @param configFile file path string of the configuration file
      * @return the current builder
      */
     def withDefaultConfigLoader(configFile: String): this.type = {
-      this.configLoader = ConfigLoader.builder()
+      val cl = ConfigLoader.builder()
         .setAppName(sparkAppName)
         .setConfigPath(configFile)
         .getOrCreate()
+      this.configLoader = Option(cl)
       this
     }
 
@@ -359,9 +377,10 @@ object Setl {
      * @return the current builder
      */
     def withDefaultConfigLoader(): this.type = {
-      this.configLoader = ConfigLoader.builder()
+      val cl = ConfigLoader.builder()
         .setAppName(sparkAppName)
         .getOrCreate()
+      this.configLoader = Option(cl)
       this
     }
 
@@ -375,37 +394,43 @@ object Setl {
     private[this] def buildSparkSession(): SparkSession = {
       val pathOf: String => String = (s: String) => s"${contextConfiguration.getOrElse(fallbackContextConfiguration)}.$s"
 
-      val usages: Array[String] = if (configLoader.has(pathOf("usages"))) {
-        configLoader.getArray(pathOf("usages"))
-      } else {
-        Array()
+      this.configLoader match {
+        case Some(cl) =>
+          val usages: Array[String] = if (cl.has(pathOf("usages"))) {
+            cl.getArray(pathOf("usages"))
+          } else {
+            Array()
+          }
+
+          val sparkConfigurations: Map[String, String] = try {
+            TypesafeConfigUtils.getMap(cl.getConfig(pathOf("spark")))
+          } catch {
+            case _: com.typesafe.config.ConfigException.Missing =>
+              log.warn(s"Config path ${pathOf("spark")} doesn't exist")
+              Map.empty
+          }
+
+          val cassandraHost = cl.getOption(pathOf("cassandraHost"))
+
+          val sparkSessionBuilder = new SparkSessionBuilder(usages: _*)
+            .setAppName(cl.appName) // Set the default app name
+            .setEnv(cl.appEnv) // Retrieve app env
+
+          // SparkConf has the highest priority
+          configureSpark(sparkConf, sparkSessionBuilder.withSparkConf)
+
+          // Configure Spark with properties defined in the configuration file
+          sparkSessionBuilder.set(sparkConfigurations)
+
+          // Overwrite configuration file's properties with those defined in the application
+          configureSpark(cassandraHost, sparkSessionBuilder.setCassandraHost)
+          configureSpark(sparkMasterUrl, sparkSessionBuilder.setSparkMaster)
+          configureSpark(shufflePartitions, sparkSessionBuilder.setShufflePartitions)
+
+          sparkSessionBuilder.getOrCreate()
+
+        case _ => throw new NoSuchElementException("Can't find ConfigLoader")
       }
-
-      val sparkConfigurations: Map[String, String] = try {
-        TypesafeConfigUtils.getMap(configLoader.getConfig(pathOf("spark")))
-      } catch {
-        case _: com.typesafe.config.ConfigException.Missing =>
-          log.warn(s"Config path ${pathOf("spark")} doesn't exist")
-          Map.empty
-      }
-
-      val cassandraHost = configLoader.getOption(pathOf("cassandraHost"))
-
-      val sparkSessionBuilder = new SparkSessionBuilder(usages: _*)
-        .setAppName(configLoader.appName) // Set the default app name
-        .setEnv(configLoader.appEnv) // Retrieve app env
-
-      // SparkConf has the highest priority
-      configureSpark(sparkConf, sparkSessionBuilder.withSparkConf)
-
-      // Configure Spark with properties defined in the configuration file
-      sparkSessionBuilder.set(sparkConfigurations)
-
-      // Overwrite configuration file's properties with those defined in the application
-      configureSpark(cassandraHost, sparkSessionBuilder.setCassandraHost)
-      configureSpark(sparkMasterUrl, sparkSessionBuilder.setSparkMaster)
-
-      sparkSessionBuilder.getOrCreate()
     }
 
     private[this] def configureSpark[T](opt: Option[T], setter: T => SparkSessionBuilder): Unit = {
@@ -417,13 +442,30 @@ object Setl {
 
     /** Build SETL */
     override def build(): Builder.this.type = {
-      setl = new Setl(configLoader) {
-        override val spark: SparkSession = buildSparkSession()
+      val _spark = sparkSession match {
+        case Some(ss) => ss
+        case _ =>
+          log.debug("Build new spark session")
+          buildSparkSession()
       }
+
+      setl = this.configLoader match {
+        case Some(cl) =>
+          Option(
+            new Setl(cl) {
+              override val spark: SparkSession = _spark
+            }
+          )
+        case _ => throw new NoSuchElementException("Can't find ConfigLoader")
+      }
+
       this
     }
 
-    override def get(): Setl = setl
+    override def get(): Setl = setl match {
+      case Some(s) => s
+      case _ => throw new NoSuchElementException("Can't find Setl. You should build it first")
+    }
   }
 
   /** Create a builder to build SETL */

@@ -6,24 +6,12 @@ import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, FileConnect
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.storage.{Condition, ConnectorBuilder, SparkRepositoryBuilder}
 import com.jcdecaux.setl.transformation.Factory
-import org.apache.spark.SparkException
+import org.apache.spark.{SparkConf, SparkContext, SparkException}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
-
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    System.setProperty("myvalue", "test-my-value")
-  }
-
-  System.setProperty("myvalue", "test-my-value")
-
-  override protected def afterAll(): Unit = {
-    System.clearProperty("myvalue")
-  }
+class SetlSuite extends AnyFunSuite {
 
   val configLoader: ConfigLoader = ConfigLoader.builder()
     .setAppEnv("local")
@@ -35,10 +23,11 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     TestObject(2, "b", "B", 2L)
   )
 
-  test("DCContext should build a spark session") {
+  test("Setl should build a spark session") {
     val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
       .setSetlConfigPath("context")
+      .setShufflePartitions(500)
       .getOrCreate()
 
     val ss = context.spark
@@ -47,10 +36,12 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     println(ss.sparkContext.appName)
     println(ss.sparkContext.getConf.get("spark.app.name"))
 
+    assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "500",
+      "setShufflePartition should overwrite config file")
     assert(ss.sparkContext.appName === configLoader.appName)
   }
 
-  test("DCContext should handle spark configuration") {
+  test("Setl should handle setl configuration path") {
     val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
       .setSetlConfigPath("setl.config")
@@ -64,7 +55,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "1000")
   }
 
-  test("DCContext should handle spark configuration in non local environment (with default config path)") {
+  test("Setl should handle spark configuration in non local environment (with default config path)") {
     val context: Setl = Setl.builder()
       .withDefaultConfigLoader("test_priority")
       .getOrCreate()
@@ -78,7 +69,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(ss.sparkContext.getConf.get("spark.app.name") === "my_app_2")
   }
 
-  test("DCContext should handle spark configuration in non local environment (with specific config path)") {
+  test("Setl should handle spark configuration in non local environment (with specific config path)") {
     val context: Setl = Setl.builder()
       .withDefaultConfigLoader("test_priority")
       .setSetlConfigPath("setl.config_2")
@@ -93,7 +84,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(ss.sparkContext.getConf.get("spark.app.name") === "my_app_context_2")
   }
 
-  test("DCContext should be able to create SparkRepository") {
+  test("Setl should be able to create SparkRepository") {
     val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
       .setSetlConfigPath("context")
@@ -116,7 +107,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
 
-  test("DCContext should be able to create a pipeline with all the registered spark repository") {
+  test("Setl should be able to create a pipeline with all the registered spark repository") {
     val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
@@ -144,7 +135,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(context.configLoader.appEnv === "local")
   }
 
-  test("DCContext should be work with default config loader") {
+  test("Setl should be work with default config loader") {
 
     val context = Setl.builder()
       .withDefaultConfigLoader("myconf.conf")
@@ -159,8 +150,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("SparkException should be thrown when no master url is configured") {
     System.clearProperty("app.environment")
     System.setProperty("app.environment", "dev")
-    val context = Setl.builder()
-      .withDefaultConfigLoader("myconf.conf")
+    val context = Setl.builder().withDefaultConfigLoader("myconf.conf")
 
     assertThrows[SparkException](context.getOrCreate())
     System.clearProperty("app.environment")
@@ -201,15 +191,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     System.clearProperty("app.environment")
   }
 
-  test("SparkException should be thrown if there is no master url configuration") {
-    System.clearProperty("app.environment")
-    System.setProperty("app.environment", "dev")
-    val context = Setl.builder().withDefaultConfigLoader("myconf.conf")
-    assertThrows[SparkException](context.getOrCreate())
-    System.clearProperty("app.environment")
-  }
-
-  test("DCContext set repository should be able to handle different consumer") {
+  test("Setl set repository should be able to handle different consumer") {
     val context = Setl.builder()
       .setConfigLoader(configLoader)
       .getOrCreate()
@@ -229,7 +211,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
     conn.delete()
   }
 
-  test("DCContext should handle connectors with delivery id") {
+  test("Setl should handle connectors with delivery id") {
 
     val context = Setl.builder()
       .setConfigLoader(configLoader)
@@ -302,7 +284,7 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorDeliveryMethod
 
-    context
+    val pipeline = context
       .newPipeline()
       .addStage(classOf[SetlSuite.MyFactory], context.spark)
       .addStage(factory)
@@ -317,28 +299,75 @@ class SetlSuite extends AnyFunSuite with BeforeAndAfterAll {
       TestObject(2, "b", "B", 2L)
     ))
     context.getConnector[FileConnector]("csv_dc_context_consumer").delete()
+
+    assert(context.getPipeline(pipeline.getUUID).nonEmpty)
+    assert(context.getPipeline(pipeline.getUUID).get.stages.length === 2)
   }
 
-  test("DCContext should throw exception when there overloaded delivery setter methods") {
+  test("Setl should take into account use defined SparkSession") {
+    try {
+      // Stop the active spark context (if exists)
+      SparkContext.getOrCreate().stop()
+    } catch {
+      case _: Throwable =>
+    }
 
-    //TODO review this test
-
-    val context = Setl.builder()
-      .setConfigLoader(configLoader)
+    val sparkConf = new SparkConf().setMaster("local").setAppName("setl_test_app").set("myKey", "myValue")
+    val spark: SparkSession = SparkSession
+      .builder()
+      .config(sparkConf)
       .getOrCreate()
 
-    context
-      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
-      .setConnector("csv_dc_context_consumer", "1")
+    assertThrows[NoSuchElementException](Setl.builder().setSparkSession(spark).getOrCreate())
 
-    val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorException
+    val setl = Setl.builder()
+      .setSparkSession(spark)
+      .withDefaultConfigLoader()
+      .getOrCreate()
 
-    val pipeline = context
-      .newPipeline()
-      .addStage(classOf[SetlSuite.MyFactory], context.spark)
-      .addStage(factory)
+    assert(setl.spark.sparkContext.getConf.get("myKey") === "myValue")
+    assert(setl.sparkSession.sparkContext.getConf.get("myKey") === "myValue")
+    assertThrows[NoSuchElementException](setl.spark.sparkContext.getConf.get("noSuchKey"))
+    assert(setl.configLoader.appEnv === "local")
+  }
 
-//    assertThrows[NoSuchMethodException](pipeline.describe())
+  test("Setl setSparkConf") {
+    val sparkConf = new SparkConf().setMaster("local").setAppName("setl_test_app").set("myKey", "myValue")
+    val setl = Setl.builder()
+      .setSparkConf(sparkConf)
+      .withDefaultConfigLoader()
+      .getOrCreate()
+
+    assert(setl.sparkSession.sparkContext.getConf.get("myKey") === "myValue")
+    assertThrows[NoSuchElementException](setl.spark.sparkContext.getConf.get("noSuchKey"))
+    assert(setl.configLoader.appEnv === "local")
+  }
+
+  test("Setl should be able to stop the spark session") {
+
+    SparkSession.clearDefaultSession()
+    SparkSession.clearActiveSession()
+    try {
+      // Stop the active spark context (if exists)
+      SparkContext.getOrCreate().stop()
+    } catch {
+      case _: Throwable =>
+    }
+
+    assert(SparkSession.getActiveSession.isEmpty)
+    assert(SparkSession.getDefaultSession.isEmpty)
+
+    val setl = Setl.builder().withDefaultConfigLoader().getOrCreate()
+    assert(SparkSession.getActiveSession.isDefined)
+    assert(SparkSession.getDefaultSession.isDefined)
+
+    setl.stop()
+    assert(SparkSession.getActiveSession.isEmpty)
+    assert(SparkSession.getDefaultSession.isEmpty)
+
+    // As the SparkContext is stopped, SparkContext.getOrCreate should throw SparkException because
+    // no master URL is configured
+    assertThrows[SparkException](SparkContext.getOrCreate())
   }
 
 }
