@@ -168,6 +168,7 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
     ).toDF("col1", "col2")
     outContent.reset()
     connector.create(newData, Some("suffix"))
+    connector.write(newData)
     assert(outContent.toString.contains("Create is not supported in DynamoDBConnector"))
     assert(connector.read().count() !== input.length)
 
