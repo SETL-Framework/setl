@@ -147,8 +147,27 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
     connector.create(data)
     assert(outContent.toString.contains("Create is not supported in DynamoDBConnector"))
 
+    val newData = Seq(
+      ("a", "A"),
+      ("b", "B"),
+      ("c", "C"),
+      ("d", "D"),
+      ("aa", "A"),
+      ("bb", "B"),
+      ("cc", "C"),
+      ("dd", "D"),
+      ("aaa", "A"),
+      ("bbb", "B"),
+      ("ccc", "C"),
+      ("ddd", "D"),
+      ("aaaa", "A"),
+      ("bbbb", "B"),
+      ("cccc", "C"),
+      ("dddd", "D"),
+      ("aaaaa", "A")
+    ).toDF("col1", "col2")
     outContent.reset()
-    connector.create(data, Some("suffix"))
+    connector.create(newData, Some("suffix"))
     assert(outContent.toString.contains("Create is not supported in DynamoDBConnector"))
     assert(connector.read().count() !== input.length)
 
