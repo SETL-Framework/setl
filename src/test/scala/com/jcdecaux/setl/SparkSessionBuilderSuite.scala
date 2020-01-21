@@ -20,7 +20,7 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
       .generateCountry("countries")
   }
 
-  test("Default instantiation") {
+  test("SparkSessionBuilder default instantiation") {
     val sparkSessionBuilder = new SparkSessionBuilder()
     assert(sparkSessionBuilder.appEnv === "local")
     assert(sparkSessionBuilder.appName === "SparkApplication")
@@ -30,6 +30,7 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
     assert(sparkSessionBuilder.spark === null)
     sparkSessionBuilder.build()
     assert(sparkSessionBuilder.spark != null)
+    assert(sparkSessionBuilder.sparkMasterUrl === "local")
   }
 
   test("Cassandra connection") {
@@ -61,12 +62,59 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
       .build()
       .get()
 
+    assert(spark.sparkContext.getConf.get("myProperty") === "hehehe")
     assert(spark.read.cassandraFormat("countries", MockCassandra.keyspace).load().count() === 20)
+
+    val builder2 = new SparkSessionBuilder()
+    assert(builder2.initialization)
+
+    builder2.configure(sparkConf)
+    assert(!builder2.initialization)
+
+    assert(builder2.get("myProperty") === null)
+    assert(builder2.get("spark.cleaner.ttl") === null)
+    assert(builder2.sparkConf.get("myProperty") === "hehehe")
+    assert(builder2.sparkConf.get("spark.ui.enabled") === "false")
+
   }
 
   test("SparkSessionBuilder exception thrown") {
     //    assertThrows[UnknownException.Environment](new SparkSessionBuilder().setEnv("hahaha"))
     assertThrows[IllegalArgumentException](new SparkSessionBuilder("cassandra").setEnv("prod").getOrCreate())
+  }
+
+  test("SparkSessionBuilder should handle configuration setting") {
+    val builder = new SparkSessionBuilder()
+      .setEnv("test_env")
+
+    assert(builder.sparkMasterUrl === null)
+    builder.setSparkMaster("some_url")
+    assert(builder.sparkMasterUrl === "some_url")
+
+    builder.setShufflePartitions(100)
+    assert(builder.getShufflePartitions === "100")
+    assert(builder.getParallelism === "100")
+
+    builder.setParallelism(500)
+    assert(builder.getShufflePartitions === "500")
+    assert(builder.getParallelism === "500")
+
+  }
+
+  test("SparkSessionBuilder Kryo") {
+    // TODO: kryo is not yet supported
+    val builder = new SparkSessionBuilder()
+      .setEnv("local")
+
+    assert(!builder.useKryo)
+    builder.useKryo(true)
+    assert(builder.useKryo)
+
+    builder.registerClass(classOf[String])
+    builder.registerClasses(Array(classOf[String], classOf[Setl]))
+
+    val spark = builder.getOrCreate()
+    assert(spark.sparkContext.getConf.get("spark.serializer") === "org.apache.spark.serializer.KryoSerializer")
   }
 
 

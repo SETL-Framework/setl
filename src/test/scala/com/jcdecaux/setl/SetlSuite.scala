@@ -1,5 +1,7 @@
 package com.jcdecaux.setl
 
+import java.util.concurrent.atomic.AtomicReference
+
 import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.config.ConfigLoader
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, FileConnector}
@@ -9,9 +11,10 @@ import com.jcdecaux.setl.transformation.Factory
 import org.apache.spark.{SparkConf, SparkContext, SparkException}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
+import org.scalatest.PrivateMethodTester
 import org.scalatest.funsuite.AnyFunSuite
 
-class SetlSuite extends AnyFunSuite {
+class SetlSuite extends AnyFunSuite with PrivateMethodTester {
 
   val configLoader: ConfigLoader = ConfigLoader.builder()
     .setAppEnv("local")
@@ -39,6 +42,23 @@ class SetlSuite extends AnyFunSuite {
     assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "500",
       "setShufflePartition should overwrite config file")
     assert(ss.sparkContext.appName === configLoader.appName)
+  }
+
+  test("Setl should handle parameter setting") {
+    val context2: Setl = Setl.builder()
+      .setConfigLoader(configLoader)
+      .setSetlConfigPath("context")
+      .getOrCreate()
+    assert(context2.spark.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "600")
+
+    val context: Setl = Setl.builder()
+      .setConfigLoader(configLoader)
+      .setSetlConfigPath("context")
+      .setParallelism(500)
+      .getOrCreate()
+
+    assert(context.spark.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "500",
+      "setShufflePartition should overwrite config file")
   }
 
   test("Setl should handle setl configuration path") {
