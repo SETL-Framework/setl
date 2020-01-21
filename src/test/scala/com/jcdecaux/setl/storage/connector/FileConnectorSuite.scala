@@ -1,5 +1,6 @@
 package com.jcdecaux.setl.storage.connector
 
+import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
@@ -25,6 +26,65 @@ class FileConnectorSuite extends AnyFunSuite {
     override def read(): DataFrame = null
 
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
+  }
+
+  test("Instanciation of constructors") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val options = Map[String, String](
+      "path" -> "src/test/resources"
+    )
+    val fileConnectorConf = new FileConnectorConf()
+    fileConnectorConf.set(options)
+
+    val connector: SparkSession => FileConnector = spark => new FileConnector(fileConnectorConf) {
+      override val storage: Storage = Storage.OTHER
+
+      override def read(): DataFrame = null
+
+      override def write(t: DataFrame, suffix: Option[String]): Unit = {}
+    }
+
+    val connector2: SparkSession => FileConnector = spark => new FileConnector(spark, fileConnectorConf) {
+      override val storage: Storage = Storage.OTHER
+
+      override def read(): DataFrame = null
+
+      override def write(t: DataFrame, suffix: Option[String]): Unit = {}
+    }
+
+    val connector3: SparkSession => FileConnector = spark => new FileConnector(options) {
+      override val storage: Storage = Storage.OTHER
+
+      override def read(): DataFrame = null
+
+      override def write(t: DataFrame, suffix: Option[String]): Unit = {}
+    }
+
+    val connector4: SparkSession => FileConnector = spark => new FileConnector(spark, options) {
+      override val storage: Storage = Storage.OTHER
+
+      override def read(): DataFrame = null
+
+      override def write(t: DataFrame, suffix: Option[String]): Unit = {}
+    }
+
+    assert(connector(spark).listFilesToLoad(false).length === 1)
+    assert(connector(spark).listFilesToLoad().length > 1)
+    assert(connector(spark).listFiles().length > 1)
+    assert(connector2(spark).listFilesToLoad(false).length === 1)
+    assert(connector2(spark).listFilesToLoad().length > 1)
+    assert(connector2(spark).listFiles().length > 1)
+    assert(connector3(spark).listFilesToLoad(false).length === 1)
+    assert(connector3(spark).listFilesToLoad().length > 1)
+    assert(connector3(spark).listFiles().length > 1)
+    assert(connector4(spark).listFilesToLoad(false).length === 1)
+    assert(connector4(spark).listFilesToLoad().length > 1)
+    assert(connector4(spark).listFiles().length > 1)
+
+    assert(connector(spark).listFiles() === connector2(spark).listFiles())
+    assert(connector(spark).listFiles() === connector3(spark).listFiles())
+    assert(connector(spark).listFiles() === connector4(spark).listFiles())
   }
 
   test("File connector list files ") {

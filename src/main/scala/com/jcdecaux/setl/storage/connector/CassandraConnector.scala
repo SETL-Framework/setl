@@ -115,7 +115,7 @@ class CassandraConnector(val keyspace: String,
    * @param df DataFrame to be saved
    */
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignore in CassandraConnector")
+    log.warn("Suffix will be ignored in CassandraConnector")
     write(df)
   }
 
@@ -125,7 +125,7 @@ class CassandraConnector(val keyspace: String,
    * @param df DataFrame that will be used to create Cassandra table
    */
   override def create(df: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignore in CassandraConnector")
+    log.warn("Suffix will be ignored in CassandraConnector")
     create(df)
   }
 

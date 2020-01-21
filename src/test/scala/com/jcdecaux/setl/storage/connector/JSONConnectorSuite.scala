@@ -2,14 +2,26 @@ package com.jcdecaux.setl.storage.connector
 
 import java.io.File
 
-import com.jcdecaux.setl.config.Properties
+import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
 class JSONConnectorSuite extends AnyFunSuite {
 
   val path: String = "src/test/resources/test JSON"
+
+  val standardPath: String = path + ".json"
+
+  val options: Map[String, String] = Map[String, String](
+    "path" -> path,
+    "saveMode" -> "Overwrite"
+  )
+
+  val conf: Conf = new Conf()
+  conf.set(options)
+
   val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
@@ -18,6 +30,60 @@ class JSONConnectorSuite extends AnyFunSuite {
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   )
+
+  test("Instanciation of constructors") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val connector = new JSONConnector(FileConnectorConf.fromMap(options))
+    connector.write(testTable.toDF())
+    val connector2 = new JSONConnector(spark, FileConnectorConf.fromMap(options))
+    assert(connector.read().collect().length == testTable.length)
+    assert(connector2.read().collect().length == testTable.length)
+
+    val connector3 = new JSONConnector(options)
+    val connector4 = new JSONConnector(spark, options)
+    assert(connector3.read().collect().length == testTable.length)
+    assert(connector4.read().collect().length == testTable.length)
+
+    val connector5 = new JSONConnector(Properties.jsonConfig)
+    connector5.write(testTable.toDF())
+    val connector6 = new JSONConnector(spark, Properties.jsonConfig)
+    assert(connector5.read().collect().length == testTable.length)
+    assert(connector6.read().collect().length == testTable.length)
+
+    val connector7 = new JSONConnector(conf)
+    val connector8 = new JSONConnector(spark, conf)
+    assert(connector7.read().collect().length == testTable.length)
+    assert(connector8.read().collect().length == testTable.length)
+
+    connector.delete()
+    connector2.delete()
+    connector3.delete()
+    connector4.delete()
+    connector5.delete()
+    connector6.delete()
+    connector7.delete()
+    connector8.delete()
+  }
+
+  test("JSON should give correct path") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val conf = new Conf()
+    conf.set("path", path)
+
+    val connector = new JSONConnector(conf)
+    assert(connector.getStandardJSONPath == new Path(standardPath))
+
+    val conf2 = new Conf()
+    conf2.set("path", standardPath)
+    val connector2 = new JSONConnector(conf2)
+    assert(connector2.getStandardJSONPath == new Path(standardPath))
+
+    connector.delete()
+    connector2.delete()
+  }
 
   test("JSON connector IO") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
@@ -135,11 +201,18 @@ class JSONConnectorSuite extends AnyFunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
+    val expectedResult = "[{\"partition1\":1,\"partition2\":\"p1\",\"clustering1\":\"c1\",\"value\":1},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":3,\"partition2\":\"p3\",\"clustering1\":\"c3\",\"value\":3}]"
+
     val path1: String = new File("src/test/resources/standart_json_format").toURI.toString
     val connector1 = new JSONConnector(Map[String, String]("path" -> path1, "saveMode" -> "Overwrite"))
     connector1.writeStandardJSON(testTable.toDF)
-    assert(connector1.readStandardJSON() === "[{\"partition1\":1,\"partition2\":\"p1\",\"clustering1\":\"c1\",\"value\":1},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":2,\"partition2\":\"p2\",\"clustering1\":\"c2\",\"value\":2},{\"partition1\":3,\"partition2\":\"p3\",\"clustering1\":\"c3\",\"value\":3}]")
+    assert(connector1.readStandardJSON() === expectedResult)
     connector1.deleteStandardJSON()
+
+    val connector2 = new JSONConnector(Map[String, String]("path" -> path1, "saveMode" -> "Append"))
+    connector2.writeStandardJSON(testTable.toDF)
+    assert(connector2.readStandardJSON() === expectedResult)
+    connector2.deleteStandardJSON()
   }
 
 }

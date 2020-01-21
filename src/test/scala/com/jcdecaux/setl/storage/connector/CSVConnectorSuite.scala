@@ -2,9 +2,9 @@ package com.jcdecaux.setl.storage.connector
 
 import java.io.File
 
-import com.jcdecaux.setl.config.Properties
+import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
 class CSVConnectorSuite extends AnyFunSuite {
@@ -19,11 +19,70 @@ class CSVConnectorSuite extends AnyFunSuite {
     "saveMode" -> "Append"
   )
 
+  val conf: Conf = new Conf()
+  conf.set(options)
+
   val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   )
+
+  test("Instanciation of constructors") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val connector = new CSVConnector(FileConnectorConf.fromMap(options))
+    connector.write(testTable.toDF)
+    val connector2 = new CSVConnector(spark, FileConnectorConf.fromMap(options))
+    assert(connector.read().collect().length == testTable.length)
+    assert(connector2.read().collect().length == testTable.length)
+
+    val connector3 = new CSVConnector(options)
+    val connector4 = new CSVConnector(spark, options)
+    assert(connector3.read().collect().length == testTable.length)
+    assert(connector4.read().collect().length == testTable.length)
+
+    val connector5 = new CSVConnector(Properties.csvConfig)
+    connector5.write(testTable.toDF)
+    val connector6 = new CSVConnector(spark, Properties.csvConfig)
+    assert(connector5.read().collect().length == testTable.length)
+    assert(connector6.read().collect().length == testTable.length)
+
+    val connector7 = new CSVConnector(conf)
+    val connector8 = new CSVConnector(spark, conf)
+    assert(connector7.read().collect().length == testTable.length)
+    assert(connector8.read().collect().length == testTable.length)
+
+    val connector9 = new CSVConnector(
+      options("path"),
+      options("inferSchema"),
+      options("delimiter"),
+      options("header"),
+      SaveMode.Append
+    )
+    val connector10 = new CSVConnector(
+      spark,
+      options("path"),
+      options("inferSchema"),
+      options("delimiter"),
+      options("header"),
+      SaveMode.Append
+    )
+    assert(connector9.read().collect().length == testTable.length)
+    assert(connector10.read().collect().length == testTable.length)
+
+    connector.delete()
+    connector2.delete()
+    connector3.delete()
+    connector4.delete()
+    connector5.delete()
+    connector6.delete()
+    connector7.delete()
+    connector8.delete()
+    connector9.delete()
+    connector10.delete()
+  }
 
   test("test CSV connector with different file path") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()

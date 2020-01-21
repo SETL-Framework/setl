@@ -2,7 +2,7 @@ package com.jcdecaux.setl.storage.connector
 
 import java.io.File
 
-import com.jcdecaux.setl.config.Properties
+import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
@@ -13,13 +13,65 @@ import org.scalatest.funsuite.AnyFunSuite
 class ParquetConnectorSuite extends AnyFunSuite {
 
   val path: String = "src/test/resources/test parquet"
+  val saveMode: SaveMode = SaveMode.Overwrite
   val table: String = "test_table"
+
+  val options: Map[String, String] = Map[String, String](
+    "path" -> path,
+    "saveMode" -> saveMode.toString
+  )
+
+  val conf: Conf = new Conf()
+  conf.set(options)
 
   val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   )
+
+  test("Instanciation of constructors") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val connector = new ParquetConnector(FileConnectorConf.fromMap(options))
+    connector.write(testTable.toDF)
+    val connector2 = new ParquetConnector(spark, FileConnectorConf.fromMap(options))
+    assert(connector.read().collect().length == testTable.length)
+    assert(connector2.read().collect().length == testTable.length)
+
+    val connector3 = new ParquetConnector(options)
+    val connector4 = new ParquetConnector(spark, options)
+    assert(connector3.read().collect().length == testTable.length)
+    assert(connector4.read().collect().length == testTable.length)
+
+    val connector5 = new ParquetConnector(path, saveMode)
+    val connector6 = new ParquetConnector(spark, path, saveMode)
+    assert(connector5.read().collect().length == testTable.length)
+    assert(connector6.read().collect().length == testTable.length)
+
+    val connector7 = new ParquetConnector(Properties.parquetConfig)
+    connector7.write(testTable.toDF)
+    val connector8 = new ParquetConnector(spark, Properties.parquetConfig)
+    assert(connector7.read().collect().length == testTable.length)
+    assert(connector8.read().collect().length == testTable.length)
+
+    val connector9 = new ParquetConnector(conf)
+    val connector10 = new ParquetConnector(spark, conf)
+    assert(connector9.read().collect().length == testTable.length)
+    assert(connector10.read().collect().length == testTable.length)
+
+    connector.delete()
+    connector2.delete()
+    connector3.delete()
+    connector4.delete()
+    connector5.delete()
+    connector6.delete()
+    connector7.delete()
+    connector8.delete()
+    connector9.delete()
+    connector10.delete()
+  }
 
   test("Parquet connector should push down filter and select") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
