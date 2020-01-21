@@ -1,11 +1,13 @@
 package com.jcdecaux.setl.storage.connector
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File}
 import java.sql.{Date, Timestamp}
 
-import com.jcdecaux.setl.config.Properties
+import com.jcdecaux.setl.config.{Conf, Properties}
 import com.jcdecaux.setl.storage.SparkRepositorySuite
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject, TestObject2}
+import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
@@ -87,16 +89,53 @@ class ExcelConnectorSuite extends AnyFunSuite {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val connector = new ExcelConnector(Properties.excelConfig)
+    val connector = new ExcelConnector(spark, path, "true")
+    connector.write(testTable.toDF)
+    assert(connector.read().count() === 3)
+
+    val conf = new Conf()
+    conf.set("path", path)
+    conf.set("useHeader", "true")
+    val connector2 = new ExcelConnector(conf)
+    assert(connector2.read().count() === 3)
+
+    val connector3 = new ExcelConnector(spark, conf)
+    assert(connector3.read().count() === 3)
+
+    val connector4 = new ExcelConnector(Properties.excelConfig)
+    val connector5 = new ExcelConnector(spark, Properties.excelConfig)
 
     testTable.toDF.show()
-    connector.write(testTable.toDF)
+    connector4.write(testTable.toDF)
 
-    val df = connector.read()
+    val df4 = connector4.read()
+    val df5 = connector5.read()
 
-    df.show()
-    assert(df.count() === 3)
+    df4.show()
+    df5.show()
+    assert(df4.count() === 3)
+    assert(df5.count() === 3)
+
+    deleteRecursively(new File(path))
     deleteRecursively(new File("src/test/resources/test_config_excel.xlsx"))
   }
 
+  test("Infer schema without defining a schema should provoke a warning") {
+    val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    val logger = Logger.getLogger(classOf[ExcelConnector])
+    val outContent = new ByteArrayOutputStream()
+    val appender = new WriterAppender(new SimpleLayout, outContent)
+    logger.addAppender(appender)
+    val warnMessage = "Excel connect may not behave as expected when parsing/saving Integers. " +
+      "It's recommended to define a schema instead of infer one"
+
+    val conf = new Conf()
+    conf.set("path", path)
+    conf.set("useHeader", "true")
+    conf.set("inferSchema", "true")
+
+    val connector = new ExcelConnector(conf)
+    assert(outContent.toString.contains(warnMessage))
+    deleteRecursively(new File(path))
+  }
 }
