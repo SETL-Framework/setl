@@ -30,7 +30,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
   val conf: JDBCConnectorConf = new JDBCConnectorConf()
   conf.set(options)
 
-  test("JDBCConstructor should work") {
+  test("JDBCConstructor constructors") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
     val data = input.toDF("col1", "col2")
@@ -97,7 +97,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     assert(connector3.read().collect().length === 4)
   }
 
-  test("JDBCConnector should not create data") {
+  test("JDBCConnector's create method is not yet implemented") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
     val logger = Logger.getLogger(classOf[JDBCConnector])
@@ -116,7 +116,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     assert(outContent.toString.contains(warnMessage))
   }
 
-  test("JDBCConnector should not delete data") {
+  test("JDBCConnector's delete method is not yet implemented") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     val logger = Logger.getLogger(classOf[JDBCConnector])
     val outContent = new ByteArrayOutputStream()
