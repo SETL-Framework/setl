@@ -1,11 +1,14 @@
 package com.jcdecaux.setl.storage.connector
 
+import java.io.ByteArrayOutputStream
+
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import com.jcdecaux.setl.config.{Conf, DynamoDBConnectorConf}
 import com.typesafe.config.ConfigFactory
+import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
@@ -130,11 +133,29 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
   test("DynamoDB Connector un-implemented methods") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
+    val logger = Logger.getLogger(classOf[DynamoDBConnector])
+    val outContent = new ByteArrayOutputStream()
+    val appender = new WriterAppender(new SimpleLayout, outContent)
+    logger.addAppender(appender)
 
     val connector = new DynamoDBConnector(conf)
     val data = input.toDF("col1", "col2")
     connector.delete("")
+    assert(outContent.toString.contains("Delete is not supported in DynamoDBConnector"))
+
+    outContent.reset()
     connector.create(data)
+    assert(outContent.toString.contains("Create is not supported in DynamoDBConnector"))
+
+    outContent.reset()
+    connector.create(data, Some("suffix"))
+    assert(outContent.toString.contains("Create is not supported in DynamoDBConnector"))
+    assert(connector.read().count() !== input.length)
+
+    outContent.reset()
+    connector.write(data, Some("suffix"))
+    assert(outContent.toString.contains("Suffix will be ignored in DynamoDBConnector"))
+    assert(connector.read().count() === input.length)
   }
 
 }

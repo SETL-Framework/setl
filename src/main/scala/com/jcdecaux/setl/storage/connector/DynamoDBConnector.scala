@@ -90,7 +90,7 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignore in DynamoDBConnector")
+    log.warn("Suffix will be ignored in DynamoDBConnector")
     write(t)
   }
 
