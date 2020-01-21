@@ -27,7 +27,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     "password" -> user
   )
 
-  val conf: Conf = new Conf()
+  val conf: JDBCConnectorConf = new JDBCConnectorConf()
   conf.set(options)
 
   test("JDBCConstructor should work") {
