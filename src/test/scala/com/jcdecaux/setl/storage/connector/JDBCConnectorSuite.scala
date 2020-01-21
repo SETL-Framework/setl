@@ -57,6 +57,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     // assertThrows[org.apache.spark.sql.AnalysisException](connector2.write(data))
 
     val connector3 = new JDBCConnector(options)
+    connector3.write(data)
     assert(connector3.read().collect().length === 2)
 
     val connector4 = new JDBCConnector(Properties.jdbcConfig)
