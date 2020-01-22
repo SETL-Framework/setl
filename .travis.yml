@@ -34,7 +34,7 @@ jobs:
         #  - docker-compose -f ./dev/docker-compose.yml up -d
       script:
         - echo Test stage
-        - echo ${qsdfsqdf}
+        - cat hahaha
     - stage: deploy
       if: branch = master AND type = push
       install:
