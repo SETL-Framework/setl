@@ -15,6 +15,7 @@ object Properties {
 
   val excelConfig: Config = cl.getConfig("test.excel")
   val cassandraConfig: Config = cl.getConfig("test.cassandra")
+  val cassandraConfigWithoutClustering: Config = cl.getConfig("test.cassandraWithoutClustering")
 
   val csvConfig: Config = cl.getConfig("test.csv")
   val parquetConfig: Config = cl.getConfig("test.parquet")

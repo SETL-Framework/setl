@@ -107,6 +107,9 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     connector.delete("partition1 = 1 and partition2 = 'p1'")
     assert(connector.read().count() === 2)
 
+    val connector2 = new CassandraConnector(spark, Properties.cassandraConfigWithoutClustering)
+    assert(connector2.read().count() === 2)
+
     val cqlConnector = new CassandraConnector(
       keyspace = keyspace,
       table = "test_spark_connector",
