@@ -19,8 +19,7 @@ stages:
   - test
   - deploy
 
-install:
-  - echo install global        #  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+#  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 #script:
 #  - echo start build
@@ -36,7 +35,7 @@ jobs:
       script:
         - echo Test stage
     - stage: deploy
-      if: branch = master
+      if: branch = master AND type = push
       install:
 #        - echo ${MVN_SETTINGS} > ${TRAVIS_HOME}/.m2/settings.xml;
 #        - echo ${MVN_SECURITY} > ${TRAVIS_HOME}/.m2/settings-security.xml;
@@ -44,7 +43,7 @@ jobs:
       script:
         - echo deploy snapshot
     - stage: deploy
-      if: tag =~ /^v.*$/
+      if: tag =~ /^v.*$/ AND type = push
       install:
         - echo install release
       script:
