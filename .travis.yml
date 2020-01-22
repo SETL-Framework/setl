@@ -15,10 +15,12 @@ cache:
 env:
   - MVN_OPT="--batch-mode clean:clean scoverage:report" AWS_ACCESS_KEY_ID="fakeAccess" AWS_SECRET_ACCESS_KEY="fakeSecret" AWS_REGION="eu-west-1"
 
+stages:
+  - test
+  - deploy
+
 install:
-  - echo start install
-#  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-#  - docker-compose -f ./dev/docker-compose.yml up -d
+  - echo install global        #  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 #script:
 #  - echo start build
@@ -28,14 +30,23 @@ install:
 jobs:
   include:
     - stage: test
+      install:
+        - echo install test
+        #  - docker-compose -f ./dev/docker-compose.yml up -d
       script:
         - echo Test stage
-    - stage: deploy snapshot
+    - stage: deploy
       if: branch = master
+      install:
+#        - echo ${MVN_SETTINGS} > ${TRAVIS_HOME}/.m2/settings.xml;
+#        - echo ${MVN_SECURITY} > ${TRAVIS_HOME}/.m2/settings-security.xml;
+        - echo install snapshot
       script:
         - echo deploy snapshot
-    - stage: deploy release
+    - stage: deploy
       if: tag =~ /^v.*$/
+      install:
+        - echo install release
       script:
         - echo deploy release
 
