@@ -2,10 +2,9 @@ version: 0.2
 
 env:
   variables:
-    AWS_ACCESS_KEY_ID: fakeAccess
-    AWS_SECRET_ACCESS_KEY: fakeSecret
-    AWS_REGION: eu-west-1
-    MVN_OPT: --batch-mode clean:clean scoverage:report scala:doc
+    MVN_TEST_OPT: --batch-mode clean:clean test scala:doc
+    MVN_DEPLOY_OPT: --batch-mode deploy -DskipTests
+    MVN_PROFILE: -Pprovided
     DEPLOY: "false"
 
 phases:
@@ -18,34 +17,32 @@ phases:
         if [[ "$DEPLOY" != "false" ]]; then
            echo ${MVN_SETTINGS} > /root/.m2/settings.xml;
            echo ${MVN_SECURITY} > /root/.m2/settings-security.xml;
-           gpg --list-keys;
            echo ${GPG_KEY} | base64 -d | gpg --import;
         fi
-  pre_build: # Services
+  pre_build:
     commands:
-      - docker version
+      # variables for unit test
+      - export AWS_ACCESS_KEY_ID="fakeAccess"
+      - export AWS_SECRET_ACCESS_KEY="fakeSecret"
+      - export AWS_REGION="eu-west-1"
+      # launch services
       - docker-compose -f ./dev/docker-compose.yml up -d
-  build: # Test and Reports
+  build:
     commands:
-      - docker container ls
-      - mvn ${MVN_OPT}
-  post_build: # Deployment
+      - mvn ${MVN_TEST_OPT}
+  post_build:
     commands:
       - |
-        if [[ "$DEPLOY" = "SNAPSHOT" ]]; then
-           export MVN_PROFILE="-Pprovided";
-        elif [[ "$DEPLOY" = "RELEASE" ]]; then
+        if [[ "$DEPLOY" = "RELEASE" ]]; then
            export MVN_PROFILE="-Prelease";
         fi
       - |
         if [[ "$DEPLOY" != "false" ]]; then
            echo Deploy to the $DEPLOY repository;
-           mvn --batch-mode deploy -DskipTests ${MVN_PROFILE};
+           mvn ${MVN_DEPLOY_OPT} ${MVN_PROFILE};
         else
            echo No deployment;
         fi
-      - curl -s https://codecov.io/bash | bash
-      - echo Build completed on `date`
 
 artifacts:
   files:

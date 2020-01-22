@@ -12,28 +12,18 @@ cache:
   directories:
     - ${HOME}/.m2
 
-branches:
-  only:
-    - master
-
 env:
-  - MVN_OPT="--batch-mode clean:clean scoverage:report" AWS_ACCESS_KEY_ID="fakeAccess" AWS_SECRET_ACCESS_KEY="fakeSecret" AWS_REGION="eu-west-1"
+  - MVN_OPT="--batch-mode clean:clean scoverage:report"
 
 install:
-  - echo start install
-  - mvn ${MAV_OPT} install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - export AWS_ACCESS_KEY_ID="fakeAccess"
+  - export AWS_SECRET_ACCESS_KEY="fakeSecret"
+  - export AWS_REGION="eu-west-1"
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
-  - echo start build
-  - docker container ls
   - mvn ${MVN_OPT}
 
 after_script:
-  - |  # Upload the report only if triggered by a PR
-    if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      echo No coverage report will be uploaded
-    else
-      curl -s https://codecov.io/bash | bash
-    fi
-  - echo Build completed on `date`
+  - curl -s https://codecov.io/bash | bash
