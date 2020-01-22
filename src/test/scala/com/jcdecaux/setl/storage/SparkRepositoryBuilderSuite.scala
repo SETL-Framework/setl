@@ -31,6 +31,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("spark repository builder configuration") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val builder = new SparkRepositoryBuilder[TestObject]()
 
@@ -39,6 +40,14 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val builder2 = new SparkRepositoryBuilder[TestObject]()
     assertThrows[com.jcdecaux.setl.exception.UnknownException.Storage](builder2.build())
+
+    val builder3 = new SparkRepositoryBuilder[TestObject](spark)
+    builder3.setPath("my/test/path")
+    assert(builder3.getAs[String]("path").get === "my/test/path")
+
+    val builder4 = new SparkRepositoryBuilder[TestObject](Some(spark), None, None)
+    builder4.setPath("my/test/path")
+    assert(builder4.getAs[String]("path").get === "my/test/path")
   }
 
   test("SparkRepository configuration setters") {
@@ -56,6 +65,8 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(builder2.getAs[String]("dateFormat").get === "yyyy-mm-dd")
     assert(builder2.getAs[Long]("excerptSize").get === 10L)
 
+    builder2.setStorage(Storage.CSV)
+    builder2.setClusteringKeys(Some(Seq("clustering1")))
     builder2.setDelimiter("|")
     builder2.setInferSchema(false)
     builder2.setUseHeader(false)
@@ -66,7 +77,11 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     builder2.setAddColorColumns(true)
     builder2.setTimestampFormat("yyyy-MM-dd hh:mm:ss")
     builder2.setDateFormat("MM-yyyy-dd")
+    builder2.setMaxRowsInMemory(2000)
     builder2.setExcerptSize(100L)
+    builder2.setWorkbookPassword("password")
+    assert(builder2.getAs[String]("storage").get === "CSV")
+    assert(builder2.getAs[String]("clusteringKeyColumns") === Some("clustering1"))
     assert(builder2.getAs[String]("delimiter") === Some("|"))
     assert(builder2.getAs[Boolean]("inferSchema").get === false)
     assert(builder2.getAs[Boolean]("useHeader").get === false)
@@ -77,7 +92,9 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(builder2.getAs[Boolean]("addColorColumns").get === true)
     assert(builder2.getAs[String]("timestampFormat").get === "yyyy-MM-dd hh:mm:ss")
     assert(builder2.getAs[String]("dateFormat").get === "MM-yyyy-dd")
+    assert(builder2.getAs[Long]("maxRowsInMemory").get === 2000L)
     assert(builder2.getAs[Long]("excerptSize").get === 100L)
+    assert(builder2.getAs[String]("workbookPassword").get === "password")
 
   }
 
