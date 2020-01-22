@@ -32,6 +32,8 @@ class ConditionSuite extends AnyFunSuite {
     val floatSetCond = Condition("float_set", "in", Set(1.343F, 2.445F))
     assert(floatSetCond.toSqlRequest === "(`float_set` IN (1.343, 2.445))")
 
+    val strCondWithType = Condition("col1", "=", "hehe")
+    assert(strCondWithType.toSqlRequest === "(`col1` = 'hehe')")
   }
 
   test("Condition should return null if value is not defined") {
