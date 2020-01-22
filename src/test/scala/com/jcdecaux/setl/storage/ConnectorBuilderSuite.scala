@@ -30,6 +30,31 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
       .generateCountry("countries")
   }
 
+  test("Deprecated constructors") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val conf = new Conf()
+    conf.set("storage", "CSV")
+    conf.set("path", "src/test/resources/test_config_csv3")
+    conf.set("inferSchema", "true")
+    conf.set("header", "true")
+
+    val connector = new ConnectorBuilder(Properties.csvConfigConnectorBuilder).build().get()
+    connector.write(testTable.toDF())
+
+    val connector2 = new ConnectorBuilder(spark, Some(Properties.csvConfigConnectorBuilder), None).build().get()
+    val connector3 = new ConnectorBuilder(spark, Properties.csvConfigConnectorBuilder).build().get()
+    val connector4 = new ConnectorBuilder(spark, conf).build().get()
+
+    assert(connector.read().count() === 3)
+    assert(connector2.read().count() === 3)
+    assert(connector3.read().count() === 3)
+    assert(connector4.read().count() === 3)
+
+    deleteRecursively(new File(Properties.csvConfigConnectorBuilder.getString("path")))
+  }
+
   test("build cassandra connector") {
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
       .withSparkConf(MockCassandra.cassandraConf)
