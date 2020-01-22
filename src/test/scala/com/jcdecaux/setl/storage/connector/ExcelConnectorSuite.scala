@@ -137,5 +137,25 @@ class ExcelConnectorSuite extends AnyFunSuite {
     val connector = new ExcelConnector(conf)
     assert(outContent.toString.contains(warnMessage))
     deleteRecursively(new File(path))
+
+    outContent.reset()
+    val connector2 = new ExcelConnector(Properties.excelConfigWithoutSchema)
+    assert(outContent.toString.contains(warnMessage))
+    deleteRecursively(new File("src/test/resources/test_config_excel_without_schema.xlsx"))
+  }
+
+  test("IllegalArgumentException should be thrown when writing with save mode different than Append or Overwrite") {
+    val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    import spark.implicits._
+    val conf = new Conf()
+    conf.set("path", path)
+    conf.set("useHeader", "true")
+    conf.set("inferSchema", "true")
+    conf.set("saveMode", "Ignore")
+
+    val connector = new ExcelConnector(conf)
+    assertThrows[IllegalArgumentException](connector.write(testTable.toDF()))
+
+    deleteRecursively(new File(path))
   }
 }

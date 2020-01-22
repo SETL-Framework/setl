@@ -14,6 +14,7 @@ object Properties {
     .setConfigPath("application.conf").getOrCreate()
 
   val excelConfig: Config = cl.getConfig("test.excel")
+  val excelConfigWithoutSchema: Config = cl.getConfig("test.excelWithoutSchema")
   val cassandraConfig: Config = cl.getConfig("test.cassandra")
   val cassandraConfigWithoutClustering: Config = cl.getConfig("test.cassandraWithoutClustering")
 
