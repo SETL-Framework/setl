@@ -54,7 +54,7 @@ class PipelineSuite extends AnyFunSuite {
   }
 
   test("Test Dataset pipeline") {
-    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(
@@ -94,7 +94,7 @@ class PipelineSuite extends AnyFunSuite {
   }
 
   test("Pipeline should handle addStage[T](args, persist)") {
-    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(
@@ -133,7 +133,7 @@ class PipelineSuite extends AnyFunSuite {
   }
 
   test("Test get methods of Pipeline") {
-    val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    val spark: SparkSession = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(
@@ -251,7 +251,7 @@ class PipelineSuite extends AnyFunSuite {
 
   test("Test pipeline with two inputs of the same type") {
 
-    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(
@@ -302,7 +302,7 @@ class PipelineSuite extends AnyFunSuite {
   }
 
   test("[SETL-25] Pipeline should be able to delivery multiple autoLoad deliveries with same type but different id") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").setSparkMaster("local").build().get()
     import spark.implicits._
 
     val repo1 = new SparkRepositoryBuilder[Product2](Storage.CSV)

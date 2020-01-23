@@ -11,7 +11,7 @@ class SimplePipelineOptimizerSuite extends AnyFunSuite {
   import PipelineSuite._
 
   test("PipelineOptimizer should optimize a pipeline") {
-    val spark = new SparkSessionBuilder("test").setEnv("local").getOrCreate()
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
 
     val ds2: Dataset[Product2] = Seq(

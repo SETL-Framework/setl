@@ -154,7 +154,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
   }
 
   test("SparkRepository should handle column name changed by annotation while filtering") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").setSparkMaster("local").build().get()
     import spark.implicits._
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B"), MyObject("b", "BB"), MyObject("b", "BBB")).toDS()
