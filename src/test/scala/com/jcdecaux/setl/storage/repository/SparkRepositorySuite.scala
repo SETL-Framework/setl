@@ -9,8 +9,9 @@ import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConn
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class SparkRepositorySuite extends AnyFunSuite {
+class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
 
@@ -234,7 +235,7 @@ class SparkRepositorySuite extends AnyFunSuite {
 
     val loadedData = repo.findAll()
     loadedData.show()
-    assert(loadedData.head === test.head)
+    loadedData.collect() should contain theSameElementsAs test.collect()
     assert(test.filter(_.col1 == "col1_3").head === repo.findBy(Condition("col1", "=", "col1_3")).head)
 
     // Exception will be thrown when we try to filter a binary column
@@ -275,7 +276,7 @@ class SparkRepositorySuite extends AnyFunSuite {
 
     val loadedData = repo.findAll()
     loadedData.show()
-    assert(loadedData.head === test.head)
+    loadedData.collect() should contain theSameElementsAs test.collect()
     assert(test.filter(_.col1 == "col1_3").head === repo.findBy(Condition("col1", "=", "col1_3")).head)
 
     // Exception will be thrown when we try to filter a binary column

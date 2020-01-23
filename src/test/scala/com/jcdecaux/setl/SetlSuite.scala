@@ -1,14 +1,12 @@
 package com.jcdecaux.setl
 
-import java.util.concurrent.atomic.AtomicReference
-
 import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.config.ConfigLoader
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, FileConnector}
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.storage.{Condition, ConnectorBuilder, SparkRepositoryBuilder}
 import com.jcdecaux.setl.transformation.Factory
-import org.apache.spark.{SparkConf, SparkContext, SparkException}
+import org.apache.spark.{SparkConf, SparkException}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
 import org.scalatest.PrivateMethodTester
@@ -325,11 +323,11 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester {
   }
 
   test("Setl should take into account use defined SparkSession") {
-    try {
-      // Stop the active spark context (if exists)
-      SparkContext.getOrCreate().stop()
-    } catch {
-      case _: Throwable =>
+    SparkSession.clearDefaultSession()
+    SparkSession.clearActiveSession()
+    SparkTestUtils.getActiveSparkContext match {
+      case Some(cc) => cc.stop()
+      case _ =>
     }
 
     val sparkConf = new SparkConf().setMaster("local").setAppName("setl_test_app").set("myKey", "myValue")
@@ -364,14 +362,12 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester {
   }
 
   test("Setl should be able to stop the spark session") {
-
     SparkSession.clearDefaultSession()
     SparkSession.clearActiveSession()
-    try {
-      // Stop the active spark context (if exists)
-      SparkContext.getOrCreate().stop()
-    } catch {
-      case _: Throwable =>
+
+    SparkTestUtils.getActiveSparkContext match {
+      case Some(cc) => cc.stop()
+      case _ =>
     }
 
     assert(SparkSession.getActiveSession.isEmpty)
@@ -384,10 +380,7 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester {
     setl.stop()
     assert(SparkSession.getActiveSession.isEmpty)
     assert(SparkSession.getDefaultSession.isEmpty)
-
-    // As the SparkContext is stopped, SparkContext.getOrCreate should throw SparkException because
-    // no master URL is configured
-    assertThrows[SparkException](SparkContext.getOrCreate())
+    assert(SparkTestUtils.getActiveSparkContext.isEmpty)
   }
 
 }

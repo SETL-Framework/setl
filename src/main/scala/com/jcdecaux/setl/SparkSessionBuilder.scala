@@ -67,8 +67,11 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
       this.sparkConf = new SparkConf()
     }
 
+    // Set default Spark master URL
     log.debug(s"Detect $appEnv environment")
-    if (appEnv.toLowerCase().contains("local")) setSparkMaster("local")
+    if (appEnv.toLowerCase().contains("local") && !properties.containsKey(SPARK_MASTER)) {
+      setSparkMaster("local[*]")
+    }
 
     import scala.collection.JavaConverters.mapAsScalaMapConverter
     properties.asScala.foreach {
