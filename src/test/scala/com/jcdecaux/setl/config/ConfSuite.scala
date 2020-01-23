@@ -26,6 +26,13 @@ class ConfSuite extends AnyFunSuite {
     conf.set("storage", Storage.CASSANDRA)
     conf.set("wrong_storage", "cassandraaa")
 
+    val newConf = new Conf()
+    assert(conf.has("string"))
+    assert(!newConf.has("string"))
+
+    newConf += conf
+    assert(newConf.has("string"))
+
   }
 
   test("customize serializer") {
@@ -57,6 +64,15 @@ class ConfSuite extends AnyFunSuite {
     assert(map2.get("b").get === "B")
   }
 
+  test("One should be able to construct a Conf from Config") {
+    val config = Properties.csvConfig
+    val conf1 = Conf(config)
+    assert(config.getString("path") === conf1.get("path").get)
+
+    val conf2 = Conf.fromConfig(config)
+    assert(config.getString("path") === conf2.get("path").get)
+  }
+
   test("Get existing Conf") {
     assert(conf.getAs[String]("string").get === "mystring")
     assert(conf.getAs[Int]("int").get === 1234)
@@ -76,6 +92,9 @@ class ConfSuite extends AnyFunSuite {
     assert(conf.getAs[Storage]("storage").get === Storage.CASSANDRA)
     assertThrows[ConfException.Format](conf.getAs[Storage]("wrong_storage"))
     assert(conf.get("none") === None)
+
+    assert(!conf.has("notExisting"))
+    assert(conf.getAs[String]("notExisting", "defaultValue") === "defaultValue")
   }
 
   test("Get undefined conf") {

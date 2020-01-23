@@ -23,6 +23,20 @@ class ConfLoaderSuite extends AnyFunSuite {
     System.clearProperty("myvalue")
   }
 
+  test("Getters of ConfigLoader") {
+    System.setProperty("app.environment", "test")
+    val cl = ConfigLoader.builder()
+      .setAppEnv("local")
+      .setConfigPath("test_priority.conf")
+      .getOrCreate()
+
+    assert(cl.get("my.value") === "haha")
+    assert(cl.getOption("my.value") === Some("haha"))
+    assert(cl.getOption("notExisting") === None)
+    assert(cl.getArray("test.list") === Array("1","2","3"))
+    assert(cl.getObject("setl.config") === cl.config.getObject("setl.config"))
+  }
+
   test("ConfigLoader builder should prioritize setConfigPath than setAppEnv and jvm property and pom") {
     System.setProperty("app.environment", "test")
     val cl = ConfigLoader.builder()
