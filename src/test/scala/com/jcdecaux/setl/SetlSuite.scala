@@ -11,8 +11,9 @@ import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
 import org.scalatest.PrivateMethodTester
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class SetlSuite extends AnyFunSuite with PrivateMethodTester {
+class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
 
   val configLoader: ConfigLoader = ConfigLoader.builder()
     .setAppEnv("local")
@@ -251,10 +252,7 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester {
     val output = factory.get()
     output.show()
     assert(output.count() === 2)
-    assert(output.collect() === Array(
-      TestObject(1, "a", "A", 1L),
-      TestObject(2, "b", "B", 2L)
-    ))
+    output.collect() should contain theSameElementsAs Array(TestObject(1, "a", "A", 1L), TestObject(2, "b", "B", 2L))
     context.getConnector("csv_dc_context_consumer").asInstanceOf[FileConnector].delete()
   }
 
@@ -280,10 +278,10 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester {
     val output = factory.get()
     output.show()
     assert(output.count() === 2)
-    assert(output.collect() === Array(
+    output.collect() should contain theSameElementsAs Array(
       TestObject(1, "a", "A", 1L),
       TestObject(2, "b", "B", 2L)
-    ))
+    )
     context.getConnector[FileConnector]("csv_dc_context_consumer").delete()
   }
 
@@ -312,10 +310,10 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester {
     val output = factory.get()
     output.show()
     assert(output.count() === 2)
-    assert(output.collect() === Array(
+    output.collect() should contain theSameElementsAs Array(
       TestObject(1, "a", "A", 1L),
       TestObject(2, "b", "B", 2L)
-    ))
+    )
     context.getConnector[FileConnector]("csv_dc_context_consumer").delete()
 
     assert(context.getPipeline(pipeline.getUUID).nonEmpty)
