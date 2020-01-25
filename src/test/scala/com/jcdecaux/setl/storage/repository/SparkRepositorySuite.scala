@@ -181,11 +181,11 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val finded5 = repo.findBy($"column1" === "a").collect()
     val finded6 = repo.findBy($"col1" === "a").collect()
 
-    assert(finded1 === finded2)
-    assert(finded2 === finded3)
-    assert(finded3 === finded4)
-    assert(finded5 === finded4)
-    assert(finded5 === finded6)
+    finded1 should contain theSameElementsAs finded2
+    finded2 should contain theSameElementsAs finded3
+    finded3 should contain theSameElementsAs finded4
+    finded5 should contain theSameElementsAs finded4
+    finded5 should contain theSameElementsAs finded6
 
     val conditionBis = Set(Condition("col1", "=", "b"), Condition("_sort_key", "IN", Set("BBB-b", "BB-b")))
     val conditionBis2 = Condition($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
@@ -197,10 +197,10 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val findedBis4 = repo.findBy($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
     val findedBis5 = repo.findBy($"column1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
 
-    assert(findedBis1.collect() === findedBis2.collect())
-    assert(findedBis2.collect() === findedBis3.collect())
-    assert(findedBis4.collect() === findedBis3.collect())
-    assert(findedBis4.collect() === findedBis5.collect())
+    findedBis1.collect() should contain theSameElementsAs findedBis2.collect()
+    findedBis2.collect() should contain theSameElementsAs findedBis3.collect()
+    findedBis4.collect() should contain theSameElementsAs findedBis3.collect()
+    findedBis4.collect() should contain theSameElementsAs findedBis5.collect()
 
     connector.delete()
   }
