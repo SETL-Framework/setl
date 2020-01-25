@@ -4,10 +4,11 @@ import java.io.File
 
 import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
+import org.apache.spark.sql.{Dataset, SaveMode, SparkSession, functions}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class CSVConnectorSuite extends AnyFunSuite {
+class CSVConnectorSuite extends AnyFunSuite with Matchers {
 
   val path: String = "src/test/resources/test_csv"
 
@@ -28,31 +29,41 @@ class CSVConnectorSuite extends AnyFunSuite {
     TestObject(3, "p3", "c3", 3L)
   )
 
-  test("Instanciation of constructors") {
+  test("Instantiation of constructors") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
     val connector = new CSVConnector(FileConnectorConf.fromMap(options))
-    connector.write(testTable.toDF)
     val connector2 = new CSVConnector(spark, FileConnectorConf.fromMap(options))
+    connector.write(testTable.toDF)
     assert(connector.read().collect().length == testTable.length)
     assert(connector2.read().collect().length == testTable.length)
+    connector.delete()
+    connector2.delete()
 
     val connector3 = new CSVConnector(options)
     val connector4 = new CSVConnector(spark, options)
+    connector3.write(testTable.toDF)
     assert(connector3.read().collect().length == testTable.length)
     assert(connector4.read().collect().length == testTable.length)
+    connector3.delete()
+    connector4.delete()
 
     val connector5 = new CSVConnector(Properties.csvConfig)
-    connector5.write(testTable.toDF)
     val connector6 = new CSVConnector(spark, Properties.csvConfig)
+    connector5.write(testTable.toDF)
     assert(connector5.read().collect().length == testTable.length)
     assert(connector6.read().collect().length == testTable.length)
+    connector5.delete()
+    connector6.delete()
 
     val connector7 = new CSVConnector(conf)
     val connector8 = new CSVConnector(spark, conf)
+    connector7.write(testTable.toDF)
     assert(connector7.read().collect().length == testTable.length)
     assert(connector8.read().collect().length == testTable.length)
+    connector7.delete()
+    connector8.delete()
 
     val connector9 = new CSVConnector(
       options("path"),
@@ -69,17 +80,9 @@ class CSVConnectorSuite extends AnyFunSuite {
       options("header"),
       SaveMode.Append
     )
+    connector9.write(testTable.toDF)
     assert(connector9.read().collect().length == testTable.length)
     assert(connector10.read().collect().length == testTable.length)
-
-    connector.delete()
-    connector2.delete()
-    connector3.delete()
-    connector4.delete()
-    connector5.delete()
-    connector6.delete()
-    connector7.delete()
-    connector8.delete()
     connector9.delete()
     connector10.delete()
   }
@@ -118,13 +121,11 @@ class CSVConnectorSuite extends AnyFunSuite {
     val csvConnector = new CSVConnector(options)
     import spark.implicits._
 
-    testTable.toDF.show()
     csvConnector.write(testTable.toDF)
     csvConnector.write(testTable.toDF)
 
     val df = csvConnector.read()
 
-    df.show()
     assert(df.count() === 6)
     csvConnector.delete()
   }
@@ -140,7 +141,6 @@ class CSVConnectorSuite extends AnyFunSuite {
     connector.write(testTable.toDF())
 
     val df = connector.read()
-    df.show()
     assert(df.count() === 6)
     connector.delete()
   }
@@ -157,7 +157,6 @@ class CSVConnectorSuite extends AnyFunSuite {
     csvConnector.write(testTable.toDF(), Some("3"))
 
     val df = csvConnector.read()
-    df.show()
     assert(df.count() == 12)
     assert(df.filter($"partition1" === 1).count() === 4)
     assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
@@ -194,9 +193,15 @@ class CSVConnectorSuite extends AnyFunSuite {
     csvConnector2.write(dff.toDF, Some("2"))
     csvConnector2.dropUserDefinedSuffix(false)
 
-    csvConnector2.read().show()
     assert(csvConnector2.read().count() === 12)
     assert(csvConnector2.read().columns.length === 5)
+    assert(csvConnector2.read().filter(functions.col(csvConnector2.getUserDefinedSuffixKey) === "1").count() === 6)
+    assert(csvConnector2.read().filter(functions.col(csvConnector2.getUserDefinedSuffixKey) === "2").count() === 6)
+    csvConnector2.read()
+      .filter(functions.col(csvConnector2.getUserDefinedSuffixKey) === "2")
+      .drop(csvConnector2.getUserDefinedSuffixKey)
+      .as[TestObject].collect() should contain theSameElementsAs dff.collect()
+
     csvConnector2.delete()
 
     // with partition without suffix
@@ -245,7 +250,6 @@ class CSVConnectorSuite extends AnyFunSuite {
     csvConnector2.write(dff.toDF, Some("1"))
     csvConnector2.write(df2.toDF, None)
     csvConnector2.dropUserDefinedSuffix(false)
-    csvConnector2.read().show()
     assert(csvConnector2.read().count() === 12)
     csvConnector2.delete()
   }
