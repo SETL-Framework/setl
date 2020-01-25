@@ -13,17 +13,15 @@ cache:
     - ${HOME}/.m2
 
 env:
-  - MVN_OPT="--batch-mode clean:clean scoverage:report"
+  - MVN_OPT="--batch-mode -ntp clean:clean scoverage:report"
 
 install:
-  - export AWS_ACCESS_KEY_ID="fakeAccess"
-  - export AWS_SECRET_ACCESS_KEY="fakeSecret"
-  - export AWS_REGION="eu-west-1"
+  - chmod +x ./dev/test.sh
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
-  - mvn ${MVN_OPT}
+  - ./dev/test.sh
 
 after_script:
   - curl -s https://codecov.io/bash | bash

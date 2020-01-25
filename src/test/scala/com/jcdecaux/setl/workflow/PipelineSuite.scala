@@ -83,7 +83,7 @@ class PipelineSuite extends AnyFunSuite {
 
     f3.get().show()
     assert(f3.get().count() === 2)
-    assert(f3.get().filter($"x" === "pd1").count() === 1)
+    assert(f3.get().filter($"x" === "pd1").collect().head === Product2("pd1", "c2"))
     assert(f3.get().filter($"x" === "id_of_product1").count() === 1)
     assert(f3.get().filter($"x" === "id_of_product1").collect().head === Product2("id_of_product1", "produced_by_datasetFactory2"))
 
