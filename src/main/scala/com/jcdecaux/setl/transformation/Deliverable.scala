@@ -18,7 +18,7 @@ class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
 
   private var empty: Boolean = false
   private[this] var _producer: Class[_ <: Factory[_]] = classOf[External]
-  private[this] val _consumer: ArrayBuffer[Class[_ <: Factory[_]]] = ArrayBuffer()
+  private[this] val _consumer: scala.collection.mutable.Set[Class[_ <: Factory[_]]] = scala.collection.mutable.Set()
   private[this] var _deliveryId: String = Deliverable.DEFAULT_ID
 
   private[setl] def isEmpty: Boolean = empty
@@ -85,14 +85,18 @@ class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
    * Return true if:
    * <ul>
    * <li>This deliverable has the same payload type as the other deliverable</li>
-   * <li>Both of them have the same consumers</li>
+   * <li>Both of them have one or more same consumers</li>
    * <li>Both of them have the same producer</li>
    * </ul>
    */
-  def hasSameContent(deliverable: Deliverable[_]): Boolean = {
-    this.hasSamePayloadType(deliverable) &&
-      this.consumer.intersect(deliverable.consumer).nonEmpty &&
-      this.producer == deliverable.producer
+  def sameDeliveryAs(deliverable: Deliverable[_]): Boolean = {
+    val sameConsumer = if (this.consumer.nonEmpty || deliverable.consumer.nonEmpty) {
+      this.consumer.intersect(deliverable.consumer).nonEmpty
+    } else {
+      true
+    }
+
+    this.hasSamePayloadType(deliverable) && sameConsumer && this.producer == deliverable.producer
   }
 
   /** Get the payload class */
@@ -116,7 +120,7 @@ class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
    * @return
    */
   def setConsumer(consumer: Class[_ <: Factory[_]]): this.type = {
-    this._consumer.append(consumer)
+    this._consumer.add(consumer)
     this
   }
 
@@ -127,7 +131,7 @@ class Deliverable[T: ru.TypeTag](payload: T) extends Identifiable with HasType {
    * @return
    */
   def setConsumers(consumer: Seq[Class[_ <: Factory[_]]]): this.type = {
-    this._consumer.appendAll(consumer)
+    consumer.foreach(c => setConsumer(c))
     this
   }
 
