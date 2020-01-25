@@ -5,10 +5,11 @@ import java.io.File
 import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, SparkSession, functions}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class JSONConnectorSuite extends AnyFunSuite {
+class JSONConnectorSuite extends AnyFunSuite with Matchers {
 
   val path: String = "src/test/resources/test JSON"
 
@@ -40,29 +41,30 @@ class JSONConnectorSuite extends AnyFunSuite {
     val connector2 = new JSONConnector(spark, FileConnectorConf.fromMap(options))
     assert(connector.read().collect().length == testTable.length)
     assert(connector2.read().collect().length == testTable.length)
+    connector.delete()
+    connector2.delete()
 
     val connector3 = new JSONConnector(options)
     val connector4 = new JSONConnector(spark, options)
+    connector3.write(testTable.toDF())
     assert(connector3.read().collect().length == testTable.length)
     assert(connector4.read().collect().length == testTable.length)
+    connector3.delete()
+    connector4.delete()
 
     val connector5 = new JSONConnector(Properties.jsonConfig)
-    connector5.write(testTable.toDF())
     val connector6 = new JSONConnector(spark, Properties.jsonConfig)
+    connector5.write(testTable.toDF())
     assert(connector5.read().collect().length == testTable.length)
     assert(connector6.read().collect().length == testTable.length)
+    connector5.delete()
+    connector6.delete()
 
     val connector7 = new JSONConnector(conf)
     val connector8 = new JSONConnector(spark, conf)
+    connector7.write(testTable.toDF())
     assert(connector7.read().collect().length == testTable.length)
     assert(connector8.read().collect().length == testTable.length)
-
-    connector.delete()
-    connector2.delete()
-    connector3.delete()
-    connector4.delete()
-    connector5.delete()
-    connector6.delete()
     connector7.delete()
     connector8.delete()
   }
@@ -187,14 +189,13 @@ class JSONConnectorSuite extends AnyFunSuite {
   }
 
   test("Complex JSON file") {
-    /*
-    TODO cannot run this test with the current guava version (21.0). This version is a dependency of embedded Cassandra
-     IllegalAccessException will be thrown. You should try with version 15.0
-     */
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
 
-    // val connector = new JSONConnector(spark, Map("path" -> "src/test/resources/test-json.json", "saveMode" -> "Append", "multiLine" -> "true"))
-    // connector.read().show()
-
+    val connector = new JSONConnector(Map("path" -> "src/test/resources/test-json.json", "saveMode" -> "Append", "multiLine" -> "true"))
+    connector.read()
+      .select(functions.col("col3.col3-2").as[String])
+      .collect() should contain theSameElementsAs Array("hehe", "hehehehe", "hehehehehehe", "hehehehehehehehe")
   }
 
   test("JSONConnector should be able to write standard JSON format") {

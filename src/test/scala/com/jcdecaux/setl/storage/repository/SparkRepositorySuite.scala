@@ -7,10 +7,11 @@ import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConnector}
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class SparkRepositorySuite extends AnyFunSuite {
+class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
 
@@ -153,7 +154,7 @@ class SparkRepositorySuite extends AnyFunSuite {
   }
 
   test("SparkRepository should handle column name changed by annotation while filtering") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").setSparkMaster("local").build().get()
     import spark.implicits._
 
     val ds: Dataset[MyObject] = Seq(MyObject("a", "A"), MyObject("b", "B"), MyObject("b", "BB"), MyObject("b", "BBB")).toDS()
@@ -180,11 +181,11 @@ class SparkRepositorySuite extends AnyFunSuite {
     val finded5 = repo.findBy($"column1" === "a").collect()
     val finded6 = repo.findBy($"col1" === "a").collect()
 
-    assert(finded1 === finded2)
-    assert(finded2 === finded3)
-    assert(finded3 === finded4)
-    assert(finded5 === finded4)
-    assert(finded5 === finded6)
+    finded1 should contain theSameElementsAs finded2
+    finded2 should contain theSameElementsAs finded3
+    finded3 should contain theSameElementsAs finded4
+    finded5 should contain theSameElementsAs finded4
+    finded5 should contain theSameElementsAs finded6
 
     val conditionBis = Set(Condition("col1", "=", "b"), Condition("_sort_key", "IN", Set("BBB-b", "BB-b")))
     val conditionBis2 = Condition($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
@@ -196,10 +197,10 @@ class SparkRepositorySuite extends AnyFunSuite {
     val findedBis4 = repo.findBy($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
     val findedBis5 = repo.findBy($"column1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
 
-    assert(findedBis1.collect() === findedBis2.collect())
-    assert(findedBis2.collect() === findedBis3.collect())
-    assert(findedBis4.collect() === findedBis3.collect())
-    assert(findedBis4.collect() === findedBis5.collect())
+    findedBis1.collect() should contain theSameElementsAs findedBis2.collect()
+    findedBis2.collect() should contain theSameElementsAs findedBis3.collect()
+    findedBis4.collect() should contain theSameElementsAs findedBis3.collect()
+    findedBis4.collect() should contain theSameElementsAs findedBis5.collect()
 
     connector.delete()
   }
@@ -234,7 +235,7 @@ class SparkRepositorySuite extends AnyFunSuite {
 
     val loadedData = repo.findAll()
     loadedData.show()
-    assert(loadedData.head === test.head)
+    loadedData.collect() should contain theSameElementsAs test.collect()
     assert(test.filter(_.col1 == "col1_3").head === repo.findBy(Condition("col1", "=", "col1_3")).head)
 
     // Exception will be thrown when we try to filter a binary column
@@ -275,7 +276,7 @@ class SparkRepositorySuite extends AnyFunSuite {
 
     val loadedData = repo.findAll()
     loadedData.show()
-    assert(loadedData.head === test.head)
+    loadedData.collect() should contain theSameElementsAs test.collect()
     assert(test.filter(_.col1 == "col1_3").head === repo.findBy(Condition("col1", "=", "col1_3")).head)
 
     // Exception will be thrown when we try to filter a binary column
@@ -287,11 +288,6 @@ class SparkRepositorySuite extends AnyFunSuite {
   }
 
   test("SparkRepository should cache read data unless there are new data be written") {
-    // Always pass
-
-    import System.nanoTime
-    def profile[R](code: => R, t: Long = nanoTime) = (code, (nanoTime - t) / 1e9)
-
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
@@ -304,36 +300,24 @@ class SparkRepositorySuite extends AnyFunSuite {
       "saveMode" -> "Append"
     ))
 
-    val repo = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector).persistReadData(true)
+    // Test cache-enabled repository
+    val repoCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector).persistReadData(true)
+    repoCached.save(testData)
+    val r1 = repoCached.findAll()
 
-    repo.save(testData)
-    val (r1, t1) = profile(repo.findAll())
-    r1.show()
+    val field = repoCached.getClass.getDeclaredField("readCache")
+    field.setAccessible(true)
+    assert(field.get(repoCached).asInstanceOf[DataFrame].storageLevel.useMemory)
+    connector.delete()
 
-    val loads = (1 to 100).par.map {
-      _ => profile(repo.findAll())
-    }
+    // Test cache-disabled repository
+    val repoNotCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector)
+    repoNotCached.save(testData)
+    val r2 = repoNotCached.findAll()
 
-    val avgCacheLoading = loads.map(_._2).sum / (1 to 100).length.toDouble
-
-    val output = loads.map(_._1).reduce(_.union(_))
-    output.show()
-
-    repo.save(testData)
-    val (r4, t4) = profile(repo.findAll())
-
-    r1.show()
-    r4.show()
-
-    println(s"First read time elapsed: $t1 seconds")
-    println(s"Average cache read time elapsed: $avgCacheLoading seconds")
-    println(s"Last read time elapsed: $t4 seconds")
-
-    repo.findBy(Condition("col1", "in", Set("col1_1", "col1_2"))).show()
-    repo.findBy(Condition("col1", "in", Set("col1_1", "col1_2"))).show()
-    repo.findBy(Condition("col1", "in", Set("col1_1"))).show()
-
+    val field2 = repoCached.getClass.getDeclaredField("readCache")
+    field2.setAccessible(true)
+    assert(!field2.get(repoNotCached).asInstanceOf[DataFrame].storageLevel.useMemory)
     connector.delete()
   }
 }
-

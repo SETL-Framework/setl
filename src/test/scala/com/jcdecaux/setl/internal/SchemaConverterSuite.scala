@@ -7,8 +7,9 @@ import com.jcdecaux.setl.internal.TestClasses._
 import org.apache.spark.sql.types.BinaryType
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class SchemaConverterSuite extends AnyFunSuite {
+class SchemaConverterSuite extends AnyFunSuite with Matchers {
   test("SchemaConverter should rename columns according to the annotation ColumnName") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
@@ -134,12 +135,12 @@ class SchemaConverterSuite extends AnyFunSuite {
     val df = SchemaConverter.toDF(ds)
     df.show()
     assert(df.columns.toSet === Set("a", "b", "c", "_sort_key", "_primary_key"))
-    assert(df.collect().map(_.getAs[String]("_primary_key")) === Array("a-1", "b-2", "c-3"))
+    df.collect().map(_.getAs[String]("_primary_key")) should contain theSameElementsAs Array("a-1", "b-2", "c-3")
     assert(df.filter($"_primary_key" === "c-3").collect().length === 1)
 
     val ds2 = SchemaConverter.fromDF[TestCompoundKey](df)
     ds2.show()
-    assert(ds2.columns sameElements Array("a", "b", "c"))
+    ds2.columns should contain theSameElementsAs Array("a", "b", "c")
     assert(df.count() === ds2.count())
 
   }
@@ -156,9 +157,9 @@ class SchemaConverterSuite extends AnyFunSuite {
 
     val df = SchemaConverter.toDF(ds)
 
-    assert(df.columns === Array("col1", "col2", "COLUMN_3", "_part_key", "_sort_key"))
-    assert(df.select($"_part_key".as[String]).collect() === Array("a-A", "b-B", "c-C"))
-    assert(df.select($"_sort_key".as[String]).collect() === Array("a-1", "b-2", "c-3"))
+    df.columns should equal(Array("col1", "col2", "COLUMN_3", "_part_key", "_sort_key"))
+    df.select($"_part_key".as[String]).collect() should contain theSameElementsAs Array("a-A", "b-B", "c-C")
+    df.select($"_sort_key".as[String]).collect() should contain theSameElementsAs Array("a-1", "b-2", "c-3")
   }
 
   test("Schema converter should add missing nullable columns in the DF-DS conversion") {
@@ -175,10 +176,10 @@ class SchemaConverterSuite extends AnyFunSuite {
     val df = ds.drop("col3", "col2")
 
     val data2 = SchemaConverter.fromDF[TestNullableColumn](df).collect()
-    assert(data2 === Seq(
+    data2 should contain theSameElementsAs Seq(
       TestNullableColumn("A", null, None, 1D),
       TestNullableColumn("B", null, None, 2D)
-    ))
+    )
   }
 
   test("Schema converter should throw exception if any non-nullable column is missing in a DF") {

@@ -12,8 +12,9 @@ import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class DynamoDBConnectorSuite extends AnyFunSuite {
+class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
 
   // SHOULD BE MORE THAN 16 ROWS OTHERWISE SPARK-DYNAMODB CONNECTOR CAN'T INFER SCHEMA
   val input: Seq[(String, String)] = Seq(
@@ -50,13 +51,11 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
   val credential = new BasicAWSCredentials("fakeAccess", "fakeSecret")
   val endpoint = new EndpointConfiguration(DynamoDBConnectorSuite.host, "eu-west-1")
 
-  println("client")
   val client: AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard()
     .withCredentials(new AWSStaticCredentialsProvider(credential))
     .withEndpointConfiguration(endpoint)
     .build()
 
-  println("request")
   val createTableRequest: CreateTableRequest = new CreateTableRequest()
     .withAttributeDefinitions(
       new AttributeDefinition("col1", ScalarAttributeType.S),
@@ -68,8 +67,6 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
     )
     .withProvisionedThroughput(new ProvisionedThroughput(10000L, 10000L))
     .withTableName("test-table")
-
-  println("send request")
 
   println(client.listTables())
 
@@ -88,11 +85,12 @@ class DynamoDBConnectorSuite extends AnyFunSuite {
     val data = input.toDF("col1", "col2")
     val connector = new DynamoDBConnector(conf)
 
-    data.show()
     connector.write(data)
 
     val readData = connector.read()
+
     assert(readData.collect().length === input.length)
+    readData.select($"col1", $"col2").collect() should contain theSameElementsAs data.collect()
 
     val connector2 = new DynamoDBConnector("eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
     val connector3 = new DynamoDBConnector(spark, "eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")

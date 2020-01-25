@@ -9,6 +9,7 @@ import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.internal.{Logging, SchemaConverter, StructAnalyser}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{Connector, DBConnector, FileConnector}
+import com.jcdecaux.setl.util.HasSparkSession
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder}
@@ -22,7 +23,7 @@ import scala.reflect.runtime.universe.TypeTag
  * @tparam DataType type of spark repository
  */
 @InterfaceStability.Evolving
-class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] with Logging {
+class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] with Logging with HasSparkSession {
 
   private[this] var connector: Connector = _
   private[this] implicit val dataEncoder: Encoder[DataType] = ExpressionEncoder[DataType]
@@ -34,7 +35,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   private[this] val lastReadHashCode: AtomicInteger = new AtomicInteger(0)
   private[this] var persistenceStorageLevel: StorageLevel = StorageLevel.MEMORY_ONLY
 
-  private[this] var readCache: DataFrame = _
+  private[this] var readCache: DataFrame = spark.emptyDataFrame
 
   def persistReadData: Boolean = this.cacheLastReadData.get()
 

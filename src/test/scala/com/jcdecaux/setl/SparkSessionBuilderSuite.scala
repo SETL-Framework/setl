@@ -30,7 +30,17 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
     assert(sparkSessionBuilder.spark === null)
     sparkSessionBuilder.build()
     assert(sparkSessionBuilder.spark != null)
-    assert(sparkSessionBuilder.sparkMasterUrl === "local")
+    assert(sparkSessionBuilder.sparkMasterUrl === "local[*]")
+  }
+
+  test("setSparkMaster method should override master url when env is local") {
+    // default local spark master url
+    val builder = new SparkSessionBuilder().setEnv("local").build()
+    assert(builder.sparkMasterUrl === "local[*]")
+
+    // override default url
+    val builder2 = new SparkSessionBuilder().setEnv("local").setSparkMaster("local").build()
+    assert(builder2.sparkMasterUrl === "local")
   }
 
   test("Cassandra connection") {

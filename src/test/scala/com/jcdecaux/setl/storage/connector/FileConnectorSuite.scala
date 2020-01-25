@@ -5,10 +5,11 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.Random
 
-class FileConnectorSuite extends AnyFunSuite {
+class FileConnectorSuite extends AnyFunSuite with Matchers {
 
   val path: String = "src/test/resources/test_csv"
 
@@ -124,7 +125,7 @@ class FileConnectorSuite extends AnyFunSuite {
       .parquet("src/test/resources/fileconnector_test_dir/col1=*/col2=A/*")
 
     assert(connector.basePath.toString === "src/test/resources/fileconnector_test_dir")
-    assert(connectorRead.collect() === sparkRead.collect())
+    connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
     new ParquetConnector(path, SaveMode.Overwrite).delete()
@@ -158,7 +159,7 @@ class FileConnectorSuite extends AnyFunSuite {
     sparkRead.show()
 
     assert(connector.basePath.toString === path)
-    assert(connectorRead.collect() === sparkRead.collect())
+    connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
     new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
@@ -184,12 +185,7 @@ class FileConnectorSuite extends AnyFunSuite {
     val connector: FileConnector =
       new FileConnector(Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
         override val storage: Storage = Storage.CSV
-
         override def read(): DataFrame = null
-
-        //        override def write(t: DataFrame): Unit = {
-        //          this.writeCount.getAndAdd(1)
-        //        }
       }
 
     val dff: Dataset[TestObject] = Seq(
