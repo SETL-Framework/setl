@@ -17,7 +17,7 @@ env:
 
 install:
   - chmod +x ./dev/test.sh
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -ntp -B -V
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
