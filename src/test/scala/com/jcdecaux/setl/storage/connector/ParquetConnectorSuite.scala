@@ -35,40 +35,42 @@ class ParquetConnectorSuite extends AnyFunSuite {
     import spark.implicits._
 
     val connector = new ParquetConnector(FileConnectorConf.fromMap(options))
-    connector.write(testTable.toDF)
     val connector2 = new ParquetConnector(spark, FileConnectorConf.fromMap(options))
+    connector.write(testTable.toDF)
     assert(connector.read().collect().length == testTable.length)
     assert(connector2.read().collect().length == testTable.length)
+    connector.delete()
+    connector2.delete()
 
     val connector3 = new ParquetConnector(options)
     val connector4 = new ParquetConnector(spark, options)
+    connector3.write(testTable.toDF)
     assert(connector3.read().collect().length == testTable.length)
     assert(connector4.read().collect().length == testTable.length)
+    connector3.delete()
+    connector4.delete()
 
     val connector5 = new ParquetConnector(path, saveMode)
     val connector6 = new ParquetConnector(spark, path, saveMode)
+    connector5.write(testTable.toDF)
     assert(connector5.read().collect().length == testTable.length)
     assert(connector6.read().collect().length == testTable.length)
+    connector5.delete()
+    connector6.delete()
 
     val connector7 = new ParquetConnector(Properties.parquetConfig)
-    connector7.write(testTable.toDF)
     val connector8 = new ParquetConnector(spark, Properties.parquetConfig)
+    connector7.write(testTable.toDF)
     assert(connector7.read().collect().length == testTable.length)
     assert(connector8.read().collect().length == testTable.length)
+    connector7.delete()
+    connector8.delete()
 
     val connector9 = new ParquetConnector(conf)
     val connector10 = new ParquetConnector(spark, conf)
+    connector9.write(testTable.toDF)
     assert(connector9.read().collect().length == testTable.length)
     assert(connector10.read().collect().length == testTable.length)
-
-    connector.delete()
-    connector2.delete()
-    connector3.delete()
-    connector4.delete()
-    connector5.delete()
-    connector6.delete()
-    connector7.delete()
-    connector8.delete()
     connector9.delete()
     connector10.delete()
   }
@@ -85,21 +87,10 @@ class ParquetConnectorSuite extends AnyFunSuite {
 
     val ds = testTable.toDS()
     parquetConnector.write(ds.toDF())
-
     val ds2 = parquetConnector.read().filter("partition1 = 1").as[TestObject].select($"partition1".as[Long])
-    ds2.show()
-    ds2.explain()
-
     val ds3 = repository.findBy(Condition("partition1", "=", 1)).select("partition1")
-    ds3.show()
-    ds3.explain()
-
     val ds4 = repository.findBy(Condition("partition1", "=", 1)).select("partition1")
-    ds4.explain()
-
     val ds5 = repository.findBy(Condition("partition1", "=", 1)).select($"partition1".as[Long], $"partition2".as[String])
-    ds5.show()
-    ds5.explain()
 
     val explain = ExplainCommand(ds5.queryExecution.logical, extended = false)
     assert(
@@ -112,7 +103,6 @@ class ParquetConnectorSuite extends AnyFunSuite {
   }
 
   test("test Parquet connector with different file path") {
-
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
@@ -135,12 +125,10 @@ class ParquetConnectorSuite extends AnyFunSuite {
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
 
-    testTable.toDF.show()
     parquetConnector.write(testTable.toDF())
     parquetConnector.write(testTable.toDF())
 
     val df = parquetConnector.read()
-    df.show()
     assert(df.count() === 3)
     parquetConnector.delete()
   }
@@ -159,7 +147,6 @@ class ParquetConnectorSuite extends AnyFunSuite {
     connector.write(testTable.toDF())
 
     val df = connector.read()
-    df.show()
     assert(df.count() === 6)
     connector.delete()
   }
@@ -176,7 +163,6 @@ class ParquetConnectorSuite extends AnyFunSuite {
     parquetConnector.write(testTable.toDF(), Some("3"))
 
     val df = parquetConnector.read()
-    df.show()
     assert(df.count() == 9)
     assert(df.filter($"partition1" === 1).count() === 3)
     assert(df.filter($"partition1" === 1).dropDuplicates().count() === 1)
@@ -207,7 +193,6 @@ class ParquetConnectorSuite extends AnyFunSuite {
     parquetConnector2.write(dff.toDF, Some("2"))
     parquetConnector2.dropUserDefinedSuffix(false)
 
-    parquetConnector2.read().show()
     assert(parquetConnector2.read().count() === 12)
     assert(parquetConnector2.read().columns.length === 5)
     parquetConnector2.delete()
