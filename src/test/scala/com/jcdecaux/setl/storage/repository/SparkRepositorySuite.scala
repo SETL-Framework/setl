@@ -7,7 +7,7 @@ import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConnector}
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
-import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -288,11 +288,6 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
   }
 
   test("SparkRepository should cache read data unless there are new data be written") {
-    // Always pass
-
-    import System.nanoTime
-    def profile[R](code: => R, t: Long = nanoTime) = (code, (nanoTime - t) / 1e9)
-
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
@@ -305,36 +300,24 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
       "saveMode" -> "Append"
     ))
 
-    val repo = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector).persistReadData(true)
+    // Test cache-enabled repository
+    val repoCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector).persistReadData(true)
+    repoCached.save(testData)
+    val r1 = repoCached.findAll()
 
-    repo.save(testData)
-    val (r1, t1) = profile(repo.findAll())
-    r1.show()
+    val field = repoCached.getClass.getDeclaredField("readCache")
+    field.setAccessible(true)
+    assert(field.get(repoCached).asInstanceOf[DataFrame].storageLevel.useMemory)
+    connector.delete()
 
-    val loads = (1 to 100).par.map {
-      _ => profile(repo.findAll())
-    }
+    // Test cache-disabled repository
+    val repoNotCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector)
+    repoNotCached.save(testData)
+    val r2 = repoNotCached.findAll()
 
-    val avgCacheLoading = loads.map(_._2).sum / (1 to 100).length.toDouble
-
-    val output = loads.map(_._1).reduce(_.union(_))
-    output.show()
-
-    repo.save(testData)
-    val (r4, t4) = profile(repo.findAll())
-
-    r1.show()
-    r4.show()
-
-    println(s"First read time elapsed: $t1 seconds")
-    println(s"Average cache read time elapsed: $avgCacheLoading seconds")
-    println(s"Last read time elapsed: $t4 seconds")
-
-    repo.findBy(Condition("col1", "in", Set("col1_1", "col1_2"))).show()
-    repo.findBy(Condition("col1", "in", Set("col1_1", "col1_2"))).show()
-    repo.findBy(Condition("col1", "in", Set("col1_1"))).show()
-
+    val field2 = repoCached.getClass.getDeclaredField("readCache")
+    field2.setAccessible(true)
+    assert(!field2.get(repoNotCached).asInstanceOf[DataFrame].storageLevel.useMemory)
     connector.delete()
   }
 }
-
