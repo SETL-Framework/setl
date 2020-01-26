@@ -17,9 +17,9 @@ env:
 #  - SCALA_PROFILE="scala_2.12"
 
 install:
-  - echo $TEST_VARIABLE
   - chmod +x ./dev/test.sh
-  - chmod +x ./dev/deploy.sh
+  - chmod +x ./dev/deploy-snapshot.sh
+  - chmod +x ./dev/deploy-release.sh
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
