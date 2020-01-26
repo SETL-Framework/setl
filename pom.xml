@@ -167,6 +167,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
@@ -192,18 +193,6 @@
                         <id>scala test compile</id>
                         <goals>
                             <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>attach-scaladocs</id>
-                        <goals>
-                            <goal>doc-jar</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>add-source</id>
-                        <goals>
-                            <goal>add-source</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -329,9 +318,83 @@
 
     <profiles>
         <profile>
+            <id>scala_2.11</id>
+            <properties>
+                <scala.version>2.11.12</scala.version>
+                <scala.compat.version>2.11</scala.compat.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>scala_2.12</id>
+            <properties>
+                <scala.version>2.12.10</scala.version>
+                <scala.compat.version>2.12</scala.compat.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>with-source</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>net.alchim31.maven</groupId>
+                        <artifactId>scala-maven-plugin</artifactId>
+                        <version>4.3.0</version>
+                        <configuration>
+                            <recompileMode>incremental</recompileMode>
+                            <args>
+                                <arg>-unchecked</arg>
+                                <arg>-deprecation</arg>
+                                <arg>-feature</arg>
+                                <arg>-explaintypes</arg>
+                                <arg>-target:jvm-1.8</arg>
+                            </args>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>scala compile</id>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>scala test compile</id>
+                                <goals>
+                                    <goal>testCompile</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>attach-scaladocs</id>
+                                <goals>
+                                    <goal>doc-jar</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>add-source</id>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>snapshot</id>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+
+        <profile>
             <id>release</id>
             <properties>
-                <dependencies.scope>provided</dependencies.scope>
                 <changelist></changelist>
             </properties>
             <build>
@@ -352,13 +415,21 @@
                     </plugin>
                 </plugins>
             </build>
+            <distributionManagement>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
         </profile>
+
         <profile>
             <id>provided</id>
             <properties>
                 <dependencies.scope>provided</dependencies.scope>
             </properties>
         </profile>
+
         <profile>
             <id>compile</id>
             <properties>
@@ -366,15 +437,4 @@
             </properties>
         </profile>
     </profiles>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
 </project>
