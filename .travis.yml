@@ -13,13 +13,17 @@ cache:
     - ${HOME}/.m2
 
 env:
-  - SCALA_PROFILE="scala_2.11"
-#  - SCALA_PROFILE="scala_2.12"
+  - SCALA_VER="2.11"
+  - SCALA_VER="2.12"
 
-install:
+before_install:
   - chmod +x ./dev/test.sh
   - chmod +x ./dev/deploy-snapshot.sh
   - chmod +x ./dev/deploy-release.sh
+  - chmod +x ./dev/change-scala-version.sh
+  - ./dev/change-scala-version.sh ${SCALA_VER}
+
+install:
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
