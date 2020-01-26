@@ -13,15 +13,29 @@ cache:
     - ${HOME}/.m2
 
 env:
-  - MVN_OPT="--batch-mode -ntp clean:clean scoverage:report"
+  - SCALA_PROFILE="scala_2.11"
+#  - SCALA_PROFILE="scala_2.12"
 
 install:
+  - echo $TEST_VARIABLE
   - chmod +x ./dev/test.sh
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -ntp -B -V
+  - chmod +x ./dev/deploy.sh
   - docker-compose -f ./dev/docker-compose.yml up -d
 
 script:
   - ./dev/test.sh
 
 after_script:
-  - curl -s https://codecov.io/bash | bash
+  - curl -s https://codecov.io/bash | bash;
+
+deploy:
+  - provider: script
+    script: ./dev/deploy-snapshot.sh
+    on:
+      branch: master
+
+  - provider: script
+    script: ./dev/deploy-release.sh
+    on:
+      tags: true
+      condition: $TRAVIS_TAG =~ ^SETL-[0-9]+.[0-9]+.[0-9]+?$
