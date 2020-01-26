@@ -30,11 +30,13 @@ after_script:
 
 deploy:
   - provider: script
+    skip_cleanup: true
     script: ./dev/deploy-snapshot.sh
     on:
       branch: master
 
   - provider: script
+    skip_cleanup: true
     script: ./dev/deploy-release.sh
     on:
       tags: true
