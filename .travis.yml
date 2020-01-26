@@ -25,7 +25,7 @@ install:
 script:
   - ./dev/test.sh
 
-after_script:
+after_success:
   - curl -s https://codecov.io/bash | bash;
 
 deploy:
