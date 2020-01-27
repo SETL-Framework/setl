@@ -163,6 +163,12 @@ class ExcelConnectorSuite extends AnyFunSuite with Matchers {
   test("ExcelConnector's sheetName option doesn't work") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
+    val logger = Logger.getLogger(classOf[ExcelConnector])
+    val outContent = new ByteArrayOutputStream()
+    val appender = new WriterAppender(new SimpleLayout, outContent)
+    logger.addAppender(appender)
+    val warnMessage = "The option `sheetName` is ignored. Use dataAddress"
+    
     val conf = new Conf()
       .set("path", "src/test/resources/test_excel_sheet.xlsx")
       .set("sheetName", "testSheet")
@@ -171,6 +177,7 @@ class ExcelConnectorSuite extends AnyFunSuite with Matchers {
       .set("saveMode", "Overwrite")
 
     val connector = new ExcelConnector(conf)
+    assert(outContent.toString.contains(warnMessage))
     connector.write(testTable.toDF)
 
     assertThrows[IllegalArgumentException](
