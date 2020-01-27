@@ -123,8 +123,11 @@ class ExcelConnector(val path: String,
 
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(spark: SparkSession, config: Config) = this(config)
-
   //END CONSTRUCTOR
+
+  if (sheetName.isDefined) {
+    log.warn("The option `sheetName` is ignored. Use dataAddress")
+  }
 
   if (inferSchema.toBoolean && schema.isEmpty) {
     log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
@@ -147,8 +150,12 @@ class ExcelConnector(val path: String,
 
     saveMode match {
       case SaveMode.Append =>
-        log.warn("The Append save mode doesn't work properly in excel connecter. Please ckeck manually after the save" +
-          "to ensure that your data are written correctly")
+        /*
+         If write mode is set to Append:
+           - when the file doesn't contains the current sheet, a new sheet will be created in the file and data
+             will be written
+           - when the file already contains the current sheet, then this sheet will be overwritten
+         */
         _writer.mode("append")
       case SaveMode.Overwrite => _writer.mode("overwrite")
       case _ => throw new IllegalArgumentException(s"Unknown save mode: $saveMode")
