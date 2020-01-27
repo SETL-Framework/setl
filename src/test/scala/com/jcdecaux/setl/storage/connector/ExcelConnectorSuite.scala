@@ -186,7 +186,15 @@ class ExcelConnectorSuite extends AnyFunSuite with Matchers {
     deleteRecursively(new File("src/test/resources/test_excel_sheet.xlsx"))
   }
 
-  test("ExeclConnector with multiple sheets") {
+  test("ExcelConnector with multiple sheets") {
+    /*
+    We test the ExcelConnector by creating a file with multiple sheets with different save mode.
+
+    If write mode is set to Append:
+      - when the file doesn't contains the current sheet, a new sheet will be created in the file and data
+        will be written
+      - when the file already contains the current sheet, then this sheet will be overwritten
+     */
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
 
