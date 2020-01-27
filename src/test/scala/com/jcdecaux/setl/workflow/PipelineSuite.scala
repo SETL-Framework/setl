@@ -53,6 +53,71 @@ class PipelineSuite extends AnyFunSuite {
 
   }
 
+  test("Test addStage with primitive types arguments") {
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
+
+    val bool: Boolean = true
+    val byte: Byte = 0.toByte
+    val char: Char = 0.toChar
+    val short: Short = 0.toShort
+    val int: Int = 0
+    val long: Long = 0L
+    val float: Float = 0F
+    val double: Double = 0D
+
+    val pipeline = new Pipeline
+    pipeline
+      .addStage[PrimitiveFactory](Array(
+        bool,
+        byte,
+        char,
+        short,
+        int,
+        long,
+        float,
+        double,
+        bool
+    ))
+      .run()
+
+    val lastOutput = pipeline.getLastOutput.asInstanceOf[Primitives]
+    assert(lastOutput.bool == bool)
+    assert(lastOutput.byte == byte)
+    assert(lastOutput.char == char)
+    assert(lastOutput.short == short)
+    assert(lastOutput.int == int)
+    assert(lastOutput.long == long)
+    assert(lastOutput.float == float)
+    assert(lastOutput.double == double)
+    assert(lastOutput.bool == bool)
+
+    val pipeline2 = new Pipeline
+    pipeline2
+      .addStage(classOf[PrimitiveFactory],
+          bool,
+          byte,
+          char,
+          short,
+          int,
+          long,
+          float,
+          double,
+          bool
+      )
+      .run()
+
+    val lastOutput2 = pipeline2.getLastOutput.asInstanceOf[Primitives]
+    assert(lastOutput2.bool == bool)
+    assert(lastOutput2.byte == byte)
+    assert(lastOutput2.char == char)
+    assert(lastOutput2.short == short)
+    assert(lastOutput2.int == int)
+    assert(lastOutput2.long == long)
+    assert(lastOutput2.float == float)
+    assert(lastOutput2.double == double)
+    assert(lastOutput2.bool == bool)
+  }
+
   test("Test Dataset pipeline") {
     val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
@@ -344,6 +409,44 @@ class PipelineSuite extends AnyFunSuite {
 }
 
 object PipelineSuite {
+
+  case class Primitives(
+                         bool: Boolean,
+                         byte: Byte,
+                         char: Char,
+                         short: Short,
+                         int: Int,
+                         long: Long,
+                         float: Float,
+                         double: Double,
+                         bool2: Boolean
+                       )
+
+  class PrimitiveFactory(
+                          bool: Boolean,
+                          byte: Byte,
+                          char: Char,
+                          short: Short,
+                          int: Int,
+                          long: Long,
+                          float: Float,
+                          double: Double,
+                          bool2: Boolean
+                        ) extends Factory[Primitives] {
+    private[this] var output: Primitives = _
+
+    override def read(): PrimitiveFactory.this.type = this
+
+    override def process(): PrimitiveFactory.this.type = {
+      output = Primitives(bool, byte, char, short, int, long, float, double, bool2)
+
+      this
+    }
+
+    override def write(): PrimitiveFactory.this.type = this
+
+    override def get(): Primitives = output
+  }
 
   abstract class Producer1 extends Factory[External]
 
