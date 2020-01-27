@@ -152,7 +152,7 @@ class ExcelConnector(val path: String,
       case SaveMode.Append =>
         /*
          If write mode is set to Append:
-           - when the file doesn't contains the current sheet, a new sheet will be created in the file and data
+           - when the file doesn't contain the current sheet, a new sheet will be created in the file and data
              will be written
            - when the file already contains the current sheet, then this sheet will be overwritten
          */
