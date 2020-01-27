@@ -7,11 +7,32 @@ import com.jcdecaux.setl.storage.connector.CSVConnector
 import com.jcdecaux.setl.transformation.Factory
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{Dataset, SparkSession}
+import org.scalatest.Outcome
 import org.scalatest.funsuite.AnyFunSuite
 
 class StageSuite extends AnyFunSuite {
 
   import StageSuite._
+
+  override def withFixture(test: NoArgTest): Outcome = {
+    // Shared setup (run at beginning of each test)
+    SparkSession.getActiveSession match {
+      case Some(ss) => ss.stop()
+      case _ =>
+    }
+    SparkSession.clearActiveSession()
+    SparkSession.clearDefaultSession()
+    try test()
+    finally {
+      // Shared cleanup (run at end of each test)
+      SparkSession.getActiveSession match {
+        case Some(ss) => ss.stop()
+        case _ =>
+      }
+      SparkSession.clearActiveSession()
+      SparkSession.clearDefaultSession()
+    }
+  }
 
   test("Stage Exceptions") {
 

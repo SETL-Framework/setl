@@ -6,9 +6,30 @@ import com.jcdecaux.setl.config.{Conf, JDBCConnectorConf, Properties}
 import org.apache.log4j._
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.scalatest.Outcome
 import org.scalatest.funsuite.AnyFunSuite
 
 class JDBCConnectorSuite extends AnyFunSuite {
+
+  override def withFixture(test: NoArgTest): Outcome = {
+    // Shared setup (run at beginning of each test)
+    SparkSession.getActiveSession match {
+      case Some(ss) => ss.stop()
+      case _ =>
+    }
+    SparkSession.clearActiveSession()
+    SparkSession.clearDefaultSession()
+    try test()
+    finally {
+      // Shared cleanup (run at end of each test)
+      SparkSession.getActiveSession match {
+        case Some(ss) => ss.stop()
+        case _ =>
+      }
+      SparkSession.clearActiveSession()
+      SparkSession.clearDefaultSession()
+    }
+  }
 
   val input: Seq[(String, String)] = Seq(
     ("a", "A"),

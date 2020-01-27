@@ -11,10 +11,31 @@ import com.typesafe.config.ConfigFactory
 import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.scalatest.Outcome
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
 class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
+
+  override def withFixture(test: NoArgTest): Outcome = {
+    // Shared setup (run at beginning of each test)
+    SparkSession.getActiveSession match {
+      case Some(ss) => ss.stop()
+      case _ =>
+    }
+    SparkSession.clearActiveSession()
+    SparkSession.clearDefaultSession()
+    try test()
+    finally {
+      // Shared cleanup (run at end of each test)
+      SparkSession.getActiveSession match {
+        case Some(ss) => ss.stop()
+        case _ =>
+      }
+      SparkSession.clearActiveSession()
+      SparkSession.clearDefaultSession()
+    }
+  }
 
   // SHOULD BE MORE THAN 16 ROWS OTHERWISE SPARK-DYNAMODB CONNECTOR CAN'T INFER SCHEMA
   val input: Seq[(String, String)] = Seq(

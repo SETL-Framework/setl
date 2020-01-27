@@ -9,11 +9,31 @@ import com.jcdecaux.setl.transformation.Factory
 import org.apache.spark.{SparkConf, SparkException}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
-import org.scalatest.PrivateMethodTester
+import org.scalatest.{Outcome, PrivateMethodTester}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
 class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
+
+  override def withFixture(test: NoArgTest): Outcome = {
+    // Shared setup (run at beginning of each test)
+    SparkSession.getActiveSession match {
+      case Some(ss) => ss.stop()
+      case _ =>
+    }
+    SparkSession.clearActiveSession()
+    SparkSession.clearDefaultSession()
+    try test()
+    finally {
+      // Shared cleanup (run at end of each test)
+      SparkSession.getActiveSession match {
+        case Some(ss) => ss.stop()
+        case _ =>
+      }
+      SparkSession.clearActiveSession()
+      SparkSession.clearDefaultSession()
+    }
+  }
 
   val configLoader: ConfigLoader = ConfigLoader.builder()
     .setAppEnv("local")
@@ -321,12 +341,6 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
   }
 
   test("Setl should take into account use defined SparkSession") {
-    SparkSession.clearDefaultSession()
-    SparkSession.clearActiveSession()
-    SparkTestUtils.getActiveSparkContext match {
-      case Some(cc) => cc.stop()
-      case _ =>
-    }
 
     val sparkConf = new SparkConf().setMaster("local").setAppName("setl_test_app").set("myKey", "myValue")
     val spark: SparkSession = SparkSession
@@ -360,14 +374,6 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
   }
 
   test("Setl should be able to stop the spark session") {
-    SparkSession.clearDefaultSession()
-    SparkSession.clearActiveSession()
-
-    SparkTestUtils.getActiveSparkContext match {
-      case Some(cc) => cc.stop()
-      case _ =>
-    }
-
     assert(SparkSession.getActiveSession.isEmpty)
     assert(SparkSession.getDefaultSession.isEmpty)
 
