@@ -54,8 +54,6 @@ class PipelineSuite extends AnyFunSuite {
   }
 
   test("Test addStage with primitive types arguments") {
-    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
-
     val bool: Boolean = true
     val byte: Byte = 0.toByte
     val char: Char = 0.toChar
@@ -66,10 +64,12 @@ class PipelineSuite extends AnyFunSuite {
     val double: Double = 0D
     val string: String = "string"
     val product2: Product2 = Product2("x", "y")
+    val inputString: String = "payload"
 
     val pipeline = new Pipeline
     pipeline
       .optimization(true)
+      .setInput[String](inputString, classOf[TestFactory], "id")
       .addStage[TestFactory](Array(
         bool,
         byte,
@@ -99,10 +99,15 @@ class PipelineSuite extends AnyFunSuite {
     assert(lastOutput.bool == bool)
     assert(lastOutput.string == string)
     assert(lastOutput.product2 == product2)
+    assert(lastOutput.inputString == inputString)
+
+    assert(pipeline.getOutput[TestFactoryArgs](classOf[TestFactory]) == lastOutput)
+    assertThrows[NoSuchElementException](pipeline.getOutput(classOf[ProductFactory]))
 
     val pipeline2 = new Pipeline
     pipeline2
       .optimization(false)
+      .setInput[String]("payload", classOf[TestFactory], "id")
       .addStage(classOf[TestFactory],
           bool,
           byte,
@@ -130,8 +135,12 @@ class PipelineSuite extends AnyFunSuite {
     assert(lastOutput2.float == float)
     assert(lastOutput2.double == double)
     assert(lastOutput2.bool == bool)
-    assert(lastOutput.string == string)
-    assert(lastOutput.product2 == product2)
+    assert(lastOutput2.string == string)
+    assert(lastOutput2.product2 == product2)
+    assert(lastOutput2.inputString == inputString)
+
+    assert(pipeline2.getOutput[TestFactoryArgs](classOf[TestFactory]) == lastOutput)
+    assertThrows[NoSuchElementException](pipeline2.getOutput(classOf[ProductFactory]))
   }
 
   test("Test Dataset pipeline") {
@@ -161,6 +170,13 @@ class PipelineSuite extends AnyFunSuite {
       .addStage(stage2)
       .describe()
       .run()
+
+    assert(pipeline.getStage(0).contains(stage0))
+    assert(pipeline.getStage(1).contains(stage1))
+    assert(pipeline.getStage(2).contains(stage2))
+
+    pipeline.toDiagram
+    assertThrows[NotImplementedError](pipeline.diagramId)
 
     f3.get().show()
     assert(f3.get().count() === 2)
@@ -437,7 +453,8 @@ object PipelineSuite {
                          double: Double,
                          bool2: Boolean,
                          string: String,
-                         product2: Product2
+                         product2: Product2,
+                         inputString: String
                        )
 
   class TestFactory(
@@ -453,12 +470,14 @@ object PipelineSuite {
                           string: String,
                           product2: Product2
                         ) extends Factory[TestFactoryArgs] {
+    @Delivery(id = "id")
+    private[this] val inputString: String = null
     private[this] var output: TestFactoryArgs = _
 
     override def read(): TestFactory.this.type = this
 
     override def process(): TestFactory.this.type = {
-      output = TestFactoryArgs(bool, byte, char, short, int, long, float, double, bool2, string, product2)
+      output = TestFactoryArgs(bool, byte, char, short, int, long, float, double, bool2, string, product2, inputString)
 
       this
     }
