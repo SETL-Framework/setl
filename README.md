@@ -134,7 +134,7 @@ class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
 #### Define the pipeline
 To execute the factory, we should add it into a pipeline.
 
-We we call `setl.newPipeline()`, **Setl** will instantiate a new **Pipeline** and configure all the registered repositories as inputs of the pipeline. Then we call `addStage` to add our factory into the pipeline.
+When we call `setl.newPipeline()`, **Setl** will instantiate a new **Pipeline** and configure all the registered repositories as inputs of the pipeline. Then we can call `addStage` to add our factory into the pipeline.
 
 ```scala
 val pipeline = setl
@@ -154,24 +154,82 @@ As our `MyFactory` produces a `Dataset[TestObject]`, it can be used by other fac
 ```scala
 class AnotherFactory extends Factory[String] with HasSparkSession {
 
-  import spark.implicit._
- 
-  @Delivery
-  val outputOfMyFactory = spark.emptyDataset[TestObject]
+  import spark.implicits._
 
-  override def read(): AnotherFactory.this.type = ???
-  
-  override def process(): AnotherFactory.this.type = ???
-  
+  @Delivery
+  private[this] val outputOfMyFactory = spark.emptyDataset[TestObject]
+
+  override def read(): AnotherFactory.this.type = this
+
+  override def process(): AnotherFactory.this.type = this
+
   override def write(): AnotherFactory.this.type = {
     outputOfMyFactory.show()
     this
   }
-  
-  override def get(): String = ???
 
+  override def get(): String = "output"
 }
 ```
+
+Add this factory into the pipeline:
+
+```scala
+pipeline.addStage[AnotherFactory]()
+```
+
+### Generate pipeline diagram (with v0.4.1+)
+You can generate a [Mermaid diagram](https://mermaid-js.github.io/mermaid/#/) by doing:
+```scala
+pipeline.showDiagram()
+```
+
+You will have some log like this:
+```
+--------- MERMAID DIAGRAM ---------
+classDiagram
+class MyFactory {
+  <<Factory[Dataset[TestObject]]>>
+  +SparkRepository[TestObject]
+}
+
+class DatasetTestObject {
+  <<Dataset[TestObject]>>
+  >partition1: Int
+  >partition2: String
+  >clustering1: String
+  >value: Long
+}
+
+DatasetTestObject <|.. MyFactory : Output
+class AnotherFactory {
+  <<Factory[String]>>
+  +Dataset[TestObject]
+}
+
+class StringFinal {
+  <<String>>
+  
+}
+
+StringFinal <|.. AnotherFactory : Output
+class SparkRepositoryTestObjectExternal {
+  <<SparkRepository[TestObject]>>
+  
+}
+
+AnotherFactory <|-- DatasetTestObject : Input
+MyFactory <|-- SparkRepositoryTestObjectExternal : Input
+
+------- END OF MERMAID CODE -------
+
+You can copy the previous code to a markdown viewer that supports Mermaid.
+
+Or you can try the live editor: https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNeUZhY3Rvcnkge1xuICA8PEZhY3RvcnlbRGF0YXNldFtUZXN0T2JqZWN0XV0-PlxuICArU3BhcmtSZXBvc2l0b3J5W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIERhdGFzZXRUZXN0T2JqZWN0IHtcbiAgPDxEYXRhc2V0W1Rlc3RPYmplY3RdPj5cbiAgPnBhcnRpdGlvbjE6IEludFxuICA-cGFydGl0aW9uMjogU3RyaW5nXG4gID5jbHVzdGVyaW5nMTogU3RyaW5nXG4gID52YWx1ZTogTG9uZ1xufVxuXG5EYXRhc2V0VGVzdE9iamVjdCA8fC4uIE15RmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgQW5vdGhlckZhY3Rvcnkge1xuICA8PEZhY3RvcnlbU3RyaW5nXT4-XG4gICtEYXRhc2V0W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIFN0cmluZ0ZpbmFsIHtcbiAgPDxTdHJpbmc-PlxuICBcbn1cblxuU3RyaW5nRmluYWwgPHwuLiBBbm90aGVyRmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgU3BhcmtSZXBvc2l0b3J5VGVzdE9iamVjdEV4dGVybmFsIHtcbiAgPDxTcGFya1JlcG9zaXRvcnlbVGVzdE9iamVjdF0-PlxuICBcbn1cblxuQW5vdGhlckZhY3RvcnkgPHwtLSBEYXRhc2V0VGVzdE9iamVjdCA6IElucHV0XG5NeUZhY3RvcnkgPHwtLSBTcGFya1JlcG9zaXRvcnlUZXN0T2JqZWN0RXh0ZXJuYWwgOiBJbnB1dFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0=
+
+```
+
+You can either copy the code into a Markdown viewer or just copy the link into your browser ([link](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNeUZhY3Rvcnkge1xuICA8PEZhY3RvcnlbRGF0YXNldFtUZXN0T2JqZWN0XV0-PlxuICArU3BhcmtSZXBvc2l0b3J5W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIERhdGFzZXRUZXN0T2JqZWN0IHtcbiAgPDxEYXRhc2V0W1Rlc3RPYmplY3RdPj5cbiAgPnBhcnRpdGlvbjE6IEludFxuICA-cGFydGl0aW9uMjogU3RyaW5nXG4gID5jbHVzdGVyaW5nMTogU3RyaW5nXG4gID52YWx1ZTogTG9uZ1xufVxuXG5EYXRhc2V0VGVzdE9iamVjdCA8fC4uIE15RmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgQW5vdGhlckZhY3Rvcnkge1xuICA8PEZhY3RvcnlbU3RyaW5nXT4-XG4gICtEYXRhc2V0W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIFN0cmluZ0ZpbmFsIHtcbiAgPDxTdHJpbmc-PlxuICBcbn1cblxuU3RyaW5nRmluYWwgPHwuLiBBbm90aGVyRmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgU3BhcmtSZXBvc2l0b3J5VGVzdE9iamVjdEV4dGVybmFsIHtcbiAgPDxTcGFya1JlcG9zaXRvcnlbVGVzdE9iamVjdF0-PlxuICBcbn1cblxuQW5vdGhlckZhY3RvcnkgPHwtLSBEYXRhc2V0VGVzdE9iamVjdCA6IElucHV0XG5NeUZhY3RvcnkgPHwtLSBTcGFya1JlcG9zaXRvcnlUZXN0T2JqZWN0RXh0ZXJuYWwgOiBJbnB1dFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0=)) 🍻
 
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)
