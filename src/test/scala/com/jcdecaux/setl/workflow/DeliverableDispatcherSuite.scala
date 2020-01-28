@@ -9,8 +9,9 @@ import com.jcdecaux.setl.storage.connector.FileConnector
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class DeliverableDispatcherSuite extends AnyFunSuite {
+class DeliverableDispatcherSuite extends AnyFunSuite with Matchers {
 
   import DeliverableDispatcherSuite._
 
@@ -337,6 +338,52 @@ class DeliverableDispatcherSuite extends AnyFunSuite {
     repo1.getConnector.asInstanceOf[FileConnector].delete()
     repo2.getConnector.asInstanceOf[FileConnector].delete()
   }
+
+  test("SETL-15: Deliverable dispatcher should handle primitive type delivery") {
+    val dd = new DeliverableDispatcher
+
+    val by: Byte = 0.toByte
+    val s: Short = 1.toShort
+    val i: Int = 2
+    val l: Long = 3.toLong
+    val f: Float = 4.toFloat
+    val d: Double = 5.toDouble
+    val bo: Boolean = true
+    val c: Char = 6.toChar
+    val str: String = "7"
+    val strAry: Array[String] = Array("a", "b")
+    val fltAry: Array[Float] = Array(99F, 11F)
+
+    dd
+      .addDeliverable(new Deliverable[Byte](by))
+      .addDeliverable(new Deliverable[Short](s))
+      .addDeliverable(new Deliverable[Int](i))
+      .addDeliverable(new Deliverable[Long](l))
+      .addDeliverable(new Deliverable[Float](f))
+      .addDeliverable(new Deliverable[Double](d))
+      .addDeliverable(new Deliverable[Boolean](bo))
+      .addDeliverable(new Deliverable[Char](c))
+      .addDeliverable(new Deliverable[String](str))
+      .addDeliverable(new Deliverable[Array[String]](strAry))
+      .addDeliverable(new Deliverable[Array[Float]](fltAry))
+
+    val fac = new PrimaryDeliveryFactory
+
+    dd.testDispatch(fac)
+
+    assert(fac.by === by)
+    assert(fac.s === s)
+    assert(fac.i === i)
+    assert(fac.l === l)
+    assert(fac.f === f)
+    assert(fac.d === d)
+    assert(fac.bo === bo)
+    assert(fac.c === c)
+    assert(fac.str equals str)
+    fac.strArray should contain theSameElementsAs strAry
+    fac.floatArray should contain theSameElementsAs fltAry
+  }
+
 }
 
 object DeliverableDispatcherSuite {
@@ -553,6 +600,40 @@ object DeliverableDispatcherSuite {
     override def write(): Factory2.this.type = this
     override def get(): String = "factory 2"
 
+  }
+
+  class PrimaryDeliveryFactory extends Factory[String] {
+
+    @Delivery
+    var by: Byte = _
+    @Delivery
+    var s: Short = _
+    @Delivery
+    var i: Int = _
+    @Delivery
+    var l: Long = _
+    @Delivery
+    var f: Float = _
+    @Delivery
+    var d: Double = _
+    @Delivery
+    var bo: Boolean = _
+    @Delivery
+    var c: Char = _
+    @Delivery
+    var str: String = ""
+    @Delivery
+    val strArray: Array[String] = Array.empty
+    @Delivery
+    val floatArray: Array[Float] = Array.empty
+
+    override def read(): PrimaryDeliveryFactory.this.type = this
+
+    override def process(): PrimaryDeliveryFactory.this.type = this
+
+    override def write(): PrimaryDeliveryFactory.this.type = this
+
+    override def get(): String = "test"
   }
 
 }
