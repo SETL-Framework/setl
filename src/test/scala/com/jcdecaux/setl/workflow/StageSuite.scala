@@ -92,7 +92,7 @@ class StageSuite extends AnyFunSuite {
       "inferSchema" -> "true",
       "delimiter" -> "|",
       "header" -> "true",
-      "saveMode" -> "Append"
+      "saveMode" -> "Overwrite"
     )
 
     val connector = new CSVConnector(connectorOptions)
@@ -125,12 +125,6 @@ object StageSuite {
     override def process(): PersistenceTest.this.type = this
 
     private[this] def writeData(): Unit = {
-      try {
-        this.connector.delete()
-      } catch {
-        case _: Throwable =>
-      }
-
       this.connector.write(output.toDF())
     }
 
