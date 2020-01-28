@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/JCDecaux/setl.svg?branch=master)](https://travis-ci.com/JCDecaux/setl)
 [![codecov](https://codecov.io/gh/JCDecaux/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/JCDecaux/setl)
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
-[![Scaladocs](https://img.shields.io/static/v1?label=doc&message=scaladocs&color=9cf)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scaladocs/#com.jcdecaux.setl.Setl)
+[![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
 [![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
