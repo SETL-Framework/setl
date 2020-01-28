@@ -10,13 +10,14 @@ import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 import com.jcdecaux.setl.workflow.DeliverableDispatcherSuite.FactoryWithMultipleAutoLoad
 import org.apache.spark.sql.{Dataset, SparkSession, functions}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
 import scala.reflect.runtime.{universe => ru}
 
 //////////////////////
 // TESTS START HERE //
 //////////////////////
-class PipelineSuite extends AnyFunSuite {
+class PipelineSuite extends AnyFunSuite with Matchers {
 
   import PipelineSuite._
 
@@ -438,6 +439,53 @@ class PipelineSuite extends AnyFunSuite {
     repo1.getConnector.asInstanceOf[FileConnector].delete()
     repo2.getConnector.asInstanceOf[FileConnector].delete()
   }
+
+  test("SETL-15: Pipeline should handle primitive type delivery") {
+    val by: Byte = 0.toByte
+    val byWrong: Byte = 0.toByte
+    val s: Short = 1.toShort
+    val i: Int = 2
+    val l: Long = 3.toLong
+    val f: Float = 4.toFloat
+    val d: Double = 5.toDouble
+    val bo: Boolean = true
+    val c: Char = 6.toChar
+    val str: String = "7"
+    val strAry: Array[String] = Array("a", "b")
+    val fltAry: Array[Float] = Array(99F, 11F)
+
+    val fac = new PrimaryDeliveryFactory
+
+    new Pipeline()
+      .setInput(by, classOf[PrimaryDeliveryFactory], "byte")
+      .setInput(byWrong, classOf[PrimaryDeliveryFactory])
+      .setInput(s)
+      .setInput(i)
+      .setInput(l)
+      .setInput(f)
+      .setInput(d)
+      .setInput(bo)
+      .setInput(c)
+      .setInput(str)
+      .setInput(strAry)
+      .setInput(fltAry)
+      .addStage(fac)
+      .run()
+      .showDiagram()
+
+    assert(fac.by === by)
+    assert(fac.s === s)
+    assert(fac.i === i)
+    assert(fac.l === l)
+    assert(fac.f === f)
+    assert(fac.d === d)
+    assert(fac.bo === bo)
+    assert(fac.c === c)
+    assert(fac.str equals str)
+    fac.strArray should contain theSameElementsAs strAry
+    fac.floatArray should contain theSameElementsAs fltAry
+  }
+
 }
 
 object PipelineSuite {
@@ -648,6 +696,40 @@ object PipelineSuite {
     override def write(): DatasetFactory4.this.type = this
 
     override def get(): Long = ds1.count()
+  }
+
+  class PrimaryDeliveryFactory extends Factory[String] {
+
+    @Delivery(id = "byte")
+    var by: Byte = _
+    @Delivery
+    var s: Short = _
+    @Delivery
+    var i: Int = _
+    @Delivery
+    var l: Long = _
+    @Delivery
+    var f: Float = _
+    @Delivery
+    var d: Double = _
+    @Delivery
+    var bo: Boolean = _
+    @Delivery
+    var c: Char = _
+    @Delivery
+    var str: String = ""
+    @Delivery
+    val strArray: Array[String] = Array.empty
+    @Delivery
+    val floatArray: Array[Float] = Array.empty
+
+    override def read(): PrimaryDeliveryFactory.this.type = this
+
+    override def process(): PrimaryDeliveryFactory.this.type = this
+
+    override def write(): PrimaryDeliveryFactory.this.type = this
+
+    override def get(): String = "test"
   }
 
 }

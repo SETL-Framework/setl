@@ -17,6 +17,37 @@ class DeliverableSuite extends AnyFunSuite with Matchers {
     assertThrows[NoSuchElementException](del.getPayload)
   }
 
+  test("Deliverable constructor") {
+    val by: Byte = 0.toByte
+    val s: Short = 1.toShort
+    val i: Int = 2.toInt
+    val l: Long = 3.toLong
+    val f: Float = 4.toFloat
+    val d: Double = 5.toDouble
+    val bo: Boolean = true
+    val c: Char = 6.toChar
+    val str: String = "7"
+    val test: Test = Test()
+    val test2: Test2 = new Test2(1D, "test")
+    val test3: Test3[Test2] = new Test3(test2)
+    val test4: Test4[Test] = new Test4[Test](test)
+
+    assert(new Deliverable[Byte](by).getPayload === by)
+    assert(new Deliverable[Short](s).getPayload === s)
+    assert(new Deliverable[Int](i).getPayload === i)
+    assert(new Deliverable[Long](l).getPayload === l)
+    assert(new Deliverable[Float](f).getPayload === f)
+    assert(new Deliverable[Double](d).getPayload === d)
+    assert(new Deliverable[Boolean](bo).getPayload === bo)
+    assert(new Deliverable[Char](c).getPayload === c)
+    assert(new Deliverable[String](str).getPayload === str)
+    assert(new Deliverable[Test](test).getPayload === test)
+    assert(new Deliverable[Test2](test2).getPayload.x === test2.x)
+    assert(new Deliverable[Test2](test2).getPayload.y === test2.y)
+    assert(new Deliverable[Test3[Test2]](test3).getPayload.x === test3.x)
+    assert(new Deliverable[Test4[Test]](test4).getPayload.x === test4.x)
+  }
+
   test("Deliverable consumer setting") {
     val del = new Deliverable[Float](0.1F)
     assert(del.consumer.isEmpty)
@@ -87,5 +118,19 @@ object DeliverableSuite {
   abstract class Consumer2 extends Factory[String]
 
   abstract class Consumer3 extends Factory[String]
+
+  case class Test(x: Int = 1)
+
+  class Test2(val x: Double, val y: String) {
+
+  }
+
+  class Test3[T](val x: T) {
+
+  }
+
+  class Test4[T <: Test](val x: T) {
+
+  }
 
 }
