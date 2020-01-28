@@ -6,7 +6,13 @@
 [![Scaladocs](https://img.shields.io/static/v1?label=doc&message=scaladocs&color=9cf)](http://jcd-datacorp-setl.s3-website.eu-west-1.amazonaws.com/snapshot/scaladocs/#com.jcdecaux.setl.Setl)
 [![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-SETL (Spark ETL, pronounced "settle") is an open-source Spark ETL framework that helps developers to structure ETL projects, modularize data transformation components and speed up the development.
+If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
+
+- Switching between multiple projects is a hassle 
+- Debugging others’ code is a nightmare
+- Spending a lot of time solving non-business-related issues 
+
+**SETL** (Spark ETL, pronounced "settle") is a Scala framework that helps you structure your Spark ETL projects, modularize your data transformation logic and speed up your development.
 
 ## Use
 
