@@ -14,12 +14,12 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
 
 **SETL** (Spark ETL, pronounced "settle") is a Scala framework that helps you structure your Spark ETL projects, modularize your data transformation logic and speed up your development.
 
-## Use
+## Use SETL
 
-### Create a new project
+### In a new project
 You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
 
-### Use in an existing project
+### In an existing project
 ```xml
 <dependency>
   <groupId>com.jcdecaux.setl</groupId>
