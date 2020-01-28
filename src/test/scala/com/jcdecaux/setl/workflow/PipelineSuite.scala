@@ -64,10 +64,13 @@ class PipelineSuite extends AnyFunSuite {
     val long: Long = 0L
     val float: Float = 0F
     val double: Double = 0D
+    val string: String = "string"
+    val product2: Product2 = Product2("x", "y")
 
     val pipeline = new Pipeline
     pipeline
-      .addStage[PrimitiveFactory](Array(
+      .optimization(true)
+      .addStage[TestFactory](Array(
         bool,
         byte,
         char,
@@ -76,11 +79,15 @@ class PipelineSuite extends AnyFunSuite {
         long,
         float,
         double,
-        bool
+        bool,
+        string,
+        product2
     ))
       .run()
 
-    val lastOutput = pipeline.getLastOutput.asInstanceOf[Primitives]
+    assert(pipeline.optimization)
+
+    val lastOutput = pipeline.getLastOutput.asInstanceOf[TestFactoryArgs]
     assert(lastOutput.bool == bool)
     assert(lastOutput.byte == byte)
     assert(lastOutput.char == char)
@@ -90,10 +97,13 @@ class PipelineSuite extends AnyFunSuite {
     assert(lastOutput.float == float)
     assert(lastOutput.double == double)
     assert(lastOutput.bool == bool)
+    assert(lastOutput.string == string)
+    assert(lastOutput.product2 == product2)
 
     val pipeline2 = new Pipeline
     pipeline2
-      .addStage(classOf[PrimitiveFactory],
+      .optimization(false)
+      .addStage(classOf[TestFactory],
           bool,
           byte,
           char,
@@ -102,11 +112,15 @@ class PipelineSuite extends AnyFunSuite {
           long,
           float,
           double,
-          bool
+          bool,
+          string,
+          product2
       )
       .run()
 
-    val lastOutput2 = pipeline2.getLastOutput.asInstanceOf[Primitives]
+    assert(!pipeline2.optimization)
+
+    val lastOutput2 = pipeline2.getLastOutput.asInstanceOf[TestFactoryArgs]
     assert(lastOutput2.bool == bool)
     assert(lastOutput2.byte == byte)
     assert(lastOutput2.char == char)
@@ -116,6 +130,8 @@ class PipelineSuite extends AnyFunSuite {
     assert(lastOutput2.float == float)
     assert(lastOutput2.double == double)
     assert(lastOutput2.bool == bool)
+    assert(lastOutput.string == string)
+    assert(lastOutput.product2 == product2)
   }
 
   test("Test Dataset pipeline") {
@@ -410,7 +426,7 @@ class PipelineSuite extends AnyFunSuite {
 
 object PipelineSuite {
 
-  case class Primitives(
+  case class TestFactoryArgs(
                          bool: Boolean,
                          byte: Byte,
                          char: Char,
@@ -419,10 +435,12 @@ object PipelineSuite {
                          long: Long,
                          float: Float,
                          double: Double,
-                         bool2: Boolean
+                         bool2: Boolean,
+                         string: String,
+                         product2: Product2
                        )
 
-  class PrimitiveFactory(
+  class TestFactory(
                           bool: Boolean,
                           byte: Byte,
                           char: Char,
@@ -431,21 +449,23 @@ object PipelineSuite {
                           long: Long,
                           float: Float,
                           double: Double,
-                          bool2: Boolean
-                        ) extends Factory[Primitives] {
-    private[this] var output: Primitives = _
+                          bool2: Boolean,
+                          string: String,
+                          product2: Product2
+                        ) extends Factory[TestFactoryArgs] {
+    private[this] var output: TestFactoryArgs = _
 
-    override def read(): PrimitiveFactory.this.type = this
+    override def read(): TestFactory.this.type = this
 
-    override def process(): PrimitiveFactory.this.type = {
-      output = Primitives(bool, byte, char, short, int, long, float, double, bool2)
+    override def process(): TestFactory.this.type = {
+      output = TestFactoryArgs(bool, byte, char, short, int, long, float, double, bool2, string, product2)
 
       this
     }
 
-    override def write(): PrimitiveFactory.this.type = this
+    override def write(): TestFactory.this.type = this
 
-    override def get(): Primitives = output
+    override def get(): TestFactoryArgs = output
   }
 
   abstract class Producer1 extends Factory[External]
