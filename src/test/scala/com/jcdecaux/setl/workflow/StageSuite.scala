@@ -124,7 +124,15 @@ object StageSuite {
 
     override def process(): PersistenceTest.this.type = this
 
-    private[this] def writeData(): Unit = this.connector.write(output.toDF())
+    private[this] def writeData(): Unit = {
+      try {
+        this.connector.delete()
+      } catch {
+        case _: Throwable =>
+      }
+
+      this.connector.write(output.toDF())
+    }
 
     override def write(): PersistenceTest.this.type = {
 
