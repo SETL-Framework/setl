@@ -53,6 +53,96 @@ class PipelineSuite extends AnyFunSuite {
 
   }
 
+  test("Test addStage with primitive types arguments") {
+    val bool: Boolean = true
+    val byte: Byte = 0.toByte
+    val char: Char = 0.toChar
+    val short: Short = 0.toShort
+    val int: Int = 0
+    val long: Long = 0L
+    val float: Float = 0F
+    val double: Double = 0D
+    val string: String = "string"
+    val product2: Product2 = Product2("x", "y")
+    val inputString: String = "payload"
+
+    val pipeline = new Pipeline
+    pipeline
+      .optimization(true)
+      .setInput[String](inputString, classOf[TestFactory], "id")
+      .addStage[TestFactory](Array(
+        bool,
+        byte,
+        char,
+        short,
+        int,
+        long,
+        float,
+        double,
+        bool,
+        string,
+        product2
+    ))
+      .run()
+
+    assert(pipeline.optimization)
+
+    val lastOutput = pipeline.getLastOutput.asInstanceOf[TestFactoryArgs]
+    assert(lastOutput.bool == bool)
+    assert(lastOutput.byte == byte)
+    assert(lastOutput.char == char)
+    assert(lastOutput.short == short)
+    assert(lastOutput.int == int)
+    assert(lastOutput.long == long)
+    assert(lastOutput.float == float)
+    assert(lastOutput.double == double)
+    assert(lastOutput.bool == bool)
+    assert(lastOutput.string == string)
+    assert(lastOutput.product2 == product2)
+    assert(lastOutput.inputString == inputString)
+
+    assert(pipeline.getOutput[TestFactoryArgs](classOf[TestFactory]) == lastOutput)
+    assertThrows[NoSuchElementException](pipeline.getOutput(classOf[ProductFactory]))
+
+    val pipeline2 = new Pipeline
+    pipeline2
+      .optimization(false)
+      .setInput[String]("payload", classOf[TestFactory], "id")
+      .addStage(classOf[TestFactory],
+          bool,
+          byte,
+          char,
+          short,
+          int,
+          long,
+          float,
+          double,
+          bool,
+          string,
+          product2
+      )
+      .run()
+
+    assert(!pipeline2.optimization)
+
+    val lastOutput2 = pipeline2.getLastOutput.asInstanceOf[TestFactoryArgs]
+    assert(lastOutput2.bool == bool)
+    assert(lastOutput2.byte == byte)
+    assert(lastOutput2.char == char)
+    assert(lastOutput2.short == short)
+    assert(lastOutput2.int == int)
+    assert(lastOutput2.long == long)
+    assert(lastOutput2.float == float)
+    assert(lastOutput2.double == double)
+    assert(lastOutput2.bool == bool)
+    assert(lastOutput2.string == string)
+    assert(lastOutput2.product2 == product2)
+    assert(lastOutput2.inputString == inputString)
+
+    assert(pipeline2.getOutput[TestFactoryArgs](classOf[TestFactory]) == lastOutput)
+    assertThrows[NoSuchElementException](pipeline2.getOutput(classOf[ProductFactory]))
+  }
+
   test("Test Dataset pipeline") {
     val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._
@@ -80,6 +170,13 @@ class PipelineSuite extends AnyFunSuite {
       .addStage(stage2)
       .describe()
       .run()
+
+    assert(pipeline.getStage(0).contains(stage0))
+    assert(pipeline.getStage(1).contains(stage1))
+    assert(pipeline.getStage(2).contains(stage2))
+
+    pipeline.toDiagram
+    assertThrows[NotImplementedError](pipeline.diagramId)
 
     f3.get().show()
     assert(f3.get().count() === 2)
@@ -344,6 +441,51 @@ class PipelineSuite extends AnyFunSuite {
 }
 
 object PipelineSuite {
+
+  case class TestFactoryArgs(
+                         bool: Boolean,
+                         byte: Byte,
+                         char: Char,
+                         short: Short,
+                         int: Int,
+                         long: Long,
+                         float: Float,
+                         double: Double,
+                         bool2: Boolean,
+                         string: String,
+                         product2: Product2,
+                         inputString: String
+                       )
+
+  class TestFactory(
+                          bool: Boolean,
+                          byte: Byte,
+                          char: Char,
+                          short: Short,
+                          int: Int,
+                          long: Long,
+                          float: Float,
+                          double: Double,
+                          bool2: Boolean,
+                          string: String,
+                          product2: Product2
+                        ) extends Factory[TestFactoryArgs] {
+    @Delivery(id = "id")
+    private[this] val inputString: String = null
+    private[this] var output: TestFactoryArgs = _
+
+    override def read(): TestFactory.this.type = this
+
+    override def process(): TestFactory.this.type = {
+      output = TestFactoryArgs(bool, byte, char, short, int, long, float, double, bool2, string, product2, inputString)
+
+      this
+    }
+
+    override def write(): TestFactory.this.type = this
+
+    override def get(): TestFactoryArgs = output
+  }
 
   abstract class Producer1 extends Factory[External]
 
