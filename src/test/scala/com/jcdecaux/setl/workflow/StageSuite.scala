@@ -84,7 +84,7 @@ class StageSuite extends AnyFunSuite {
     assertThrows[java.io.FileNotFoundException](connector.read(), "Output should not be persisted")
   }
 
-  test("Stage should persist the output of a factory both persistence are set to true") {
+  test("Stage should persist the output of a factory both writable are set to true") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val connectorOptions: Map[String, String] = Map[String, String](
@@ -102,7 +102,7 @@ class StageSuite extends AnyFunSuite {
       .addFactory[PersistenceTest](Array(connector), writable = true)
       .run()
 
-    assert(connector.read().count() === 2, "Output should not be persisted")
+    assert(connector.read().count() === 2, "Output should be persisted")
     connector.delete()
   }
 }
@@ -124,7 +124,26 @@ object StageSuite {
 
     override def process(): PersistenceTest.this.type = this
 
+    private[this] def writeData(): Unit = this.connector.write(output.toDF())
+
     override def write(): PersistenceTest.this.type = {
+
+      /*
+      Mysterious error caused by Spark, wait two sec before retry
+      java.lang.IllegalArgumentException: Error while instantiating 'org.apache.spark.sql.internal.SessionStateBuilder':
+      ...
+      Cause: java.lang.IllegalStateException: RpcEnv has been stopped
+       */
+
+      try {
+        writeData()
+      } catch {
+        case _: Throwable =>
+          val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+          Thread.sleep(2000)
+          writeData()
+      }
+
       this.connector.write(output.toDF())
       this
     }
