@@ -19,7 +19,7 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
 
     private final Map<String, Method> methods = new HashMap<>();
 
-    private Map<String, Long> benchmarkResult = new HashMap<>();
+    private Map<String, Double> benchmarkResult = new HashMap<>();
 
     private static Logger logger = LogManager.getLogger(BenchmarkInvocationHandler.class);
 
@@ -33,7 +33,7 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
         }
     }
 
-    public Map<String, Long> getBenchmarkResult() {
+    public Map<String, Double> getBenchmarkResult() {
         return benchmarkResult;
     }
 
@@ -48,11 +48,12 @@ public class BenchmarkInvocationHandler implements InvocationHandler {
             long start = System.nanoTime();
             result = targetMethod.invoke(target, args);
             long elapsed = System.nanoTime() - start;
+            double seconds = (double)elapsed / 1_000_000_000.0;
 
-            this.benchmarkResult.put(targetMethod.getName(), elapsed);
+            this.benchmarkResult.put(targetMethod.getName(), seconds);
 
             logger.info("Executing " + target.getClass().getSimpleName() + "." +
-                    method.getName() + " finished in " + elapsed + " ns");
+                    method.getName() + " finished in " + seconds + " s");
         } else {
             // if the method doesn't have the Benchmark annotation, run it without measuring the elapsed time
             result = targetMethod.invoke(target, args);
