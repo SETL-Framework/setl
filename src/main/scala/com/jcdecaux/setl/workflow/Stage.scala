@@ -213,17 +213,17 @@ class Stage extends Logging
       proxyFactory.write()
     }
 
-    val elapsed = System.nanoTime() - start
-    log.info(s"Execution of $factoryName finished in $elapsed ns")
+    val elapsed = (System.nanoTime() - start) / 1000000000.0
+    log.info(s"Execution of $factoryName finished in $elapsed s")
 
     val result = benchmarkInvocationHandler.getBenchmarkResult
 
     BenchmarkResult(
       factory.getClass.getSimpleName,
-      result.getOrDefault("read", 0L),
-      result.getOrDefault("process", 0L),
-      result.getOrDefault("write", 0L),
-      result.getOrDefault("get", 0L),
+      result.getOrDefault("read", 0.0),
+      result.getOrDefault("process", 0.0),
+      result.getOrDefault("write", 0.0),
+      result.getOrDefault("get", 0.0),
       elapsed
     )
   }
