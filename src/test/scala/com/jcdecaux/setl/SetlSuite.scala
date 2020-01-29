@@ -387,6 +387,23 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     assert(SparkTestUtils.getActiveSparkContext.isEmpty)
   }
 
+  test("Setl needs a Config Loader to be built") {
+    val setlBuilder = Setl.builder()
+
+    assertThrows[NoSuchElementException](setlBuilder.get())
+    assertThrows[NoSuchElementException](setlBuilder.build())
+
+    val setl = setlBuilder
+      .withDefaultConfigLoader()
+      .setSetlConfigPath("usages.config")
+      .build()
+      .getOrCreate()
+
+    assert(setlBuilder.get() == setl)
+
+    setl.setConnector("csv_dc_context_consumer", classOf[CSVConnector])
+  }
+
 }
 
 object SetlSuite {
