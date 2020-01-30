@@ -240,7 +240,7 @@ You can either copy the code into a Markdown viewer or just copy the link into y
   - Cassandra
   - DynamoDB
 
-To read/write data from/to AWS S3 (or similar services of other cloud providers), you should include the 
+To read/write data from/to AWS S3 (or other storage services), you should include the 
 corresponding hadoop library in your project.
 
 For example
@@ -254,12 +254,16 @@ For example
 
 You should also provide Scala and Spark in your pom file. SETL is tested against the following version of Spark: 
 
-Package Maintainer | Spark Version | Scala Version
------------------- | ------------- | -------------
-Apache Spark | 2.3.4 | 2.11
-Apache Spark | 2.3.4 | 2.12
-Apache Spark | 2.4.4 | 2.11
-Apache Spark | 2.4.4 | 2.12
+Spark Version | Scala Version  | Note
+------------- | -------------  | ----
+    2.3.4     |        2.11    | :warning: see *known issues*
+    2.3.4     |        2.12    | :warning: see *known issues*
+    2.4.4     |        2.11    | :heavy_check_mark:
+    2.4.4     |        2.12    | :heavy_check_mark:
+
+# Known issues
+- `DynamoDBConnector` doesn't work with Spark version 2.3
+- `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
 
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)

@@ -6,7 +6,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConnector}
-import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
+import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -207,6 +207,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should compress columns with Compress annotation") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val test = spark.createDataset(testCompressionRepository)
@@ -249,10 +251,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
   test("SparkRepository should compress columns with Compress annotation with another Compressor") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
-    assume(
-      spark.version.split("\\.")(1).toInt >= 4 &&
-        spark.version.split("\\.")(0).toInt >= 2
-    )
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
 
     import spark.implicits._
 
@@ -295,6 +294,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should cache read data unless there are new data be written") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val testData = spark.createDataset(testCompressionRepositoryGZIP)

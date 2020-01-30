@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.internal
 
-import com.jcdecaux.setl.SparkSessionBuilder
+import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils}
 import com.jcdecaux.setl.annotation.{ColumnName, CompoundKey, Compress}
 import com.jcdecaux.setl.exception.InvalidSchemaException
 import com.jcdecaux.setl.internal.TestClasses._
@@ -112,7 +112,7 @@ class SchemaConverterSuite extends AnyFunSuite with Matchers {
     assert(SchemaConverter.fromDF[TestComplex](mockDataSource).collect() === ds.collect())  // should log WARN message
     assert(SchemaConverter.fromDF[TestComplex](mockDataSource).columns === Array("col_1", "col_2", "col_3", "col_4"))  // should log WARN message
 
-    if (spark.version.split("\\.")(1).toInt >= 4 && spark.version.split("\\.")(0).toInt >= 2) {
+    if (SparkTestUtils.checkSparkVersion("2.4")) {
       val ds2 = Seq(
         TestComplex2("string", true, 1, 3D, Seq("string", "haha", "hehe", "hoho"))
       ).toDS
@@ -221,7 +221,7 @@ class SchemaConverterSuite extends AnyFunSuite with Matchers {
       )
     )
 
-    if (spark.version.split("\\.")(1).toInt >= 4 && spark.version.split("\\.")(0).toInt >= 2) {
+    if (SparkTestUtils.checkSparkVersion("2.4")) {
       val schema = StructAnalyser.analyseSchema[TestCompression]
       val compressed = SchemaConverter.compressColumn(schema)(test.toDF())
       assert(compressed.schema.find(_.name == "col3").get.dataType === BinaryType)
