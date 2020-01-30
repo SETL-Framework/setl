@@ -217,8 +217,8 @@ object Conf {
     try {
       f(v)
     } catch {
-      case _: IllegalArgumentException => throw new ConfException.Format(s"Can't convert $v to $classOfT")
       case _: NumberFormatException => throw new ConfException.Format(s"Can't convert $v to $classOfT")
+      case _: IllegalArgumentException => throw new ConfException.Format(s"Can't convert $v to $classOfT")
       case e: Throwable => throw e
     }
   }
