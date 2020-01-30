@@ -76,9 +76,18 @@ class StageSuite extends AnyFunSuite {
 
     val connector = new CSVConnector(connectorOptions)
     val stage = new Stage().writable(false)
+    val stage2 = new Stage().persist(false)
+    assert(!stage.writable)
+    assert(!stage2.persist)
 
     stage
       .addFactory[PersistenceTest](Array(connector), writable = true)
+      .run()
+
+    assertThrows[java.io.FileNotFoundException](connector.read(), "Output should not be persisted")
+
+    stage2
+      .addFactory[PersistenceTest](Array(connector), writable = false)
       .run()
 
     assertThrows[java.io.FileNotFoundException](connector.read(), "Output should not be persisted")
@@ -97,12 +106,51 @@ class StageSuite extends AnyFunSuite {
 
     val connector = new CSVConnector(connectorOptions)
     val stage = new Stage().writable(true)
+    val stage2 = new Stage().persist(true)
 
     stage
       .addFactory[PersistenceTest](Array(connector), writable = true)
       .run()
 
     assert(connector.read().count() === 2, "Output should be persisted")
+
+    stage2
+      .addFactory[PersistenceTest](Array(connector), writable = true)
+      .run()
+
+    assert(connector.read().count() === 2, "Output should be persisted")
+
+    connector.delete()
+  }
+
+  test("Getters of stage") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connectorOptions: Map[String, String] = Map[String, String](
+      "path" -> "src/test/resources/test_csv_persistence",
+      "inferSchema" -> "true",
+      "delimiter" -> "|",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    )
+
+    val connector = new CSVConnector(connectorOptions)
+    val stage = new Stage().writable(true)
+
+    assert(!stage.optimization)
+    stage.optimization(true)
+    assert(stage.optimization)
+
+    assert(stage.parallel)
+    stage.parallel(false)
+    assert(!stage.parallel)
+
+    assert(stage.deliverable === null)
+
+    stage
+      .addFactory[PersistenceTest](Array(connector))
+      .run()
+
     connector.delete()
   }
 }
