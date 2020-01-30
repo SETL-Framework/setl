@@ -346,6 +346,22 @@
         </profile>
 
         <profile>
+            <id>spark_2.4</id>
+            <properties>
+                <spark.version>2.4.4</spark.version>
+                <spark.compat.version>2.4</spark.compat.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>spark_2.3</id>
+            <properties>
+                <spark.version>2.3.4</spark.version>
+                <spark.compat.version>2.3</spark.compat.version>
+            </properties>
+        </profile>
+
+        <profile>
             <id>snapshot</id>
             <distributionManagement>
                 <snapshotRepository>

@@ -27,18 +27,18 @@ Use pre-created profiles to change version.
 
 ```shell
 # Build SNAPSHOT with Scala 2.11
-mvn clean package -Psnapshot -Pscala_2.11
+mvn clean package -Psnapshot -Pscala_2.11 -Pspark_2.4
 
 # Build RELEASE with Scala 2.11
-mvn clean package -Prelease -Pscala_2.11
+mvn clean package -Prelease -Pscala_2.11 -Pspark_2.4
 
 # Build SNAPSHOT with Scala 2.12
 ./dev/change-scala-version.sh 2.12
-mvn clean package -Psnapshot -Pscala_2.12
+mvn clean package -Psnapshot -Pscala_2.12 -Pspark_2.4
 
 # Build RELEASE with Scala 2.12
 ./dev/change-scala-version.sh 2.12
-mvn clean package -Prelease -Pscala_2.12
+mvn clean package -Prelease -Pscala_2.12 -Pspark_2.4
 ```
 
 ### Unit tests
@@ -51,6 +51,7 @@ docker-compose -f ./dev/docker-compose.yml up
 To start the test with cli:
 ```shell
 export SCALA_VER=2.11
+export SPARK_VER=2.4
 ./dev/test.sh
 ```
 

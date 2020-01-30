@@ -4,6 +4,6 @@ import org.apache.spark.sql.SparkSession
 
 trait HasSparkSession {
 
-  val spark: SparkSession = SparkSession.active
+  val spark: SparkSession = SparkSession.getActiveSession.get
 
 }
