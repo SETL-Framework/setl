@@ -25,6 +25,8 @@ class PipelineInspectorSuite extends AnyFunSuite {
 
     val pipelineInspector = new PipelineInspector(pipeline).inspect()
     pipelineInspector.describe()
+    println(pipelineInspector.getDataFlowGraph.toDiagram)
+    assertThrows[NotImplementedError](pipelineInspector.getDataFlowGraph.diagramId)
 
     pipeline.run()
 
