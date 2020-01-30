@@ -254,14 +254,14 @@ For example
 
 You should also provide Scala and Spark in your pom file. SETL is tested against the following version of Spark: 
 
-Spark Version | Scala Version  | Note
-------------- | -------------  | ----
-    2.3.4     |        2.11    | :warning: see *known issues*
-    2.3.4     |        2.12    | :warning: see *known issues*
-    2.4.4     |        2.11    | :heavy_check_mark:
-    2.4.4     |        2.12    | :heavy_check_mark:
+| Spark Version | Scala Version  | Note                         |
+| ------------- | -------------  | -----------------------------|
+|     2.3.4     |        2.11    | :warning: see *known issues* |
+|     2.3.4     |        2.12    | :warning: see *known issues* |
+|     2.4.4     |        2.11    | :heavy_check_mark: Ok        |
+|     2.4.4     |        2.12    | :heavy_check_mark: Ok        |
 
-# Known issues
+## Known issues
 - `DynamoDBConnector` doesn't work with Spark version 2.3
 - `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
 
