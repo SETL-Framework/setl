@@ -47,7 +47,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     "dbtable" -> "unittest",
     "saveMode" -> "Overwrite",
     "user" -> user,
-    "password" -> user
+    "password" -> password
   )
 
   val conf: JDBCConnectorConf = new JDBCConnectorConf()
