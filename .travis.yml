@@ -16,7 +16,6 @@ env:
   - SCALA_VER="2.11" SPARK_VER="2.4" UPLOAD_COVERAGE="true"  DEPLOY="true"
   - SCALA_VER="2.12" SPARK_VER="2.4" UPLOAD_COVERAGE="false" DEPLOY="true"
   - SCALA_VER="2.11" SPARK_VER="2.3" UPLOAD_COVERAGE="false" DEPLOY="false"
-  - SCALA_VER="2.12" SPARK_VER="2.3" UPLOAD_COVERAGE="false" DEPLOY="false"
 
 before_install:
   - chmod +x ./dev/test.sh
