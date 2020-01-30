@@ -268,14 +268,18 @@ class NodeSuite extends AnyFunSuite {
 
     assert(node1.targetNode(node21) === true)
     assert(node1.targetNode(node21WithWrongType) === false, "The Int input in the second node doesn't have the right producer")
+    node1.showDiagram()
+    assert(node1.listInputProducers === List(classOf[External]))
 
     assert(node1WithConsumer.targetNode(node21) === true)
     assert(node1WithConsumer.targetNode(node21WithWrongType) === false)
     assert(node1WithConsumer.targetNode(node21WithWrongProducer) === false)
+    assert(node1WithConsumer.listInputProducers === List(classOf[External]))
 
     assert(node1.targetNode(node22) === true)
     assert(node1WithConsumer.targetNode(node22) === true)
     assert(node1WithWrongConsumer.targetNode(node22) === false)
+    assert(node1WithWrongConsumer.listInputProducers === List(classOf[External]))
 
     assertThrows[InvalidDeliveryException](node1.targetNode(node2))
     assertThrows[InvalidDeliveryException](node1WithConsumer.targetNode(node2))
