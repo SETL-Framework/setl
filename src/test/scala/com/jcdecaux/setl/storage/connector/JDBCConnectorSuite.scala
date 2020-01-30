@@ -5,7 +5,9 @@ import java.io.ByteArrayOutputStream
 import com.jcdecaux.setl.config.{Conf, JDBCConnectorConf, Properties}
 import org.apache.log4j._
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.storage.StorageLevel
 import org.scalatest.Outcome
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -116,6 +118,9 @@ class JDBCConnectorSuite extends AnyFunSuite {
     )
     connector3.write(data)
     assert(connector3.read().collect().length === 4)
+
+    val sameData = connector2.read()
+    assertThrows[RuntimeException](connector2.write(sameData))
   }
 
   test("JDBCConnector's create method is not yet implemented") {
