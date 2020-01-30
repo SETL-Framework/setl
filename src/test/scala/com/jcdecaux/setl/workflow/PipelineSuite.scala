@@ -156,6 +156,12 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     val f1 = new ProductFactory
     val f2 = new DatasetFactory(spark)
     val f3 = new DatasetFactory2(spark)
+
+    assert(f1.persist)
+    f1.persist(false)
+    assert(!f1.persist)
+    f1.persist(true)
+
     val pipeline = new Pipeline
 
     val stage0 = new Stage().addFactory(f1)
