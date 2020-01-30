@@ -6,7 +6,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConnector}
-import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
+import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -188,14 +188,14 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     finded5 should contain theSameElementsAs finded6
 
     val conditionBis = Set(Condition("col1", "=", "b"), Condition("_sort_key", "IN", Set("BBB-b", "BB-b")))
-    val conditionBis2 = Condition($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
-    val conditionBis3 = Set(Condition("col1", "=", "b"), Condition($"_sort_key".isInCollection(Set("BBB-b", "BB-b"))))
+    val conditionBis2 = Condition($"col1" === "b" && $"_sort_key".isin("BBB-b", "BB-b"))
+    val conditionBis3 = Set(Condition("col1", "=", "b"), Condition($"_sort_key".isin("BBB-b", "BB-b")))
 
     val findedBis1 = repo.findBy(conditionBis)
     val findedBis2 = repo.findBy(conditionBis2)
     val findedBis3 = repo.findBy(conditionBis3)
-    val findedBis4 = repo.findBy($"col1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
-    val findedBis5 = repo.findBy($"column1" === "b" && $"_sort_key".isInCollection(Set("BBB-b", "BB-b")))
+    val findedBis4 = repo.findBy($"col1" === "b" && $"_sort_key".isin("BBB-b", "BB-b"))
+    val findedBis5 = repo.findBy($"column1" === "b" && $"_sort_key".isin("BBB-b", "BB-b"))
 
     findedBis1.collect() should contain theSameElementsAs findedBis2.collect()
     findedBis2.collect() should contain theSameElementsAs findedBis3.collect()
@@ -207,6 +207,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should compress columns with Compress annotation") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val test = spark.createDataset(testCompressionRepository)
@@ -248,6 +250,9 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should compress columns with Compress annotation with another Compressor") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val test = spark.createDataset(testCompressionRepositoryGZIP)
@@ -289,6 +294,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should cache read data unless there are new data be written") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val testData = spark.createDataset(testCompressionRepositoryGZIP)

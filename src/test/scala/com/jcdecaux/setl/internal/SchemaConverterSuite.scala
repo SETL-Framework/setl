@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.internal
 
-import com.jcdecaux.setl.SparkSessionBuilder
+import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils}
 import com.jcdecaux.setl.annotation.{ColumnName, CompoundKey, Compress}
 import com.jcdecaux.setl.exception.InvalidSchemaException
 import com.jcdecaux.setl.internal.TestClasses._
@@ -112,14 +112,18 @@ class SchemaConverterSuite extends AnyFunSuite with Matchers {
     assert(SchemaConverter.fromDF[TestComplex](mockDataSource).collect() === ds.collect())  // should log WARN message
     assert(SchemaConverter.fromDF[TestComplex](mockDataSource).columns === Array("col_1", "col_2", "col_3", "col_4"))  // should log WARN message
 
-    val ds2 = Seq(
-      TestComplex2("string", true, 1, 3D, Seq("string", "haha", "hehe", "hoho"))
-    ).toDS
+    if (SparkTestUtils.checkSparkVersion("2.4")) {
+      val ds2 = Seq(
+        TestComplex2("string", true, 1, 3D, Seq("string", "haha", "hehe", "hoho"))
+      ).toDS
 
-    val df2 = SchemaConverter.toDF(ds2)
-    assert(df2.columns === Array("col1", "col2", "col3", "col4", "col5", "_test_key"))
-    assert(SchemaConverter.fromDF[TestComplex2](df2).collect() === ds2.collect())
-    assert(SchemaConverter.fromDF[TestComplex](df2.toDF()).collect() !== ds2.collect())
+      val df2 = SchemaConverter.toDF(ds2)
+      assert(df2.columns === Array("col1", "col2", "col3", "col4", "col5", "_test_key"))
+      assert(SchemaConverter.fromDF[TestComplex](df2.toDF()).collect() !== ds2.collect())
+      assert(SchemaConverter.fromDF[TestComplex2](df2).collect() === ds2.collect())
+    } else {
+      println(s"Ignore test for ${spark.version}")
+    }
   }
 
   test("Schema converter should handle the annotation CompoundKey") {
@@ -217,22 +221,26 @@ class SchemaConverterSuite extends AnyFunSuite with Matchers {
       )
     )
 
-    val schema = StructAnalyser.analyseSchema[TestCompression]
-    val compressed = SchemaConverter.compressColumn(schema)(test.toDF())
-    assert(compressed.schema.find(_.name == "col3").get.dataType === BinaryType)
-    assert(compressed.schema.find(_.name == "col4").get.dataType === BinaryType)
+    if (SparkTestUtils.checkSparkVersion("2.4")) {
+      val schema = StructAnalyser.analyseSchema[TestCompression]
+      val compressed = SchemaConverter.compressColumn(schema)(test.toDF())
+      assert(compressed.schema.find(_.name == "col3").get.dataType === BinaryType)
+      assert(compressed.schema.find(_.name == "col4").get.dataType === BinaryType)
 
-    val decompressed = SchemaConverter.decompressColumn(schema)(compressed).as[TestCompression]
-    assert(test.head === decompressed.head)
+      val decompressed = SchemaConverter.decompressColumn(schema)(compressed).as[TestCompression]
+      assert(test.head === decompressed.head)
 
-    val compressed2 = SchemaConverter.toDF(test)
-    compressed2.printSchema()
-    assert(compressed2.schema.find(_.name == "col3").get.dataType === BinaryType)
-    assert(compressed2.schema.find(_.name == "col4").get.dataType === BinaryType)
+      val compressed2 = SchemaConverter.toDF(test)
+      compressed2.printSchema()
+      assert(compressed2.schema.find(_.name == "col3").get.dataType === BinaryType)
+      assert(compressed2.schema.find(_.name == "col4").get.dataType === BinaryType)
 
-    val decompressed2 = SchemaConverter.fromDF[TestCompression](compressed2)
-    decompressed2.show()
-    assert(test.head === decompressed2.head)
+      val decompressed2 = SchemaConverter.fromDF[TestCompression](compressed2)
+      decompressed2.show()
+      assert(test.head === decompressed2.head)
+    } else {
+      println(s"Ignore test for ${spark.version}")
+    }
   }
 }
 
