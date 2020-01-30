@@ -1,8 +1,11 @@
 package com.jcdecaux.setl.storage.connector
 
+import java.net.URI
+
 import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
+import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -272,6 +275,45 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
 
     assert(connector.basePath.toString !== "src/test/resources/test_base_path.csv")
     assert(connector.basePath.toString === "src/test/resources")
+  }
+
+  test("FileConnector filesystem") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "path",
+      "inferSchema" -> "true",
+      "fs.s3a.aws.credentials.provider" -> "credentials",
+      "fs.s3a.access.key" -> "accessKey",
+      "fs.s3a.secret.key" -> "secretKey",
+      "fs.s3a.session.token" -> "sessionToken"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    val expectedFileSystem = FileSystem.get(URI.create("path"), connector.spark.sparkContext.hadoopConfiguration)
+    assert(connector.getFileSystem == expectedFileSystem)
+
+    assert(connector.getWriteCount == 0)
+  }
+
+  test("Suffixes") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "src/test/resources/test_base_path.csv",
+      "inferSchema" -> "true",
+      "header" -> "false",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    connector.resetSuffix()
+
+    // TODO: Play with lock/deadlock
+
   }
 
 }
