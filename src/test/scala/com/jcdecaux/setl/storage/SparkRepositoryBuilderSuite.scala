@@ -249,6 +249,8 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val repoBuilder = new SparkRepositoryBuilder[TestObject](Storage.EXCEL)
 
+    assertThrows[Throwable](repoBuilder.setSchema(null))
+
     repoBuilder
       .setInferSchema(false)
       .setTable("test")
