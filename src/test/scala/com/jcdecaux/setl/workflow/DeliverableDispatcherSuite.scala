@@ -2,14 +2,17 @@ package com.jcdecaux.setl.workflow
 
 import com.jcdecaux.setl.SparkSessionBuilder
 import com.jcdecaux.setl.annotation.Delivery
+import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.{AlreadyExistsException, InvalidDeliveryException}
-import com.jcdecaux.setl.storage.SparkRepositoryBuilder
+import com.jcdecaux.setl.storage.{ConnectorBuilder, SparkRepositoryBuilder}
 import com.jcdecaux.setl.storage.connector.FileConnector
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
+
+import scala.reflect.runtime.{universe => ru}
 
 class DeliverableDispatcherSuite extends AnyFunSuite with Matchers {
 
@@ -32,10 +35,17 @@ class DeliverableDispatcherSuite extends AnyFunSuite with Matchers {
     deliveryManager.addDeliverable(new Deliverable(C2P2))
 
     deliveryManager.testDispatch(myFactory)
+    assert(deliveryManager.findDeliverableByType(ru.typeOf[Container[Product]]).length == 1)
+    assert(deliveryManager.findDeliverableByName(ru.typeOf[Container[Product]].toString).length == 1)
 
     assert(myFactory.input == C2P)
     assert(myFactory.output == CP2)
 
+    val stage = new Stage().addFactory(myFactory).run()
+    val deliveryManager2 = new DeliverableDispatcher
+    assert(deliveryManager2.findDeliverableByType(ru.typeOf[Container[Product23]]).length == 0)
+    deliveryManager2.collectDeliverable(stage)
+    assert(deliveryManager2.findDeliverableByType(ru.typeOf[Container[Product23]]).length == 1)
   }
 
   test("Test with dataset") {
@@ -119,6 +129,20 @@ class DeliverableDispatcherSuite extends AnyFunSuite with Matchers {
     assertThrows[InvalidDeliveryException](dispatchManager.testDispatch(factory2))
   }
 
+  test("DispatchManager should throw exception when there are multiple " +
+    "matched deliveries but no matched producer") {
+
+    val dispatchManager = new DeliverableDispatcher
+    val del3 = new Deliverable[String]("hehe1").setProducer(classOf[Factory2]).setConsumer(classOf[Factory2])
+    val del4 = new Deliverable[String]("hehe2").setProducer(classOf[Factory2]).setConsumer(classOf[Factory2])
+
+    dispatchManager
+      .addDeliverable(del3)
+      .addDeliverable(del4)
+
+    assertThrows[NoSuchElementException](dispatchManager.testDispatch(new Factory2))
+  }
+
   test("Deliverable dispatcher should handle auto loading") {
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
@@ -142,6 +166,31 @@ class DeliverableDispatcherSuite extends AnyFunSuite with Matchers {
     dispatchManager.testDispatch(factoryWithAutoLoad)
     assert(factoryWithAutoLoad.input.count() === 3)
     repo.getConnector.asInstanceOf[FileConnector].delete()
+
+    val conf = new Conf()
+    conf.set("storage", "CSV")
+    conf.set("path", "src/test/resources/csv_test_auto_load_df")
+    conf.set("inferSchema", "true")
+    conf.set("header", "true")
+
+    val conn = new ConnectorBuilder(conf)
+      .getOrCreate()
+
+    val df = Seq(
+      Product2("a", "1"),
+      Product2("b", "2"),
+      Product2("c", "3")
+    ).toDF()
+
+    conn.write(df)
+
+    val dispatchManager2 = new DeliverableDispatcher
+    dispatchManager2.addDeliverable(new Deliverable(conn))
+    val factoryWithAutoLoad2 = new FactoryWithAutoLoadWithoutDS
+    // Cannot autoload Connector
+    assertThrows[NoSuchElementException](dispatchManager2.testDispatch(factoryWithAutoLoad2))
+
+    conn.asInstanceOf[FileConnector].delete()
   }
 
   test("Deliverable dispatcher should handle auto loading with condition when no DS is available") {
@@ -548,6 +597,16 @@ object DeliverableDispatcherSuite {
     override def write(): FactoryWithAutoLoadOptional.this.type = this
     override def get(): Dataset[Product2] = input
 
+  }
+
+  class FactoryWithAutoLoadWithoutDS extends Factory[Int] {
+    @Delivery(autoLoad = true)
+    var input: DataFrame = _
+
+    override def read(): FactoryWithAutoLoadWithoutDS.this.type = this
+    override def process(): FactoryWithAutoLoadWithoutDS.this.type = this
+    override def write(): FactoryWithAutoLoadWithoutDS.this.type = this
+    override def get(): Int = input.count.toInt
   }
 
   abstract class P1 extends Factory[External]

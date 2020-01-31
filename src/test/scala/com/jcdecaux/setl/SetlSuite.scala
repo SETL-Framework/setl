@@ -6,12 +6,12 @@ import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, FileConnect
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.storage.{Condition, ConnectorBuilder, SparkRepositoryBuilder}
 import com.jcdecaux.setl.transformation.Factory
-import org.apache.spark.{SparkConf, SparkException}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
-import org.scalatest.{Outcome, PrivateMethodTester}
+import org.apache.spark.{SparkConf, SparkException}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.{Outcome, PrivateMethodTester}
 
 class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
 
@@ -385,6 +385,21 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     assert(SparkSession.getActiveSession.isEmpty)
     assert(SparkSession.getDefaultSession.isEmpty)
     assert(SparkTestUtils.getActiveSparkContext.isEmpty)
+  }
+
+  test("Setl needs a Config Loader to be built") {
+    val setlBuilder = Setl.builder()
+
+    assertThrows[NoSuchElementException](setlBuilder.get())
+    assertThrows[NoSuchElementException](setlBuilder.build())
+
+    val setl = setlBuilder
+      .withDefaultConfigLoader()
+      .setSetlConfigPath("usages.config")
+      .build()
+      .getOrCreate()
+
+    setl.setConnector("csv_dc_context_consumer", classOf[CSVConnector])
   }
 
 }

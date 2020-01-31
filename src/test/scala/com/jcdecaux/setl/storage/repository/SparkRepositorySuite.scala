@@ -1,12 +1,14 @@
 package com.jcdecaux.setl.storage.repository
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File}
 
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
-import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConnector}
+import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
+import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
+import org.apache.spark.SparkException
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -49,6 +51,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
 
   test("Instantiation") {
+    assertThrows[SparkException](new SparkRepository().spark)
+
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
@@ -106,6 +110,23 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assert(filteredData.count() === 1)
 
     deleteRecursively(new File(path))
+
+    val url: String = s"jdbc:postgresql://${JDBCConnectorSuite.psqlHost}:5432/framework_dev"
+    val user: String = "postgres"
+    val password: String = "postgres"
+
+    val options: Map[String, String] = Map(
+      "url" -> url,
+      "dbtable" -> "unittest",
+      "saveMode" -> "Overwrite",
+      "user" -> user,
+      "password" -> password
+    )
+    val connector2 = new JDBCConnector(options)
+    connector2.write(ds.toDF())
+    val repo2 = new SparkRepository[MyObject].setConnector(connector2)
+    repo2.partitionBy("partition")
+    assert(!connector2.read().columns.contains("partition"))
   }
 
   test("SparkRepository should handle UDS key configuration") {
@@ -121,8 +142,28 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val repo = new SparkRepository[MyObject].setConnector(connector)
 
     assert(connector.asInstanceOf[CSVConnector].getUserDefinedSuffixKey === "_user_defined_suffix")
+    assert(repo.getUserDefinedSuffixKey === Some("_user_defined_suffix"))
     repo.setUserDefinedSuffixKey("TestKey")
     assert(connector.asInstanceOf[CSVConnector].getUserDefinedSuffixKey === "TestKey")
+    assert(repo.getUserDefinedSuffixKey === Some("TestKey"))
+
+    val logger = Logger.getLogger(classOf[SparkRepository[MyObject]])
+    val outContent = new ByteArrayOutputStream()
+    val appender = new WriterAppender(new SimpleLayout, outContent)
+    logger.addAppender(appender)
+    val warnMessage = "Current connector doesn't support user defined suffix, skip UDS setting"
+    val connector2 = new JDBCConnector(Map(
+      "url" -> "url",
+      "dbtable" -> "unittest",
+      "saveMode" -> "Overwrite",
+      "user" -> "user",
+      "password" -> "password"
+    ))
+    val repo2 = new SparkRepository[MyObject].setConnector(connector2)
+    assert(repo2.getUserDefinedSuffixKey === None)
+    repo2.setUserDefinedSuffixKey("key")
+    assert(outContent.toString.contains(warnMessage))
+    assert(repo2.getUserDefinedSuffixKey === None)
   }
 
   test("Test spark repository save with suffix") {
@@ -140,6 +181,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     ))
 
     val repo = new SparkRepository[MyObject].setConnector(connector)
+    val repo2 = new SparkRepository[MyObject].setConnector(null)
+    assertThrows[NullPointerException](repo2.save(ds))
 
     repo.save(ds, Some("1"))
     repo.save(ds, Some("2"))
@@ -309,6 +352,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
     // Test cache-enabled repository
     val repoCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector).persistReadData(true)
+    assert(repoCached.persistReadData)
+    assert(repoCached.getReadCacheStorageLevel.useMemory)
     repoCached.save(testData)
     val r1 = repoCached.findAll()
 
@@ -319,6 +364,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
     // Test cache-disabled repository
     val repoNotCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector)
+    assert(!repoNotCached.persistReadData)
+    assert(repoNotCached.getReadCacheStorageLevel.useMemory)
     repoNotCached.save(testData)
     val r2 = repoNotCached.findAll()
 
