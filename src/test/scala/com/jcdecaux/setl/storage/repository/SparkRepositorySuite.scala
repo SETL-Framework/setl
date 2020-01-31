@@ -5,11 +5,8 @@ import java.io.{ByteArrayOutputStream, File}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
-import com.jcdecaux.setl.storage.connector._
-import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
 import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
-import org.apache.spark.sql._
-import com.jcdecaux.setl.storage.connector.{CSVConnector, Connector, ParquetConnector}
+import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
