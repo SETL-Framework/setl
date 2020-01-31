@@ -8,6 +8,7 @@ import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
+import org.apache.spark.SparkException
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -50,6 +51,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
 
   test("Instantiation") {
+    assertThrows[SparkException](new SparkRepository().spark)
+
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
     import spark.implicits._
