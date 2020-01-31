@@ -1,11 +1,9 @@
 package com.jcdecaux.setl.storage.connector
 
-import java.net.URI
-
 import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
-import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.fs.LocalFileSystem
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -277,7 +275,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     assert(connector.basePath.toString === "src/test/resources")
   }
 
-  test("FileConnector filesystem") {
+  test("getFileSystem should return the correct file system") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val connector: FileConnector = new FileConnector(Map[String, String](
@@ -291,9 +289,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
       override val storage: Storage = Storage.CSV
     }
 
-    val expectedFileSystem = FileSystem.get(URI.create("path"), connector.spark.sparkContext.hadoopConfiguration)
-    assert(connector.getFileSystem == expectedFileSystem)
-
+    assert(connector.getFileSystem.isInstanceOf[LocalFileSystem])
     assert(connector.getWriteCount == 0)
   }
 

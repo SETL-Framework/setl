@@ -111,7 +111,7 @@ class ConfSuite extends AnyFunSuite {
     assertThrows[ConfException.Format](conf.getAs[Array[Boolean]]("stringArray"))
   }
 
-  test("Deserialization exceptions") {
+  test("Deserialization should throw exception if it can't convert to the wanted class") {
     import Conf.Serializer
 
     assertThrows[ConfException](Serializer.intLoader.deserialize("integer"))

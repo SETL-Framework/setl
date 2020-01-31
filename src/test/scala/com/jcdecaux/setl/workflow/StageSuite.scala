@@ -137,6 +137,8 @@ class StageSuite extends AnyFunSuite {
     val connector = new CSVConnector(connectorOptions)
     val stage = new Stage().writable(true)
 
+    assert(stage.start)
+
     assert(!stage.optimization)
     stage.optimization(true)
     assert(stage.optimization)
