@@ -6,6 +6,7 @@ import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
+import com.jcdecaux.setl.SparkTestUtils
 import com.jcdecaux.setl.config.{Conf, DynamoDBConnectorConf}
 import com.typesafe.config.ConfigFactory
 import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
@@ -101,6 +102,8 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
 
   test("DynamoDBConnector should read and write") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val data = input.toDF("col1", "col2")
@@ -151,6 +154,8 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
 
   test("DynamoDB Connector un-implemented methods") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
     val logger = Logger.getLogger(classOf[DynamoDBConnector])
     val outContent = new ByteArrayOutputStream()
