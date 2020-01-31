@@ -2,12 +2,10 @@ package com.jcdecaux.setl.storage.connector
 
 import java.io.ByteArrayOutputStream
 
-import com.jcdecaux.setl.config.{Conf, JDBCConnectorConf, Properties}
+import com.jcdecaux.setl.config.{JDBCConnectorConf, Properties}
 import org.apache.log4j._
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{SaveMode, SparkSession}
-import org.apache.spark.storage.StorageLevel
 import org.scalatest.Outcome
 import org.scalatest.funsuite.AnyFunSuite
 
