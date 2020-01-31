@@ -256,9 +256,9 @@ You should also provide Scala and Spark in your pom file. SETL is tested against
 
 | Spark Version | Scala Version  | Note                         |
 | ------------- | -------------  | -----------------------------|
-|     2.4.4     |        2.11    | :heavy_check_mark: Ok        |
-|     2.4.4     |        2.12    | :heavy_check_mark: Ok        |
-|     2.3.4     |        2.11    | :warning: see *known issues* |
+|     2.4       |        2.11    | :heavy_check_mark: Ok        |
+|     2.4       |        2.12    | :heavy_check_mark: Ok        |
+|     2.3       |        2.11    | :warning: see *known issues* |
 
 ## Known issues
 - `DynamoDBConnector` doesn't work with Spark version 2.3
