@@ -5,9 +5,9 @@ import java.io.{ByteArrayOutputStream, File}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
-import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
 import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
+import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -120,6 +120,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
       "password" -> password
     )
     val connector2 = new JDBCConnector(options)
+    connector2.write(ds.toDF())
     val repo2 = new SparkRepository[MyObject].setConnector(connector2)
     repo2.partitionBy("partition")
     assert(!connector2.read().columns.contains("partition"))
