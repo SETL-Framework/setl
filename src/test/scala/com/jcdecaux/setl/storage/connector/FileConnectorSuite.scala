@@ -3,6 +3,7 @@ package com.jcdecaux.setl.storage.connector
 import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
+import org.apache.hadoop.fs.LocalFileSystem
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -274,6 +275,43 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     assert(connector.basePath.toString === "src/test/resources")
   }
 
+  test("getFileSystem should return the correct file system") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "path",
+      "inferSchema" -> "true",
+      "fs.s3a.aws.credentials.provider" -> "credentials",
+      "fs.s3a.access.key" -> "accessKey",
+      "fs.s3a.secret.key" -> "secretKey",
+      "fs.s3a.session.token" -> "sessionToken"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assert(connector.getFileSystem.isInstanceOf[LocalFileSystem])
+    assert(connector.getWriteCount == 0)
+  }
+
+  test("Suffixes") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "src/test/resources/test_base_path.csv",
+      "inferSchema" -> "true",
+      "header" -> "false",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    connector.resetSuffix()
+
+    // TODO: Play with lock/deadlock
+
+  }
+
   test("SETL-97: FileConnector should list file recursively") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
@@ -313,5 +351,4 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     assert(connector2.read().count() === 4)
     assert(connector2.read().columns.length === 3)
   }
-
 }

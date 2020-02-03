@@ -19,5 +19,6 @@ class FactoryDeliveryMetadataSuite extends AnyFunSuite {
     assert(setters.map(_.factoryUUID).toSet.size === 1)
     assert(setters.find(_.name == "inputInt").get.producer === classOf[External])
     assert(setters.find(_.name == "setInputs").get.argTypes.size === 2)
+    assert(setters.find(_.isDataset.contains(true)).size === 0)
   }
 }

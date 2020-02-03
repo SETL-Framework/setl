@@ -231,6 +231,39 @@ Or you can try the live editor: https://mermaid-js.github.io/mermaid-live-editor
 
 You can either copy the code into a Markdown viewer or just copy the link into your browser ([link](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNeUZhY3Rvcnkge1xuICA8PEZhY3RvcnlbRGF0YXNldFtUZXN0T2JqZWN0XV0-PlxuICArU3BhcmtSZXBvc2l0b3J5W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIERhdGFzZXRUZXN0T2JqZWN0IHtcbiAgPDxEYXRhc2V0W1Rlc3RPYmplY3RdPj5cbiAgPnBhcnRpdGlvbjE6IEludFxuICA-cGFydGl0aW9uMjogU3RyaW5nXG4gID5jbHVzdGVyaW5nMTogU3RyaW5nXG4gID52YWx1ZTogTG9uZ1xufVxuXG5EYXRhc2V0VGVzdE9iamVjdCA8fC4uIE15RmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgQW5vdGhlckZhY3Rvcnkge1xuICA8PEZhY3RvcnlbU3RyaW5nXT4-XG4gICtEYXRhc2V0W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIFN0cmluZ0ZpbmFsIHtcbiAgPDxTdHJpbmc-PlxuICBcbn1cblxuU3RyaW5nRmluYWwgPHwuLiBBbm90aGVyRmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgU3BhcmtSZXBvc2l0b3J5VGVzdE9iamVjdEV4dGVybmFsIHtcbiAgPDxTcGFya1JlcG9zaXRvcnlbVGVzdE9iamVjdF0-PlxuICBcbn1cblxuQW5vdGhlckZhY3RvcnkgPHwtLSBEYXRhc2V0VGVzdE9iamVjdCA6IElucHV0XG5NeUZhY3RvcnkgPHwtLSBTcGFya1JlcG9zaXRvcnlUZXN0T2JqZWN0RXh0ZXJuYWwgOiBJbnB1dFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0=)) 🍻
 
+## Dependencies
+
+**SETL** currently supports the following data source:
+  - All file formats supported by Apache Spark (csv, json, parquet etc)
+  - Excel
+  - JDBC (you have to provide the jdbc driver)
+  - Cassandra
+  - DynamoDB
+
+To read/write data from/to AWS S3 (or other storage services), you should include the 
+corresponding hadoop library in your project.
+
+For example
+```
+<dependency>
+    <groupId>org.apache.hadoop</groupId>
+    <artifactId>hadoop-aws</artifactId>
+    <version>2.9.2</version>
+</dependency>
+```
+
+You should also provide Scala and Spark in your pom file. SETL is tested against the following version of Spark: 
+
+| Spark Version | Scala Version  | Note                         |
+| ------------- | -------------  | -----------------------------|
+|     2.4       |        2.11    | :heavy_check_mark: Ok        |
+|     2.4       |        2.12    | :heavy_check_mark: Ok        |
+|     2.3       |        2.11    | :warning: see *known issues* |
+
+## Known issues
+- `DynamoDBConnector` doesn't work with Spark version 2.3
+- `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
+
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)
 

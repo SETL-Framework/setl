@@ -13,8 +13,9 @@ cache:
     - ${HOME}/.m2
 
 env:
-  - SCALA_VER="2.11" UPLOAD_COVERAGE="true"
-  - SCALA_VER="2.12"
+  - SCALA_VER="2.11" SPARK_VER="2.4" UPLOAD_COVERAGE="true"  DEPLOY="true"
+  - SCALA_VER="2.12" SPARK_VER="2.4" UPLOAD_COVERAGE="false" DEPLOY="true"
+  - SCALA_VER="2.11" SPARK_VER="2.3" UPLOAD_COVERAGE="false" DEPLOY="false"
 
 before_install:
   - chmod +x ./dev/test.sh
@@ -42,10 +43,11 @@ deploy:
     script: ./dev/deploy-snapshot.sh
     on:
       branch: master
+      condition: $DEPLOY = true
 
   - provider: script
     skip_cleanup: true
     script: ./dev/deploy-release.sh
     on:
       tags: true
-      condition: $TRAVIS_TAG =~ ^SETL-[0-9]+.[0-9]+.[0-9]+?$
+      condition: $TRAVIS_TAG =~ ^SETL-[0-9]+.[0-9]+.[0-9]+?$ && $DEPLOY = true

@@ -24,8 +24,11 @@ class PipelineInspectorSuite extends AnyFunSuite {
       .addStage[LastFactory]()
 
     val pipelineInspector = new PipelineInspector(pipeline).inspect()
+    pipelineInspector.describe()
+    println(pipelineInspector.getDataFlowGraph.toDiagram)
+    assertThrows[NotImplementedError](pipelineInspector.getDataFlowGraph.diagramId)
 
-    pipeline.describe().run()
+    pipeline.run()
 
     assert(pipelineInspector.nodes.size === 2)
     assert(pipelineInspector.flows.size === 3)
