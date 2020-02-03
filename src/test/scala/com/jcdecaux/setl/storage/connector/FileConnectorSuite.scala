@@ -1,5 +1,7 @@
 package com.jcdecaux.setl.storage.connector
 
+import java.io.File
+
 import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
@@ -170,9 +172,9 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val targetSizeBytes = if (System.getProperty("line.separator").length() == 2) {
-      665  // windows line separator
+      665 // windows line separator
     } else {
-      624  // otherwise
+      624 // otherwise
     }
 
     assert(connector2(spark).getSize === targetSizeBytes)
@@ -186,6 +188,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     val connector: FileConnector =
       new FileConnector(Map[String, String]("path" -> (path + "suffix_handling_exception"), "filenamePattern" -> "(test).*")) {
         override val storage: Storage = Storage.CSV
+
         override def read(): DataFrame = null
       }
 
@@ -312,4 +315,44 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
 
   }
 
+  test("SETL-97: FileConnector should list file recursively") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "src/test/resources/test-list-files",
+      "inferSchema" -> "true",
+      "header" -> "true",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV",
+      "filenamePattern" -> "(file)(.*)(\\.csv)"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assert(connector.listFiles().length >= 6) // >= because some OS will add hidden files (like .DS_Store in MacOS)
+    connector.listFilesToLoad(false).map(_.split(File.separatorChar).last) should contain theSameElementsAs Array(
+      "file2-1.csv",
+      "file1.csv",
+      "file1-2-2.csv",
+      "file1-2-1.csv",
+      "file1-1-1.csv"
+    )
+
+    assert(connector.read().count() === 5)
+    assert(connector.read().columns.length === 2)
+
+    val connector2: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "src/test/resources/test-list-files2",
+      "inferSchema" -> "true",
+      "header" -> "true",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assert(connector2.listFiles().length >= 4) // >= because some OS will add hidden files (like .DS_Store in MacOS)
+    assert(connector2.read().count() === 4)
+    assert(connector2.read().columns.length === 3)
+  }
 }

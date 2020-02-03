@@ -259,8 +259,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
    */
   def listPaths(): Array[Path] = {
     val filePaths = ArrayBuffer[Path]()
-    val files = fileSystem.listLocatedStatus(absolutePath)
-
+    val files = fileSystem.listFiles(absolutePath, true)
     while (files.hasNext) {
       val status = files.next()
       if (status.isFile) {
