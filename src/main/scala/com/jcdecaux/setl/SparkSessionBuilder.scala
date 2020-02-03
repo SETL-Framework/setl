@@ -35,6 +35,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
 
   private[setl] var appEnv: String = "local"
   private[setl] var sparkConf: SparkConf = new SparkConf()
+  private[setl] var prefixConf: String = "spark."
   private[setl] var initialization: Boolean = true
   private[setl] var spark: SparkSession = _
 
@@ -104,7 +105,12 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
    */
   private[this] def updateSparkConf(key: String, value: String): Unit = {
     if (!sparkConf.contains(key)) {
-      sparkConf.set(key, value)
+      if (!key.startsWith(prefixConf)) {
+        val updatedKey = prefixConf.concat(key)
+        sparkConf.set(updatedKey, value)
+      } else {
+        sparkConf.set(key, value)
+      }
     } else {
       log.info(s"Skip spark configuration $key -> $value")
     }

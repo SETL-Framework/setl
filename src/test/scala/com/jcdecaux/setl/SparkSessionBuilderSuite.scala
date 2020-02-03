@@ -138,5 +138,29 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
     assert(builder.get("spark.kryo.registrationRequired") == "true")
   }
 
+  test("SparkSessionBuilder should append the prefix 'spark' when missing in config path") {
+
+    val spark = new SparkSessionBuilder()
+      .set("spark.app.name", "my_app")
+      .set("spark.sql.shuffle.partitions", "1000")
+      .set("spark.ui.showConsoleProgress", "false")
+      .build()
+      .get()
+
+    assert(spark.sparkContext.getConf.get("spark.app.name") === "my_app")
+    assert(spark.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "1000")
+    assert(spark.sparkContext.getConf.get("spark.ui.showConsoleProgress") === "false")
+
+    val spark2 = new SparkSessionBuilder()
+      .set("app.name", "my_app_2")
+      .set("sql.shuffle.partitions", "2000")
+      .set("ui.showConsoleProgress", "true")
+      .build()
+      .get()
+
+    assert(spark2.sparkContext.getConf.get("spark.app.name") === "my_app_2")
+    assert(spark2.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "2000")
+    assert(spark2.sparkContext.getConf.get("spark.ui.showConsoleProgress") === "true")
+  }
 
 }
