@@ -326,7 +326,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
       override val storage: Storage = Storage.CSV
     }
 
-    assert(connector.listFiles().length >= 5)  // >= because some OS will add hidden files (like .DS_Store in MacOS)
+    assert(connector.listFiles().length >= 6)  // >= because some OS will add hidden files (like .DS_Store in MacOS)
     connector.listFilesToLoad(false) should contain theSameElementsAs Array(
       "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/subdir2/file2-1.csv",
       "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/file1.csv",
