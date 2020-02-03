@@ -51,6 +51,13 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
       .get()
 
     assert(spark.read.cassandraFormat("countries", MockCassandra.keyspace).load().count() === 20)
+
+    val builder = new SparkSessionBuilder()
+      .setEnv("local")
+
+    assert(builder.cassandraHost == null)
+    builder.setCassandraHost("cassandraHost")
+    assert(builder.cassandraHost == "cassandraHost")
   }
 
   test("Custom configuration") {
@@ -125,6 +132,10 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
 
     val spark = builder.getOrCreate()
     assert(spark.sparkContext.getConf.get("spark.serializer") === "org.apache.spark.serializer.KryoSerializer")
+
+    assert(builder.get("spark.kryo.registrationRequired") == null)
+    builder.setKryoRegistrationRequired(true)
+    assert(builder.get("spark.kryo.registrationRequired") == "true")
   }
 
   test("SparkSessionBuilder should append the prefix 'spark' when missing in config path") {

@@ -32,6 +32,7 @@ class FlowSuite extends AnyFunSuite {
 
     val expectedExternalFlowDiagram = "ProductFactory <|-- StringExternal : Input".replace(" ", "")
 
+    assert(flow.diagramId === "")
     assert(flow.toDiagram.replace(" ", "") === expectedDiagram)
     assert(flowExternal.toDiagram.replace(" ", "") === expectedExternalFlowDiagram)
   }
