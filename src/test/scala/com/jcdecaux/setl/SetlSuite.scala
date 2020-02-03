@@ -387,6 +387,17 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     assert(SparkTestUtils.getActiveSparkContext.isEmpty)
   }
 
+  test("Context builder should handle spark configuration when missing prefix 'spark' in config path") {
+    val context: Setl = Setl.builder().withDefaultConfigLoader("local")
+      .setSetlConfigPath("setl.config_2")
+      .getOrCreate()
+
+    val ss = context.spark
+
+    assert(ss.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "2000")
+    assert(ss.sparkContext.getConf.get("spark.app.name") === "my_app_2")
+  }
+
 }
 
 object SetlSuite {
