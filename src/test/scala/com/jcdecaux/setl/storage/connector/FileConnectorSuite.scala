@@ -274,4 +274,44 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     assert(connector.basePath.toString === "src/test/resources")
   }
 
+  test("SETL-97: FileConnector should list file recursively") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connector: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "src/test/resources/test-list-files",
+      "inferSchema" -> "true",
+      "header" -> "true",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV",
+      "filenamePattern" -> "(file)(.*)(\\.csv)"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assert(connector.listFiles().length >= 5)  // >= because some OS will add hidden files (like .DS_Store in MacOS)
+    connector.listFilesToLoad(false) should contain theSameElementsAs Array(
+      "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/subdir2/file2-1.csv",
+      "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/file1.csv",
+      "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/subdir1/subsubdir2/file1-2-2.csv",
+      "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/subdir1/subsubdir2/file1-2-1.csv",
+      "file:/Users/qin/IdeaProjects/setl-qxzzxq/src/test/resources/test-list-files/subdir1/subsubdir1/file1-1-1.csv"
+    )
+    assert(connector.read().count() === 5)
+    assert(connector.read().columns.length === 2)
+
+    val connector2: FileConnector = new FileConnector(Map[String, String](
+      "path" -> "src/test/resources/test-list-files2",
+      "inferSchema" -> "true",
+      "header" -> "true",
+      "saveMode" -> "Overwrite",
+      "storage" -> "CSV"
+    )) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assert(connector2.listFiles().length >= 4)  // >= because some OS will add hidden files (like .DS_Store in MacOS)
+    assert(connector2.read().count() === 4)
+    assert(connector2.read().columns.length === 3)
+  }
+
 }
