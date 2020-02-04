@@ -109,4 +109,9 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   override def write(t: DataFrame): Unit = {
     writeDynamoDB(t, conf.getTable.get)
   }
+
+  override def drop(): Unit = {
+    log.warn("Drop is not supported in DynamoDBConnector")
+  }
+
 }

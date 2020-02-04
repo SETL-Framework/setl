@@ -8,6 +8,7 @@ import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
 import org.apache.spark.sql.execution.command.ExplainCommand
+import org.apache.spark.sql.execution.datasources.jdbc._
 
 class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
@@ -36,6 +37,41 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(sparkSession: SparkSession, conf: Conf) = this(conf)
+
+  private[this] val jdbcConnectorOption = {
+    val prop = new java.util.Properties
+
+    conf.getUser match {
+      case Some(user) => prop.setProperty("user", user)
+      case _ =>
+    }
+
+    conf.getPassword match {
+      case Some(pw) => prop.setProperty("password", pw)
+      case _ =>
+    }
+
+    conf.getUrl match {
+      case Some(url) =>   prop.setProperty("url", url)
+      case _ =>
+    }
+
+    conf.getDbTable match {
+      case Some(table) => prop.setProperty("dbtable", table)
+      case _ =>
+    }
+
+    import scala.collection.JavaConverters._
+
+    val parameters = prop.asScala.toMap
+    new org.apache.spark.sql.execution.datasources.jdbc.JdbcOptionsInWrite(parameters)
+  }
+
+  private[this] def executeRequest(request: String): Unit = {
+    val statement = JdbcUtils.createConnectionFactory(jdbcConnectorOption)().createStatement()
+    statement.execute(request)
+    statement.close()
+  }
 
   override val storage: Storage = Storage.JDBC
 
@@ -105,4 +141,9 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
     writer(t).save()
 
   }
+
+  override def drop(): Unit = {
+    this.executeRequest(s"DROP TABLE IF EXISTS ${conf.getDbTable.get};")
+  }
+
 }

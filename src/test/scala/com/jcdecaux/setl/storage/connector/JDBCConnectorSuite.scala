@@ -1,6 +1,7 @@
 package com.jcdecaux.setl.storage.connector
 
 import java.io.ByteArrayOutputStream
+import java.sql.SQLException
 
 import com.jcdecaux.setl.config.{JDBCConnectorConf, Properties}
 import org.apache.log4j._
@@ -150,6 +151,28 @@ class JDBCConnectorSuite extends AnyFunSuite {
     val connector = new JDBCConnector(options)
     connector.delete("query")
     assert(outContent.toString.contains("Delete is not supported in JDBC Connector"))
+  }
+
+  test("JDBCConnector should be able to drop table") {
+    val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    import spark.implicits._
+    val data = input.toDF("col1", "col2")
+
+    val connector1 = new JDBCConnector(
+      new JDBCConnectorConf()
+        .setUrl(url)
+        .setDbTable("test_jdbc_drop")
+        .setUser(user)
+        .setPassword(password)
+        .setSaveMode(SaveMode.Overwrite)
+    )
+
+    connector1.write(data)
+    assert(connector1.read().count() === 2)
+    assert(connector1.read().columns.length === 2)
+
+    connector1.drop()
+    assertThrows[SQLException](connector1.read().show())
   }
 
 }

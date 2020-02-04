@@ -1,6 +1,7 @@
 package com.jcdecaux.setl.config
 
 import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 class JDBCConnectorConf extends ConnectorConf {
 

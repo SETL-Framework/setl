@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasSparkSession {
+abstract class FileConnector(val options: FileConnectorConf) extends Connector {
 
   def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
