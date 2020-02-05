@@ -38,7 +38,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(sparkSession: SparkSession, conf: Conf) = this(conf)
 
-  private[this] val jdbcConnectorOption = {
+  private[this] lazy val jdbcConnectorOption: JDBCOptions = {
     val prop = new java.util.Properties
 
     conf.getUser match {
@@ -52,7 +52,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
     }
 
     conf.getUrl match {
-      case Some(url) =>   prop.setProperty("url", url)
+      case Some(url) => prop.setProperty("url", url)
       case _ =>
     }
 
@@ -64,7 +64,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
     import scala.collection.JavaConverters._
 
     val parameters = prop.asScala.toMap
-    new org.apache.spark.sql.execution.datasources.jdbc.JdbcOptionsInWrite(parameters)
+    new JDBCOptions(parameters)
   }
 
   private[this] def executeRequest(request: String): Unit = {
