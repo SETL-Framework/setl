@@ -177,6 +177,7 @@ class CassandraConnector(val keyspace: String,
     }
   }
 
+  @throws[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException]("Make sure the strategy is correct")
   def createKeyspace(strategy: String, replicationFactor: Int): Unit = {
     cqlConnection.withSessionDo {
       session =>
