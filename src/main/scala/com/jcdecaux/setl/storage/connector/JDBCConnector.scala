@@ -39,31 +39,15 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   def this(sparkSession: SparkSession, conf: Conf) = this(conf)
 
   private[this] lazy val jdbcConnectorOption: JDBCOptions = {
-    val prop = new java.util.Properties
+    val parameters: Map[String, String] = Array(
+      JDBCConnectorConf.USER,
+      JDBCConnectorConf.PASSWORD,
+      JDBCConnectorConf.URL,
+      JDBCConnectorConf.DB_TABLE
+    ).collect {
+      case key: String if conf.has(key) => key -> conf.get(key).get
+    }.toMap
 
-    conf.getUser match {
-      case Some(user) => prop.setProperty("user", user)
-      case _ =>
-    }
-
-    conf.getPassword match {
-      case Some(pw) => prop.setProperty("password", pw)
-      case _ =>
-    }
-
-    conf.getUrl match {
-      case Some(url) => prop.setProperty("url", url)
-      case _ =>
-    }
-
-    conf.getDbTable match {
-      case Some(table) => prop.setProperty("dbtable", table)
-      case _ =>
-    }
-
-    import scala.collection.JavaConverters._
-
-    val parameters = prop.asScala.toMap
     new JDBCOptions(parameters)
   }
 
