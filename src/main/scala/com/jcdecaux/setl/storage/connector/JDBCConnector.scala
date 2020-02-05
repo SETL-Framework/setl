@@ -38,21 +38,8 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(sparkSession: SparkSession, conf: Conf) = this(conf)
 
-  private[this] lazy val jdbcConnectorOption: JDBCOptions = {
-    val parameters: Map[String, String] = Array(
-      JDBCConnectorConf.USER,
-      JDBCConnectorConf.PASSWORD,
-      JDBCConnectorConf.URL,
-      JDBCConnectorConf.DB_TABLE
-    ).collect {
-      case key: String if conf.has(key) => key -> conf.get(key).get
-    }.toMap
-
-    new JDBCOptions(parameters)
-  }
-
   private[this] def executeRequest(request: String): Unit = {
-    val statement = JdbcUtils.createConnectionFactory(jdbcConnectorOption)().createStatement()
+    val statement = JdbcUtils.createConnectionFactory(conf.getJDBCOptions)().createStatement()
     statement.execute(request)
     statement.close()
   }
