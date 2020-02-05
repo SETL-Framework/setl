@@ -181,7 +181,7 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
 
     outContent.reset()
     connector.drop()
-    assert(outContent.toString.contain("Drop is not supported in DynamoDBConnector"))
+    assert(outContent.toString.contains("Drop is not supported in DynamoDBConnector"))
   }
 
 }
