@@ -141,16 +141,54 @@ class JDBCConnectorSuite extends AnyFunSuite {
     assert(outContent.toString.contains(warnMessage))
   }
 
-  test("JDBCConnector's delete method is not yet implemented") {
+  test("JDBCConnector should be able to execute delete query") {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
-    val logger = Logger.getLogger(classOf[JDBCConnector])
-    val outContent = new ByteArrayOutputStream()
-    val appender = new WriterAppender(new SimpleLayout, outContent)
-    logger.addAppender(appender)
+    import spark.implicits._
+    val data = input.toDF("col1", "col2")
+    val query = "DELETE FROM test_jdbc_delete WHERE col1 = 'a'"
 
-    val connector = new JDBCConnector(options)
-    connector.delete("query")
-    assert(outContent.toString.contains("Delete is not supported in JDBC Connector"))
+    val connector = new JDBCConnector(
+      new JDBCConnectorConf()
+        .setUrl(url)
+        .setDbTable("test_jdbc_delete")
+        .setUser(user)
+        .setPassword(password)
+        .setSaveMode(SaveMode.Overwrite)
+    )
+
+    connector.write(data)
+    assert(connector.read().count() === 2)
+    assert(connector.read().columns.length === 2)
+
+    connector.delete(query)
+
+    assert(connector.read().count() === 1)
+    assert(connector.read().columns.length === 2)
+  }
+
+  test("JDBCConnector should throw an exception when delete query is not well formatted") {
+    val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    import spark.implicits._
+    val data = input.toDF("col1", "col2")
+    val query = "DELETE test_jdbc_delete WHERE col1 = 'a'" // Incorrect SQL syntax
+
+    val connector = new JDBCConnector(
+      new JDBCConnectorConf()
+        .setUrl(url)
+        .setDbTable("test_jdbc_delete")
+        .setUser(user)
+        .setPassword(password)
+        .setSaveMode(SaveMode.Overwrite)
+    )
+
+    connector.write(data)
+    assert(connector.read().count() === 2)
+    assert(connector.read().columns.length === 2)
+
+    assertThrows[SQLException](connector.delete(query))
+
+    assert(connector.read().count() === 2)
+    assert(connector.read().columns.length === 2)
   }
 
   test("JDBCConnector should be able to drop table") {
