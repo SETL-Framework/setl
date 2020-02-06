@@ -145,7 +145,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
     val data = input.toDF("col1", "col2")
-    val query = "DELETE FROM test_jdbc_delete WHERE col1 = 'a'"
+    val condition = "col1 = 'a' OR col1 = 'b'"
 
     val connector = new JDBCConnector(
       new JDBCConnectorConf()
@@ -160,9 +160,9 @@ class JDBCConnectorSuite extends AnyFunSuite {
     assert(connector.read().count() === 2)
     assert(connector.read().columns.length === 2)
 
-    connector.delete(query)
+    connector.delete(condition)
 
-    assert(connector.read().count() === 1)
+    assert(connector.read().count() === 0)
     assert(connector.read().columns.length === 2)
   }
 
@@ -170,7 +170,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
     import spark.implicits._
     val data = input.toDF("col1", "col2")
-    val query = "DELETE test_jdbc_delete WHERE col1 = 'a'" // Incorrect SQL syntax
+    val condition = "col1 = 'a' || col1 = 'b'" // Incorrect SQL syntax
 
     val connector = new JDBCConnector(
       new JDBCConnectorConf()
@@ -185,7 +185,7 @@ class JDBCConnectorSuite extends AnyFunSuite {
     assert(connector.read().count() === 2)
     assert(connector.read().columns.length === 2)
 
-    assertThrows[SQLException](connector.delete(query))
+    assertThrows[SQLException](connector.delete(condition))
 
     assert(connector.read().count() === 2)
     assert(connector.read().columns.length === 2)
