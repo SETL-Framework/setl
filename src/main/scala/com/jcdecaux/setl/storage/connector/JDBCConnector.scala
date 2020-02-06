@@ -71,8 +71,8 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
     log.warn("Create is not supported in JDBC Connector")
   }
 
-  override def delete(query: String): Unit = {
-    this.executeRequest(query)
+  override def delete(condition: String): Unit = {
+    this.executeRequest(s"DELETE FROM ${conf.getDbTable.get} WHERE $condition;")
   }
 
   override def read(): DataFrame = {
