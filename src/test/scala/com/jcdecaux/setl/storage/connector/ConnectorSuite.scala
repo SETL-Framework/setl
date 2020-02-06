@@ -14,8 +14,6 @@ class ConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(Connector.empty.spark === null)
     assert(Connector.empty.storage === null)
-    assert(Connector.empty.reader === null)
-    assert(Connector.empty.writer === null)
     assert(Connector.empty.read() === null)
     Connector.empty.write(df)
     Connector.empty.write(df, Some("suffix"))

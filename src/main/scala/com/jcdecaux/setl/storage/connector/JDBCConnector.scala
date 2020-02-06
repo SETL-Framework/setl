@@ -8,6 +8,7 @@ import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
 import org.apache.spark.sql.execution.command.ExplainCommand
+import org.apache.spark.sql.execution.datasources.jdbc._
 
 class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
@@ -36,6 +37,12 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
 
   @deprecated("use the constructor with no spark session", "0.3.4")
   def this(sparkSession: SparkSession, conf: Conf) = this(conf)
+
+  private[this] def executeRequest(request: String): Unit = {
+    val statement = JdbcUtils.createConnectionFactory(conf.getJDBCOptions)().createStatement()
+    statement.execute(request)
+    statement.close()
+  }
 
   override val storage: Storage = Storage.JDBC
 
@@ -105,4 +112,9 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
     writer(t).save()
 
   }
+
+  override def drop(): Unit = {
+    this.executeRequest(s"DROP TABLE IF EXISTS ${conf.getDbTable.get};")
+  }
+
 }

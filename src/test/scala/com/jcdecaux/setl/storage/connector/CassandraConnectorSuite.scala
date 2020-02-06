@@ -12,9 +12,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
 
-
   val connector: CC = CC(MockCassandra.cassandraConf)
-
   val keyspace = "test_space"
 
   override def beforeAll(): Unit = {
@@ -186,4 +184,80 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(connector.read().count() == connector2.read().count())
   }
+
+  test("CassandraConnector should drop table") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(MockCassandra.cassandraConf)
+      .setEnv("local")
+      .build().get()
+
+    import spark.implicits._
+
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val connector = new CassandraConnector(
+      keyspace = keyspace,
+      table = "test_spark_connector_drop_table",
+      spark = spark,
+      partitionKeyColumns = Some(Seq("partition1", "partition2")),
+      clusteringKeyColumns = Some(Seq("clustering1"))
+    )
+
+    connector.write(testTable.toDF())
+    assert(connector.read().count() === 3)
+    connector.drop()
+    assertThrows[java.io.IOException](connector.read().show())
+  }
+
+  test("CassandraConnector should be able to create and drop keyspace") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(MockCassandra.cassandraConf)
+      .setEnv("local")
+      .build().get()
+
+    import spark.implicits._
+
+    val testTable: Dataset[TestObject] = Seq(
+      TestObject(1, "p1", "c1", 1L),
+      TestObject(2, "p2", "c2", 2L),
+      TestObject(3, "p3", "c3", 3L)
+    ).toDS()
+
+    val connector = new CassandraConnector(
+      keyspace = "test_spark_connector_keyspace",
+      table = "test_spark_connector_drop_table",
+      spark = spark,
+      partitionKeyColumns = Some(Seq("partition1", "partition2")),
+      clusteringKeyColumns = Some(Seq("clustering1"))
+    )
+
+    // test create keyspace
+    this.connector.withSessionDo (_.execute("DROP KEYSPACE IF EXISTS test_spark_connector_keyspace"))
+    assertThrows[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException](
+      connector.write(testTable.toDF()),
+      "Exception should be thrown because the keyspace doesn't exist"
+    )
+    assertThrows[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException](
+      connector.createKeyspace("WrongStrategy", 1),
+      "Exception should be thrown when the strategy is wrong"
+    )
+    connector.createKeyspace("SimpleStrategy", 1)
+    connector.write(testTable.toDF())
+    assert(connector.read().count() === 3)
+    assert(connector.read().columns.length === 4)
+
+    // drop the keyspace
+    val dropMethod = classOf[CassandraConnector].getDeclaredMethod("dropKeyspace")
+    dropMethod.setAccessible(true)
+    dropMethod.invoke(connector)
+    assertThrows[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException](
+      connector.write(testTable.toDF()),
+      "Exception should be thrown because the keyspace was dropped"
+    )
+  }
+
 }

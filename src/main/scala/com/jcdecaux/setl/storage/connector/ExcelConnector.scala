@@ -40,7 +40,7 @@ class ExcelConnector(val path: String,
                      var workbookPassword: Option[String],
                      var schema: Option[StructType],
                      var saveMode: SaveMode
-                    ) extends Connector with HasSparkSession {
+                    ) extends Connector {
 
   // CONSTRUCTORS
   def this(spark: SparkSession,

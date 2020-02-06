@@ -178,6 +178,10 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
     outContent.reset()
     connector.write(data, Some("suffix"))
     assert(outContent.toString.contains("Suffix will be ignored in DynamoDBConnector"))
+
+    outContent.reset()
+    connector.drop()
+    assert(outContent.toString.contains("Drop is not supported in DynamoDBConnector"))
   }
 
 }

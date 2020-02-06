@@ -1,5 +1,6 @@
 package com.jcdecaux.setl.storage.connector
 
+import com.datastax.spark.connector.cql.{CassandraConnector => DatastaxCassandraConnector}
 import com.datastax.driver.core.exceptions.AlreadyExistsException
 import com.datastax.spark.connector._
 import com.jcdecaux.setl.annotation.InterfaceStability
@@ -75,6 +76,8 @@ class CassandraConnector(val keyspace: String,
    * @param config [[com.typesafe.config.Config]] typesafe Config object
    */
   def this(spark: SparkSession, config: Config) = this(config)
+
+  private[this] val cqlConnection =  DatastaxCassandraConnector(spark.sparkContext.getConf)
 
   override val reader: DataFrameReader = spark.read.cassandraFormat(table, keyspace)
 
@@ -166,4 +169,27 @@ class CassandraConnector(val keyspace: String,
       .where(query)
       .deleteFromCassandra(keyspace, table)
   }
+
+  override def drop(): Unit = {
+    cqlConnection.withSessionDo {
+      session =>
+        session.execute(s"DROP TABLE IF EXISTS $keyspace.$table;")
+    }
+  }
+
+  @throws[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException]("Make sure the strategy is correct")
+  def createKeyspace(strategy: String, replicationFactor: Int): Unit = {
+    cqlConnection.withSessionDo {
+      session =>
+        session.execute(s"CREATE KEYSPACE IF NOT EXISTS $keyspace WITH replication = {'class':'$strategy', 'replication_factor':$replicationFactor};")
+    }
+  }
+
+  private[this] def dropKeyspace(): Unit = {
+    cqlConnection.withSessionDo {
+      session =>
+        session.execute(s"DROP KEYSPACE IF EXISTS $keyspace;")
+    }
+  }
+
 }

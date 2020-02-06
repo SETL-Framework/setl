@@ -1,6 +1,7 @@
 package com.jcdecaux.setl.config
 
 import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.execution.datasources.jdbc.JDBCOptions
 
 class JDBCConnectorConf extends ConnectorConf {
 
@@ -66,6 +67,20 @@ class JDBCConnectorConf extends ConnectorConf {
   override def getWriterConf: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap - FETCH_SIZE - FORMAT - SAVEMODE - PARTITION_COLUMN - LOWER_BOUND - UPPER_BOUND
+  }
+
+  @throws[java.lang.IllegalArgumentException]
+  def getJDBCOptions: JDBCOptions = {
+    val parameters: Map[String, String] = Array(
+      JDBCConnectorConf.USER,
+      JDBCConnectorConf.PASSWORD,
+      JDBCConnectorConf.URL,
+      JDBCConnectorConf.DB_TABLE
+    ).collect {
+      case key: String if this.has(key) => key -> this.get(key).get
+    }.toMap
+
+    new JDBCOptions(parameters)
   }
 
 }
