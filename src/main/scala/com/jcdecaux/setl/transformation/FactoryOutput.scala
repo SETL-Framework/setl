@@ -27,9 +27,8 @@ private[setl] case class FactoryOutput(override val runtimeType: runtime.univers
   private[this] def payloadField: List[String] = {
     val isDataset = this.runtimeType.baseClasses.head.asClass == runtime.universe.symbolOf[Dataset[_]].asClass
 
-    val isNative = {
-      val runtimeTypeName = runtimeType.toString
-      typeToExclude.contains(runtimeTypeName) || runtimeTypeName.startsWith("scala") || runtimeTypeName.startsWith("java")
+    val isCaseClass = {
+      runtimeType.baseClasses.head.asClass.isCaseClass
     }
 
     if (isDataset) {
@@ -38,7 +37,7 @@ private[setl] case class FactoryOutput(override val runtimeType: runtime.univers
         i => s">${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
       }
 
-    } else if (!isNative) {
+    } else if (isCaseClass) {
       val typeArgFields = super.getTypeArgList(this.runtimeType)
       typeArgFields.map {
         i => s"-${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"

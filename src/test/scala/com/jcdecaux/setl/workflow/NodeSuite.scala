@@ -491,6 +491,30 @@ class NodeSuite extends AnyFunSuite {
     )
 
     println(node2.toDiagram)
+
+    val node3 = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(argTypes = List(runtime.universe.typeOf[String]), producer = classOf[External])
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[ComplexProduct], List())
+    )
+
+    println(node3.toDiagram)
+
+    val node4 = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(argTypes = List(runtime.universe.typeOf[String]), producer = classOf[External])
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[String], List())
+    )
+
+    println(node4.toDiagram)
   }
 
 }
