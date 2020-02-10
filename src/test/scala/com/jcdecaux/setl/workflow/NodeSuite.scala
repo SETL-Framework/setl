@@ -4,6 +4,8 @@ import java.util.UUID
 
 import com.jcdecaux.setl.annotation.Delivery
 import com.jcdecaux.setl.exception.InvalidDeliveryException
+import com.jcdecaux.setl.storage.connector.Connector
+import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.transformation.{Factory, FactoryDeliveryMetadata, FactoryOutput}
 import org.apache.spark.sql.Dataset
 import org.scalatest.funsuite.AnyFunSuite
@@ -463,6 +465,32 @@ class NodeSuite extends AnyFunSuite {
                            |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output
                            |""".stripMargin
     assert(node.toDiagram.replaceAll("\n|\r\n|\r", System.getProperty("line.separator")) === expectedOutput)
+  }
+
+  test("Node should be able to generate a Mermaid diagram without throwing errors") {
+    val node = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(argTypes = List(runtime.universe.typeOf[String]), producer = classOf[External])
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[SparkRepository[String]], List())
+    )
+
+    println(node.toDiagram)
+
+    val node2 = Node(
+      factoryClass = classOf[Producer1],
+      factoryUUID = uuid1,
+      stage = 0,
+      setters = List(
+        testMetadata.copy(argTypes = List(runtime.universe.typeOf[String]), producer = classOf[External])
+      ),
+      output = FactoryOutput(runtime.universe.typeOf[Connector], List())
+    )
+
+    println(node2.toDiagram)
   }
 
 }

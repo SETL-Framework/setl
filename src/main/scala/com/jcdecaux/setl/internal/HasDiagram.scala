@@ -11,13 +11,18 @@ trait HasDiagram {
   def diagramId: String
 
   protected def getTypeArgList(tpe: runtime.universe.Type): List[runtime.universe.Symbol] = {
-    tpe
+    val baseClass = tpe
       .baseClasses.head
       .asClass
-      .primaryConstructor
-      .typeSignature
-      .paramLists
-      .head
+
+    if (baseClass.isAbstract) {
+      List()
+    } else {
+      baseClass.primaryConstructor
+        .typeSignature
+        .paramLists
+        .head
+    }
   }
 
   protected def formatDiagramId(prettyName: String,
