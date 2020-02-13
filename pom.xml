@@ -57,7 +57,7 @@
         <scala.compat.version>2.12</scala.compat.version>
         <spark.version>2.4.5</spark.version>
         <spark.compat.version>2.4</spark.compat.version>
-        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
+        <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
         <site.plugin.version>3.7.1</site.plugin.version>
         <dependencies.scope>provided</dependencies.scope>
         <app.environment>local</app.environment>
@@ -330,18 +330,18 @@
 
     <profiles>
         <profile>
-            <id>scala_2.11</id>
-            <properties>
-                <scala.version>2.11.12</scala.version>
-                <scala.compat.version>2.11</scala.compat.version>
-            </properties>
-        </profile>
-
-        <profile>
             <id>scala_2.12</id>
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>scala_2.11</id>
+            <properties>
+                <scala.version>2.11.12</scala.version>
+                <scala.compat.version>2.11</scala.compat.version>
             </properties>
         </profile>
 
