@@ -46,6 +46,17 @@
         <url>https://github.com/JCDecaux/setl/tree/master</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>maven.apache.org</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>ossrh-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+
     <properties>
         <revision>0.4.2</revision>
         <changelist>-SNAPSHOT</changelist>
@@ -53,11 +64,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
         <java.version>1.8</java.version>
-        <scala.version>2.12.10</scala.version>
-        <scala.compat.version>2.12</scala.compat.version>
-        <spark.version>2.4.5</spark.version>
-        <spark.compat.version>2.4</spark.compat.version>
-        <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
+        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
         <site.plugin.version>3.7.1</site.plugin.version>
         <dependencies.scope>provided</dependencies.scope>
         <app.environment>local</app.environment>
@@ -374,7 +381,7 @@
         <profile>
             <id>release</id>
             <properties>
-                <changelist></changelist>
+                <changelist/>
             </properties>
             <build>
                 <plugins>
@@ -400,13 +407,6 @@
                     <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
-        </profile>
-
-        <profile>
-            <id>compile</id>
-            <properties>
-                <dependencies.scope>compile</dependencies.scope>
-            </properties>
         </profile>
     </profiles>
 </project>
