@@ -59,6 +59,9 @@
 
     <properties>
         <revision>0.4.2</revision>
+        <changelist>-SNAPSHOT</changelist>
+        <scala.version>2.12.10</scala.version>
+        <scala.compat.version>2.12</scala.compat.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
@@ -340,22 +343,6 @@
 
     <profiles>
         <profile>
-            <id>scala_2.12</id>
-            <properties>
-                <scala.version>2.12.10</scala.version>
-                <scala.compat.version>2.12</scala.compat.version>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>scala_2.11</id>
-            <properties>
-                <scala.version>2.11.12</scala.version>
-                <scala.compat.version>2.11</scala.compat.version>
-            </properties>
-        </profile>
-
-        <profile>
             <id>spark_2.4</id>
             <properties>
                 <spark.version>2.4.5</spark.version>
@@ -387,7 +374,7 @@
         <profile>
             <id>release</id>
             <properties>
-                <changelist/>
+                <changelist></changelist>
             </properties>
             <build>
                 <plugins>
