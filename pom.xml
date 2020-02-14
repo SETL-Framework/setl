@@ -10,8 +10,8 @@
 
     <name>SETL</name>
     <description>
-        SETL is an open-source Spark ETL framework that helps developers to structure ETL projects,
-        modularize data transformation components and speed up the development.
+        SETL is an open-source Scala framework powered by Apache Spark that helps developers to structure ETL projects,
+        modularize data transformation logic and speed up the development.
     </description>
     <url>https://github.com/JCDecaux/setl</url>
 
