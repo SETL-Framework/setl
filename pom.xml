@@ -58,7 +58,7 @@
     </repositories>
 
     <properties>
-        <revision>0.4.2</revision>
+        <revision>0.4.3</revision>
         <changelist>-SNAPSHOT</changelist>
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
