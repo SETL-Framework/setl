@@ -144,6 +144,57 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     assertThrows[NoSuchElementException](pipeline2.getOutput(classOf[ProductFactory]))
   }
 
+  test("Check deliveries before running pipeline") {
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
+    val errorMessage = "requirement failed"
+
+    // 1) Missing input Delivery in the first Factory
+    val pipeline = new Pipeline()
+      .addStage[DatasetFactory](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline.run()).getMessage == errorMessage)
+
+    // 2) No missing input Delivery in the first Factory
+    new Pipeline()
+      .setInput[Product1](Product1("product1"))
+      .addStage[DatasetFactory](Array(spark))
+      .run()
+
+    // 3) Missing input and factory output Delivery in the second Factory
+    val pipeline3 = new Pipeline()
+      .addStage[Product2Factory]()
+      .addStage[DatasetFactory](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline3.run()).getMessage == errorMessage)
+
+    // 4) No missing input Delivery in the second Factory
+    new Pipeline()
+      .setInput[Product1](Product1("good product1"))
+      .addStage[Product2Factory]()
+      .addStage[DatasetFactory](Array(spark))
+      .run()
+
+    // 5) No missing factory output Delivery in the second Factory
+    new Pipeline()
+      .setInput[String]("good string")
+      .addStage[ProductFactory]()
+      .addStage[DatasetFactory](Array(spark))
+      .run()
+      .getOutput[Product1](classOf[ProductFactory])
+
+    // 6) Missing input Delivery in the first Factory because of deliveryId
+    val pipeline6 = new Pipeline()
+      .setInput[Product1](Product1("good product1"), deliveryId = "goodId")
+      .addStage[DatasetFactory](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline6.run()).getMessage == errorMessage)
+
+    // 7) Missing input Delivery in the second Factory because of deliveryId
+    // The first Factory is not even run
+    val pipeline7 = new Pipeline()
+      .setInput[Product1](Product1("good product1"), deliveryId = "goodId")
+      .addStage[Product2Factory]()
+      .addStage[DatasetFactory](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline7.run()).getMessage == errorMessage)
+  }
+
   test("Test Dataset pipeline") {
     val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
     import spark.implicits._

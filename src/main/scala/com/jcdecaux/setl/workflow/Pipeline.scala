@@ -4,6 +4,7 @@ import com.jcdecaux.setl.BenchmarkResult
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
+import com.jcdecaux.setl.util.ReflectUtils
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
@@ -284,6 +285,30 @@ class Pipeline extends Logging
   /** Execute the pipeline */
   def run(): this.type = {
     inspectPipeline()
+
+    // Find all deliverables in Pipeline
+    val pipelineDeliverables = _deliverableDispatcher
+      .getRegistry
+      .values
+      .map(v => s"${ReflectUtils.getPrettyName(v.runtimeType)} ${v.deliveryId}")
+      .toSet
+
+    // Find middle factories output that can be used as a deliverable
+    val stagesOutput = stages
+      .flatMap(s => s.factories)
+      .dropRight(1)
+      .map(factory => s"${ReflectUtils.getPrettyName(factory.deliveryType())} ${factory.deliveryId}")
+      .toSet
+
+    // Find all needed deliverables
+    val neededDeliverables = stages
+      .flatMap(s => s.createNodes())
+      .flatMap(node => node.input)
+      .map(input => s"${ReflectUtils.getPrettyName(input.runtimeType)} ${input.deliveryId}")
+      .toSet
+
+    require(neededDeliverables.subsetOf(pipelineDeliverables ++ stagesOutput))
+
     _benchmarkResult = stages
       .flatMap {
         stage =>
