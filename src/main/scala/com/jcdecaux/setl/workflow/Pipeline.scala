@@ -304,7 +304,11 @@ class Pipeline extends Logging
     val neededDeliverables = stages
       .flatMap(s => s.createNodes())
       .flatMap(node => node.input)
-      .map(input => s"${ReflectUtils.getPrettyName(input.runtimeType)} ${input.deliveryId}")
+      .filter(input => !input.optional)
+      .map(input => {
+        if (input.autoLoad) s"${ReflectUtils.getPrettyName(input.runtimeType)} ${input.deliveryId}".replaceAll("Dataset", "SparkRepository")
+        else s"${ReflectUtils.getPrettyName(input.runtimeType)} ${input.deliveryId}"
+      })
       .toSet
 
     require(neededDeliverables.subsetOf(pipelineDeliverables ++ stagesOutput))

@@ -17,4 +17,6 @@ import scala.reflect.runtime
  */
 private[setl] case class FactoryInput(override val runtimeType: runtime.universe.Type,
                                       producer: Class[_],
-                                      deliveryId: String = Deliverable.DEFAULT_ID) extends HasType
+                                      deliveryId: String = Deliverable.DEFAULT_ID,
+                                      autoLoad: Boolean,
+                                      optional: Boolean) extends HasType

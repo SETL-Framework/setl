@@ -52,7 +52,7 @@ class PipelineInspectorSuite extends AnyFunSuite {
       .addStage[WrongLastFactory]()
       .describe()
 
-    assertThrows[NoSuchElementException](pipeline.run())
+    assertThrows[IllegalArgumentException](pipeline.run())
   }
 }
 
