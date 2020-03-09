@@ -10,4 +10,8 @@ trait HasSparkSession {
     case _ => throw new SparkException("No active Spark session")
   }
 
+  def setJobDescription(desc: String): Unit = spark.sparkContext.setJobDescription(desc)
+
+  def setJobGroup(group: String): Unit = spark.sparkContext.setJobGroup(group, null)
+
 }
