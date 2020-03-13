@@ -193,6 +193,15 @@ class PipelineSuite extends AnyFunSuite with Matchers {
       .addStage[Product2Factory]()
       .addStage[DatasetFactory](Array(spark))
     assert(the[IllegalArgumentException].thrownBy(pipeline7.run()).getMessage == errorMessage)
+
+    // 8) No missing factory output Delivery in the second factory of the second Stage
+    val stage = new Stage()
+    stage.addFactory(classOf[Product2Factory]).addFactory(classOf[DatasetFactory], spark).parallel(false)
+    new Pipeline()
+      .setInput[String]("good string")
+      .addStage[ProductFactory]()
+      .addStage(stage)
+      .run()
   }
 
   test("Test Dataset pipeline") {

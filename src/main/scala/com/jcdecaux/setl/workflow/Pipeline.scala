@@ -295,8 +295,8 @@ class Pipeline extends Logging
 
     // Find middle factories output that can be used as a deliverable
     val stagesOutput = stages
-      .flatMap(s => s.factories)
       .dropRight(1)
+      .flatMap(s => s.factories)
       .map(factory => s"${ReflectUtils.getPrettyName(factory.deliveryType())} ${factory.deliveryId}")
       .toSet
 
