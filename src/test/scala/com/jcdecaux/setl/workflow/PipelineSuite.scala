@@ -235,6 +235,13 @@ class PipelineSuite extends AnyFunSuite with Matchers {
       .setInput[String]("still a good consumer")
       .addStage[ProductFactory]()
       .run()
+
+    // 13) Missing factory output due to wrong consumer
+    val pipeline13 = new Pipeline()
+      .setInput[String]("test")
+      .addStage[ProductFactoryBis]()
+      .addStage[DatasetFactoryBis2](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline13.run()).getMessage == errorMessage)
   }
 
   test("Test Dataset pipeline") {
@@ -670,6 +677,8 @@ object PipelineSuite {
     override def write(): ProductFactoryBis.this.type = this
 
     override def get(): Product1 = output
+
+    override def consumers: Seq[Class[_ <: Factory[_]]] = Seq(classOf[DatasetFactoryBis])
   }
 
   class Product2Factory extends Factory[Product2] {
@@ -764,6 +773,26 @@ object PipelineSuite {
     }
 
     override def write(): DatasetFactoryBis.this.type = this
+
+    override def get(): Dataset[Product1] = output
+  }
+
+  class DatasetFactoryBis2(spark: SparkSession) extends Factory[Dataset[Product1]] {
+
+    import spark.implicits._
+
+    @Delivery
+    var p1: Product1 = _
+    var output: Dataset[Product1] = _
+
+    override def read(): DatasetFactoryBis2.this.type = this
+
+    override def process(): DatasetFactoryBis2.this.type = {
+      output = Seq(p1, Product1("pd1")).toDS
+      this
+    }
+
+    override def write(): DatasetFactoryBis2.this.type = this
 
     override def get(): Dataset[Product1] = output
   }
