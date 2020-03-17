@@ -13,14 +13,16 @@ import scala.reflect.runtime
  * DeliverySetterMetadata contains information of the @Delivery annotated method, including the name,
  * argument types, the producer and optional
  *
- * @param factoryUUID UUID of factory
- * @param symbol      symbol of the method
- * @param argTypes    type of each argument
- * @param producer    the producer class for the given data
- * @param optional    true if optional
+ * @param factoryUUID  UUID of factory
+ * @param factoryClass class of factory that has this delivery
+ * @param symbol       symbol of the method
+ * @param argTypes     type of each argument
+ * @param producer     the producer class for the given data
+ * @param optional     true if optional
  */
 @InterfaceStability.Evolving
 private[setl] case class FactoryDeliveryMetadata(factoryUUID: UUID,
+                                                 factoryClass: Class[_ <: Factory[_]],
                                                  symbol: runtime.universe.Symbol,
                                                  deliverySetter: Either[Field, Method],
                                                  argTypes: List[runtime.universe.Type],
@@ -38,7 +40,7 @@ private[setl] case class FactoryDeliveryMetadata(factoryUUID: UUID,
    *
    * @return
    */
-  def getFactoryInputs(consumer: Class[_ <: Factory[_]]): List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer, id, autoLoad, optional, consumer))
+  def getFactoryInputs: List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer, id, autoLoad, optional, factoryClass))
 
   def isDataset: List[Boolean] = argTypes.map {
     tp => tp.toString.startsWith(runtime.universe.typeOf[Dataset[_]].toString.dropRight(2))
@@ -107,6 +109,7 @@ private[setl] object FactoryDeliveryMetadata {
 
           FactoryDeliveryMetadata(
             factoryUUID = factoryUUID,
+            factoryClass = cls,
             symbol = symbol,
             deliverySetter = deliverySetter,
             argTypes = argTypes,

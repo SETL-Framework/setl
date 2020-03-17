@@ -4,7 +4,7 @@ import com.jcdecaux.setl.BenchmarkResult
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
-import com.jcdecaux.setl.util.{CheckDeliverable, ReflectUtils}
+import com.jcdecaux.setl.util.{ExpectedDeliverable, ReflectUtils}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
@@ -283,7 +283,7 @@ class Pipeline extends Logging
   }
 
   /** Find all the Deliverables that are set as Input in the Pipeline */
-  private[this] def getPipelineDeliverables(deliverableDispatcher: DeliverableDispatcher): Set[CheckDeliverable] = {
+  private[this] def getPipelineDeliverables(deliverableDispatcher: DeliverableDispatcher): Set[ExpectedDeliverable] = {
     deliverableDispatcher
       .getRegistry
       .values
@@ -291,7 +291,7 @@ class Pipeline extends Logging
         if (v.consumer.nonEmpty) {
           v.consumer.map(
             consumer =>
-              CheckDeliverable(
+              ExpectedDeliverable(
                 deliverableType = ReflectUtils.getPrettyName(v.runtimeType),
                 deliveryId = v.deliveryId,
                 producer = v.producer,
@@ -299,7 +299,7 @@ class Pipeline extends Logging
               )
           )
         } else {
-          Seq(CheckDeliverable(
+          Seq(ExpectedDeliverable(
             deliverableType = ReflectUtils.getPrettyName(v.runtimeType),
             deliveryId = v.deliveryId,
             producer = v.producer,
@@ -311,7 +311,7 @@ class Pipeline extends Logging
   }
 
   /** */
-  private[this] def getStagesMiddleOutputs(stages: List[Stage]): Set[CheckDeliverable] = {
+  private[this] def getStagesMiddleOutputs(stages: List[Stage]): Set[ExpectedDeliverable] = {
     stages
       .dropRight(1)
       .flatMap(s => s.factories)
@@ -319,7 +319,7 @@ class Pipeline extends Logging
         if (factory.consumers.nonEmpty) {
           factory.consumers.map(
             consumer =>
-              CheckDeliverable(
+              ExpectedDeliverable(
                 deliverableType = ReflectUtils.getPrettyName(factory.deliveryType()),
                 deliveryId = factory.deliveryId,
                 producer = factory.getClass,
@@ -327,7 +327,7 @@ class Pipeline extends Logging
               )
           )
         } else {
-          Seq(CheckDeliverable(
+          Seq(ExpectedDeliverable(
             deliverableType = ReflectUtils.getPrettyName(factory.deliveryType()),
             deliveryId = factory.deliveryId,
             producer = factory.getClass,
@@ -339,21 +339,21 @@ class Pipeline extends Logging
   }
 
   /** */
-  private[this] def getNeededDeliverables(stages: List[Stage]): Set[CheckDeliverable] = {
+  private[this] def getNeededDeliverables(stages: List[Stage]): Set[ExpectedDeliverable] = {
     stages
       .flatMap(s => s.createNodes())
       .flatMap(node => node.input)
       .filter(input => !input.optional)
       .map(input => {
         if (input.autoLoad) {
-          CheckDeliverable(
+          ExpectedDeliverable(
             deliverableType = ReflectUtils.getPrettyName(input.runtimeType).replaceAll("Dataset", "SparkRepository"),
             deliveryId = input.deliveryId,
             producer = input.producer,
             consumer = input.consumer
           )
         } else {
-          CheckDeliverable(
+          ExpectedDeliverable(
             deliverableType = ReflectUtils.getPrettyName(input.runtimeType),
             deliveryId = input.deliveryId,
             producer = input.producer,
@@ -365,10 +365,10 @@ class Pipeline extends Logging
   }
 
   /** */
-  private[this] def compareDeliverables(availableDeliverables: Set[CheckDeliverable], neededDeliverables: Set[CheckDeliverable]): Unit = {
+  private[this] def compareDeliverables(availableDeliverables: Set[ExpectedDeliverable], neededDeliverables: Set[ExpectedDeliverable]): Unit = {
     neededDeliverables.foreach(
       needed => {
-        var potentialDeliverables: Set[CheckDeliverable] = Set()
+        var potentialDeliverables: Set[ExpectedDeliverable] = Set()
         // Producer is not set in a @Deliverable (neededDeliverable)
         if (ReflectUtils.getPrettyName(needed.producer) == classOf[External].getSimpleName) {
           potentialDeliverables = availableDeliverables.filter(available => {
