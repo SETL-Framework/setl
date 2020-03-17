@@ -20,4 +20,4 @@ private[setl] case class FactoryInput(override val runtimeType: runtime.universe
                                       deliveryId: String = Deliverable.DEFAULT_ID,
                                       autoLoad: Boolean,
                                       optional: Boolean,
-                                      factoryClass: Class[_ <: Factory[_]]) extends HasType
+                                      consumer: Class[_ <: Factory[_]]) extends HasType
