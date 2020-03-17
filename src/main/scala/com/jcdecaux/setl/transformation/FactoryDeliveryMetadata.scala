@@ -38,7 +38,7 @@ private[setl] case class FactoryDeliveryMetadata(factoryUUID: UUID,
    *
    * @return
    */
-  def getFactoryInputs: List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer, id, autoLoad, optional))
+  def getFactoryInputs(consumer: Class[_ <: Factory[_]]): List[FactoryInput] = argTypes.map(tp => FactoryInput(tp, producer, id, autoLoad, optional, consumer))
 
   def isDataset: List[Boolean] = argTypes.map {
     tp => tp.toString.startsWith(runtime.universe.typeOf[Dataset[_]].toString.dropRight(2))

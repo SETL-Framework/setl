@@ -47,7 +47,7 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
 
   override def getPrettyName: String = ReflectUtils.getPrettyName(factoryClass)
 
-  def input: List[FactoryInput] = setters.flatMap(s => s.getFactoryInputs)
+  def input: List[FactoryInput] = setters.flatMap(s => s.getFactoryInputs(factoryClass))
 
   def listInputProducers: List[Class[_]] = this.input.map(_.producer)
 

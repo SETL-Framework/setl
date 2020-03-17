@@ -178,7 +178,6 @@ class PipelineSuite extends AnyFunSuite with Matchers {
       .addStage[ProductFactory]()
       .addStage[DatasetFactory](Array(spark))
       .run()
-      .getOutput[Product1](classOf[ProductFactory])
 
     // 6) Missing input Delivery in the first Factory because of deliveryId
     val pipeline6 = new Pipeline()
@@ -201,6 +200,40 @@ class PipelineSuite extends AnyFunSuite with Matchers {
       .setInput[String]("good string")
       .addStage[ProductFactory]()
       .addStage(stage)
+      .run()
+
+    // 9) Missing input Delivery due to wrong producer
+    val pipeline9 = new Pipeline()
+      .setInput[Product1](Product1("wrong product1"))
+      .addStage[DatasetFactoryBis](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline9.run()).getMessage == errorMessage)
+    val pipeline9bis = new Pipeline()
+      .setInput[String]("wrong product1")
+      .addStage[ProductFactory]()
+      .addStage[DatasetFactoryBis](Array(spark))
+    assert(the[IllegalArgumentException].thrownBy(pipeline9bis.run()).getMessage == errorMessage)
+
+    // 10) No missing factory output Delivery
+    new Pipeline()
+      .setInput[String]("good product1")
+      .addStage[ProductFactoryBis]()
+      .addStage[DatasetFactoryBis](Array(spark))
+      .run()
+
+    // 11) Missing input Delivery due to wrong consumer
+    val pipeline11 = new Pipeline()
+      .setInput[String]("wrong consumer", consumer = classOf[DatasetFactory])
+      .addStage[ProductFactory]()
+    assert(the[IllegalArgumentException].thrownBy(pipeline11.run()).getMessage == errorMessage)
+
+    // 12 No missing input Delivery due to wrong consumer
+    new Pipeline()
+      .setInput[String]("good consumer", consumer = classOf[ProductFactory])
+      .addStage[ProductFactory]()
+      .run()
+    new Pipeline()
+      .setInput[String]("still a good consumer")
+      .addStage[ProductFactory]()
       .run()
   }
 
@@ -622,6 +655,23 @@ object PipelineSuite {
     override def get(): Product1 = output
   }
 
+  class ProductFactoryBis extends Factory[Product1] {
+    @Delivery
+    private[this] val id: String = null
+    private[this] var output: Product1 = _
+
+    override def read(): ProductFactoryBis.this.type = this
+
+    override def process(): ProductFactoryBis.this.type = {
+      output = Product1(id)
+      this
+    }
+
+    override def write(): ProductFactoryBis.this.type = this
+
+    override def get(): Product1 = output
+  }
+
   class Product2Factory extends Factory[Product2] {
     var output: Product2 = _
 
@@ -694,6 +744,26 @@ object PipelineSuite {
     }
 
     override def write(): DatasetFactory.this.type = this
+
+    override def get(): Dataset[Product1] = output
+  }
+
+  class DatasetFactoryBis(spark: SparkSession) extends Factory[Dataset[Product1]] {
+
+    import spark.implicits._
+
+    @Delivery(producer = classOf[ProductFactoryBis])
+    var p1: Product1 = _
+    var output: Dataset[Product1] = _
+
+    override def read(): DatasetFactoryBis.this.type = this
+
+    override def process(): DatasetFactoryBis.this.type = {
+      output = Seq(p1, Product1("pd1")).toDS
+      this
+    }
+
+    override def write(): DatasetFactoryBis.this.type = this
 
     override def get(): Dataset[Product1] = output
   }

@@ -4,7 +4,7 @@ import com.jcdecaux.setl.BenchmarkResult
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{Deliverable, Factory}
-import com.jcdecaux.setl.util.ReflectUtils
+import com.jcdecaux.setl.util.{CheckDeliverable, ReflectUtils}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
@@ -282,36 +282,125 @@ class Pipeline extends Logging
     this
   }
 
+  /** Find all the Deliverables that are set as Input in the Pipeline */
+  private[this] def getPipelineDeliverables(deliverableDispatcher: DeliverableDispatcher): Set[CheckDeliverable] = {
+    deliverableDispatcher
+      .getRegistry
+      .values
+      .flatMap(v =>
+        if (v.consumer.nonEmpty) {
+          v.consumer.map(
+            consumer =>
+              CheckDeliverable(
+                deliverableType = ReflectUtils.getPrettyName(v.runtimeType),
+                deliveryId = v.deliveryId,
+                producer = v.producer,
+                consumer = consumer
+              )
+          )
+        } else {
+          Seq(CheckDeliverable(
+            deliverableType = ReflectUtils.getPrettyName(v.runtimeType),
+            deliveryId = v.deliveryId,
+            producer = v.producer,
+            consumer = null
+          ))
+        }
+      )
+      .toSet
+  }
+
+  /** */
+  private[this] def getStagesMiddleOutputs(stages: List[Stage]): Set[CheckDeliverable] = {
+    stages
+      .dropRight(1)
+      .flatMap(s => s.factories)
+      .flatMap(factory =>
+        if (factory.consumers.nonEmpty) {
+          factory.consumers.map(
+            consumer =>
+              CheckDeliverable(
+                deliverableType = ReflectUtils.getPrettyName(factory.deliveryType()),
+                deliveryId = factory.deliveryId,
+                producer = factory.getClass,
+                consumer = consumer
+              )
+          )
+        } else {
+          Seq(CheckDeliverable(
+            deliverableType = ReflectUtils.getPrettyName(factory.deliveryType()),
+            deliveryId = factory.deliveryId,
+            producer = factory.getClass,
+            consumer = null
+          ))
+        }
+      )
+      .toSet
+  }
+
+  /** */
+  private[this] def getNeededDeliverables(stages: List[Stage]): Set[CheckDeliverable] = {
+    stages
+      .flatMap(s => s.createNodes())
+      .flatMap(node => node.input)
+      .filter(input => !input.optional)
+      .map(input => {
+        if (input.autoLoad) {
+          CheckDeliverable(
+            deliverableType = ReflectUtils.getPrettyName(input.runtimeType).replaceAll("Dataset", "SparkRepository"),
+            deliveryId = input.deliveryId,
+            producer = input.producer,
+            consumer = input.consumer
+          )
+        } else {
+          CheckDeliverable(
+            deliverableType = ReflectUtils.getPrettyName(input.runtimeType),
+            deliveryId = input.deliveryId,
+            producer = input.producer,
+            consumer = input.consumer
+          )
+        }
+      })
+      .toSet
+  }
+
+  /** */
+  private[this] def compareDeliverables(availableDeliverables: Set[CheckDeliverable], neededDeliverables: Set[CheckDeliverable]): Unit = {
+    neededDeliverables.foreach(
+      needed => {
+        var potentialDeliverables: Set[CheckDeliverable] = Set()
+        // Producer is not set in a @Deliverable (neededDeliverable)
+        if (ReflectUtils.getPrettyName(needed.producer) == classOf[External].getSimpleName) {
+          potentialDeliverables = availableDeliverables.filter(available => {
+            available.deliverableType == needed.deliverableType && available.deliveryId == needed.deliveryId
+          })
+        } else {
+          // Producer is set in a @Deliverable (neededDeliverable)
+          potentialDeliverables = availableDeliverables.filter(available => {
+            available.deliverableType == needed.deliverableType && available.deliveryId == needed.deliveryId && available.producer == needed.producer
+          })
+        }
+        // If there is no available deliverable with the correct consumer, we need to find one without consumer
+        // If there is, no requirement is needed
+        if (!potentialDeliverables.exists(p => needed.consumer == p.consumer)) {
+          require(potentialDeliverables.exists(p => p.consumer == null))
+        }
+      }
+    )
+  }
+
   /** Execute the pipeline */
   def run(): this.type = {
     inspectPipeline()
 
     // Find all deliverables in Pipeline
-    val pipelineDeliverables = _deliverableDispatcher
-      .getRegistry
-      .values
-      .map(v => s"${ReflectUtils.getPrettyName(v.runtimeType)} ${v.deliveryId}")
-      .toSet
-
+    val pipelineDeliverables = getPipelineDeliverables(_deliverableDispatcher)
     // Find middle factories output that can be used as a deliverable
-    val stagesOutput = stages
-      .dropRight(1)
-      .flatMap(s => s.factories)
-      .map(factory => s"${ReflectUtils.getPrettyName(factory.deliveryType())} ${factory.deliveryId}")
-      .toSet
-
+    val stagesOutput = getStagesMiddleOutputs(stages)
     // Find all needed deliverables
-    val neededDeliverables = stages
-      .flatMap(s => s.createNodes())
-      .flatMap(node => node.input)
-      .filter(input => !input.optional)
-      .map(input => {
-        if (input.autoLoad) s"${ReflectUtils.getPrettyName(input.runtimeType)} ${input.deliveryId}".replaceAll("Dataset", "SparkRepository")
-        else s"${ReflectUtils.getPrettyName(input.runtimeType)} ${input.deliveryId}"
-      })
-      .toSet
+    val neededDeliverables = getNeededDeliverables(stages)
 
-    require(neededDeliverables.subsetOf(pipelineDeliverables ++ stagesOutput))
+    compareDeliverables(pipelineDeliverables ++ stagesOutput, neededDeliverables)
 
     _benchmarkResult = stages
       .flatMap {
