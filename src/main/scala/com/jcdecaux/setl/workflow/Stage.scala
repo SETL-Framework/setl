@@ -5,7 +5,7 @@ import com.jcdecaux.setl.annotation.{Benchmark, InterfaceStability}
 import com.jcdecaux.setl.exception.AlreadyExistsException
 import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{AbstractFactory, Deliverable, Factory}
-import com.jcdecaux.setl.util.HasSparkSession
+import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
@@ -21,8 +21,7 @@ class Stage extends Logging
   with HasRegistry[Factory[_]]
   with HasDescription
   with HasBenchmark
-  with Writable
-  with HasSparkSession {
+  with Writable {
 
   this._benchmark = Some(true)
   private[this] var _optimization: Boolean = false
@@ -31,6 +30,10 @@ class Stage extends Logging
   private[this] var _stageId: Int = _
   private[this] var _deliverable: Array[Deliverable[_]] = _
   private[this] val _benchmarkResult: ArrayBuffer[BenchmarkResult] = ArrayBuffer.empty
+
+  // Stage doesn't inherit "HasSparkSession" because we want to keep the framework
+  // working for applications that don't use spark
+  private[this] val _spark: Option[SparkSession] = SparkSession.getActiveSession
 
   private[workflow] def end: Boolean = _end
 
@@ -234,7 +237,7 @@ class Stage extends Logging
   private[this] val runFactory: Factory[_] => Deliverable[_] = {
     factory: Factory[_] =>
       // Set job group to the factory name
-      super.setJobGroup(factory.getPrettyName)
+      this.withSparkSessionDo(_.sparkContext.setJobGroup(factory.getPrettyName, null))
 
       if (this.benchmark.getOrElse(false) && factory.getClass.isAnnotationPresent(classOf[Benchmark])) {
         // Benchmark the factory when this stage has the Benchmark set to true and
@@ -253,7 +256,7 @@ class Stage extends Logging
       }
 
       // Clear the job group after the execution
-      super.clearJobGroup()
+      this.withSparkSessionDo(_.sparkContext.clearJobGroup())
       factory.getDelivery
   }
 
@@ -275,6 +278,19 @@ class Stage extends Logging
   private[workflow] def createNodes(): Array[Node] = {
     factories.map { fac =>
       new Node(factory = fac, this.stageId, end)
+    }
+  }
+
+  /**
+   * When SparkSession is presented, invoke the method 'fun'
+   *
+   * @param fun method of SparkSession
+   * @return Any value
+   */
+  private[this] def withSparkSessionDo(fun: SparkSession => Any): Any = {
+    this._spark match {
+      case Some(ss) => fun(ss)
+      case _ =>
     }
   }
 
