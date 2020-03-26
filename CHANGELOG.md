@@ -1,3 +1,11 @@
+## 0.4.3 (2020-03-26)
+New Features:
+- Added pipeline dependency check before starting the spark job (#113)
+- Added default Spark job group and description (#115)
+
+## 0.4.2 (2020-02-15)
+- Fixed cross building issue (#111)
+
 ## 0.4.1 (2020-02-13)
 Changes:
 - Changed benchmark unit of time to *seconds* (#88)
