@@ -14,4 +14,8 @@ trait HasSparkSession {
 
   def setJobGroup(group: String): Unit = spark.sparkContext.setJobGroup(group, null)
 
+  def setJobGroup(group: String, description: String): Unit = spark.sparkContext.setJobGroup(group, description)
+
+  def clearJobGroup(): Unit = spark.sparkContext.clearJobGroup()
+
 }

@@ -5,6 +5,7 @@ import com.jcdecaux.setl.annotation.{Benchmark, InterfaceStability}
 import com.jcdecaux.setl.exception.AlreadyExistsException
 import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.transformation.{AbstractFactory, Deliverable, Factory}
+import com.jcdecaux.setl.util.HasSparkSession
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.mutable.ParArray
@@ -20,7 +21,8 @@ class Stage extends Logging
   with HasRegistry[Factory[_]]
   with HasDescription
   with HasBenchmark
-  with Writable {
+  with Writable
+  with HasSparkSession {
 
   this._benchmark = Some(true)
   private[this] var _optimization: Boolean = false
@@ -231,16 +233,17 @@ class Stage extends Logging
   /** Execute a factory and return the deliverable of this factory */
   private[this] val runFactory: Factory[_] => Deliverable[_] = {
     factory: Factory[_] =>
+      // Set job group to the factory name
+      super.setJobGroup(factory.getPrettyName)
 
       if (this.benchmark.getOrElse(false) && factory.getClass.isAnnotationPresent(classOf[Benchmark])) {
-
-        // Benchmark the factory
+        // Benchmark the factory when this stage has the Benchmark set to true and
+        // the factory has the Benchmark annotation
         val factoryBench = handleBenchmark(factory)
         _benchmarkResult.append(factoryBench)
 
       } else {
-
-        // Without benchmarking
+        // Otherwise run the factory without benchmarking
         factory.read().process()
         if (shouldWrite(factory)) {
           log.debug(s"Persist output of ${factory.getPrettyName}")
@@ -249,11 +252,13 @@ class Stage extends Logging
 
       }
 
+      // Clear the job group after the execution
+      super.clearJobGroup()
       factory.getDelivery
   }
 
   /** Return true if both this stage and the factory are writable, otherwise false */
-  private[this] val shouldWrite: Factory[_] => Boolean = factory => {
+  private[this] val shouldWrite: Writable => Boolean = factory => {
     this.writable && factory.writable
   }
 
