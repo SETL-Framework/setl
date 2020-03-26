@@ -79,11 +79,13 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   override val storage: Storage = Storage.DYNAMODB
 
   private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
+    this.setJobDescription(s"Write data to table $tableName}")
     conf.getWriterConf.foreach(log.debug)
     writer(df).option("tableName", tableName).save()
   }
 
   override def read(): DataFrame = {
+    this.setJobDescription(s"Write data to table ${conf.getTable.getOrElse("unknown")}")
     log.debug(s"Reading DynamoDB table ${conf.getTable.get} in ${conf.getRegion.get}")
     conf.getReaderConf.foreach(log.debug)
     reader.option("tableName", conf.getTable.get).load()

@@ -7,7 +7,6 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.FileConnectorConf
-import com.jcdecaux.setl.util.HasSparkSession
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -441,6 +440,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector {
    * Write a [[DataFrame]] into the given path with the given save mode
    */
   def writeToPath(df: DataFrame, filepath: String): Unit = {
+    this.setJobDescription(s"Write file to $filepath")
     log.debug(s"(${Thread.currentThread().getId}) Write DataFrame to $filepath")
     incrementWriteCounter()
     writer(df).format(storage.toString.toLowerCase()).save(filepath)
@@ -481,6 +481,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector {
   @throws[org.apache.spark.sql.AnalysisException](s"$absolutePath doesn't exist")
   override def read(): DataFrame = {
     log.debug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
+    this.setJobDescription(s"Read file(s) from '${absolutePath.toString}'")
 
     val df = reader
       .option("basePath", basePath.toString)

@@ -186,11 +186,13 @@ class ExcelConnector(val path: String,
   }
 
   override def read(): DataFrame = {
+    this.setJobDescription(s"Read Excel from $path")
     reader.load(path)
   }
 
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
     if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
+    this.setJobDescription(s"Write Excel to $path")
     writer(df).save(path)
   }
 

@@ -76,6 +76,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   }
 
   override def read(): DataFrame = {
+    this.setJobDescription(s"Read table ${conf.getDbTable.getOrElse("unknown")}")
     _read.set(true)
     reader.load()
   }
@@ -83,6 +84,8 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   override def write(t: DataFrame, suffix: Option[String]): Unit = write(t)
 
   override def write(t: DataFrame): Unit = {
+    this.setJobDescription(s"Write data to table ${conf.getDbTable.getOrElse("unknown")}")
+
     conf.getSaveMode match {
       case Some(sm) =>
         /*

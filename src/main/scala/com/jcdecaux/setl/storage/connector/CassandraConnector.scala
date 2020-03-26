@@ -107,6 +107,8 @@ class CassandraConnector(val keyspace: String,
   private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
 
     log.debug(s"Write DataFrame to $keyspace.$table")
+    this.setJobDescription(s"Write data to cassandra table $keyspace.$table")
+
     writer(df)
       .cassandraFormat(table, keyspace)
       .save()
@@ -137,6 +139,7 @@ class CassandraConnector(val keyspace: String,
     log.debug(s"Create cassandra table $keyspace.$table")
     log.debug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
     log.debug(s"Clustering keys: ${clusteringKeyColumns.getOrElse(Seq("None")).mkString(", ")}")
+    this.setJobDescription(s"Create cassandra table $keyspace.$table")
     try {
       df.createCassandraTable(keyspace, table, partitionKeyColumns, clusteringKeyColumns)
     } catch {
@@ -165,12 +168,14 @@ class CassandraConnector(val keyspace: String,
    * @param keyspace keyspace name
    */
   private[this] def deleteCassandra(query: String, table: String, keyspace: String): Unit = {
+    this.setJobDescription(s"Delete data from cassandra table $keyspace.$table. Request: $query")
     spark.sparkContext.cassandraTable(keyspace, table)
       .where(query)
       .deleteFromCassandra(keyspace, table)
   }
 
   override def drop(): Unit = {
+    log.debug(s"Drop cassandra table $keyspace.$table")
     cqlConnection.withSessionDo {
       session =>
         session.execute(s"DROP TABLE IF EXISTS $keyspace.$table;")
@@ -179,6 +184,7 @@ class CassandraConnector(val keyspace: String,
 
   @throws[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException]("Make sure the strategy is correct")
   def createKeyspace(strategy: String, replicationFactor: Int): Unit = {
+    log.debug(s"Create cassandra keyspace $keyspace")
     cqlConnection.withSessionDo {
       session =>
         session.execute(s"CREATE KEYSPACE IF NOT EXISTS $keyspace WITH replication = {'class':'$strategy', 'replication_factor':$replicationFactor};")
@@ -186,6 +192,7 @@ class CassandraConnector(val keyspace: String,
   }
 
   private[this] def dropKeyspace(): Unit = {
+    log.debug(s"Drop cassandra keyspace $keyspace")
     cqlConnection.withSessionDo {
       session =>
         session.execute(s"DROP KEYSPACE IF EXISTS $keyspace;")
