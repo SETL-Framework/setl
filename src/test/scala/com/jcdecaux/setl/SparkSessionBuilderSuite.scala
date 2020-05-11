@@ -64,8 +64,6 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
 
     val sparkConf = new SparkConf(true)
       .set("spark.cassandra.connection.port", "9042")
-      .set("spark.cassandra.connection.keep_alive_ms", "5000")
-      .set("spark.cassandra.connection.timeout_ms", "30000")
       .set("spark.ui.showConsoleProgress", "false")
       .set("spark.ui.enabled", "false")
       .set("spark.cleaner.ttl", "3600")

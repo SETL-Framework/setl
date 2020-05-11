@@ -3,7 +3,7 @@ package com.jcdecaux.setl.storage.connector
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.enums.Storage
-import com.jcdecaux.setl.util.{HasSparkSession, TypesafeConfigUtils}
+import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.StructType
@@ -65,7 +65,7 @@ class ExcelConnector(val path: String,
 
   def this(conf: Conf) = this(
     path = conf.get("path").get,
-    useHeader = conf.get("useHeader").get,
+    useHeader = conf.get("header").getOrElse(conf.get("useHeader").get),
     dataAddress = conf.get("dataAddress").getOrElse("A1"),
     treatEmptyValuesAsNulls = conf.get("treatEmptyValuesAsNulls").getOrElse("true"),
     inferSchema = conf.get("inferSchema").getOrElse("false"),
@@ -88,7 +88,9 @@ class ExcelConnector(val path: String,
     path =
       TypesafeConfigUtils.getAs[String](config, "path").get,
     useHeader =
-      TypesafeConfigUtils.getAs[String](config, "useHeader").get,
+      TypesafeConfigUtils
+        .getAs[String](config, "header")
+        .getOrElse(TypesafeConfigUtils.getAs[String](config, "useHeader").get),
     dataAddress =
       TypesafeConfigUtils.getAs[String](config, "dataAddress").getOrElse("A1"),
     treatEmptyValuesAsNulls =
@@ -141,7 +143,7 @@ class ExcelConnector(val path: String,
     val _writer = df
       .write
       .format("com.crealytics.spark.excel")
-      .option("useHeader", useHeader)
+      .option("header", useHeader)
       .option("dataAddress", dataAddress)
       .option("timestampFormat", timestampFormat)
       .option("dateFormat", dateFormat) // Optional, default: yy-m-d h:mm
@@ -169,7 +171,7 @@ class ExcelConnector(val path: String,
     val reader = spark
       .read
       .format("com.crealytics.spark.excel")
-      .option("useHeader", useHeader)
+      .option("header", useHeader)
       .option("dataAddress", dataAddress)
       .option("treatEmptyValuesAsNulls", treatEmptyValuesAsNulls)
       .option("inferSchema", inferSchema)

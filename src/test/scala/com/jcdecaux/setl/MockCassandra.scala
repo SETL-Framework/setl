@@ -1,12 +1,12 @@
 package com.jcdecaux.setl
 
-import com.datastax.driver.core.Session
+import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.spark.connector.cql.CassandraConnector
 import org.apache.spark.SparkConf
 
 class MockCassandra(connector: CassandraConnector, keyspace: String) {
 
-  private def dropTable(table: String, session: Session): Unit = session.execute(s"DROP TABLE IF EXISTS $keyspace.$table;")
+  private def dropTable(table: String, session: CqlSession): Unit = session.execute(s"DROP TABLE IF EXISTS $keyspace.$table;")
 
   def dropKeyspace(): this.type = {
     connector.withSessionDo(session => {
@@ -326,8 +326,6 @@ object MockCassandra {
   val cassandraConf: SparkConf = new SparkConf(true)
     .set("spark.cassandra.connection.host", host)
     .set("spark.cassandra.connection.port", "9042")
-    .set("spark.cassandra.connection.keep_alive_ms", "5000")
-    .set("spark.cassandra.connection.timeout_ms", "30000")
     .set("spark.ui.showConsoleProgress", "false")
     .set("spark.ui.enabled", "false")
     .set("spark.cleaner.ttl", "3600")
