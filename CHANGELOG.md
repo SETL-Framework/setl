@@ -11,6 +11,7 @@ New Features:
 - Added default Spark job group and description (#115)
 
 Fixes
+- Fixed path separator in FileConnectorSuite
 
 ## 0.4.2 (2020-02-15)
 - Fixed cross building issue (#111)
