@@ -236,12 +236,12 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     // test create keyspace
-    this.connector.withSessionDo (_.execute("DROP KEYSPACE IF EXISTS test_spark_connector_keyspace"))
-    assertThrows[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException](
+    this.connector.withSessionDo(_.execute("DROP KEYSPACE IF EXISTS test_spark_connector_keyspace"))
+    assertThrows[com.datastax.oss.driver.api.core.servererrors.QueryValidationException](
       connector.write(testTable.toDF()),
       "Exception should be thrown because the keyspace doesn't exist"
     )
-    assertThrows[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException](
+    assertThrows[com.datastax.oss.driver.api.core.servererrors.QueryValidationException](
       connector.createKeyspace("WrongStrategy", 1),
       "Exception should be thrown when the strategy is wrong"
     )
@@ -254,7 +254,7 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val dropMethod = classOf[CassandraConnector].getDeclaredMethod("dropKeyspace")
     dropMethod.setAccessible(true)
     dropMethod.invoke(connector)
-    assertThrows[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException](
+    assertThrows[com.datastax.oss.driver.api.core.servererrors.QueryValidationException](
       connector.write(testTable.toDF()),
       "Exception should be thrown because the keyspace was dropped"
     )

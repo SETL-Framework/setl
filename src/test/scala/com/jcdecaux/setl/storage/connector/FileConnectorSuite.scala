@@ -1,11 +1,9 @@
 package com.jcdecaux.setl.storage.connector
 
-import java.io.File
-
 import com.jcdecaux.setl.config.FileConnectorConf
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
-import org.apache.hadoop.fs.LocalFileSystem
+import org.apache.hadoop.fs.{LocalFileSystem, Path}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -330,7 +328,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     }
 
     assert(connector.listFiles().length >= 6) // >= because some OS will add hidden files (like .DS_Store in MacOS)
-    connector.listFilesToLoad(false).map(_.split(File.separatorChar).last) should contain theSameElementsAs Array(
+    connector.listFilesToLoad(false).map(_.split(Path.SEPARATOR).last) should contain theSameElementsAs Array(
       "file2-1.csv",
       "file1.csv",
       "file1-2-2.csv",

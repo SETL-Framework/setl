@@ -1,8 +1,8 @@
 package com.jcdecaux.setl.storage.connector
 
-import com.datastax.spark.connector.cql.{CassandraConnector => DatastaxCassandraConnector}
-import com.datastax.driver.core.exceptions.AlreadyExistsException
+import com.datastax.oss.driver.api.core.servererrors.AlreadyExistsException
 import com.datastax.spark.connector._
+import com.datastax.spark.connector.cql.{CassandraConnector => DatastaxCassandraConnector}
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.enums.Storage
@@ -182,7 +182,7 @@ class CassandraConnector(val keyspace: String,
     }
   }
 
-  @throws[com.datastax.driver.core.exceptions.InvalidConfigurationInQueryException]("Make sure the strategy is correct")
+  @throws[com.datastax.oss.driver.api.core.servererrors.QueryValidationException]("Make sure the strategy is correct")
   def createKeyspace(strategy: String, replicationFactor: Int): Unit = {
     log.debug(s"Create cassandra keyspace $keyspace")
     cqlConnection.withSessionDo {
