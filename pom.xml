@@ -137,6 +137,12 @@
             <artifactId>spark-dynamodb_${scala.compat.version}</artifactId>
             <version>1.0.4</version>
         </dependency>
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-core_${scala.compat.version}</artifactId>
+            <version>0.6.0</version>
+        </dependency>
+
         <!-- TYPESAFE CONFIG -->
         <dependency>
             <groupId>com.typesafe</groupId>
