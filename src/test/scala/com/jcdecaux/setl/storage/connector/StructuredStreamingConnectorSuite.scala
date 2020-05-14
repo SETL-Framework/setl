@@ -13,7 +13,7 @@ class StructuredStreamingConnectorSuite extends AnyFunSuite {
 
   val consoleOutputConf: Map[String, String] = Map(
     "format" -> "console",
-    "outputMode" -> "append",
+    "outputMode" -> "append"
   )
 
   val parquetOutputConf: Map[String, String] = Map(
