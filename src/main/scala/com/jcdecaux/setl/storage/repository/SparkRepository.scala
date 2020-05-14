@@ -200,13 +200,16 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   override def update(data: Dataset[DataType]): SparkRepository.this.type = {
     connector match {
       case c: ACIDConnector =>
-      case _ => log.warn(s"Current connector doesn't support upsert opertion")
+      case _ => log.warn(s"Current connector doesn't support upsert operation")
     }
     val dataToSave = SchemaConverter.toDF[DataType](data)
-    val primaryColumns = schema.filter(_.metadata.contains(COMPOUND_KEY))
-        .map(x => if(!x.metadata.contains(COLUMN_NAME)) x.name else x.metadata.getStringArray(COLUMN_NAME)(0))
-    println(primaryColumns.toArray.toList)
-    updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
+    val primaryColumns = StructAnalyser.findCompoundColumn[DataType]
+    if (primaryColumns.nonEmpty)
+      updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
+    else {
+      log.warn(s"Current Dataset doesn't contain any compound key! Normal write operation will do used.")
+      writeDataFrame(dataToSave)
+    }
     this
   }
 

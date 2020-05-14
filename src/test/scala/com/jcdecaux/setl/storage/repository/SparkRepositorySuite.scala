@@ -134,13 +134,13 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     import spark.implicits._
 
     val ds: Dataset[TestDeltaUpdate] = Seq(TestDeltaUpdate(1, "c1", 2.3D), TestDeltaUpdate(2, "c2", 4.9D)).toDS()
-    val dss: Dataset[TestDeltaUpdate] = Seq(TestDeltaUpdate(3, "c3", 4.4D), TestDeltaUpdate(1, "c1", 5.1D)).toDS()
+    val dss: Dataset[TestDeltaUpdate] = Seq(TestDeltaUpdate(1, "c1bis", 4.4D), TestDeltaUpdate(1, "c1", 5.1D)).toDS()
     val path: String = "src/test/resources/test_delta_with_anno"
     val connector = new DeltaConnector(Map[String, String](
       "path" -> path,
       "saveMode" -> "Append"
     ))
-    val condition = Condition("col1", "=", 1)
+    val condition = Condition("col1", "=", 2)
 
     val repo = new SparkRepository[TestDeltaUpdate].setConnector(connector)
 
@@ -177,7 +177,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val filteredDataAfterUpdate = repo.findBy(condition)
     assert(filteredDataAfterUpdate.count() === 1)
 
-    repo.getConnector.asInstanceOf[ACIDConnector].drop()
+    connector.drop()
   }
 
   test("SparkRepository should handle UDS key configuration") {
