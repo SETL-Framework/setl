@@ -5,7 +5,7 @@ import java.io.File
 import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.repository.SparkRepository
-import com.jcdecaux.setl.{SparkSessionBuilder, TestObject}
+import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
@@ -35,6 +35,8 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("Instantiation of constructors") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val connector = new DeltaConnector(FileConnectorConf.fromMap(options))
@@ -65,6 +67,8 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("test Delta connector update") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
 
     import spark.implicits._
@@ -87,6 +91,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
       .set("spark.databricks.delta.retentionDurationCheck.enabled", "false")
       .build()
       .get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
 
@@ -124,6 +129,8 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("test Delta connector delete") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
 
     import spark.implicits._
@@ -138,6 +145,8 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("Delta connector should push down filter and select") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
 
     val repository = new SparkRepository[TestObject].setConnector(deltaConnector).persistReadData(true)
@@ -159,6 +168,8 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("test Delta connector with different file path") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
     import spark.implicits._
 

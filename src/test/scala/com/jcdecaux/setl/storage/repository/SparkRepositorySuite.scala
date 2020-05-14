@@ -131,6 +131,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should handle update (upsert) when ACIDConnector is used") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4"))
+
     import spark.implicits._
 
     val ds: Dataset[TestDeltaUpdate] = Seq(TestDeltaUpdate(1, "c1", 2.3D), TestDeltaUpdate(2, "c2", 4.9D)).toDS()
