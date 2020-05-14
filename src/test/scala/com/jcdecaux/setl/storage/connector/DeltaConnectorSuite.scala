@@ -15,6 +15,20 @@ import scala.collection.mutable.ArrayBuffer
 
 class DeltaConnectorSuite extends AnyFunSuite {
 
+  private def numberOfFiles(spark: SparkSession, path: String) : Long = {
+    val filePaths = ArrayBuffer[Path]()
+    val files = FileSystem
+      .get(spark.sparkContext.hadoopConfiguration)
+      .listFiles(new Path(path), true)
+    while (files.hasNext) {
+      val status = files.next()
+      if (status.isFile) {
+        filePaths += status.getPath
+      }
+    }
+    filePaths.toArray.length
+  }
+
   val path: String = "src/test/resources/test delta"
   val saveMode: SaveMode = SaveMode.Append
   val table: String = "test_table"
@@ -35,7 +49,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("Instantiation of constructors") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     import spark.implicits._
 
@@ -67,7 +81,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("test Delta connector update") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
 
@@ -91,7 +105,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
       .set("spark.databricks.delta.retentionDurationCheck.enabled", "false")
       .build()
       .get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
 
@@ -113,23 +127,9 @@ class DeltaConnectorSuite extends AnyFunSuite {
     deltaConnector.drop()
   }
 
-  private def numberOfFiles(spark: SparkSession, path: String) : Long = {
-      val filePaths = ArrayBuffer[Path]()
-      val files = FileSystem
-        .get(spark.sparkContext.hadoopConfiguration)
-        .listFiles(new Path(path), true)
-      while (files.hasNext) {
-        val status = files.next()
-        if (status.isFile) {
-          filePaths += status.getPath
-        }
-      }
-      filePaths.toArray.length
-  }
-
   test("test Delta connector delete") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
 
@@ -145,7 +145,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("Delta connector should push down filter and select") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
 
@@ -168,7 +168,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
   test("test Delta connector with different file path") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
     import spark.implicits._
@@ -186,8 +186,9 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector partition by") {
-
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
+
     import spark.implicits._
 
     val dff: Dataset[TestObject] = Seq(

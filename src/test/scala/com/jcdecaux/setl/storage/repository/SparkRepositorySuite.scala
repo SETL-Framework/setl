@@ -131,7 +131,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
   test("SparkRepository should handle update (upsert) when ACIDConnector is used") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-    assume(SparkTestUtils.checkSparkVersion("2.4"))
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     import spark.implicits._
 
