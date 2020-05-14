@@ -129,6 +129,57 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assert(!connector2.read().columns.contains("partition"))
   }
 
+  test("SparkRepository should handle update (upsert) when ACIDConnector is used") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val ds: Dataset[TestDeltaUpdate] = Seq(TestDeltaUpdate(1, "c1", 2.3D), TestDeltaUpdate(2, "c2", 4.9D)).toDS()
+    val dss: Dataset[TestDeltaUpdate] = Seq(TestDeltaUpdate(3, "c3", 4.4D), TestDeltaUpdate(1, "c1", 5.1D)).toDS()
+    val path: String = "src/test/resources/test_delta_with_anno"
+    val connector = new DeltaConnector(Map[String, String](
+      "path" -> path,
+      "saveMode" -> "Append"
+    ))
+    val condition = Condition("col1", "=", 1)
+
+    val repo = new SparkRepository[TestDeltaUpdate].setConnector(connector)
+
+    connector.drop()
+
+    repo
+      .partitionBy("_sort_key")
+      .save(ds)
+
+    // to verify if the filter is pushed down
+    val filteredBySortKey = repo.findBy(Condition("_sort_key", "=", "c2"))
+    filteredBySortKey.explain()
+    assert(filteredBySortKey.count() === 1)
+
+    val data = repo.findAll()
+    assert(data.columns === Array("column1", "column2", "value"))
+
+    val rawData = connector.read()
+    rawData.show()
+    assert(rawData.columns === Array("col1", "column2", "value", "_partition_key", "_sort_key"))
+
+    val filteredData = repo.findBy(condition)
+    assert(filteredData.columns === Array("column1", "column2", "value"))
+    assert(filteredData.count() === 1)
+
+    repo
+      .partitionBy("_sort_key")
+      .update(dss)
+
+    val rawDataAfterUpdate = connector.read()
+
+    assert(rawDataAfterUpdate.count() === 3)
+
+    val filteredDataAfterUpdate = repo.findBy(condition)
+    assert(filteredDataAfterUpdate.count() === 1)
+
+    repo.getConnector.asInstanceOf[ACIDConnector].drop()
+  }
+
   test("SparkRepository should handle UDS key configuration") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val path: String = "src/test/resources/test_parquet_with_anno"

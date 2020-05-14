@@ -6,9 +6,10 @@ import java.util.concurrent.locks.ReentrantLock
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.UnknownException
+import com.jcdecaux.setl.internal.SchemaConverter.{COLUMN_NAME, COMPOUND_KEY}
 import com.jcdecaux.setl.internal.{Logging, SchemaConverter, StructAnalyser}
 import com.jcdecaux.setl.storage.Condition
-import com.jcdecaux.setl.storage.connector.{Connector, DBConnector, FileConnector}
+import com.jcdecaux.setl.storage.connector.{ACIDConnector, Connector, DBConnector, FileConnector}
 import com.jcdecaux.setl.util.HasSparkSession
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types.StructType
@@ -188,6 +189,35 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
       case _ =>
         throw new UnknownException.Storage(s"Unknown connector ${connector.getClass.toString}")
     }
+  }
+
+  /**
+   * Update/Insert a [[Dataset]] into a data persistence store
+   *
+   * @param data data to be saved
+   * @return
+   */
+  override def update(data: Dataset[DataType]): SparkRepository.this.type = {
+    connector match {
+      case c: ACIDConnector =>
+      case _ => log.warn(s"Current connector doesn't support upsert opertion")
+    }
+    val dataToSave = SchemaConverter.toDF[DataType](data)
+    val primaryColumns = schema.filter(_.metadata.contains(COMPOUND_KEY))
+        .map(x => if(!x.metadata.contains(COLUMN_NAME)) x.name else x.metadata.getStringArray(COLUMN_NAME)(0))
+    println(primaryColumns.toArray.toList)
+    updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
+    this
+  }
+
+  /**
+   * Update data frame and set flushReadCach to true
+   *
+   * @param data data to be saved
+   */
+  private[repository] def updateDataFrame(data: DataFrame, column: String, columns: String*): Unit = {
+    connector.asInstanceOf[ACIDConnector].update(data, column, columns: _*)
+    flushReadCache.set(true)
   }
 }
 

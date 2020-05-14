@@ -2,7 +2,6 @@ package com.jcdecaux.setl.storage.connector
 
 import com.jcdecaux.setl.config.{Conf, DeltaConnectorConf}
 import com.jcdecaux.setl.enums.Storage
-import com.jcdecaux.setl.internal.{CanDelete, CanDrop, CanUpdate}
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import io.delta.tables.DeltaTable
@@ -15,7 +14,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * DeltaConnector contains functionality for transforming [[DataFrame]] into DeltaLake files
  */
-class DeltaConnector(val options: DeltaConnectorConf) extends Connector with CanDrop with CanUpdate with CanDelete  {
+class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector  {
 
   val storage = Storage.DELTA
 
@@ -61,7 +60,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends Connector with Can
       .save(options.getPath)
   }
 
-  override def update (df: DataFrame, column: String, columns: String *): Unit = {
+  override def update(df: DataFrame, column: String, columns: String *): Unit = {
     DeltaTable.forPath(options.getPath).as("oldData")
       .merge(
         df.toDF().as("newData"),
@@ -84,7 +83,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends Connector with Can
   }
 
   def delete(condition: Column): Unit = {
-    DeltaTable.forPath("./delta-table").delete(condition)
+    DeltaTable.forPath(options.getPath).delete(condition)
   }
 
   override def drop(): Unit = {
@@ -100,4 +99,15 @@ class DeltaConnector(val options: DeltaConnectorConf) extends Connector with Can
     partition.append(columns: _*)
     this
   }
+
+  override def vacuum(retentionHours: Double): Unit = {
+    DeltaTable.forPath(options.getPath).vacuum(retentionHours)
+  }
+
+  override def vacuum(): Unit = {
+    DeltaTable.forPath(options.getPath).vacuum()
+  }
+
+
+
 }
