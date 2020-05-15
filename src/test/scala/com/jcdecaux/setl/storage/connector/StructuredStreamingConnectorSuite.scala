@@ -1,7 +1,7 @@
 package com.jcdecaux.setl.storage.connector
 
 import com.jcdecaux.setl.SparkSessionBuilder
-import com.jcdecaux.setl.config.StructuredStreamingConnectorConf
+import com.jcdecaux.setl.config.Conf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -28,8 +28,10 @@ class StructuredStreamingConnectorSuite extends AnyFunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     import spark.implicits._
 
+    val _conf = Conf.fromMap(parquetOutputConf)
+
     val connector = new StructuredStreamingConnector(inputConf)
-    val outputConnector = new StructuredStreamingConnector(StructuredStreamingConnectorConf.fromMap(parquetOutputConf))
+    val outputConnector = new StructuredStreamingConnector(_conf)
     val parquetConnector = new ParquetConnector(parquetOutputConf)
 
     val input = connector.read()
