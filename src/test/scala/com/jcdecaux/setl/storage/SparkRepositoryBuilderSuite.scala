@@ -15,6 +15,8 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
+import scala.concurrent.{Await, Future}
+
 class SparkRepositoryBuilderSuite extends AnyFunSuite {
 
   import SparkRepositorySuite.deleteRecursively
@@ -370,6 +372,10 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     import com.jcdecaux.setl.storage.repository.streaming._
     import spark.implicits._
 
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.duration._
+
+
     val conf = ConfigFactory.load("streaming_test_resources/streaming.conf")
 
     val inputConf = conf.getConfig("structured_streaming_connector_input_repository")
@@ -380,14 +386,24 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
       "header" -> "true"
     )
 
-    val inputRepo = new SparkRepositoryBuilder[StreamingText](inputConf).getOrCreate().toStreamingRepository
+    val inputRepo = new SparkRepositoryBuilder[StreamingText](inputConf).getOrCreate()
     val outputRepo = new SparkRepositoryBuilder[StreamingText](outputConf).getOrCreate().toStreamingRepository
     val csvConnector = new CSVConnector(csvOutputConf)
 
     val input = inputRepo.findAll()
 
-    outputRepo.save(input)
-    outputRepo.awaitTerminationOrTimeout(10000)
+    // Here the future is used only to test awaitTermination() and stop() methods
+    // Use should use awaitTerminationOrTimeout() in production code
+    val future = Future {
+      outputRepo.save(input)
+      outputRepo.awaitTermination()
+    }
+
+    try {
+      Await.result(future, 5 second)
+    } catch {
+      case _: java.util.concurrent.TimeoutException => outputRepo.stop()
+    }
 
     csvConnector.read().show()
     assert(csvConnector.read().as[String].collect().mkString(" ") === "hello world")
