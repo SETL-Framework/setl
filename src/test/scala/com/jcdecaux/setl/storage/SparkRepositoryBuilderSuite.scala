@@ -8,27 +8,16 @@ import com.datastax.spark.connector.cql.CassandraConnector
 import com.jcdecaux.setl.config.Properties
 import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.UnknownException
-import com.jcdecaux.setl.storage.connector.{ExcelConnector, ParquetConnector}
+import com.jcdecaux.setl.storage.connector.{CSVConnector, ExcelConnector, ParquetConnector}
 import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
+class SparkRepositoryBuilderSuite extends AnyFunSuite {
 
   import SparkRepositorySuite.deleteRecursively
-
-  val connector: CassandraConnector = CassandraConnector(MockCassandra.cassandraConf)
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    new MockCassandra(connector, MockCassandra.keyspace)
-      .dropKeyspace()
-      .generateKeyspace()
-      .generateTraffic("traffic")
-  }
 
   test("spark repository builder configuration") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
@@ -105,6 +94,12 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("SparkRepository cassandra") {
+    val connector: CassandraConnector = CassandraConnector(MockCassandra.cassandraConf)
+
+    new MockCassandra(connector, MockCassandra.keyspace)
+      .dropKeyspace()
+      .generateKeyspace()
+      .generateTraffic("traffic")
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
       .withSparkConf(MockCassandra.cassandraConf)
@@ -367,4 +362,41 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     df.show(false)
     assert(df.count() === 3)
   }
+
+  test("SparkRepository build StructuredStreaming repo") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    import SparkRepositoryBuilderSuite.StreamingText
+    import com.jcdecaux.setl.storage.repository.streaming._
+    import spark.implicits._
+
+    val conf = ConfigFactory.load("streaming_test_resources/streaming.conf")
+
+    val inputConf = conf.getConfig("structured_streaming_connector_input_repository")
+    val outputConf = conf.getConfig("structured_streaming_connector_output_repository")
+
+    val csvOutputConf: Map[String, String] = Map(
+      "path" -> "src/test/resources/streaming_test_resources/output/3",
+      "header" -> "true"
+    )
+
+    val inputRepo = new SparkRepositoryBuilder[StreamingText](inputConf).getOrCreate().toStreamingRepository
+    val outputRepo = new SparkRepositoryBuilder[StreamingText](outputConf).getOrCreate().toStreamingRepository
+    val csvConnector = new CSVConnector(csvOutputConf)
+
+    val input = inputRepo.findAll()
+
+    outputRepo.save(input)
+    outputRepo.awaitTerminationOrTimeout(10000)
+
+    csvConnector.read().show()
+    assert(csvConnector.read().as[String].collect().mkString(" ") === "hello world")
+  }
+
+}
+
+object SparkRepositoryBuilderSuite {
+
+  case class StreamingText(text: String) {}
+
 }
