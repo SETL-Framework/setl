@@ -1,6 +1,7 @@
 package com.jcdecaux.setl.storage.connector
 
 import com.jcdecaux.setl.SparkSessionBuilder
+import com.jcdecaux.setl.config.StructuredStreamingConnectorConf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -28,12 +29,12 @@ class StructuredStreamingConnectorSuite extends AnyFunSuite {
     import spark.implicits._
 
     val connector = new StructuredStreamingConnector(inputConf)
-    val outputConnector = new StructuredStreamingConnector(parquetOutputConf)
+    val outputConnector = new StructuredStreamingConnector(StructuredStreamingConnectorConf.fromMap(parquetOutputConf))
     val parquetConnector = new ParquetConnector(parquetOutputConf)
 
     val input = connector.read()
 
-    outputConnector.write(input)
+    outputConnector.write(input, Option("suffix_should_be_ignored"))
     outputConnector.awaitTerminationOrTimeout(10000)
 
     parquetConnector.read().show()
