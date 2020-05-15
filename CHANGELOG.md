@@ -9,6 +9,7 @@ Changes:
 New Features:
 - Added pipeline dependency check before starting the spark job (#113)
 - Added default Spark job group and description (#115)
+- Added `StructuredStreamingConnector`
 
 Fixes
 - Fixed path separator in FileConnectorSuite

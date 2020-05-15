@@ -7,28 +7,20 @@ import com.jcdecaux.setl.config.{Conf, Properties}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.{ConfException, UnknownException}
 import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
-import com.jcdecaux.setl.storage.connector.JSONConnector
+import com.jcdecaux.setl.storage.connector.{CSVConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
 import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject}
+import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
-  val _connector: CC = CC(MockCassandra.cassandraConf)
-
   val testTable: Seq[TestObject] = Seq(
     TestObject(1, "p1", "c1", 1L),
     TestObject(2, "p2", "c2", 2L),
     TestObject(3, "p3", "c3", 3L)
   )
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    new MockCassandra(_connector, "test_space")
-      .generateKeyspace()
-      .generateCountry("countries")
-  }
 
   test("Deprecated constructors") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
@@ -56,6 +48,11 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("build cassandra connector") {
+    val _connector: CC = CC(MockCassandra.cassandraConf)
+    new MockCassandra(_connector, "test_space")
+      .generateKeyspace()
+      .generateCountry("countries")
+
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
       .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
@@ -185,6 +182,35 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     assertThrows[IllegalArgumentException](
       new ConnectorBuilder(Some(Properties.wrongCsvConfigConnectorBuilder2), Some(new Conf().set("storage", "BLABLA"))).build().get()
     )
+  }
+
+  test("build structured streaming connector") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    import spark.implicits._
+
+    val conf = ConfigFactory.load("streaming_test_resources/streaming.conf")
+
+    val inputConf = conf.getConfig("structured_streaming_connector_input")
+    val outputConf = conf.getConfig("structured_streaming_connector_output")
+
+    val csvOutputConf: Map[String, String] = Map(
+      "path" -> "src/test/resources/streaming_test_resources/output/2",
+      "header" -> "false"
+    )
+
+    val connector = new ConnectorBuilder(inputConf).getOrCreate()
+    val outputConnector = new ConnectorBuilder(outputConf).getOrCreate()
+    val parquetConnector = new CSVConnector(csvOutputConf)
+
+    val input = connector.read()
+
+    outputConnector.write(input)
+    outputConnector.asInstanceOf[StructuredStreamingConnector].awaitTerminationOrTimeout(10000)
+
+    parquetConnector.read().show()
+    assert(parquetConnector.read().as[String].collect().mkString(" ") === StructuredStreamingConnectorSuite.text)
+
   }
 
 }

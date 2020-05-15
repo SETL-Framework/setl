@@ -59,6 +59,14 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  def setUserDefinedSuffixKey(key: Option[String]): this.type = {
+    key match {
+      case Some(k) => this.setUserDefinedSuffixKey(k)
+      case _ =>
+    }
+    this
+  }
+
   def getUserDefinedSuffixKey: Option[String] = {
     connector match {
       case c: FileConnector => Option(c.getUserDefinedSuffixKey)
