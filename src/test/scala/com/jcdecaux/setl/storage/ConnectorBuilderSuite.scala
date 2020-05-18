@@ -8,7 +8,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.{ConfException, UnknownException}
 import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
 import com.jcdecaux.setl.storage.connector.{CSVConnector, DeltaConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
-import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject}
+import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject}
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
@@ -219,6 +219,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setEnv("local")
       .build()
       .get()
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     import spark.implicits._
     val connector = new ConnectorBuilder(Properties.deltaConfigConnectorBuilder).build().get()
