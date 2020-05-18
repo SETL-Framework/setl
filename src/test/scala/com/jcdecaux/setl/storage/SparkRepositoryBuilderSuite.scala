@@ -324,9 +324,6 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
 
     sparkRepositoryBuilderWithConfigTest(Properties.cassandraConfigRepoBuilder)
     // deleteRecursively(new File(Properties.csvConfig.getString("path")))
-
-    sparkRepositoryBuilderWithConfigTest(Properties.deltaConfigRepoBuilder)
-    deleteRecursively(new File(Properties.deltaConfigRepoBuilder.getString("path")))
   }
 
   test("SparkRepository Build with delta connector configuration") {

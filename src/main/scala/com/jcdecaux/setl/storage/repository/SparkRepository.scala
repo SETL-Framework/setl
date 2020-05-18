@@ -5,8 +5,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.enums.{Storage, ValueType}
-import com.jcdecaux.setl.exception.UnknownException
-import com.jcdecaux.setl.internal.SchemaConverter.{COLUMN_NAME, COMPOUND_KEY}
+import com.jcdecaux.setl.exception.{InvalidConnectorException, UnknownException}
 import com.jcdecaux.setl.internal.{Logging, SchemaConverter, StructAnalyser}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector.{ACIDConnector, Connector, DBConnector, FileConnector}
@@ -207,17 +206,19 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    */
   override def update(data: Dataset[DataType]): SparkRepository.this.type = {
     connector match {
-      case c: ACIDConnector =>
-      case _ => log.warn(s"Current connector doesn't support upsert operation")
+      case _: ACIDConnector =>
+        val dataToSave = SchemaConverter.toDF[DataType](data)
+        val primaryColumns = StructAnalyser.findCompoundColumns[DataType]
+        if (primaryColumns.nonEmpty)
+          updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
+        else {
+          log.warn(s"Current Dataset doesn't contain any compound key! Normal write operation will do used.")
+          writeDataFrame(dataToSave)
+        }
+      case _ =>
+        throw new InvalidConnectorException(s"Current connector doesn't support upsert operation!")
     }
-    val dataToSave = SchemaConverter.toDF[DataType](data)
-    val primaryColumns = StructAnalyser.findCompoundColumns[DataType]
-    if (primaryColumns.nonEmpty)
-      updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
-    else {
-      log.warn(s"Current Dataset doesn't contain any compound key! Normal write operation will do used.")
-      writeDataFrame(dataToSave)
-    }
+
     this
   }
 

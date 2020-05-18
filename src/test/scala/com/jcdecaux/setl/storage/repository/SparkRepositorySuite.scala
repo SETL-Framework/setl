@@ -152,9 +152,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
       .partitionBy("_sort_key")
       .save(ds)
 
-    // to verify if the filter is pushed down
     val filteredBySortKey = repo.findBy(Condition("_sort_key", "=", "c2"))
-    filteredBySortKey.explain()
     assert(filteredBySortKey.count() === 1)
 
     val data = repo.findAll()
