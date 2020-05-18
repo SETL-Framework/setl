@@ -108,6 +108,4 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector  {
     DeltaTable.forPath(options.getPath).vacuum()
   }
 
-
-
 }
