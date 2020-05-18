@@ -108,7 +108,7 @@ object StructAnalyser extends Logging {
    * @tparam T type of case class to be inspected
    * @return an array of (column names)
    */
-  def findCompoundColumn[T: ru.TypeTag]: Seq[String] = {
+  def findCompoundColumns[T: ru.TypeTag]: Seq[String] = {
     this.analyseSchema[T].filter(_.metadata.contains(COMPOUND_KEY))
       .map(x => if(!x.metadata.contains(COLUMN_NAME)) x.name else x.metadata.getStringArray(COLUMN_NAME)(0))
   }

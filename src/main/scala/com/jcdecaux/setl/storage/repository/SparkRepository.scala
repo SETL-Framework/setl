@@ -211,7 +211,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
       case _ => log.warn(s"Current connector doesn't support upsert operation")
     }
     val dataToSave = SchemaConverter.toDF[DataType](data)
-    val primaryColumns = StructAnalyser.findCompoundColumn[DataType]
+    val primaryColumns = StructAnalyser.findCompoundColumns[DataType]
     if (primaryColumns.nonEmpty)
       updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
     else {
