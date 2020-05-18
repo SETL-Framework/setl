@@ -52,4 +52,13 @@ trait Repository[DT] {
    * @return
    */
   def save(data: DT, suffix: Option[String]): this.type
+
+
+  /**
+   * Update/Insert a [[Dataset]] into a data persistence store
+   *
+   * @param data data to be saved
+   * @return
+   */
+  def update(data: DT): this.type
 }

@@ -59,6 +59,17 @@ class StructAnalyserSuite extends AnyFunSuite {
     assert(structType.find(_.name == "col3").get.metadata.getStringArray(classOf[CompoundKey].getCanonicalName) === Array("part!@2"))
   }
 
+
+  test("StructAnalyser should be able to find columns with @CompoundKey") {
+    val primaryColumns1 = StructAnalyser.findCompoundColumns[TestClasses.MultipleCompoundKeyTest]
+    val primaryColumns2 = StructAnalyser.findCompoundColumns[TestClasses.MyObject]
+
+    assert(primaryColumns1.length == 3)
+    assert(primaryColumns1 === Array("col1", "col2", "COLUMN_3"))
+    assert(primaryColumns2.isEmpty)
+    assert(primaryColumns2 === Array())
+  }
+
   test("[SETL-34] StructAnalyser should throw exception when there are more than one ColumnName annotation") {
     assertThrows[IllegalArgumentException](StructAnalyser.analyseSchema[TestClasses.WrongClass])
   }

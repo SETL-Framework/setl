@@ -7,8 +7,8 @@ import com.jcdecaux.setl.config.{Conf, Properties}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.{ConfException, UnknownException}
 import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
-import com.jcdecaux.setl.storage.connector.{CSVConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
-import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject}
+import com.jcdecaux.setl.storage.connector.{CSVConnector, DeltaConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
+import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject}
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
@@ -213,4 +213,24 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   }
 
+  test("build DeltaConnector") {
+    val spark: SparkSession = new SparkSessionBuilder("cassandra")
+      .withSparkConf(MockCassandra.cassandraConf)
+      .setEnv("local")
+      .build()
+      .get()
+    assume(SparkTestUtils.checkSparkVersion("2.4.2"))
+
+    import spark.implicits._
+    val connector = new ConnectorBuilder(Properties.deltaConfigConnectorBuilder).build().get()
+
+    testTable.toDF.show()
+    connector.write(testTable.toDF)
+
+    val df = connector.read()
+
+    df.show()
+    assert(df.count() === 3)
+    connector.asInstanceOf[DeltaConnector].drop()
+  }
 }

@@ -103,6 +103,17 @@ object StructAnalyser extends Logging {
   }
 
   /**
+   * Inspect the class T, find fields with @COMPOUND_KEY annotation
+   *
+   * @tparam T type of case class to be inspected
+   * @return an array of (column names)
+   */
+  def findCompoundColumns[T: ru.TypeTag]: Seq[String] = {
+    this.analyseSchema[T].filter(_.metadata.contains(COMPOUND_KEY))
+      .map(x => if(!x.metadata.contains(COLUMN_NAME)) x.name else x.metadata.getStringArray(COLUMN_NAME)(0))
+  }
+
+  /**
    * Verify the annotations of a field with the following conditions:
    *
    * <p>A field should not have more than one @ColumnName annotation</p>

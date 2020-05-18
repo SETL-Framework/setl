@@ -13,6 +13,8 @@ package object repository {
 
   case class MyObject(@CompoundKey("sort", "2") @ColumnName("col1") column1: String, @CompoundKey("sort", "1") column2: String)
 
+  case class TestDeltaUpdate(@ColumnName("col1") @CompoundKey("partition", "1") column1: Int, @CompoundKey("sort", "1") column2: String, value: Double)
+
   case class TestCompressionRepository(col1: String,
                                        col2: String,
                                        @Compress col3: Seq[InnerClass],

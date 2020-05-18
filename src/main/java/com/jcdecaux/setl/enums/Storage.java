@@ -7,6 +7,7 @@ public enum Storage {
     CSV("com.jcdecaux.setl.storage.connector.CSVConnector"),
     EXCEL("com.jcdecaux.setl.storage.connector.ExcelConnector"),
     PARQUET("com.jcdecaux.setl.storage.connector.ParquetConnector"),
+    DELTA("com.jcdecaux.setl.storage.connector.DeltaConnector"),
     CASSANDRA("com.jcdecaux.setl.storage.connector.CassandraConnector"),
     DYNAMODB("com.jcdecaux.setl.storage.connector.DynamoDBConnector"),
     JSON("com.jcdecaux.setl.storage.connector.JSONConnector"),

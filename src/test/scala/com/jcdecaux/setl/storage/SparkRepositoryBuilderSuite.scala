@@ -9,7 +9,7 @@ import com.jcdecaux.setl.config.Properties
 import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.storage.connector.{CSVConnector, ExcelConnector, ParquetConnector}
-import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, TestObject, TestObject2}
+import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject, TestObject2}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
@@ -323,8 +323,12 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     deleteRecursively(new File(Properties.excelConfigRepoBuilder.getString("path")))
 
     sparkRepositoryBuilderWithConfigTest(Properties.cassandraConfigRepoBuilder)
-    //    deleteRecursively(new File(Properties.csvConfig.getString("path")))
+    // deleteRecursively(new File(Properties.csvConfig.getString("path")))
+  }
 
+  test("SparkRepository Build with delta connector configuration") {
+    sparkRepositoryBuilderWithConfigTest(Properties.deltaConfigRepoBuilder, Some("2.4.2"))
+    deleteRecursively(new File(Properties.deltaConfigRepoBuilder.getString("path")))
   }
 
   test("SparkRepository throw exceptions") {
@@ -342,12 +346,16 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     //    assertThrows[NoSuchElementException](new SparkRepositoryBuilder[TestObject](Storage.CSV).setSpark(spark).build())
   }
 
-  private[this] def sparkRepositoryBuilderWithConfigTest(config: Config): Unit = {
+  private[this] def sparkRepositoryBuilderWithConfigTest(config: Config, checkSparkVersion: Option[String] = None): Unit = {
 
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
       .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
       .getOrCreate()
+
+    if(checkSparkVersion.isDefined) {
+      assume(SparkTestUtils.checkSparkVersion(checkSparkVersion.get))
+    }
 
     import spark.implicits._
 

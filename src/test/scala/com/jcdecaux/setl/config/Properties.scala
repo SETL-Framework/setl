@@ -35,6 +35,7 @@ object Properties {
   val cassandraConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.cassandra")
   val csvConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.csv")
   val jsonConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.json")
+  val deltaConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.delta")
 
 
   val wrongCsvConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.wrong_csv")
@@ -46,5 +47,6 @@ object Properties {
   val cassandraConfigRepoBuilder: Config = cl.getConfig("repoBuilder.cassandra")
   val csvConfigRepoBuilder: Config = cl.getConfig("repoBuilder.csv")
   val parquetConfigRepoBuilder: Config = cl.getConfig("repoBuilder.parquet")
+  val deltaConfigRepoBuilder: Config = cl.getConfig("repoBuilder.delta")
 
 }
