@@ -12,6 +12,7 @@ public enum Storage {
     DYNAMODB("com.jcdecaux.setl.storage.connector.DynamoDBConnector"),
     JSON("com.jcdecaux.setl.storage.connector.JSONConnector"),
     JDBC("com.jcdecaux.setl.storage.connector.JDBCConnector"),
+    STRUCTURED_STREAMING("com.jcdecaux.setl.storage.connector.StructuredStreamingConnector"),
     OTHER(null);
 
     private String connectorName;
