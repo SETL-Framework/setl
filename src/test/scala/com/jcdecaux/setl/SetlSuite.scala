@@ -154,17 +154,17 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     import context.spark.implicits._
     import com.jcdecaux.setl.SetlSuite.TestGetRepository
 
-
     val ds = this.ds.toDS()
 
-    context.setSparkRepository[TestObject]("csv_dc_context", deliveryId = "id")
+    context
+      .setSparkRepository[TestObject]("csv_dc_context", deliveryId = "id")
 
     val repo = context.getSparkRepository[TestObject]("csv_dc_context")
     repo.save(ds)
 
     assert(context.hasExternalInput(context.repositoryIdOf("csv_dc_context")))
     assert(!context.hasExternalInput(context.repositoryIdOf("csv_dc_context_non_exist")))
-
+    assert(context.listInputs().size === 1)
 
     context
       .newPipeline()
