@@ -146,6 +146,34 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
 
+  test("getSparkRepository should return a registered repository without changing it") {
+    val context = Setl.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    import context.spark.implicits._
+    import com.jcdecaux.setl.SetlSuite.TestGetRepository
+
+
+    val ds = this.ds.toDS()
+
+    context.setSparkRepository[TestObject]("csv_dc_context", deliveryId = "id")
+
+    val repo = context.getSparkRepository[TestObject]("csv_dc_context")
+    repo.save(ds)
+
+    assert(context.hasExternalInput(context.repositoryIdOf("csv_dc_context")))
+    assert(!context.hasExternalInput(context.repositoryIdOf("csv_dc_context_non_exist")))
+
+
+    context
+      .newPipeline()
+      .addStage[TestGetRepository]()
+      .run()
+
+    repo.getConnector.asInstanceOf[FileConnector].delete()
+  }
+
   test("Setl should be able to create a pipeline with all the registered spark repository") {
     val context = Setl.builder()
       .setConfigLoader(configLoader)
@@ -416,6 +444,29 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
 }
 
 object SetlSuite {
+
+  class TestGetRepository extends Factory[Dataset[TestObject]] {
+
+    @Delivery(id = "id")
+    private[this] val repo = SparkRepository[TestObject]
+
+    /** Read data */
+    override def read(): TestGetRepository.this.type = this
+
+    /** Process data */
+    override def process(): TestGetRepository.this.type = {
+      repo.findAll().show()
+      this
+    }
+
+    /** Write data */
+    override def write(): TestGetRepository.this.type = this
+
+    /** Get the processed data */
+    override def get(): Dataset[TestObject] = {
+      repo.findAll()
+    }
+  }
 
   class MyFactory(spark: SparkSession) extends Factory[Dataset[TestObject]] {
 
