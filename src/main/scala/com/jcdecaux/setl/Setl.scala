@@ -24,10 +24,15 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
   val spark: SparkSession
 
   private[this] val externalInputRegistry: ConcurrentHashMap[String, Deliverable[_]] = new ConcurrentHashMap()
-  private[this] val repositoryIdOf: String => String = config => s"@rpstry.$config"
-  private[this] val connectorIdOf: String => String = config => s"@cnnctr.$config"
+  private[setl] val repositoryIdOf: String => String = config => s"@rpstry.$config"
+  private[setl] val connectorIdOf: String => String = config => s"@cnnctr.$config"
 
-  private[this] def hasExternalInput(id: String): Boolean = externalInputRegistry.contains(id)
+  private[setl] def hasExternalInput(id: String): Boolean = externalInputRegistry.containsKey(id)
+
+  private[setl] def listInputs(): Map[String, Deliverable[_]] = {
+    import scala.collection.JavaConverters._
+    externalInputRegistry.asScala.toMap
+  }
 
   /**
    * Get a SparkRepository[DT]. If the given config path hasn't been registered, then the repository will
