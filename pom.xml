@@ -58,7 +58,7 @@
     </repositories>
 
     <properties>
-        <revision>0.4.3</revision>
+        <revision>1.0.0</revision>
         <changelist>-SNAPSHOT</changelist>
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
@@ -380,6 +380,7 @@
             <properties>
                 <spark.version>3.0.0-preview2</spark.version>
                 <spark.compat.version>3.0</spark.compat.version>
+                <spark.cassandra.connector.version>3.0</spark.cassandra.connector.version>
             </properties>
         </profile>
         <profile>
