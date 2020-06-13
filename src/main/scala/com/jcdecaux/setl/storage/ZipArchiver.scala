@@ -11,7 +11,7 @@ import com.jcdecaux.setl.internal.Logging
 import com.jcdecaux.setl.storage.connector.FileConnector
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import org.apache.commons.io.IOUtils
-import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, Path, UnsupportedFileSystemException}
+import org.apache.hadoop.fs.{FileSystem, Path, UnsupportedFileSystemException}
 
 class ZipArchiver() extends Compressor with Archiver with Logging {
 
@@ -112,19 +112,32 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
    * @return
    */
   @throws[UnsupportedFileSystemException]
+  @throws[NoSuchElementException]
   override def archive(outputPath: Path): this.type = {
-    val fs = fileSystem.getOrElse(throw new UnsupportedFileSystemException("The file system is not set yet"))
-    val hdfsDataOutputStream: FSDataOutputStream = fs.create(outputPath)
+    this.validInputs()
+    log.info(s"Archive to ${outputPath.toString}")
 
-    withOutputStream(new ZipOutputStream(hdfsDataOutputStream)) {
+    val dataOutputStream: OutputStream = fileSystem match {
+      case Some(hdfs) => hdfs.create(outputPath)
+      case _ =>
+        try {
+          new FileOutputStream(outputPath.toString)
+        } catch {
+          case e: FileNotFoundException =>
+            throw new FileNotFoundException("Cannot create output zip file. " +
+              "Archive without a valid Hadoop FileSystem is not guaranteed to be working. " +
+              s"Please provide a filesystem by calling setFileSystem(). Original message: ${e.getMessage}")
+        }
+    }
+
+    withOutputStream(new ZipOutputStream(dataOutputStream)) {
       zipOutputStream =>
         val iterator = fileEntries.entrySet().iterator()
         while (iterator.hasNext) {
           val entrySet = iterator.next()
           val path = entrySet.getValue
           val name = entrySet.getKey
-          log.debug(s"Read ${path.toString}")
-          val inputStream = fs.open(path)
+          val inputStream = inputStreamOf(path)
           val data = IOUtils.toByteArray(inputStream)
           val zipEntry = new ZipEntry(name)
           zipOutputStream.putNextEntry(zipEntry)
@@ -133,6 +146,28 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
         }
     }
     this
+  }
+
+  private[this] def validInputs(): Unit = {
+    if (fileEntries.isEmpty) {
+      throw new NoSuchElementException("There is no input to be archived")
+    }
+  }
+
+  private[this] def inputStreamOf(path: Path): InputStream = {
+    log.debug(s"Read ${path.toString}")
+    fileSystem match {
+      case Some(hdfs) => hdfs.open(path)
+      case _ =>
+        try {
+          new FileInputStream(path.toString)
+        } catch {
+          case e: FileNotFoundException =>
+            throw new FileNotFoundException("Cannot read input file. " +
+              "Archive without a valid Hadoop FileSystem is not guaranteed to be working. " +
+              s"Please provide a filesystem by calling setFileSystem(). Original message: ${e.getMessage}")
+        }
+    }
   }
 
   /**
@@ -167,7 +202,6 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
 
     new BufferedReader(inputStreamReader).lines().collect(Collectors.joining("\n"))
   }
-
 
   /**
    * For a given output stream and a partial function f, call <code>f(outputStream)</code> and then close the stream
