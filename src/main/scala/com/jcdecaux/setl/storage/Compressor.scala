@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.storage
 
-import java.io.{IOException, OutputStream}
+import java.io.IOException
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 
@@ -21,9 +21,5 @@ trait Compressor extends Serializable {
    */
   @throws[IOException]
   def decompress(bytes: Array[Byte]): String
-
-  protected def withOutputStream[T <: OutputStream](outputStream: T)(f: T => Unit): Unit = {
-    try f(outputStream) finally outputStream.close()
-  }
 
 }

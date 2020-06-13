@@ -1,6 +1,6 @@
 package com.jcdecaux.setl.storage
 
-import java.io.{BufferedReader, ByteArrayInputStream, ByteArrayOutputStream, InputStreamReader}
+import java.io._
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
@@ -123,7 +123,7 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
           val entrySet = iterator.next()
           val path = entrySet.getValue
           val name = entrySet.getKey
-          log.info(s"Read ${path.toString}")
+          log.debug(s"Read ${path.toString}")
           val inputStream = fs.open(path)
           val data = IOUtils.toByteArray(inputStream)
           val zipEntry = new ZipEntry(name)
@@ -139,7 +139,7 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
    * Compress an input string into a byte array
    */
   override def compress(input: String): Array[Byte] = {
-    if ((input == null) || (input.length() == 0)) {
+    if ((input == null) || input.isEmpty) {
       return null
     }
 
@@ -156,7 +156,7 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
    * Decompress a byte array into an input string
    */
   override def decompress(bytes: Array[Byte]): String = {
-    if ((bytes == null) || (bytes.length == 0)) {
+    if ((bytes == null) || bytes.isEmpty) {
       return ""
     }
 
@@ -168,4 +168,14 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
     new BufferedReader(inputStreamReader).lines().collect(Collectors.joining("\n"))
   }
 
+
+  /**
+   * For a given output stream and a partial function f, call <code>f(outputStream)</code> and then close the stream
+   *
+   * @param outputStream output stream
+   * @param f            function
+   */
+  private[this] def withOutputStream[T <: OutputStream](outputStream: T)(f: T => Unit): Unit = {
+    try f(outputStream) finally outputStream.close()
+  }
 }
