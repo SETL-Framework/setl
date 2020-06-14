@@ -6,7 +6,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.InvalidConnectorException
 import com.jcdecaux.setl.storage.connector.FileConnector
 import com.jcdecaux.setl.util.IOUtils
-import org.apache.hadoop.fs.{Path, UnsupportedFileSystemException}
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -25,7 +25,6 @@ class ZipArchiverSuite extends AnyFunSuite {
     assert(str3.getBytes().length >= compressor.compress(str3).length)
     assert(str4.getBytes().length >= compressor.compress(str4).length)
     assert(compressor.compress("") === null)
-
   }
 
   test("ZipArchiver should be able to decompress a Byte array to string") {
@@ -47,13 +46,14 @@ class ZipArchiverSuite extends AnyFunSuite {
     )) {
       override val storage: Storage = Storage.CSV
     }
+    assertThrows[NoSuchElementException](compressor.archive(new Path(connector.basePath.getParent, "output.zip")))
 
-    assertThrows[UnsupportedFileSystemException](compressor.archive(new Path(connector.basePath.getParent, "output.zip")))
-
-    compressor
-      .addConnector(connector, Some("dir"))
-      .addFile(new Path("src/test/resources/test-archiver/test-input-file.txt"), Some("my_file.txt"))
-      .archive(new Path(connector.basePath.getParent, "output.zip"))
+    IOUtils.withTempDir { dir =>
+      compressor
+        .addConnector(connector, Some("dir"))
+        .addFile(new Path("src/test/resources/test-archiver/test-input-file.txt"), Some("my_file.txt"))
+        .archive(new Path(dir.getCanonicalPath, "output.zip"))
+    }
   }
 
   test("ZipArchiver should throw exception") {
@@ -68,5 +68,15 @@ class ZipArchiverSuite extends AnyFunSuite {
       cp.addRepository(fileRepo)
       assertThrows[InvalidConnectorException](cp.addRepository(dbRepo))
     }
+  }
+
+  test("Archiver with local file") {
+    val archiver = new ZipArchiver
+    IOUtils.withTempDir { dir =>
+      archiver
+        .addFile(new Path("src/test/resources/test-archiver/test-input-file.txt"))
+        .archive(new Path(dir.getCanonicalPath, "test-input-file.zip"))
+    }
+
   }
 }
