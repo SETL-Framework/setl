@@ -25,7 +25,7 @@ You can start working by cloning [this template project](https://github.com/qxzz
 <dependency>
   <groupId>com.jcdecaux.setl</groupId>
   <artifactId>setl_2.11</artifactId>
-  <version>0.4.2</version>
+  <version>0.4.3</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
   <dependency>
     <groupId>com.jcdecaux.setl</groupId>
     <artifactId>setl_2.11</artifactId>
-    <version>0.4.3-SNAPSHOT</version>
+    <version>0.4.4-SNAPSHOT</version>
   </dependency>
 </dependencies>
 ```
