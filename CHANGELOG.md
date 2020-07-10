@@ -1,19 +1,21 @@
-## 0.4.3-SNAPSHOT
+## 0.4.3 (2020-07-10)
 Changes:
-- Updated spark-cassandra-connector from 2.4.2 to 2.5.0 (#117)
-- Updated spark-excel-connector from 0.12.4 to 0.13.1 (#117)
-- Updated spark-dynamodb-connector from 1.0.1 to 1.0.4 (#117)
-- Updated scalatest (scope test) from 3.1.0 to 3.1.2 (#117)
-- Updated postgresql (scope test) from 42.2.9 to 42.2.12 (#117)
+- Updated spark-cassandra-connector from 2.4.2 to 2.5.0 (PR #117)
+- Updated spark-excel-connector from 0.12.4 to 0.13.1 (PR #117)
+- Updated spark-dynamodb-connector from 1.0.1 to 1.0.4 (PR #117)
+- Updated scalatest (scope test) from 3.1.0 to 3.1.2 (PR #117)
+- Updated postgresql (scope test) from 42.2.9 to 42.2.12 (PR #117)
 
 New Features:
-- Added pipeline dependency check before starting the spark job (#113)
-- Added default Spark job group and description (#115)
-- Added `StructuredStreamingConnector` (#119)
-- Added `DeltaConnector` (#118)
+- Added pipeline dependency check before starting the spark job (PR #114)
+- Added default Spark job group and description (PR #116)
+- Added `StructuredStreamingConnector` (PR #119)
+- Added `DeltaConnector` (PR #118)
+- Added `ZipArchiver` that can zip files/directories (PR #124)
 
 Fixes
 - Fixed path separator in FileConnectorSuite that cause test failure
+- Fixed `Setl.hasExternalInput` that always returns false (PR #121)
 
 ## 0.4.2 (2020-02-15)
 - Fixed cross building issue (#111)
