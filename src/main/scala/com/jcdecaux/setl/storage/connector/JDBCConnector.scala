@@ -7,6 +7,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
+import org.apache.spark.sql.execution.ExtendedMode
 import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.execution.datasources.jdbc._
 
@@ -95,7 +96,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
        */
         if (sm == SaveMode.Overwrite.toString && this._read.get()) {
 
-          val queryExplainCommand = ExplainCommand(t.queryExecution.logical, extended = false)
+          val queryExplainCommand = ExplainCommand(t.queryExecution.logical, ExtendedMode)
           val explain = spark.sessionState
             .executePlan(queryExplainCommand)
             .executedPlan

@@ -149,6 +149,12 @@
             <groupId>com.crealytics</groupId>
             <artifactId>spark-excel_${scala.compat.version}</artifactId>
             <version>${spark.excel.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.audienceproject</groupId>
@@ -378,9 +384,11 @@
         <profile>
             <id>spark_3.0</id>
             <properties>
-                <spark.version>3.0.0-preview2</spark.version>
+                <spark.version>3.0.0</spark.version>
                 <spark.compat.version>3.0</spark.compat.version>
-                <spark.cassandra.connector.version>3.0</spark.cassandra.connector.version>
+                <spark.cassandra.connector.version>3.0.0-beta</spark.cassandra.connector.version>
+                <spark.dynamodb.version>1.1.0</spark.dynamodb.version>
+
             </properties>
         </profile>
         <profile>
