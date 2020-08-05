@@ -30,7 +30,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
-  test("Instanciation of constructors") {
+  test("Instantiation of constructors") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val options = Map[String, String](
