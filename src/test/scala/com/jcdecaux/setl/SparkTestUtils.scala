@@ -21,9 +21,9 @@ private[setl] object SparkTestUtils {
       case Some(ss) => ss.version
       case _ => throw new SparkException("No active Spark Session")
     }
-    requiredVersion.split("\\.").zip(currentVersion.split("\\.")).forall {
-      case (targetVer, thisVer) => thisVer.toInt >= targetVer.toInt
-    }
+    val targetVer = requiredVersion.replace(".", "") + "000"
+    val thisVer = currentVersion.replace(".", "") + "000"
+    thisVer.take(3).toInt >= targetVer.take(3).toInt
   }
 
 }

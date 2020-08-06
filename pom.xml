@@ -71,9 +71,9 @@
         <app.environment>local</app.environment>
         <apache.hadoop.version>2.9.2</apache.hadoop.version>
         <spark.cassandra.connector.version>2.5.0</spark.cassandra.connector.version>
-        <spark.excel.version>0.13.1</spark.excel.version>
+        <spark.excel.version>0.13.4</spark.excel.version>
         <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
-        <delta.version>0.6.0</delta.version>
+        <delta.version>0.7.0</delta.version>
         <typesafe.config.version>1.4.0</typesafe.config.version>
         <scalatest.version>3.1.2</scalatest.version>
         <postgresql.version>42.2.12</postgresql.version>
