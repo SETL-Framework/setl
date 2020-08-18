@@ -5,10 +5,9 @@ import java.io.File
 import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.repository.SparkRepository
+import com.jcdecaux.setl.util.SparkUtils
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.execution.ExtendedMode
-import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -157,7 +156,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
     deltaConnector.write(ds.toDF())
     val ds5 = repository.findBy(Condition("partition1", "=", 1)).select($"partition1".as[Long], $"partition2".as[String])
 
-    val explain = ExplainCommand(ds5.queryExecution.logical, ExtendedMode)
+    val explain = SparkUtils.explainCommandWithExtendedMode(ds5.queryExecution.logical)
     assert(
       spark.sessionState.executePlan(explain).executedPlan.executeCollect()
         .map(_.getString(0)).mkString("; ")

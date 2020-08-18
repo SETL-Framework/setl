@@ -282,8 +282,7 @@
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
-                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding}
-                        -Daws.dynamodb.endpoint=http://localhost:8000
+                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding} -Daws.dynamodb.endpoint=http://localhost:8000
                     </argLine>
                     <parallel>false</parallel>
                 </configuration>
