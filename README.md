@@ -1,8 +1,8 @@
 ![logo](images/logo_setl.png)
 ----------
 
-[![Build Status](https://travis-ci.com/JCDecaux/setl.svg?branch=master)](https://travis-ci.com/JCDecaux/setl)
-[![codecov](https://codecov.io/gh/JCDecaux/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/JCDecaux/setl)
+[![Build Status](https://travis-ci.com/SETL-Developers/setl.svg?branch=master)](https://travis-ci.com/SETL-Developers/setl)
+[![codecov](https://codecov.io/gh/SETL-Developers/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Developers/setl)
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
 [![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
 [![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
