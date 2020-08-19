@@ -5,9 +5,9 @@ import java.io.File
 import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.repository.SparkRepository
+import com.jcdecaux.setl.util.SparkUtils
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -15,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class DeltaConnectorSuite extends AnyFunSuite {
 
-  private def numberOfFiles(spark: SparkSession, path: String) : Long = {
+  private def numberOfFiles(spark: SparkSession, path: String): Long = {
     val filePaths = ArrayBuffer[Path]()
     val files = FileSystem
       .get(spark.sparkContext.hadoopConfiguration)
@@ -128,7 +128,12 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector delete") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder()
+      .setEnv("local")
+      .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .build()
+      .get()
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
@@ -144,7 +149,12 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("Delta connector should push down filter and select") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local")
+      .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .build()
+      .get()
+
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
@@ -156,7 +166,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
     deltaConnector.write(ds.toDF())
     val ds5 = repository.findBy(Condition("partition1", "=", 1)).select($"partition1".as[Long], $"partition2".as[String])
 
-    val explain = ExplainCommand(ds5.queryExecution.logical, extended = false)
+    val explain = SparkUtils.explainCommandWithExtendedMode(ds5.queryExecution.logical)
     assert(
       spark.sessionState.executePlan(explain).executedPlan.executeCollect()
         .map(_.getString(0)).mkString("; ")

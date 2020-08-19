@@ -73,6 +73,7 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
     df.write
       .options(conf.getWriterConf)
+      .mode(conf.getSaveMode)
       .format(sourceName)
   }
 
@@ -81,7 +82,12 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
     this.setJobDescription(s"Write data to table $tableName}")
     conf.getWriterConf.foreach(log.debug)
-    writer(df).option("tableName", tableName).save()
+
+    import com.audienceproject.spark.dynamodb.implicits._
+    df.write
+      .options(conf.getWriterConf)
+      .mode(conf.getSaveMode)
+      .dynamodb(tableName)
   }
 
   override def read(): DataFrame = {
