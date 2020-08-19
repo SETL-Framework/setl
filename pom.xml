@@ -76,7 +76,7 @@
         <delta.version>0.6.1</delta.version>
         <typesafe.config.version>1.4.0</typesafe.config.version>
         <scalatest.version>3.1.2</scalatest.version>
-        <postgresql.version>42.2.12</postgresql.version>
+        <postgresql.version>42.2.15</postgresql.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <scala.maven.plugin.version>4.3.0</scala.maven.plugin.version>
         <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
