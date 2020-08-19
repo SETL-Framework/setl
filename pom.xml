@@ -69,7 +69,7 @@
         <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
         <site.plugin.version>3.7.1</site.plugin.version>
         <app.environment>local</app.environment>
-        <apache.hadoop.version>2.9.2</apache.hadoop.version>
+        <apache.hadoop.version>3.3.0</apache.hadoop.version>
         <spark.cassandra.connector.version>2.5.1</spark.cassandra.connector.version>
         <spark.excel.version>0.13.4</spark.excel.version>
         <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
