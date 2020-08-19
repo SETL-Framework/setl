@@ -67,7 +67,7 @@
         <project.timezone>UTC</project.timezone>
         <java.version>1.8</java.version>
         <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
-        <site.plugin.version>3.7.1</site.plugin.version>
+        <site.plugin.version>3.9.1</site.plugin.version>
         <app.environment>local</app.environment>
     </properties>
 
