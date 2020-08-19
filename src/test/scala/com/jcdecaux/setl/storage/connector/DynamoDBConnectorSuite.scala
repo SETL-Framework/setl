@@ -188,6 +188,6 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
 
 object DynamoDBConnectorSuite {
 
-  val host: String = "http://localhost:8000"  // System.getProperty("aws.dynamodb.endpoint", "http://localhost:8000")
+  val host: String = "http://127.0.0.1:8000"  // System.getProperty("aws.dynamodb.endpoint", "http://localhost:8000")
 
 }

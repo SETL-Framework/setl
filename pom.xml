@@ -70,7 +70,7 @@
         <site.plugin.version>3.7.1</site.plugin.version>
         <app.environment>local</app.environment>
         <apache.hadoop.version>2.9.2</apache.hadoop.version>
-        <spark.cassandra.connector.version>2.5.0</spark.cassandra.connector.version>
+        <spark.cassandra.connector.version>2.5.1</spark.cassandra.connector.version>
         <spark.excel.version>0.13.4</spark.excel.version>
         <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
         <delta.version>0.6.1</delta.version>
@@ -282,7 +282,7 @@
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
-                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding} -Daws.dynamodb.endpoint=http://localhost:8000
+                    <argLine>-Duser.timezone=${project.timezone} -Dfile.encoding=${project.build.sourceEncoding} -Daws.dynamodb.endpoint=http://127.0.0.1:8000
                     </argLine>
                     <parallel>false</parallel>
                 </configuration>
