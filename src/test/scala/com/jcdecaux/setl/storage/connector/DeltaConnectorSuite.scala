@@ -15,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class DeltaConnectorSuite extends AnyFunSuite {
 
-  private def numberOfFiles(spark: SparkSession, path: String) : Long = {
+  private def numberOfFiles(spark: SparkSession, path: String): Long = {
     val filePaths = ArrayBuffer[Path]()
     val files = FileSystem
       .get(spark.sparkContext.hadoopConfiguration)
@@ -128,7 +128,12 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector delete") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder()
+      .setEnv("local")
+      .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .build()
+      .get()
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
@@ -144,7 +149,12 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("Delta connector should push down filter and select") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local")
+      .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .build()
+      .get()
+
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
