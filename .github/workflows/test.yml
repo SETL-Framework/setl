@@ -13,13 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VER: ["2.11", "2.12"]
-        SPARK_VER: ["3.0", "2.4", "2.3"]
+        SCALA_VER: ["2.12", "2.11"]
+        SPARK_VER: ["2.4", "2.3"]
         exclude:
           - SCALA_VER: 2.12
             SPARK_VER: 2.3
-          - SCALA_VER: 2.11
-            SPARK_VER: 3.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -52,3 +50,4 @@ jobs:
         with:
           flags: pr
           name: codecov-pull-request
+          
