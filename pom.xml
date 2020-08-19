@@ -60,7 +60,7 @@
     <properties>
         <revision>0.4.3</revision>
         <changelist>-SNAPSHOT</changelist>
-        <scala.version>2.12.10</scala.version>
+        <scala.version>2.13.3</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
