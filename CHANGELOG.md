@@ -1,3 +1,10 @@
+## 1.0.0 (2020-08-19)
+New Features:
+- Added Spark 3.0 support
+
+Fixes:
+- Fixed save mode in DynamoDB Connector
+
 ## 0.4.3 (2020-07-10)
 Changes:
 - Updated spark-cassandra-connector from 2.4.2 to 2.5.0 (PR #117)

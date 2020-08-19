@@ -116,8 +116,8 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
     assert(readData.collect().length === input.length)
     readData.select($"col1", $"col2").collect() should contain theSameElementsAs data.collect()
 
-    val connector2 = new DynamoDBConnector("eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
-    val connector3 = new DynamoDBConnector(spark, "eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
+    val connector2 = new DynamoDBConnector("eu-west-1", "test-table", SaveMode.Overwrite, "10000")
+    val connector3 = new DynamoDBConnector(spark, "eu-west-1", "test-table", SaveMode.Overwrite, "10000")
     assert(connector2.read().collect().length === input.length)
     assert(connector3.read().collect().length === input.length)
 
