@@ -376,7 +376,7 @@
         <profile>
             <id>spark_2.4</id>
             <properties>
-                <spark.version>2.4.5</spark.version>
+                <spark.version>3.0.0-preview2</spark.version>
                 <spark.compat.version>2.4</spark.compat.version>
             </properties>
         </profile>
