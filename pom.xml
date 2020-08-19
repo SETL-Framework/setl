@@ -79,7 +79,7 @@
         <postgresql.version>42.2.12</postgresql.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <scala.maven.plugin.version>4.3.0</scala.maven.plugin.version>
-        <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
+        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.1.0</maven.source.plugin.version>
         <maven.surefire.plugin.version>2.7</maven.surefire.plugin.version>
         <scalatest.maven.plugin.version>2.0.0</scalatest.maven.plugin.version>
