@@ -9,11 +9,10 @@ on:
 
 jobs:
   test_setl:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
         SCALA_VER: ["2.11", "2.12"]
         SPARK_VER: ["3.0", "2.4", "2.3"]
         exclude:
