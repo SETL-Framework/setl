@@ -465,7 +465,11 @@ class NodeSuite extends AnyFunSuite {
                            |
                            |DatasetComplexProductFinal <|.. ConcreteProducer1 : Output
                            |""".stripMargin
-    assert(node.toDiagram.replaceAll("\n|\r\n|\r", System.getProperty("line.separator")) === expectedOutput)
+
+    assert(
+      node.toDiagram.replaceAll("\n|\r\n|\r", System.getProperty("line.separator")) ===
+      expectedOutput.replaceAll("\n|\r\n|\r", System.getProperty("line.separator"))
+    )
   }
 
   test("Node should be able to generate a Mermaid diagram without throwing errors") {

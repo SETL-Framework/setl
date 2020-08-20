@@ -36,7 +36,12 @@
         <developer>
             <id>QXZ</id>
             <name>Qin Xuzhou</name>
-            <email>xuzhou.qin@jcdecaux.com</email>
+            <email>me@qinxuzhou.com</email>
+        </developer>
+        <developer>
+            <id>JTR</id>
+            <name>Joris Truong</name>
+            <email>joris.truong@jcdecaux.com</email>
         </developer>
     </developers>
 
@@ -60,33 +65,35 @@
     <properties>
         <revision>1.0.0</revision>
         <changelist>-SNAPSHOT</changelist>
+        <java.version>1.8</java.version>
+        <app.environment>local</app.environment>
+        <apache.hadoop.version>3.3.0</apache.hadoop.version>
+        <delta.version>0.7.0</delta.version>
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
+        <scala.maven.plugin.version>4.3.0</scala.maven.plugin.version>
+        <scalatest.version>3.2.1</scalatest.version>
+        <scalatest.maven.plugin.version>2.0.0</scalatest.maven.plugin.version>
+        <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
+        <spark.version>3.0.0</spark.version>
+        <spark.compat.version>3.0</spark.compat.version>
+        <spark.cassandra.connector.version>3.0.0-beta</spark.cassandra.connector.version>
+        <spark.dynamodb.version>1.1.0</spark.dynamodb.version>
+        <spark.excel.version>0.13.4</spark.excel.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
-        <java.version>1.8</java.version>
-        <scoverage.plugin.version>1.4.0</scoverage.plugin.version>
-        <site.plugin.version>3.7.1</site.plugin.version>
-        <app.environment>local</app.environment>
-        <apache.hadoop.version>2.9.2</apache.hadoop.version>
-        <spark.cassandra.connector.version>2.5.1</spark.cassandra.connector.version>
-        <spark.excel.version>0.13.4</spark.excel.version>
-        <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
-        <delta.version>0.6.1</delta.version>
-        <typesafe.config.version>1.4.0</typesafe.config.version>
-        <scalatest.version>3.1.2</scalatest.version>
-        <postgresql.version>42.2.12</postgresql.version>
+        <postgresql.version>42.2.15</postgresql.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-        <scala.maven.plugin.version>4.3.0</scala.maven.plugin.version>
-        <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
-        <maven.source.plugin.version>3.1.0</maven.source.plugin.version>
-        <maven.surefire.plugin.version>2.7</maven.surefire.plugin.version>
-        <scalatest.maven.plugin.version>2.0.0</scalatest.maven.plugin.version>
+        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
+        <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+        <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
-        <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
-        <maven.help.plugin.version>3.1.0</maven.help.plugin.version>
+        <maven.help.plugin.version>3.2.0</maven.help.plugin.version>
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.site.plugin.version>3.9.1</maven.site.plugin.version>
+        <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
+        <typesafe.config.version>1.4.0</typesafe.config.version>
     </properties>
 
     <dependencies>
@@ -335,7 +342,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>${site.plugin.version}</version>
+                <version>${maven.site.plugin.version}</version>
                 <configuration>
                     <skip>true</skip>
                 </configuration>
@@ -378,16 +385,10 @@
             <properties>
                 <spark.version>2.4.5</spark.version>
                 <spark.compat.version>2.4</spark.compat.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>spark_3.0</id>
-            <properties>
-                <spark.version>3.0.0</spark.version>
-                <spark.compat.version>3.0</spark.compat.version>
-                <spark.cassandra.connector.version>3.0.0-beta</spark.cassandra.connector.version>
-                <spark.dynamodb.version>1.1.0</spark.dynamodb.version>
-                <delta.version>0.7.0</delta.version>
+                <spark.cassandra.connector.version>2.5.1</spark.cassandra.connector.version>
+                <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
+                <delta.version>0.6.1</delta.version>
+                <apache.hadoop.version>2.9.2</apache.hadoop.version>
             </properties>
         </profile>
         <profile>
@@ -395,6 +396,15 @@
             <properties>
                 <spark.version>2.3.4</spark.version>
                 <spark.compat.version>2.3</spark.compat.version>
+                <spark.cassandra.connector.version>2.5.1</spark.cassandra.connector.version>
+                <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
+                <delta.version>0.6.1</delta.version>
+                <apache.hadoop.version>2.9.2</apache.hadoop.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark_3.0</id>
+            <properties>
             </properties>
         </profile>
         <profile>
@@ -412,7 +422,8 @@
         <profile>
             <id>release</id>
             <properties>
-                <changelist></changelist>
+                <changelist>
+                </changelist>
             </properties>
             <build>
                 <plugins>
