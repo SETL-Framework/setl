@@ -72,7 +72,7 @@
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <scala.maven.plugin.version>4.3.0</scala.maven.plugin.version>
-        <scalatest.version>3.2.1</scalatest.version>
+        <scalatest.version>3.3.0-SNAP2</scalatest.version>
         <scalatest.maven.plugin.version>2.0.0</scalatest.maven.plugin.version>
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
         <spark.version>3.0.0</spark.version>
