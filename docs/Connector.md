@@ -98,6 +98,33 @@ To use `org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider`:
 | fs.s3a.secret.key | your_s3a_secret_key | 
 | fs.s3a.session.token | your_s3a_session_token | 
 
+| key | value |
+| ------ | ------ |
+| fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
+| fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
+| fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
+| fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
+| fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
+| fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
+
 To use `com.amazonaws.auth.InstanceProfileCredentialsProvider`:
 
 | key | value |
