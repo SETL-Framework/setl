@@ -3,6 +3,10 @@ name: test
 on:
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
 
 jobs:
   test_setl:

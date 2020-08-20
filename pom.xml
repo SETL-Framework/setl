@@ -13,7 +13,7 @@
         SETL is an open-source Scala framework powered by Apache Spark that helps developers to structure ETL projects,
         modularize data transformation logic and speed up the development.
     </description>
-    <url>https://github.com/JCDecaux/setl</url>
+    <url>https://github.com/SETL-Developers/setl</url>
 
     <licenses>
         <license>
@@ -46,9 +46,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/JCDecaux/setl.git</connection>
-        <developerConnection>scm:git:ssh://github.com:JCDecaux/setl.git</developerConnection>
-        <url>https://github.com/JCDecaux/setl/tree/master</url>
+        <connection>scm:git:git://github.com/SETL-Developers/setl.git</connection>
+        <developerConnection>scm:git:ssh://github.com:SETL-Developers/setl.git</developerConnection>
+        <url>https://github.com/SETL-Developers/setl/tree/master</url>
     </scm>
 
     <repositories>
