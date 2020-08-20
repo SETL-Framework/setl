@@ -126,7 +126,7 @@ Send a delete request.
 ## CSVConnector
 
 ### Options
-| name  | default
+| name  | default   |
 | ------  |  ------- |
 | path |   <user_input> |
 | schema | <user_input> |
@@ -148,7 +148,7 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 
 ## JSONConnector
 ### Options
-| name  | default
+| name  | default |
 | ------  |  ------- |
 | path | <user_input>  |
 | schema | <user_input>  |
@@ -170,7 +170,7 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 
 ## ParquetConnector
 ### Options
-| name  | default
+| name  | default |
 | ------  |  ------- |
 | path | <user_input>  |
 | filenamePattern* | <optional_input>  |
@@ -178,7 +178,7 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 
 ## ExcelConnector
 ### Options
-| name  | default
+| name  | default |
 | ------  |  ------- |
 | path | <user_input>  |
 | filenamePattern* | <optional_input>  |
@@ -198,7 +198,7 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 ## DynamoDBConnector
 ### Options
 
-| name  | default
+| name  | default |
 | ------  |  ------- |
 | region | <user_input>  |
 | table | <user_input>  |
@@ -207,7 +207,7 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 ## CassandraConnector
 ### Options
 
-| name  | default
+| name  | default |
 | ------  |  ------- |
 | keyspace | <user_input>  |
 | table | <user_input>  |
