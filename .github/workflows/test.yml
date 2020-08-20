@@ -3,11 +3,6 @@ name: test
 on:
   pull_request:
     branches: [ master ]
-  push:
-    branches-ignore:
-      - 'master'
-    paths-ignore:
-      - 'README.md'
 
 jobs:
   test_setl:
@@ -47,8 +42,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
-        if: ${{ matrix.SPARK_VER == '3.0' && matrix.SCALA_VER == '2.12' }}
         with:
-          flags: pr
+          flags: pr_${{ matrix.SCALA_VER }}_${{ matrix.SPARK_VER }}
           name: codecov-pull-request
 

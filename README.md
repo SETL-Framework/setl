@@ -234,12 +234,13 @@ You can either copy the code into a Markdown viewer or just copy the link into y
 
 ## Dependencies
 
-**SETL** currently supports the following data source:
+**SETL** currently supports the following data source. You won't need to provide these libraries in your project (except the JDBC driver):
   - All file formats supported by Apache Spark (csv, json, parquet etc)
-  - Excel
+  - Delta
+  - Excel ([crealytics/spark-excel](https://github.com/crealytics/spark-excel))
+  - Cassandra ([datastax/spark-cassandra-connector](https://github.com/datastax/spark-cassandra-connector))
+  - DynamoDB ([audienceproject/spark-dynamodb](https://github.com/audienceproject/spark-dynamodb))
   - JDBC (you have to provide the jdbc driver)
-  - Cassandra
-  - DynamoDB
 
 To read/write data from/to AWS S3 (or other storage services), you should include the 
 corresponding hadoop library in your project.
@@ -257,13 +258,17 @@ You should also provide Scala and Spark in your pom file. SETL is tested against
 
 | Spark Version | Scala Version  | Note                         |
 | ------------- | -------------  | -----------------------------|
-|     2.4       |        2.11    | :heavy_check_mark: Ok        |
+|     3.0       |        2.12    | :heavy_check_mark: Ok        |
 |     2.4       |        2.12    | :heavy_check_mark: Ok        |
+|     2.4       |        2.11    | :heavy_check_mark: Ok        |
 |     2.3       |        2.11    | :warning: see *known issues* |
 
 ## Known issues
 - `DynamoDBConnector` doesn't work with Spark version 2.3
 - `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
+
+## Test Coverage
+![](https://codecov.io/gh/SETL-Developers/setl/branch/master/graphs/sunburst.svg)
 
 ## Documentation
 [Check our wiki](https://github.com/JCDecaux/setl/wiki)
