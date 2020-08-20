@@ -58,9 +58,8 @@ Data could be partitioned before saving. To do this, call `partitionBy(columns: 
 #### Suffix
 A suffix is similar to a partition, but it is defined manually while calling `write(df, suffix)`. **Connector** handles the suffix by creating a subdirectory with the same naming convention as Spark partition (by default it will be `_user_defined_suffix=suffix`.
 
->>>
-:warning: Currently (v0.3), you **can't** mix with-suffix write and non-suffix write when your data are partitioned. An **IllegalArgumentException** will be thrown in this case. The reason for which it's not supported is that, as suffix is handled by *Connector* and partition is handled by *Spark*, a suffix may confuse Spark when the latter tries to infer the structure of DataFrame.
->>>
+>:warning: Currently (v0.3), you **can't** mix with-suffix write and non-suffix write when your data are partitioned. An **IllegalArgumentException** will be thrown in this case. The reason for which it's not supported is that, as suffix is handled by *Connector* and partition is handled by *Spark*, a suffix may confuse Spark when the latter tries to infer the structure of DataFrame.
+
 
 #### Multiple files reading and name pattern matching
 You can read multiple files at once if the `path` you set in **options** is a directory (instead of a file path). You can also filter files by setting a regex pattern `filenamePattern` in **options**.
@@ -95,9 +94,9 @@ To use `org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider`:
 | key | value |
 | ------ | ------ |
 | fs.s3a.aws.credentials.provider | org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider |
-| fs.s3a.access.key | <you_s3a_access_key> | 
-| fs.s3a.secret.key | <you_s3a_secret_key> | 
-| fs.s3a.session.token | <you_s3a_session_token> | 
+| fs.s3a.access.key | your_s3a_access_key | 
+| fs.s3a.secret.key | your_s3a_secret_key | 
+| fs.s3a.session.token | your_s3a_session_token | 
 
 To use `com.amazonaws.auth.InstanceProfileCredentialsProvider`:
 
@@ -129,10 +128,10 @@ Send a delete request.
 ### Options
 | name  | default
 | ------  |  ------- |
-|path||
-|schema||
-|filenamePattern*||
-|saveMode||
+| path |   <user_input> |
+| schema | <user_input> |
+| filenamePattern* | <optional_input> |
+| saveMode | <user_input> |
 | sep  |  `,` |
 | encoding   | `UTF-8`|
 | quote  | `"`|
@@ -151,10 +150,10 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 ### Options
 | name  | default
 | ------  |  ------- |
-|path||
-|schema||
-|filenamePattern*||
-|saveMode||
+| path | <user_input>  |
+| schema | <user_input>  |
+| filenamePattern* | <optional_input>  |
+| saveMode | <user_input>  |
 | primitivesAsString  |  `false` |
 | prefersDecimal   | `false`|
 | allowComments  | `false`|
@@ -173,44 +172,44 @@ For other options, please refer to [this doc](https://docs.databricks.com/spark/
 ### Options
 | name  | default
 | ------  |  ------- |
-|path||
-|filenamePattern||
-|saveMode||
+| path | <user_input>  |
+| filenamePattern* | <optional_input>  |
+| saveMode | <user_input>  |
 
 ## ExcelConnector
 ### Options
 | name  | default
 | ------  |  ------- |
-|path||
-|filenamePattern*||
-|schema||
-|saveMode||
-|useHeader||
-|dataAddress|`A1`|
-|treatEmptyValuesAsNulls|`true`|
-|inferSchema|`false`|
-|addColorColumns|`false`|
-| dateFormat  | `yyyy-MM-dd`|
-| timestampFormat  | `yyyy-mm-dd hh:mm:ss.000`|
-|maxRowsInMemory|None|
-|excerptSize|10|
-|workbookPassword|None|
+| path | <user_input>  |
+| filenamePattern* | <optional_input>  |
+| schema | <user_input>  |
+| saveMode | <user_input>  |
+| useHeader | <user_input>  |
+| dataAddress | `A1` |
+| treatEmptyValuesAsNulls | `true` |
+| inferSchema | `false` |
+| addColorColumns | `false` |
+| dateFormat  | `yyyy-MM-dd` |
+| timestampFormat  | `yyyy-mm-dd hh:mm:ss.000` |
+| maxRowsInMemory  | None |
+| excerptSize  | 10 |
+| workbookPassword  | None |
 
 ## DynamoDBConnector
 ### Options
 
 | name  | default
 | ------  |  ------- |
-|region||
-|table||
-|saveMode||
+| region | <user_input>  |
+| table | <user_input>  |
+| saveMode | <user_input>  |
 
 ## CassandraConnector
 ### Options
 
 | name  | default
 | ------  |  ------- |
-|keyspace||
-|table||
-|partitionKeyColumns| `None` |
-|clusteringKeyColumns| `None` |
+| keyspace | <user_input>  |
+| table | <user_input>  |
+| partitionKeyColumns | `None` |
+| clusteringKeyColumns | `None` |
