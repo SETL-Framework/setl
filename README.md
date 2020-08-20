@@ -18,9 +18,11 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
 ## Use SETL
 
 ### In a new project
+
 You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
 
 ### In an existing project
+
 ```xml
 <dependency>
   <groupId>com.jcdecaux.setl</groupId>
@@ -48,7 +50,9 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
 ```
 
 ## Quick Start
+
 ### Basic concept
+
 With SETL, an ETL application could be represented by a `Pipeline`. A `Pipeline` contains multiple `Stages`. In each stage, we could find one or several `Factories`.
 
 The class `Factory[T]` is an abstraction of a data transformation that will produce an object of type `T`. It has 4 methods (*read*, *process*, *write* and *get*) that should be implemented by the developer.
@@ -58,6 +62,7 @@ The class `SparkRepository[T]` is a data access layer abstraction. It could be u
 The entry point of a SETL project is the object `com.jcdecaux.setl.Setl`, which will handle the pipeline and spark repository instantiation.
 
 ### Show me some code
+
 You can find the following tutorial code in [the starter template of SETL](https://github.com/qxzzxq/setl-template). Go and clone it :)
 
 Here we show a simple example of creating and saving a **Dataset[TestObject]**. The case class **TestObject** is defined as follows:
@@ -67,6 +72,7 @@ case class TestObject(partition1: Int, partition2: String, clustering1: String, 
 ```
 
 #### Context initialization
+
 Suppose that we want to save our output into `src/main/resources/test_csv`. We can create a configuration file **local.conf** in `src/main/resources` with the following content that defines the target datastore to save our dataset:
 
 ```txt
@@ -92,6 +98,7 @@ setl.setSparkRepository[TestObject]("testObjectRepository")
 ```
 
 #### Implementation of Factory
+
 We will create our `Dataset[TestObject]` inside a `Factory[Dataset[TestObject]]`. A `Factory[A]` will always produce an object of type `A`, and it contains 4 abstract methods that you need to implement:
 - read
 - process
@@ -133,6 +140,7 @@ class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
 ```
 
 #### Define the pipeline
+
 To execute the factory, we should add it into a pipeline.
 
 When we call `setl.newPipeline()`, **Setl** will instantiate a new **Pipeline** and configure all the registered repositories as inputs of the pipeline. Then we can call `addStage` to add our factory into the pipeline.
@@ -144,12 +152,14 @@ val pipeline = setl
 ```
 
 #### Run our pipeline
+
 ```scala
 pipeline.describe().run()
 ```
 The dataset will be saved into `src/main/resources/test_csv`
 
 #### What's more?
+
 As our `MyFactory` produces a `Dataset[TestObject]`, it can be used by other factories of the same pipeline.
 
 ```scala
@@ -180,6 +190,7 @@ pipeline.addStage[AnotherFactory]()
 ```
 
 ### Generate pipeline diagram (with v0.4.1+)
+
 You can generate a [Mermaid diagram](https://mermaid-js.github.io/mermaid/#/) by doing:
 ```scala
 pipeline.showDiagram()
@@ -264,15 +275,19 @@ You should also provide Scala and Spark in your pom file. SETL is tested against
 |     2.3       |        2.11    | :warning: see *known issues* |
 
 ## Known issues
+
 - `DynamoDBConnector` doesn't work with Spark version 2.3
 - `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
 
 ## Test Coverage
-![](https://codecov.io/gh/SETL-Developers/setl/branch/master/graphs/sunburst.svg)
+
+[![coverage.svg](https://codecov.io/gh/SETL-Developers/setl/branch/master/graphs/sunburst.svg)](https://codecov.io/gh/SETL-Developers/setl)
 
 ## Documentation
+
 [https://setl-developers.github.io/setl/](https://setl-developers.github.io/setl/)
 
 ## Contributing to SETL
+
 [Check our contributing guide](https://github.com/SETL-Developers/setl/blob/master/CONTRIBUTING.md)
 
