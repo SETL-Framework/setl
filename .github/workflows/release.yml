@@ -48,6 +48,14 @@ jobs:
           export AWS_REGION="eu-west-1"
           mvn -B -ntp clean:clean scoverage:report -P snapshot,spark_${{ matrix.SPARK_VER }}
 
+      # If the tag follows the format SETL-X.Y.Z-RC*, then release the RC version
+      - name: RC version deployment
+        if: ${{ startsWith( github.ref, 'refs/tags/SETL-' ) && contains( github.ref, '-RC' ) }}
+        run: |
+          RC_VER=-$(echo ${{ github.ref }} | cut -d'-' -f 3)
+          mvn clean deploy scala:doc -ntp -B -DskipTests -P release,spark_${{ matrix.SPARK_VER }} -Dchangelist=$RC_VER
+
+      # If the tag follows the format SETL-X.Y.Z, then release the stable version
       - name: Deployment
-        if: ${{ startsWith( github.ref, 'refs/tags/SETL' ) }}
+        if: ${{ startsWith( github.ref, 'refs/tags/SETL-' ) && !contains( github.ref, '-RC' ) }}
         run: mvn clean deploy scala:doc -ntp -B -DskipTests -P release,spark_${{ matrix.SPARK_VER }}
