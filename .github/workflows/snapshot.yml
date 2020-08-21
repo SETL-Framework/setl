@@ -9,7 +9,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
 
 jobs:
-  deploy_snapshot:
+  snapshot_deployment:
     runs-on: ubuntu-latest
     strategy:
       matrix:

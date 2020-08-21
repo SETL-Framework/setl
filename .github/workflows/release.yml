@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  deploy_snapshot:
+  release_deployment:
     runs-on: ubuntu-latest
     strategy:
       matrix:
