@@ -35,9 +35,9 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     val connector = new ConnectorBuilder(Properties.csvConfigConnectorBuilder).build().get()
     connector.write(testTable.toDF())
 
-    val connector2 = new ConnectorBuilder(spark, Some(Properties.csvConfigConnectorBuilder), None).build().get()
-    val connector3 = new ConnectorBuilder(spark, Properties.csvConfigConnectorBuilder).build().get()
-    val connector4 = new ConnectorBuilder(spark, conf).build().get()
+    val connector2 = new ConnectorBuilder(Some(Properties.csvConfigConnectorBuilder), None).build().get()
+    val connector3 = new ConnectorBuilder(Properties.csvConfigConnectorBuilder).build().get()
+    val connector4 = new ConnectorBuilder(conf).build().get()
 
     assert(connector.read().count() === 3)
     assert(connector2.read().count() === 3)

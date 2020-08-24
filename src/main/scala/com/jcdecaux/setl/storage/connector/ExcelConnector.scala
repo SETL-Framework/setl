@@ -3,6 +3,7 @@ package com.jcdecaux.setl.storage.connector
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.internal.HasReaderWriter
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -40,7 +41,7 @@ class ExcelConnector(val path: String,
                      var workbookPassword: Option[String],
                      var schema: Option[StructType],
                      var saveMode: SaveMode
-                    ) extends Connector {
+                    ) extends Connector with HasReaderWriter {
 
   // CONSTRUCTORS
   def this(spark: SparkSession,

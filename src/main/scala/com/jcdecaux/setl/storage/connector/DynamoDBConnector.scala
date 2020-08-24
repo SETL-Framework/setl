@@ -3,6 +3,7 @@ package com.jcdecaux.setl.storage.connector
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.{Conf, DynamoDBConnectorConf}
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.internal.HasReaderWriter
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -21,7 +22,7 @@ import org.apache.spark.sql._
  * }}}
  */
 @InterfaceStability.Evolving
-class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
+class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector with HasReaderWriter {
 
   def this(conf: Map[String, String]) = this(new DynamoDBConnectorConf().set(conf))
 

@@ -4,12 +4,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.jcdecaux.setl.config.{Conf, JDBCConnectorConf}
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.internal.HasReaderWriter
 import com.jcdecaux.setl.util.{SparkUtils, TypesafeConfigUtils}
 import com.typesafe.config.Config
 import org.apache.spark.sql._
 import org.apache.spark.sql.execution.datasources.jdbc._
 
-class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
+class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector with HasReaderWriter {
 
   private[this] val _read: AtomicBoolean = new AtomicBoolean(false)
   private[this] val _source: String = s"JDBCRelation(${conf.getDbTable.get})"
