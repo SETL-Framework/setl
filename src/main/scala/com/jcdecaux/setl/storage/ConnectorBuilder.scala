@@ -70,7 +70,7 @@ class ConnectorBuilder(val config: Either[Config, Conf]) extends Builder[Connect
         c.getAs[Storage]("storage")
     }
 
-    require(storage.nonEmpty)
+    require(storage.nonEmpty, "Storage type is not defined")
 
     val argClass = if (config.isLeft) {
       classOf[Config]

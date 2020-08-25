@@ -30,7 +30,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     assert(builder.getAs[String]("path").get === "my/test/path")
 
     val builder2 = new SparkRepositoryBuilder[TestObject]()
-    assertThrows[com.jcdecaux.setl.exception.UnknownException.Storage](builder2.build())
+    assertThrows[IllegalArgumentException](builder2.build())
 
     val builder3 = new SparkRepositoryBuilder[TestObject](spark)
     builder3.setPath("my/test/path")
@@ -92,7 +92,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
   test("SparkRepository build with typesafe config") {
     val conf = ConfigFactory.load("test_priority.conf")
     val builder = new SparkRepositoryBuilder[TestObject](conf)
-    assertThrows[UnknownException.Storage](builder.build())
+    assertThrows[IllegalArgumentException](builder.build())
   }
 
   test("SparkRepository cassandra") {

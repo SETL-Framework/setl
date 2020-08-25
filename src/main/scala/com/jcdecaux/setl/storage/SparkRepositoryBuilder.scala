@@ -152,13 +152,7 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
     config match {
       case Some(typeSafeConfig) =>
         log.debug("Build connector with TypeSafe configuration")
-        try {
-          return new ConnectorBuilder(typeSafeConfig).build().get()
-        } catch {
-          case _: UnknownException.Storage => log.error("Unknown storage type in connector configuration")
-          case e: Throwable => throw e
-        }
-
+        return new ConnectorBuilder(typeSafeConfig).build().get()
       case _ =>
     }
 
