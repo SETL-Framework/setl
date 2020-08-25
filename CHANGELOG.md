@@ -4,6 +4,7 @@ New Features:
 
 Changes:
 - Added `ConnectorInterface` to support custom connectors
+- Changed default hadoop version to 3.2.0
 
 Fixes:
 - Fixed save mode in DynamoDB Connector
