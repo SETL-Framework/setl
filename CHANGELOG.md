@@ -2,6 +2,9 @@
 New Features:
 - Added Spark 3.0 support
 
+Changes:
+- Added `ConnectorInterface` to support custom connectors
+
 Fixes:
 - Fixed save mode in DynamoDB Connector
 
