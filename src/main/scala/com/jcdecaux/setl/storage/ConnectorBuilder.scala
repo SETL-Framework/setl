@@ -65,33 +65,72 @@ class ConnectorBuilder(val config: Either[Config, Conf]) extends Builder[Connect
   private[this] def buildConnector(config: Either[Config, Conf]): Connector = {
     val storage = config match {
       case Left(c) =>
-        TypesafeConfigUtils.getAs[Storage](c, "storage")
+        TypesafeConfigUtils.getAs[Storage](c, ConnectorBuilder.STORAGE)
       case Right(c) =>
-        c.getAs[Storage]("storage")
+        c.getAs[Storage](ConnectorBuilder.STORAGE)
     }
 
     require(storage.nonEmpty, "Storage type is not defined")
 
-    val argClass = if (config.isLeft) {
-      classOf[Config]
-    } else {
-      classOf[Conf]
-    }
-
-    log.debug(s"Build ${storage.get} connector with ${argClass.getCanonicalName}")
 
     if (storage.get != Storage.OTHER) {
-      val constructor = connectorConstructorOf(storage.get, argClass)
-      constructor.newInstance(
-        config match {
-          case Left(c) => c
-          case Right(c) => c
-        }
-      )
+      val argClass = if (config.isLeft) {
+        classOf[Config]
+      } else {
+        classOf[Conf]
+      }
+
+      log.debug(s"Build ${storage.get} connector with ${argClass.getCanonicalName}")
+
+      if (classOf[ConnectorInterface].isAssignableFrom(Class.forName(storage.get.connectorName()))) {
+        log.debug("Detect V2 connector")
+        instantiateConnectorInterface(storage.get.connectorName(), config)
+      } else {
+        val constructor = connectorConstructorOf(storage.get, argClass)
+        constructor.newInstance(
+          config match {
+            case Left(c) => c
+            case Right(c) => c
+          }
+        )
+      }
+
+
     } else {
-      throw new UnknownException.Storage(s"Storage $storage is not supported")
+
+      val connectorName = config match {
+        case Left(c) =>
+          TypesafeConfigUtils.getAs[String](c, ConnectorBuilder.CLASS)
+        case Right(c) =>
+          c.getAs[String](ConnectorBuilder.CLASS)
+      }
+
+      require(connectorName.nonEmpty, s"A class reference of the custom connector must be provided in the '${ConnectorBuilder.CLASS}' field'")
+
+      instantiateConnectorInterface(connectorName.get, config)
     }
 
+  }
+
+  /**
+   * Instantiate a ConnectorInterface
+   * @param cls string of connector interface name
+   * @param config configuration
+   * @return
+   */
+  private[this] def instantiateConnectorInterface(cls: String, config: Either[Config, Conf]): ConnectorInterface = {
+    val _cls = Class.forName(cls)
+    require(classOf[ConnectorInterface].isAssignableFrom(_cls), s"The class $cls is not an implementation of ConnectorInterface")
+    val cst = _cls.getDeclaredConstructor()
+    cst.setAccessible(true)
+    val connectorInterface = cst.asInstanceOf[Constructor[ConnectorInterface]].newInstance()
+
+    config match {
+      case Left(c) => connectorInterface.setConfig(c)
+      case Right(c) => connectorInterface.setConf(c)
+    }
+
+    connectorInterface
   }
 
   /**
@@ -112,4 +151,9 @@ class ConnectorBuilder(val config: Either[Config, Conf]) extends Builder[Connect
   }
 
   override def get(): Connector = connector
+}
+
+object ConnectorBuilder {
+  val STORAGE: String = "storage"
+  val CLASS: String = "class"
 }

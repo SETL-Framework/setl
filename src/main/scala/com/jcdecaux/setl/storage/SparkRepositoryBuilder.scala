@@ -128,6 +128,8 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
 
   def setWorkbookPassword(pwd: String): this.type = set("workbookPassword", pwd)
 
+  def setCustomConnectorClass(cls: String): this.type = set(ConnectorBuilder.CLASS, cls)
+
   /**
    * Build an object
    *

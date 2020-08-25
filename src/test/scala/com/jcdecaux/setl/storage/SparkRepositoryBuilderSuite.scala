@@ -338,8 +338,9 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
       .setEnv("local")
       .getOrCreate()
 
-    // UnknownException.Storage should be thrown if the given storage type is not supported
-    assertThrows[UnknownException.Storage](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
+    assertThrows[IllegalArgumentException](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build(),
+      "IllegalArgumentException should be thrown if storage = OTHER and no available class reference is provided"
+    )
 
     // NoSuchElementException should be thrown if missing arguments
     assertThrows[InvocationTargetException](new SparkRepositoryBuilder[TestObject](Storage.CSV).build())
@@ -353,7 +354,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
       .setEnv("local")
       .getOrCreate()
 
-    if(checkSparkVersion.isDefined) {
+    if (checkSparkVersion.isDefined) {
       assume(SparkTestUtils.checkSparkVersion(checkSparkVersion.get))
     }
 

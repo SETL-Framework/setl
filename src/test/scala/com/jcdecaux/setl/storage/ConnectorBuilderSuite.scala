@@ -7,10 +7,10 @@ import com.jcdecaux.setl.config.{Conf, Properties}
 import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.exception.{ConfException, UnknownException}
 import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
-import com.jcdecaux.setl.storage.connector.{CSVConnector, DeltaConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
-import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject}
-import com.typesafe.config.ConfigFactory
-import org.apache.spark.sql.SparkSession
+import com.jcdecaux.setl.storage.connector.{CSVConnector, ConnectorInterface, DeltaConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
+import com.jcdecaux.setl.{CustomConnector, MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject}
+import com.typesafe.config.{Config, ConfigFactory}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -159,8 +159,9 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
       .get()
 
 
-    // IllegalArgumentException should be thrown when the typesafe config contains a wrong storage type
-    assertThrows[IllegalArgumentException](new ConnectorBuilder(Properties.wrongCsvConfigConnectorBuilder).build().get())
+    assertThrows[IllegalArgumentException](new ConnectorBuilder(Properties.wrongCsvConfigConnectorBuilder).build().get(),
+      "IllegalArgumentException should be thrown when the typesafe config contains a wrong storage type"
+    )
 
     // ConfException should be thrown when the storage type can't be parsed
     assertThrows[ConfException](
@@ -168,8 +169,12 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     // UnknownException.Storage should be thrown if the given storage is not supported
-    assertThrows[UnknownException.Storage](new ConnectorBuilder(Properties.wrongCsvConfigConnectorBuilder2).build().get())
-    assertThrows[UnknownException.Storage](new ConnectorBuilder(new Conf().set("storage", Storage.OTHER)).build().get())
+    assertThrows[IllegalArgumentException](new ConnectorBuilder(Properties.customConnectorWithoutRef).build().get(),
+      "IllegalArgumentException should be thrown if no class ref is provided for a custom connector"
+    )
+    assertThrows[IllegalArgumentException](new ConnectorBuilder(new Conf().set("storage", Storage.OTHER)).build().get(),
+      "IllegalArgumentException should be thrown if no class ref is provided for a custom connector"
+    )
   }
 
   test("Connector builder with two configurations") {
@@ -180,7 +185,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
       .get()
 
     assertThrows[IllegalArgumentException](
-      new ConnectorBuilder(Some(Properties.wrongCsvConfigConnectorBuilder2), Some(new Conf().set("storage", "BLABLA"))).build().get()
+      new ConnectorBuilder(Some(Properties.customConnectorWithoutRef), Some(new Conf().set("storage", "BLABLA"))).build().get()
     )
   }
 
@@ -232,5 +237,22 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
     df.show()
     assert(df.count() === 3)
     connector.asInstanceOf[DeltaConnector].drop()
+  }
+
+  test("Build custom connector") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    import spark.implicits._
+
+    val conf = new Conf()
+      .set("storage", "OTHER")
+      .set(ConnectorBuilder.CLASS, classOf[CustomConnector].getCanonicalName)
+    val connector = new ConnectorBuilder(Right(conf)).getOrCreate()
+    assert(connector.read().as[Int].collect().sum === 1 + 2 + 3)
+
+
+    val config = ConfigFactory.load("test_connector_builder.conf").getConfig("customConnector")
+    val connector2 = new ConnectorBuilder(Left(config)).getOrCreate()
+    connector2.read().show()
+    assert(connector2.read().as[Int].collect().sum === 1 + 2 + 3)
   }
 }
