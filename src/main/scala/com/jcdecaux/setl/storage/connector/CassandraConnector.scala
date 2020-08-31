@@ -6,6 +6,7 @@ import com.datastax.spark.connector.cql.{CassandraConnector => DatastaxCassandra
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.internal.HasReaderWriter
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -18,7 +19,7 @@ import org.apache.spark.sql.cassandra._
 class CassandraConnector(val keyspace: String,
                          val table: String,
                          val partitionKeyColumns: Option[Seq[String]],
-                         val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector {
+                         val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector with HasReaderWriter {
 
   def this(keyspace: String,
            table: String,

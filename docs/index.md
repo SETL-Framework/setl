@@ -17,6 +17,7 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
     - [FileConnector](Connector#fileconnector)
     - [DBConnector](Connector#dbconnector)
     - [StructuredStreamingConnector](Structured-Streaming-Connector)
+    - [Use your own connector](CustomConnector)
   - [Repository](Repository)
   - [SparkRepositoryAdapter](SparkRepositoryAdapter)
   - [ConnectorBuilder](ConnectorBuilder)

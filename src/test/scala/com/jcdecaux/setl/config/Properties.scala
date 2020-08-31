@@ -39,7 +39,7 @@ object Properties {
 
 
   val wrongCsvConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.wrong_csv")
-  val wrongCsvConfigConnectorBuilder2: Config = cl.getConfig("connectorBuilder.wrong_csv2")
+  val customConnectorWithoutRef: Config = cl.getConfig("connectorBuilder.wrong_csv2")
   val parquetConfigConnectorBuilder: Config = cl.getConfig("connectorBuilder.parquet")
 
 

@@ -30,9 +30,6 @@ class StructuredStreamingConnector(val conf: StructuredStreamingConnectorConf) e
 
   override val storage: Storage = Storage.STRUCTURED_STREAMING
 
-  override protected val reader: DataFrameReader = null
-  override protected val writer: DataFrame => DataFrameWriter[Row] = null
-
   @inline protected val streamReader: DataStreamReader = spark.readStream
     .format(conf.getFormat)
     .options(conf.getReaderConf)

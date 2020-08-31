@@ -2,6 +2,10 @@
 New Features:
 - Added Spark 3.0 support
 
+Changes:
+- Added `ConnectorInterface` to support custom connectors
+- Changed default hadoop version to 3.2.0
+
 Fixes:
 - Fixed save mode in DynamoDB Connector
 
