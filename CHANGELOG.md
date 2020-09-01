@@ -1,9 +1,18 @@
+## Unreleased
+
+### Added:
+
+- A new trait `ConnectorInterface` that simplify the use of custom connectors
+
+### Removed:
+
+- Deprecated methods and constructors
+
 ## 1.0.0-RC1 (2020-08-19)
 
 ### Added:
 
 - Spark 3.0 support
-- Added `ConnectorInterface` to support custom connectors
 
 ### Changed:
 
@@ -12,10 +21,6 @@
 ### Fixed:
 
 - Save mode in DynamoDB Connector
-
-### Removed:
-
-- Deprecated methods and constructors
 
 ## 0.4.3 (2020-07-10)
 
