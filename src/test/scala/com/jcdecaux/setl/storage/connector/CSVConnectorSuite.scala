@@ -34,36 +34,24 @@ class CSVConnectorSuite extends AnyFunSuite with Matchers {
     import spark.implicits._
 
     val connector = new CSVConnector(FileConnectorConf.fromMap(options))
-    val connector2 = new CSVConnector(spark, FileConnectorConf.fromMap(options))
     connector.write(testTable.toDF)
     assert(connector.read().collect().length == testTable.length)
-    assert(connector2.read().collect().length == testTable.length)
     connector.delete()
-    connector2.delete()
 
     val connector3 = new CSVConnector(options)
-    val connector4 = new CSVConnector(spark, options)
     connector3.write(testTable.toDF)
     assert(connector3.read().collect().length == testTable.length)
-    assert(connector4.read().collect().length == testTable.length)
     connector3.delete()
-    connector4.delete()
 
     val connector5 = new CSVConnector(Properties.csvConfig)
-    val connector6 = new CSVConnector(spark, Properties.csvConfig)
     connector5.write(testTable.toDF)
     assert(connector5.read().collect().length == testTable.length)
-    assert(connector6.read().collect().length == testTable.length)
     connector5.delete()
-    connector6.delete()
 
     val connector7 = new CSVConnector(conf)
-    val connector8 = new CSVConnector(spark, conf)
     connector7.write(testTable.toDF)
     assert(connector7.read().collect().length == testTable.length)
-    assert(connector8.read().collect().length == testTable.length)
     connector7.delete()
-    connector8.delete()
 
     val connector9 = new CSVConnector(
       options("path"),
@@ -72,19 +60,9 @@ class CSVConnectorSuite extends AnyFunSuite with Matchers {
       options("header"),
       SaveMode.Append
     )
-    val connector10 = new CSVConnector(
-      spark,
-      options("path"),
-      options("inferSchema"),
-      options("delimiter"),
-      options("header"),
-      SaveMode.Append
-    )
     connector9.write(testTable.toDF)
     assert(connector9.read().collect().length == testTable.length)
-    assert(connector10.read().collect().length == testTable.length)
     connector9.delete()
-    connector10.delete()
   }
 
   test("test CSV connector with different file path") {

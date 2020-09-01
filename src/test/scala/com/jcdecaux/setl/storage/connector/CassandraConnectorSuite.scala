@@ -32,7 +32,6 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val cqlConnector = new CassandraConnector(
       keyspace = keyspace,
       table = "test_spark_connector",
-      spark = spark,
       partitionKeyColumns = Some(Seq("partition1", "partition2")),
       clusteringKeyColumns = Some(Seq("clustering1"))
     )
@@ -87,7 +86,7 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
       TestObject(3, "p3", "c3", 3L)
     ).toDS()
 
-    val connector = new CassandraConnector(spark, Properties.cassandraConfig)
+    val connector = new CassandraConnector(Properties.cassandraConfig)
 
     assert(connector.partitionKeyColumns === Option(Seq("partition1", "partition2")))
     assert(connector.clusteringKeyColumns === Option(Seq("clustering1")))
@@ -105,13 +104,12 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     connector.delete("partition1 = 1 and partition2 = 'p1'")
     assert(connector.read().count() === 2)
 
-    val connector2 = new CassandraConnector(spark, Properties.cassandraConfigWithoutClustering)
+    val connector2 = new CassandraConnector(Properties.cassandraConfigWithoutClustering)
     assert(connector2.read().count() === 2)
 
     val cqlConnector = new CassandraConnector(
       keyspace = keyspace,
       table = "test_spark_connector",
-      spark = spark,
       partitionKeyColumns = Some(Seq("partition1", "partition2")),
       clusteringKeyColumns = Some(Seq("clustering1"))
     )
@@ -133,14 +131,11 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val cqlConnector4 = new CassandraConnector(conf2)
     assert(cqlConnector4.read().count() === 3)
 
-    val cqlConnector5 = new CassandraConnector(spark, conf2)
-    assert(cqlConnector5.read().count() === 3)
 
     cqlConnector.delete("partition1 = 1 and partition2 = 'p1'")
     cqlConnector2.delete("partition1 = 1 and partition2 = 'p1'")
     cqlConnector3.delete("partition1 = 1 and partition2 = 'p1'")
     cqlConnector4.delete("partition1 = 1 and partition2 = 'p1'")
-    cqlConnector5.delete("partition1 = 1 and partition2 = 'p1'")
   }
 
   test("Write with suffix should have no impact") {
@@ -164,14 +159,13 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     ).toDS()
 
 
-    val connector = new CassandraConnector(spark, Properties.cassandraConfig)
+    val connector = new CassandraConnector(Properties.cassandraConfig)
     connector.create(testTable.toDF())
     connector.write(testTable.toDF())
 
     val connector2 = new CassandraConnector(
       keyspace = keyspace,
       table = "test_spark_connector",
-      spark = spark,
       partitionKeyColumns = Some(Seq("partition1", "partition2")),
       clusteringKeyColumns = Some(Seq("clustering1"))
     )
@@ -202,7 +196,6 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val connector = new CassandraConnector(
       keyspace = keyspace,
       table = "test_spark_connector_drop_table",
-      spark = spark,
       partitionKeyColumns = Some(Seq("partition1", "partition2")),
       clusteringKeyColumns = Some(Seq("clustering1"))
     )
@@ -230,7 +223,6 @@ class CassandraConnectorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val connector = new CassandraConnector(
       keyspace = "test_spark_connector_keyspace",
       table = "test_spark_connector_drop_table",
-      spark = spark,
       partitionKeyColumns = Some(Seq("partition1", "partition2")),
       clusteringKeyColumns = Some(Seq("clustering1"))
     )

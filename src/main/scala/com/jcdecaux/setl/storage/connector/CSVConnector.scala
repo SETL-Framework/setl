@@ -99,22 +99,6 @@ class CSVConnector(override val options: FileConnectorConf) extends FileConnecto
       "saveMode" -> saveMode.toString
     ))
 
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, config: Config) = this(TypesafeConfigUtils.getMap(config))
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, conf: Conf) = this(conf.toMap)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, path: String, inferSchema: String, delimiter: String, header: String, saveMode: SaveMode) =
-    this(path, inferSchema, delimiter, header, saveMode)
-
   override val storage: Storage = Storage.CSV
 
   this.options.setStorage(storage)

@@ -5,12 +5,11 @@ import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.config.Conf.Serializer
 import com.jcdecaux.setl.enums.Storage
-import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.typesafe.config.Config
+import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -30,12 +29,6 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   def this(storage: Storage) = this(Some(storage), None)
 
   def this(config: Config) = this(None, Some(config))
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: Option[SparkSession], storage: Option[Storage], config: Option[Config]) = this(storage, config)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession) = this(None, None)
 
   import Conf.Serializer._
 
@@ -71,9 +64,6 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   def getAs[T](key: String)(implicit converter: Serializer[T]): Option[T] = {
     conf.getAs[T](key)
   }
-
-  @deprecated("This method has no effect as SparkSession is removed from SparkRepositoryBuilder", "0.3.4")
-  def setSpark(spark: SparkSession): this.type = this
 
   def setStorage(storage: Storage): this.type = set("storage", storage)
 

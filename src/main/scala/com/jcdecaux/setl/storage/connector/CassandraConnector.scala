@@ -21,12 +21,6 @@ class CassandraConnector(val keyspace: String,
                          val partitionKeyColumns: Option[Seq[String]],
                          val clusteringKeyColumns: Option[Seq[String]]) extends DBConnector with HasReaderWriter {
 
-  def this(keyspace: String,
-           table: String,
-           spark: SparkSession,
-           partitionKeyColumns: Option[Seq[String]],
-           clusteringKeyColumns: Option[Seq[String]]) = this(keyspace, table, partitionKeyColumns, clusteringKeyColumns)
-
   /**
    * Constructor with a [[com.jcdecaux.setl.config.Conf]] object
    *
@@ -61,22 +55,6 @@ class CassandraConnector(val keyspace: String,
         None
       }
   )
-
-  /**
-   * Constructor with a [[com.jcdecaux.setl.config.Conf]] object
-   *
-   * @param spark spark session
-   * @param conf  [[com.jcdecaux.setl.config.Conf]] object
-   */
-  def this(spark: SparkSession, conf: Conf) = this(conf)
-
-  /**
-   * Constructor with a [[com.typesafe.config.Config]] object
-   *
-   * @param spark  spark session
-   * @param config [[com.typesafe.config.Config]] typesafe Config object
-   */
-  def this(spark: SparkSession, config: Config) = this(config)
 
   private[this] val cqlConnection =  DatastaxCassandraConnector(spark.sparkContext.getConf)
 

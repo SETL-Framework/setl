@@ -58,19 +58,6 @@ class Stage extends Logging
   def parallel: Boolean = _parallel
 
   /**
-   * Alias of writable
-   *
-   * @param persistence if set to true, then the write method of the factory will be invoked
-   * @return
-   */
-  @deprecated("To avoid misunderstanding, use writable()", "0.4.0")
-  def persist(persistence: Boolean): this.type = this.writable(persistence)
-
-  /** Return true if the write method will be invoked by the pipeline */
-  @deprecated("To avoid misunderstanding, use writable", "0.4.0")
-  def persist: Boolean = writable
-
-  /**
    * Set to true to run all factories of this stage in parallel. Otherwise they will be executed in sequential order
    *
    * @param boo true for parallel. otherwise false
@@ -165,7 +152,7 @@ class Stage extends Logging
 
   /** Describe the current stage */
   override def describe(): this.type = {
-    log.info(s"Stage $stageId contains ${getRegistryLength} factories")
+    log.info(s"Stage $stageId contains $getRegistryLength factories")
     factories.foreach(_.describe())
     this
   }

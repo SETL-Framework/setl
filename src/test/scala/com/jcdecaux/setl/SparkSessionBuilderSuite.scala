@@ -108,12 +108,9 @@ class SparkSessionBuilderSuite extends AnyFunSuite with BeforeAndAfterAll with S
 
     builder.setShufflePartitions(100)
     assert(builder.getShufflePartitions === "100")
-    assert(builder.getParallelism === "100")
 
-    builder.setParallelism(500)
+    builder.setShufflePartitions(500)
     assert(builder.getShufflePartitions === "500")
-    assert(builder.getParallelism === "500")
-
   }
 
   test("SparkSessionBuilder Kryo") {

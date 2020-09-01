@@ -121,11 +121,6 @@ class ExcelConnector(val path: String,
     saveMode = SaveMode.valueOf(TypesafeConfigUtils.getAs[String](config, "saveMode").getOrElse("Overwrite"))
   )
 
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, conf: Conf) = this(conf)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, config: Config) = this(config)
   //END CONSTRUCTOR
 
   if (sheetName.isDefined) {
