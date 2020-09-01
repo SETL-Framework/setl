@@ -122,22 +122,18 @@ class ExcelConnectorSuite extends AnyFunSuite with Matchers {
     val connector2 = new ExcelConnector(conf)
     assert(connector2.read().count() === 3)
 
-    val connector3 = new ExcelConnector(spark, conf)
+    val connector3 = new ExcelConnector(conf)
     assert(connector3.read().count() === 3)
 
     val connector4 = new ExcelConnector(Properties.excelConfig)
-    val connector5 = new ExcelConnector(spark, Properties.excelConfig)
 
     testTable.toDF.show()
     connector4.write(testTable.toDF)
 
     val df4 = connector4.read()
-    val df5 = connector5.read()
 
     df4.show()
-    df5.show()
     assert(df4.count() === 3)
-    assert(df5.count() === 3)
 
     deleteRecursively(new File(path))
     deleteRecursively(new File("src/test/resources/test_config_excel.xlsx"))

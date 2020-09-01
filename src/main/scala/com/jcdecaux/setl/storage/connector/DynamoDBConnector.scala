@@ -46,19 +46,6 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector wit
 
   def this(conf: Conf) = this(conf.toMap)
 
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession,
-           region: String, // "eu-west-1"
-           table: String,
-           saveMode: SaveMode,
-           throughput: String = "10000") = this(region, table, saveMode, throughput)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, config: Config) = this(config)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, conf: Conf) = this(conf)
-
   private[this] val sourceName: String = "com.audienceproject.spark.dynamodb.datasource"
 
   require(conf.getTable.nonEmpty, "DynamoDB table is not defined")

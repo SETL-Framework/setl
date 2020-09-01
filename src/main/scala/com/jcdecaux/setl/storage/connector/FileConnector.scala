@@ -22,13 +22,6 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
 
   def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
-
-  // Note: this constructor was added to keep the backward compatibility
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: Map[String, String]) = this(options)
-
   private[this] val hadoopConfiguration: Configuration = spark.sparkContext.hadoopConfiguration
   private[this] var wildcardPath: Boolean = false
 

@@ -73,7 +73,7 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
       .setSetlConfigPath("context")
-      .setParallelism(500)
+      .setShufflePartitions(500)
       .getOrCreate()
 
     assert(context.spark.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "500",
@@ -151,8 +151,8 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
       .setConfigLoader(configLoader)
       .getOrCreate()
 
-    import context.spark.implicits._
     import com.jcdecaux.setl.SetlSuite.TestGetRepository
+    import context.spark.implicits._
 
     val ds = this.ds.toDS()
 

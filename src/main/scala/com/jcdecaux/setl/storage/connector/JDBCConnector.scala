@@ -32,12 +32,6 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector with HasRea
 
   def this(conf: Conf) = this(conf.toMap)
 
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(sparkSession: SparkSession, config: Config) = this(config)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(sparkSession: SparkSession, conf: Conf) = this(conf)
-
   private[this] def executeRequest(request: String): Unit = {
     val statement = JdbcUtils.createConnectionFactory(conf.getJDBCOptions)().createStatement()
     statement.execute(request)

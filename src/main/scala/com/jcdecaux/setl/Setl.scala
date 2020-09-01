@@ -323,10 +323,7 @@ object Setl {
       this.shufflePartitions = Some(par)
       this
     }
-
-    @deprecated("To avoid ambiguity, use setShufflePartitions", "0.4.1")
-    def setParallelism(par: Int): this.type = this.setShufflePartitions(par)
-
+    
     /**
      * Provide a user-defined config loader
      *

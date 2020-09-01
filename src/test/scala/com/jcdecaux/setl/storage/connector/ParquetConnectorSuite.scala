@@ -35,52 +35,34 @@ class ParquetConnectorSuite extends AnyFunSuite {
     import spark.implicits._
 
     val connector = new ParquetConnector(FileConnectorConf.fromMap(options))
-    val connector2 = new ParquetConnector(spark, FileConnectorConf.fromMap(options))
     connector.write(testTable.toDF)
     assert(connector.read().collect().length == testTable.length)
-    assert(connector2.read().collect().length == testTable.length)
     connector.delete()
-    connector2.delete()
 
     val connector3 = new ParquetConnector(options)
-    val connector4 = new ParquetConnector(spark, options)
     connector3.write(testTable.toDF)
     assert(connector3.read().collect().length == testTable.length)
-    assert(connector4.read().collect().length == testTable.length)
     connector3.delete()
-    connector4.delete()
 
     val connector5 = new ParquetConnector(path, saveMode)
-    val connector6 = new ParquetConnector(spark, path, saveMode)
     connector5.write(testTable.toDF)
     assert(connector5.read().collect().length == testTable.length)
-    assert(connector6.read().collect().length == testTable.length)
     connector5.delete()
-    connector6.delete()
 
     val connector7 = new ParquetConnector(Properties.parquetConfig)
-    val connector8 = new ParquetConnector(spark, Properties.parquetConfig)
     connector7.write(testTable.toDF)
     assert(connector7.read().collect().length == testTable.length)
-    assert(connector8.read().collect().length == testTable.length)
     connector7.delete()
-    connector8.delete()
 
     val connector9 = new ParquetConnector(conf)
-    val connector10 = new ParquetConnector(spark, conf)
     connector9.write(testTable.toDF)
     assert(connector9.read().collect().length == testTable.length)
-    assert(connector10.read().collect().length == testTable.length)
     connector9.delete()
-    connector10.delete()
   }
 
   test("Parquet connector should push down filter and select") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
-
-    // test legacy constructor
-    new ParquetConnector(spark, path, SaveMode.Overwrite)
 
     val repository = new SparkRepository[TestObject].setConnector(parquetConnector).persistReadData(true)
     import spark.implicits._
@@ -140,9 +122,6 @@ class ParquetConnectorSuite extends AnyFunSuite {
     import spark.implicits._
 
     val connector = new ParquetConnector(Properties.parquetConfig)
-
-    // test legacy constructor
-    new  ParquetConnector(spark, Properties.parquetConfig)
 
     connector.write(testTable.toDF())
     connector.write(testTable.toDF())
