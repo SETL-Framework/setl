@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.FileConnectorConf
-import com.jcdecaux.setl.internal.HasReaderWriter
+import com.jcdecaux.setl.internal.{CanDrop, HasReaderWriter}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter {
+abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter with CanDrop {
 
   def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
@@ -413,9 +413,14 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
   }
 
   /**
+   * Alias of drop
+   */
+  def delete(): Unit = drop()
+
+  /**
    * Delete the current file or directory
    */
-  def delete(): Unit = {
+  override def drop(): Unit = {
     log.info(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
     resetSuffix(true)

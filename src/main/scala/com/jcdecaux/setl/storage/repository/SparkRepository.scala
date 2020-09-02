@@ -267,6 +267,9 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  /**
+   * Drop the entire table/directory.
+   */
   override def drop(): SparkRepository.this.type = {
     connector match {
       case c: CanDrop => c.drop()
@@ -275,6 +278,11 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  /**
+   * Delete rows according to the query
+   *
+   * @param query a query string
+   */
   override def delete(query: String): SparkRepository.this.type = {
     connector match {
       case c: CanDelete => c.delete(query: String)
