@@ -6,9 +6,9 @@ import java.util.concurrent.locks.ReentrantLock
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.enums.{Storage, ValueType}
 import com.jcdecaux.setl.exception.{InvalidConnectorException, UnknownException}
-import com.jcdecaux.setl.internal.{Logging, SchemaConverter, StructAnalyser}
+import com.jcdecaux.setl.internal._
 import com.jcdecaux.setl.storage.Condition
-import com.jcdecaux.setl.storage.connector.{ACIDConnector, Connector, DBConnector, FileConnector}
+import com.jcdecaux.setl.storage.connector.{Connector, FileConnector}
 import com.jcdecaux.setl.util.HasSparkSession
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types.StructType
@@ -188,7 +188,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
 
   private[repository] def configureConnector(df: DataFrame, suffix: Option[String]): Unit = {
     connector match {
-      case db: DBConnector =>
+      case db: CanCreate =>
         db.create(df)
       case file: FileConnector =>
         file.setSuffix(suffix)
@@ -206,7 +206,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    */
   override def update(data: Dataset[DataType]): SparkRepository.this.type = {
     connector match {
-      case _: ACIDConnector =>
+      case _: CanUpdate =>
         val dataToSave = SchemaConverter.toDF[DataType](data)
         val primaryColumns = StructAnalyser.findCompoundColumns[DataType]
         if (primaryColumns.nonEmpty)
@@ -216,7 +216,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
           writeDataFrame(dataToSave)
         }
       case _ =>
-        throw new InvalidConnectorException(s"Current connector doesn't support upsert operation!")
+        throw new InvalidConnectorException(s"Current connector doesn't support update operation!")
     }
 
     this
@@ -228,8 +228,103 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    * @param data data to be saved
    */
   private[repository] def updateDataFrame(data: DataFrame, column: String, columns: String*): Unit = {
-    connector.asInstanceOf[ACIDConnector].update(data, column, columns: _*)
+    connector.asInstanceOf[CanUpdate].update(data, column, columns: _*)
     flushReadCache.set(true)
+  }
+
+  override def awaitTermination(): this.type = {
+    connector match {
+      case c: CanWait => c.awaitTermination()
+      case _ => throw new InvalidConnectorException("Current connector doesn't support awaitTermination")
+    }
+    this
+  }
+
+  /**
+   * Wait for the execution to stop. Any exceptions that occurs during the execution
+   * will be thrown in this thread.
+   *
+   * @param timeout time to wait in milliseconds
+   * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
+   *         if the waiting time elapsed before returning from the method.
+   */
+  override def awaitTerminationOrTimeout(timeout: Long): this.type = {
+    connector match {
+      case c: CanWait => c.awaitTerminationOrTimeout(timeout)
+      case _ => throw new InvalidConnectorException("Current connector doesn't support awaitTerminationOrTimeout")
+    }
+    this
+  }
+
+  /**
+   * Stops the execution of this query if it is running.
+   */
+  override def stopStreaming(): this.type = {
+    connector match {
+      case c: CanWait => c.stop()
+      case _ => throw new InvalidConnectorException("Current connector doesn't support stop")
+    }
+    this
+  }
+
+  override def drop(): SparkRepository.this.type = {
+    connector match {
+      case c: CanDrop => c.drop()
+      case _ => throw new InvalidConnectorException("Current connector doesn't support drop")
+    }
+    this
+  }
+
+  override def delete(query: String): SparkRepository.this.type = {
+    connector match {
+      case c: CanDelete => c.delete(query: String)
+      case _ => throw new InvalidConnectorException("Current connector doesn't support drop")
+    }
+    this
+  }
+
+
+  /**
+   * Create a data storage (e.g. table in a database or file/folder in a file system) with a suffix
+   *
+   * @param t      data frame to be written
+   * @param suffix suffix to be appended at the end of the data storage name
+   */
+  override def create(t: DataFrame, suffix: Option[String]): SparkRepository.this.type = {
+    connector match {
+      case c: CanCreate => c.create(t, suffix)
+      case _ => throw new InvalidConnectorException("Current connector doesn't support create")
+    }
+    this
+  }
+
+  /**
+   * Create a data storage (e.g. table in a database or file/folder in a file system)
+   *
+   * @param t data frame to be written
+   */
+  override def create(t: DataFrame): SparkRepository.this.type = {
+    connector match {
+      case c: CanCreate => c.create(t)
+      case _ => throw new InvalidConnectorException("Current connector doesn't support create")
+    }
+    this
+  }
+
+  override def vacuum(retentionHours: Double): SparkRepository.this.type = {
+    connector match {
+      case c: CanVacuum => c.vacuum(retentionHours)
+      case _ => throw new InvalidConnectorException("Current connector doesn't support vacuum")
+    }
+    this
+  }
+
+  override def vacuum(): SparkRepository.this.type = {
+    connector match {
+      case c: CanVacuum => c.vacuum()
+      case _ => throw new InvalidConnectorException("Current connector doesn't support vacuum")
+    }
+    this
   }
 }
 

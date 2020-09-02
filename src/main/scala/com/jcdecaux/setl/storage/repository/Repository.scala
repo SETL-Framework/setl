@@ -2,7 +2,7 @@ package com.jcdecaux.setl.storage.repository
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.storage.Condition
-import org.apache.spark.sql.{Column, Dataset}
+import org.apache.spark.sql.{Column, DataFrame, Dataset}
 
 /**
  * The goal of Repository is to significantly reduce the amount of boilerplate code required to
@@ -61,4 +61,49 @@ trait Repository[DT] {
    * @return
    */
   def update(data: DT): this.type
+
+  def drop(): this.type
+
+  def delete(query: String): this.type
+
+  /**
+   * Create a data storage (e.g. table in a database or file/folder in a file system) with a suffix
+   *
+   * @param t      data frame to be written
+   * @param suffix suffix to be appended at the end of the data storage name
+   */
+  def create(t: DataFrame, suffix: Option[String]): this.type
+
+  /**
+   * Create a data storage (e.g. table in a database or file/folder in a file system)
+   *
+   * @param t data frame to be written
+   */
+  def create(t: DataFrame): this.type
+
+  def vacuum(retentionHours: Double): this.type
+
+  def vacuum(): this.type
+
+  /**
+   * Wait for the execution to stop. Any exceptions that occurs during the execution
+   * will be thrown in this thread.
+   */
+  def awaitTermination(): this.type
+
+  /**
+   * Wait for the execution to stop. Any exceptions that occurs during the execution
+   * will be thrown in this thread.
+   *
+   * @param timeout time to wait in milliseconds
+   * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
+   *         if the waiting time elapsed before returning from the method.
+   */
+  def awaitTerminationOrTimeout(timeout: Long): this.type
+
+  /**
+   * Stops the execution of this query if it is running.
+   */
+  def stopStreaming(): this.type
+
 }

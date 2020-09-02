@@ -410,7 +410,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     try {
       Await.result(future, 5 second)
     } catch {
-      case _: java.util.concurrent.TimeoutException => outputRepo.stop()
+      case _: java.util.concurrent.TimeoutException => outputRepo.stopStreaming()
     }
 
     csvConnector.read().show()
