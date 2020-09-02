@@ -415,6 +415,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
   /**
    * Alias of drop
    */
+  @deprecated("To avoid ambiguity, use drop()", "1.0.0")
   def delete(): Unit = drop()
 
   /**

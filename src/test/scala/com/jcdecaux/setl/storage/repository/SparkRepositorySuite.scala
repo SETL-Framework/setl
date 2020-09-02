@@ -3,6 +3,7 @@ package com.jcdecaux.setl.storage.repository
 import java.io.{ByteArrayOutputStream, File}
 
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.exception.InvalidConnectorException
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector._
@@ -68,7 +69,17 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assert(repo.getConnector === parquetConnector)
 
     assert(repo.findBy(condition).count() === 1)
-    deleteRecursively(new File(path))
+
+    assertThrows[InvalidConnectorException](repo.vacuum())
+    assertThrows[InvalidConnectorException](repo.vacuum(1))
+    assertThrows[InvalidConnectorException](repo.update(testTable.toDS()))
+    assertThrows[InvalidConnectorException](repo.awaitTerminationOrTimeout(1))
+    assertThrows[InvalidConnectorException](repo.awaitTermination())
+    assertThrows[InvalidConnectorException](repo.stopStreaming())
+    assertThrows[InvalidConnectorException](repo.stopStreaming())
+    assertThrows[InvalidConnectorException](repo.delete(""))
+    repo.drop()
+    assert(!new File(path).exists())
 
   }
 
@@ -125,7 +136,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val connector2 = new JDBCConnector(options)
     connector2.write(ds.toDF())
     val repo2 = new SparkRepository[MyObject].setConnector(connector2)
-    repo2.partitionBy("partition")
+    assertThrows[InvalidConnectorException](repo2.partitionBy("partition"),
+      "InvalidConnectorException should be thrown as JDBCConnector doesn't inherit CanPartition")
     assert(!connector2.read().columns.contains("partition"))
   }
 
