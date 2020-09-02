@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.FileConnectorConf
-import com.jcdecaux.setl.internal.{CanDrop, HasReaderWriter}
+import com.jcdecaux.setl.internal.{CanDrop, CanPartition, HasReaderWriter}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter with CanDrop {
+abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter with CanDrop with CanPartition {
 
   def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
@@ -406,7 +406,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
       .partitionBy(partition: _*)
   }
 
-  def partitionBy(columns: String*): this.type = {
+  override def partitionBy(columns: String*): this.type = {
     log.info(s"Data will be partitioned by ${columns.mkString(", ")}")
     partition.append(columns: _*)
     this

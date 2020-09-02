@@ -6,7 +6,7 @@ import com.jcdecaux.setl.enums.Storage
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter, StreamingQuery}
-import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter, Row}
+import org.apache.spark.sql.{DataFrame, Row}
 
 /**
  * :: Experimental ::
@@ -75,7 +75,7 @@ class StructuredStreamingConnector(val conf: StructuredStreamingConnectorConf) e
    * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
    *         if the waiting time elapsed before returning from the method.
    */
-  override def awaitTerminationOrTimeout(timeout: Long): Unit = streamingQuery.awaitTermination(timeout)
+  override def awaitTerminationOrTimeout(timeout: Long): Boolean = streamingQuery.awaitTermination(timeout)
 
   /**
    * Stops the execution of this query if it is running.

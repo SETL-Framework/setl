@@ -15,7 +15,7 @@ import org.scalatest.matchers.should.Matchers
 
 class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
-  import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
+  import com.jcdecaux.setl.util.IOUtils.deleteRecursively
 
   val path: String = "src/test/resources/test_parquet"
   val table: String = "test_table"
@@ -424,5 +424,9 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     field2.setAccessible(true)
     assert(!field2.get(repoNotCached).asInstanceOf[DataFrame].storageLevel.useMemory)
     connector.delete()
+  }
+
+  test("") {
+
   }
 }

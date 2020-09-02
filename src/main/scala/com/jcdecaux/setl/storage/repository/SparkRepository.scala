@@ -37,20 +37,53 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
 
   private[this] var readCache: DataFrame = spark.emptyDataFrame
 
+  /**
+   * Whether to cache or not after reading data. This only takes effect for repository that loads data
+   *
+   * @return if true, then this repository will cache the loaded data, otherwise, false
+   */
   def persistReadData: Boolean = this.cacheLastReadData.get()
 
+  /**
+   * SparkRepository can cache (persist) the data after reading. Set to true to cache the read data.
+   *
+   * @param persist true to cache the read data, false otherwise
+   * @return this repository instance
+   */
   def persistReadData(persist: Boolean): this.type = {
     this.cacheLastReadData.set(persist)
     this
   }
 
+  /**
+   * Get the storage level of the input cache
+   *
+   * @return StorageLevel
+   */
   def getReadCacheStorageLevel: StorageLevel = this.persistenceStorageLevel
 
+  /**
+   * Set the storage level for caching data after reading
+   *
+   * @param storageLevel storage level
+   * @return this repository instance
+   */
   def setReadCacheStorageLevel(storageLevel: StorageLevel): this.type = {
     this.persistenceStorageLevel = storageLevel
     this
   }
 
+  /**
+   * If the connector of this repository is a file connector, and user called save(df, suffix), then the repository
+   * will create a sub-directory for this given suffix. The name of directory respects the naming convention
+   * of HIVE partition:
+   *
+   * {{{
+   *   ../{UserDefinedSuffixKey}={suffix}
+   * }}}
+   *
+   * By default UserDefinedSuffixKey = "_user_defined_suffix"
+   */
   def setUserDefinedSuffixKey(key: String): this.type = {
     connector match {
       case c: FileConnector => c.setUserDefinedSuffixKey(key)
@@ -59,14 +92,31 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  /**
+   * If the connector of this repository is a file connector, and user called save(df, suffix), then the repository
+   * will create a sub-directory for this given suffix. The name of directory respects the naming convention
+   * of HIVE partition:
+   *
+   * {{{
+   *   ../{UserDefinedSuffixKey}={suffix}
+   * }}}
+   *
+   * By default UserDefinedSuffixKey = "_user_defined_suffix"
+   */
   def setUserDefinedSuffixKey(key: Option[String]): this.type = {
     key match {
       case Some(k) => this.setUserDefinedSuffixKey(k)
-      case _ =>
+      case _ => log.warn(s"Current connector doesn't support user defined suffix, skip UDS setting")
     }
     this
   }
 
+  /**
+   * Get the value of user defined suffix column name.
+   *
+   * @return if the connector is a FileConnector, then the user defined suffix key will be returned,
+   *         by default the key is "_user_defined_suffix"
+   */
   def getUserDefinedSuffixKey: Option[String] = {
     connector match {
       case c: FileConnector => Option(c.getUserDefinedSuffixKey)
@@ -74,6 +124,11 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     }
   }
 
+  /**
+   * Get the storage type
+   *
+   * @return
+   */
   def getStorage: Storage = connector.storage
 
   /**
@@ -88,12 +143,33 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  /**
+   * Get the connector of this repository
+   *
+   * @return a [[com.jcdecaux.setl.storage.connector.Connector]] object
+   */
   def getConnector: Connector = this.connector
 
+  /**
+   * Partitions the output by the given columns on the file system. If specified, the output is
+   * laid out on the file system similar to Hive's partitioning scheme. As an example, when we
+   * partition a dataset by year and then month, the directory layout would look like:
+   * <ul>
+   * <li>year=2016/month=01/</li>
+   * <li>year=2016/month=02/</li>
+   * </ul>
+   *
+   * Partitioning is one of the most widely used techniques to optimize physical data layout.
+   * It provides a coarse-grained index for skipping unnecessary data reads when queries have
+   * predicates on the partitioned columns. In order for partitioning to work well, the number
+   * of distinct values in each column should typically be less than tens of thousands.
+   *
+   * This is applicable for all file-based data sources (e.g. Parquet, JSON)
+   */
   def partitionBy(columns: String*): this.type = {
     connector match {
-      case c: FileConnector => c.partitionBy(columns: _*)
-      case _ =>
+      case c: CanPartition => c.partitionBy(columns: _*)
+      case _ => throw new InvalidConnectorException("Current connector doesn't support partition")
     }
     this
   }
@@ -210,7 +286,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
         val dataToSave = SchemaConverter.toDF[DataType](data)
         val primaryColumns = StructAnalyser.findCompoundColumns[DataType]
         if (primaryColumns.nonEmpty)
-          updateDataFrame(dataToSave, primaryColumns.head, primaryColumns.tail: _*)
+          updateDataFrame(dataToSave, primaryColumns: _*)
         else {
           log.warn(s"Current Dataset doesn't contain any compound key! Normal write operation will do used.")
           writeDataFrame(dataToSave)
@@ -227,17 +303,22 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    *
    * @param data data to be saved
    */
-  private[repository] def updateDataFrame(data: DataFrame, column: String, columns: String*): Unit = {
-    connector.asInstanceOf[CanUpdate].update(data, column, columns: _*)
+  private[repository] def updateDataFrame(data: DataFrame, columns: String*): Unit = {
+    connector.asInstanceOf[CanUpdate].update(data, columns: _*)
     flushReadCache.set(true)
   }
 
-  override def awaitTermination(): this.type = {
+  /**
+   * Wait for the execution to stop. Any exceptions that occurs during the execution
+   * will be thrown in this thread.
+   *
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanWait
+   */
+  override def awaitTermination(): Unit = {
     connector match {
       case c: CanWait => c.awaitTermination()
       case _ => throw new InvalidConnectorException("Current connector doesn't support awaitTermination")
     }
-    this
   }
 
   /**
@@ -247,17 +328,19 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    * @param timeout time to wait in milliseconds
    * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
    *         if the waiting time elapsed before returning from the method.
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanWait
    */
-  override def awaitTerminationOrTimeout(timeout: Long): this.type = {
+  override def awaitTerminationOrTimeout(timeout: Long): Boolean = {
     connector match {
       case c: CanWait => c.awaitTerminationOrTimeout(timeout)
       case _ => throw new InvalidConnectorException("Current connector doesn't support awaitTerminationOrTimeout")
     }
-    this
   }
 
   /**
    * Stops the execution of this query if it is running.
+   *
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanWait
    */
   override def stopStreaming(): this.type = {
     connector match {
@@ -269,6 +352,8 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
 
   /**
    * Drop the entire table/directory.
+   *
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanDrop
    */
   override def drop(): SparkRepository.this.type = {
     connector match {
@@ -282,6 +367,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    * Delete rows according to the query
    *
    * @param query a query string
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanDelete
    */
   override def delete(query: String): SparkRepository.this.type = {
     connector match {
@@ -291,12 +377,12 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
-
   /**
    * Create a data storage (e.g. table in a database or file/folder in a file system) with a suffix
    *
    * @param t      data frame to be written
    * @param suffix suffix to be appended at the end of the data storage name
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait create
    */
   override def create(t: DataFrame, suffix: Option[String]): SparkRepository.this.type = {
     connector match {
@@ -310,6 +396,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
    * Create a data storage (e.g. table in a database or file/folder in a file system)
    *
    * @param t data frame to be written
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait create
    */
   override def create(t: DataFrame): SparkRepository.this.type = {
     connector match {
@@ -319,6 +406,16 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  /**
+   * Recursively delete files and directories in the table that are not needed by the table for
+   * maintaining older versions up to the given retention threshold. This method will return an
+   * empty DataFrame on successful completion.
+   *
+   * @param retentionHours The retention threshold in hours. Files required by the table for
+   *                       reading versions earlier than this will be preserved and the
+   *                       rest of them will be deleted.
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanVacuum
+   */
   override def vacuum(retentionHours: Double): SparkRepository.this.type = {
     connector match {
       case c: CanVacuum => c.vacuum(retentionHours)
@@ -327,6 +424,15 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
     this
   }
 
+  /**
+   * Recursively delete files and directories in the table that are not needed by the table for
+   * maintaining older versions up to the given retention threshold. This method will return an
+   * empty DataFrame on successful completion.
+   *
+   * note: This will use the default retention period of 7 days.
+   *
+   * @throws InvalidConnectorException this exception will be thrown if the current connector doesn't inherit the trait CanVacuum
+   */
   override def vacuum(): SparkRepository.this.type = {
     connector match {
       case c: CanVacuum => c.vacuum()

@@ -3,6 +3,7 @@ package com.jcdecaux.setl.storage.repository.streaming
 import com.jcdecaux.setl.SparkSessionBuilder
 import com.jcdecaux.setl.exception.InvalidConnectorException
 import com.jcdecaux.setl.storage.connector.CSVConnector
+import com.jcdecaux.setl.storage.repository.SparkRepository
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -19,8 +20,10 @@ class StreamingRepositorySuite extends AnyFunSuite {
     )
     val csvConnector = new CSVConnector(csvOutputConf)
     val repo = new StreamingRepository[TestClass]()
+    val repo2 = new SparkRepository[TestClass]().setConnector(csvConnector)
 
     assertThrows[InvalidConnectorException](repo.setConnector(csvConnector))
+    assertThrows[InvalidConnectorException](repo2.awaitTermination())
 
   }
 

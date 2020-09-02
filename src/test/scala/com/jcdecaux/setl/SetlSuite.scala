@@ -285,7 +285,7 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
       .getOrCreate()
 
     context
-      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), cacheData = true)
       .setConnector("csv_dc_context_consumer", "1")
 
     val factory = new SetlSuite.FactoryWithConnectorDeliveryVariable
@@ -311,7 +311,7 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
       .getOrCreate()
 
     context
-      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), readCache = true)
+      .setSparkRepository[TestObject]("csv_dc_context_consumer", Array(classOf[SetlSuite.MyFactory]), cacheData = true)
       .setConnector("csv_dc_context_consumer", "1", classOf[CSVConnector])
 
     val factory = new com.jcdecaux.setl.SetlSuite.FactoryWithConnectorDeliveryMethod

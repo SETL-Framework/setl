@@ -49,7 +49,7 @@ trait Repository[DT] {
    *
    * @param data   data to be saved
    * @param suffix an optional string to separate data
-   * @return
+   * @return this repository instance
    */
   def save(data: DT, suffix: Option[String]): this.type
 
@@ -58,10 +58,14 @@ trait Repository[DT] {
    * Update/Insert a [[Dataset]] into a data persistence store
    *
    * @param data data to be saved
-   * @return
+   * @return this repository instance
    */
   def update(data: DT): this.type
 
+  /**
+   * Drop the entire table/file/directory
+   * @return this repository instance
+   */
   def drop(): this.type
 
   def delete(query: String): this.type
@@ -89,7 +93,7 @@ trait Repository[DT] {
    * Wait for the execution to stop. Any exceptions that occurs during the execution
    * will be thrown in this thread.
    */
-  def awaitTermination(): this.type
+  def awaitTermination(): Unit
 
   /**
    * Wait for the execution to stop. Any exceptions that occurs during the execution
@@ -99,7 +103,7 @@ trait Repository[DT] {
    * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
    *         if the waiting time elapsed before returning from the method.
    */
-  def awaitTerminationOrTimeout(timeout: Long): this.type
+  def awaitTerminationOrTimeout(timeout: Long): Boolean
 
   /**
    * Stops the execution of this query if it is running.
