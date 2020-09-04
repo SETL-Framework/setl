@@ -19,12 +19,10 @@ class StreamingRepositorySuite extends AnyFunSuite {
       "header" -> "true"
     )
     val csvConnector = new CSVConnector(csvOutputConf)
-    val repo = new StreamingRepository[TestClass]()
-    val repo2 = new SparkRepository[TestClass]().setConnector(csvConnector)
+    val repo = new SparkRepository[TestClass]().setConnector(csvConnector)
 
-    assertThrows[InvalidConnectorException](repo.setConnector(csvConnector))
-    assertThrows[InvalidConnectorException](repo2.awaitTermination())
-
+    assertThrows[InvalidConnectorException](repo.awaitTermination())
+    assertThrows[InvalidConnectorException](repo.awaitTerminationOrTimeout(1))
   }
 
 }

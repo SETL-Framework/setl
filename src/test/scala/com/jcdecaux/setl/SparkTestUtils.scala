@@ -13,4 +13,11 @@ private[setl] object SparkTestUtils {
 
   def checkSparkVersion(requiredVersion: String): Boolean = SparkUtils.checkSparkVersion(requiredVersion)
 
+  def testConsolePrint(test: => Any, expected: String): Boolean = {
+    val stream = new java.io.ByteArrayOutputStream()
+    Console.withOut(stream)(test)
+    val result = stream.toString().trim()
+    result == expected
+  }
+
 }
