@@ -1,11 +1,11 @@
-![logo](images/logo_setl.png)
+![logo](docs/img/logo_setl.png)
 ----------
 
-[![Build Status](https://travis-ci.com/JCDecaux/setl.svg?branch=master)](https://travis-ci.com/JCDecaux/setl)
-[![codecov](https://codecov.io/gh/JCDecaux/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/JCDecaux/setl)
+[![build](https://github.com/SETL-Developers/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Developers/setl/actions)
+[![codecov](https://codecov.io/gh/SETL-Developers/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Developers/setl)
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
 [![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
-[![Gitter](https://badges.gitter.im/setl-by-jcdecaux/community.svg)](https://gitter.im/setl-by-jcdecaux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-developers.github.io/setl/)
 
 If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
 
@@ -18,14 +18,16 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
 ## Use SETL
 
 ### In a new project
+
 You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
 
 ### In an existing project
+
 ```xml
 <dependency>
   <groupId>com.jcdecaux.setl</groupId>
-  <artifactId>setl_2.11</artifactId>
-  <version>0.4.2</version>
+  <artifactId>setl_2.12</artifactId>
+  <version>1.0.0-RC1</version>
 </dependency>
 ```
 
@@ -41,14 +43,16 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
 <dependencies>
   <dependency>
     <groupId>com.jcdecaux.setl</groupId>
-    <artifactId>setl_2.11</artifactId>
-    <version>0.4.3-SNAPSHOT</version>
+    <artifactId>setl_2.12</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
   </dependency>
 </dependencies>
 ```
 
 ## Quick Start
+
 ### Basic concept
+
 With SETL, an ETL application could be represented by a `Pipeline`. A `Pipeline` contains multiple `Stages`. In each stage, we could find one or several `Factories`.
 
 The class `Factory[T]` is an abstraction of a data transformation that will produce an object of type `T`. It has 4 methods (*read*, *process*, *write* and *get*) that should be implemented by the developer.
@@ -58,6 +62,7 @@ The class `SparkRepository[T]` is a data access layer abstraction. It could be u
 The entry point of a SETL project is the object `com.jcdecaux.setl.Setl`, which will handle the pipeline and spark repository instantiation.
 
 ### Show me some code
+
 You can find the following tutorial code in [the starter template of SETL](https://github.com/qxzzxq/setl-template). Go and clone it :)
 
 Here we show a simple example of creating and saving a **Dataset[TestObject]**. The case class **TestObject** is defined as follows:
@@ -67,6 +72,7 @@ case class TestObject(partition1: Int, partition2: String, clustering1: String, 
 ```
 
 #### Context initialization
+
 Suppose that we want to save our output into `src/main/resources/test_csv`. We can create a configuration file **local.conf** in `src/main/resources` with the following content that defines the target datastore to save our dataset:
 
 ```txt
@@ -92,6 +98,7 @@ setl.setSparkRepository[TestObject]("testObjectRepository")
 ```
 
 #### Implementation of Factory
+
 We will create our `Dataset[TestObject]` inside a `Factory[Dataset[TestObject]]`. A `Factory[A]` will always produce an object of type `A`, and it contains 4 abstract methods that you need to implement:
 - read
 - process
@@ -133,6 +140,7 @@ class MyFactory() extends Factory[Dataset[TestObject]] with HasSparkSession {
 ```
 
 #### Define the pipeline
+
 To execute the factory, we should add it into a pipeline.
 
 When we call `setl.newPipeline()`, **Setl** will instantiate a new **Pipeline** and configure all the registered repositories as inputs of the pipeline. Then we can call `addStage` to add our factory into the pipeline.
@@ -144,12 +152,14 @@ val pipeline = setl
 ```
 
 #### Run our pipeline
+
 ```scala
 pipeline.describe().run()
 ```
 The dataset will be saved into `src/main/resources/test_csv`
 
 #### What's more?
+
 As our `MyFactory` produces a `Dataset[TestObject]`, it can be used by other factories of the same pipeline.
 
 ```scala
@@ -179,7 +189,43 @@ Add this factory into the pipeline:
 pipeline.addStage[AnotherFactory]()
 ```
 
+### Custom Connector
+
+You can implement you own data source connector by implementing the `ConnectorInterface`
+
+```scala
+class CustomConnector extends ConnectorInterface with CanDrop {
+  override def setConf(conf: Conf): Unit = null
+
+  override def setConfig(config: Config): Unit = null
+
+  override def read(): DataFrame = {
+    import spark.implicits._
+    Seq(1, 2, 3).toDF("id")
+  }
+
+  override def write(t: DataFrame, suffix: Option[String]): Unit = log.debug("Write with suffix")
+
+  override def write(t: DataFrame): Unit = log.debug("Write")
+
+  /**
+   * Drop the entire table.
+   */
+  override def drop(): Unit = log.debug("drop")
+}
+```
+
+To use it, just set the storage to **OTHER** and provide the class reference of your connector:
+
+```txt
+myConnector {
+  storage = "OTHER"
+  class = "com.example.CustomConnector"  // class reference of your connector 
+}
+```
+
 ### Generate pipeline diagram (with v0.4.1+)
+
 You can generate a [Mermaid diagram](https://mermaid-js.github.io/mermaid/#/) by doing:
 ```scala
 pipeline.showDiagram()
@@ -234,12 +280,13 @@ You can either copy the code into a Markdown viewer or just copy the link into y
 
 ## Dependencies
 
-**SETL** currently supports the following data source:
+**SETL** currently supports the following data source. You won't need to provide these libraries in your project (except the JDBC driver):
   - All file formats supported by Apache Spark (csv, json, parquet etc)
-  - Excel
+  - Delta
+  - Excel ([crealytics/spark-excel](https://github.com/crealytics/spark-excel))
+  - Cassandra ([datastax/spark-cassandra-connector](https://github.com/datastax/spark-cassandra-connector))
+  - DynamoDB ([audienceproject/spark-dynamodb](https://github.com/audienceproject/spark-dynamodb))
   - JDBC (you have to provide the jdbc driver)
-  - Cassandra
-  - DynamoDB
 
 To read/write data from/to AWS S3 (or other storage services), you should include the 
 corresponding hadoop library in your project.
@@ -257,17 +304,25 @@ You should also provide Scala and Spark in your pom file. SETL is tested against
 
 | Spark Version | Scala Version  | Note                         |
 | ------------- | -------------  | -----------------------------|
-|     2.4       |        2.11    | :heavy_check_mark: Ok        |
+|     3.0       |        2.12    | :heavy_check_mark: Ok        |
 |     2.4       |        2.12    | :heavy_check_mark: Ok        |
+|     2.4       |        2.11    | :heavy_check_mark: Ok        |
 |     2.3       |        2.11    | :warning: see *known issues* |
 
 ## Known issues
+
 - `DynamoDBConnector` doesn't work with Spark version 2.3
 - `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
 
+## Test Coverage
+
+[![coverage.svg](https://codecov.io/gh/SETL-Developers/setl/branch/master/graphs/sunburst.svg)](https://codecov.io/gh/SETL-Developers/setl)
+
 ## Documentation
-[Check our wiki](https://github.com/JCDecaux/setl/wiki)
+
+[https://setl-developers.github.io/setl/](https://setl-developers.github.io/setl/)
 
 ## Contributing to SETL
-[Check our contributing guide](https://github.com/JCDecaux/setl/blob/master/CONTRIBUTING.md)
+
+[Check our contributing guide](https://github.com/SETL-Developers/setl/blob/master/CONTRIBUTING.md)
 

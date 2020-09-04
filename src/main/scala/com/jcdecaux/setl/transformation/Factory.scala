@@ -24,19 +24,6 @@ abstract class Factory[A: ru.TypeTag] extends AbstractFactory[A]
   private[this] val _consumers: Seq[Class[_ <: Factory[_]]] = Seq.empty
   private[this] val _deliveryId: String = Deliverable.DEFAULT_ID
 
-  /**
-   * Alias of writable
-   *
-   * @param persistence if set to true, then the write method of the factory will be invoked
-   * @return
-   */
-  @deprecated("To avoid misunderstanding, use writable()", "0.4.0")
-  def persist(persistence: Boolean): this.type = this.writable(persistence)
-
-  /** Return true if the write method will be invoked by the pipeline */
-  @deprecated("To avoid misunderstanding, use writable", "0.4.0")
-  def persist: Boolean = writable
-
   /** Return the list of consumer class */
   def consumers: Seq[Class[_ <: Factory[_]]] = this._consumers
 

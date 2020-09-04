@@ -7,6 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.FileConnectorConf
+import com.jcdecaux.setl.internal.HasReaderWriter
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -17,16 +18,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val options: FileConnectorConf) extends Connector {
+abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter {
 
   def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
-
-  // Note: this constructor was added to keep the backward compatibility
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: Map[String, String]) = this(options)
 
   private[this] val hadoopConfiguration: Configuration = spark.sparkContext.hadoopConfiguration
   private[this] var wildcardPath: Boolean = false
@@ -355,12 +349,12 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector {
     val locked = lock.tryLock(10, TimeUnit.SECONDS)
 
     val _suffix = if (locked) {
-      // log.debug(s"(${Thread.currentThread().getId}) Acquire lock")
+      log.trace(s"(${Thread.currentThread().getId}) Acquire lock")
       try {
         if (suffixState.get() == 0) updateSuffixState(suffix)
         validateSuffix(suffix)
       } finally {
-        // log.debug(s"(${Thread.currentThread().getId}) Release lock")
+        log.trace(s"(${Thread.currentThread().getId}) Release lock")
         lock.unlock()
       }
     } else {
@@ -378,7 +372,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector {
    */
   def resetSuffix(force: Boolean = false): this.type = {
     if (force) {
-      log.warn("Reset suffix may cause unexpected behavior of FileConnector")
+      log.warn("Clear suffix. This may cause unexpected behavior of FileConnector")
       this.UDSValue.set(None)
       this.writeCount.set(0L)
       this.suffixState.set(0)
@@ -413,7 +407,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector {
   }
 
   def partitionBy(columns: String*): this.type = {
-    log.debug(s"Data will be partitioned by ${columns.mkString(", ")}")
+    log.info(s"Data will be partitioned by ${columns.mkString(", ")}")
     partition.append(columns: _*)
     this
   }
@@ -422,7 +416,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector {
    * Delete the current file or directory
    */
   def delete(): Unit = {
-    log.debug(s"Delete $absolutePath")
+    log.info(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
     resetSuffix(true)
   }

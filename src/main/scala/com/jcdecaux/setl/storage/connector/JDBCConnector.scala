@@ -4,13 +4,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.jcdecaux.setl.config.{Conf, JDBCConnectorConf}
 import com.jcdecaux.setl.enums.Storage
-import com.jcdecaux.setl.util.TypesafeConfigUtils
+import com.jcdecaux.setl.internal.HasReaderWriter
+import com.jcdecaux.setl.util.{SparkUtils, TypesafeConfigUtils}
 import com.typesafe.config.Config
 import org.apache.spark.sql._
-import org.apache.spark.sql.execution.command.ExplainCommand
 import org.apache.spark.sql.execution.datasources.jdbc._
 
-class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
+class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector with HasReaderWriter {
 
   private[this] val _read: AtomicBoolean = new AtomicBoolean(false)
   private[this] val _source: String = s"JDBCRelation(${conf.getDbTable.get})"
@@ -31,12 +31,6 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
   def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
 
   def this(conf: Conf) = this(conf.toMap)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(sparkSession: SparkSession, config: Config) = this(config)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(sparkSession: SparkSession, conf: Conf) = this(conf)
 
   private[this] def executeRequest(request: String): Unit = {
     val statement = JdbcUtils.createConnectionFactory(conf.getJDBCOptions)().createStatement()
@@ -95,7 +89,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector {
        */
         if (sm == SaveMode.Overwrite.toString && this._read.get()) {
 
-          val queryExplainCommand = ExplainCommand(t.queryExecution.logical, extended = false)
+          val queryExplainCommand = SparkUtils.explainCommandWithExtendedMode(t.queryExecution.logical)
           val explain = spark.sessionState
             .executePlan(queryExplainCommand)
             .executedPlan

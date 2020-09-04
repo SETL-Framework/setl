@@ -23,10 +23,6 @@ trait Connector extends HasSparkSession with Logging {
 
   val storage: Storage
 
-  protected val reader: DataFrameReader
-
-  protected val writer: DataFrame => DataFrameWriter[Row]
-
   def read(): DataFrame
 
   def write(t: DataFrame, suffix: Option[String]): Unit
@@ -40,8 +36,6 @@ object Connector {
   def empty: Connector = new Connector {
     override val spark: SparkSession = null
     override val storage: Storage = null
-    override val reader: DataFrameReader = null
-    override val writer: DataFrame => DataFrameWriter[Row] = null
     override def read(): DataFrame = null
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
     override def write(t: DataFrame): Unit = {}

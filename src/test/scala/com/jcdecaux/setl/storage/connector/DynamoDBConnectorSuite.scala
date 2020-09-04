@@ -116,10 +116,8 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
     assert(readData.collect().length === input.length)
     readData.select($"col1", $"col2").collect() should contain theSameElementsAs data.collect()
 
-    val connector2 = new DynamoDBConnector("eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
-    val connector3 = new DynamoDBConnector(spark, "eu-west-1", "test-table", SaveMode.ErrorIfExists, "10000")
+    val connector2 = new DynamoDBConnector("eu-west-1", "test-table", SaveMode.Overwrite, "10000")
     assert(connector2.read().collect().length === input.length)
-    assert(connector3.read().collect().length === input.length)
 
 
     val dynamoDBConnectorConf = new DynamoDBConnectorConf()
@@ -128,27 +126,21 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
       .set(DynamoDBConnectorConf.THROUGHPUT, "1000")
 
     val connector4 = new DynamoDBConnector(dynamoDBConnectorConf)
-    val connector4b = new DynamoDBConnector(spark, dynamoDBConnectorConf)
     assert(connector4.read().collect().length === input.length)
-    assert(connector4b.read().collect().length === input.length)
 
     val dynamoConf = new Conf()
       .set(DynamoDBConnectorConf.TABLE, "test-table")
       .set(DynamoDBConnectorConf.REGION, "eu-west-1")
       .set(DynamoDBConnectorConf.THROUGHPUT, "1000")
     val connector5 = new DynamoDBConnector(dynamoConf)
-    val connector5b = new DynamoDBConnector(spark, dynamoConf)
     assert(connector5.read().collect().length === input.length)
-    assert(connector5b.read().collect().length === input.length)
 
     val config = ConfigFactory.load("dynamodb.conf")
     assertThrows[IllegalArgumentException](new DynamoDBConnector(config))
 
 
     val connector7 = new DynamoDBConnector(config.getConfig("dynamodb.connector"))
-    val connector7b = new DynamoDBConnector(spark, config.getConfig("dynamodb.connector"))
     assert(connector7.read().collect().length === input.length)
-    assert(connector7b.read().collect().length === input.length)
 
   }
 
@@ -188,6 +180,6 @@ class DynamoDBConnectorSuite extends AnyFunSuite with Matchers {
 
 object DynamoDBConnectorSuite {
 
-  val host: String = "http://localhost:8000"  // System.getProperty("aws.dynamodb.endpoint", "http://localhost:8000")
+  val host: String = "http://127.0.0.1:8000"  // System.getProperty("aws.dynamodb.endpoint", "http://localhost:8000")
 
 }

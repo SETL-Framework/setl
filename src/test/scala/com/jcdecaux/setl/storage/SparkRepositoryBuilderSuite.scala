@@ -5,11 +5,10 @@ import java.lang.reflect.InvocationTargetException
 import java.sql.{Date, Timestamp}
 
 import com.datastax.spark.connector.cql.CassandraConnector
+import com.jcdecaux.setl._
 import com.jcdecaux.setl.config.Properties
 import com.jcdecaux.setl.enums.{Storage, ValueType}
-import com.jcdecaux.setl.exception.UnknownException
 import com.jcdecaux.setl.storage.connector.{CSVConnector, ExcelConnector, ParquetConnector}
-import com.jcdecaux.setl.{MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject, TestObject2}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
@@ -30,13 +29,13 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     assert(builder.getAs[String]("path").get === "my/test/path")
 
     val builder2 = new SparkRepositoryBuilder[TestObject]()
-    assertThrows[com.jcdecaux.setl.exception.UnknownException.Storage](builder2.build())
+    assertThrows[IllegalArgumentException](builder2.build())
 
-    val builder3 = new SparkRepositoryBuilder[TestObject](spark)
+    val builder3 = new SparkRepositoryBuilder[TestObject]()
     builder3.setPath("my/test/path")
     assert(builder3.getAs[String]("path").get === "my/test/path")
 
-    val builder4 = new SparkRepositoryBuilder[TestObject](Some(spark), None, None)
+    val builder4 = new SparkRepositoryBuilder[TestObject](None, None)
     builder4.setPath("my/test/path")
     assert(builder4.getAs[String]("path").get === "my/test/path")
   }
@@ -92,7 +91,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
   test("SparkRepository build with typesafe config") {
     val conf = ConfigFactory.load("test_priority.conf")
     val builder = new SparkRepositoryBuilder[TestObject](conf)
-    assertThrows[UnknownException.Storage](builder.build())
+    assertThrows[IllegalArgumentException](builder.build())
   }
 
   test("SparkRepository cassandra") {
@@ -338,8 +337,9 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
       .setEnv("local")
       .getOrCreate()
 
-    // UnknownException.Storage should be thrown if the given storage type is not supported
-    assertThrows[UnknownException.Storage](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build())
+    assertThrows[IllegalArgumentException](new SparkRepositoryBuilder[TestObject](Storage.OTHER).build(),
+      "IllegalArgumentException should be thrown if storage = OTHER and no available class reference is provided"
+    )
 
     // NoSuchElementException should be thrown if missing arguments
     assertThrows[InvocationTargetException](new SparkRepositoryBuilder[TestObject](Storage.CSV).build())
@@ -353,7 +353,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
       .setEnv("local")
       .getOrCreate()
 
-    if(checkSparkVersion.isDefined) {
+    if (checkSparkVersion.isDefined) {
       assume(SparkTestUtils.checkSparkVersion(checkSparkVersion.get))
     }
 

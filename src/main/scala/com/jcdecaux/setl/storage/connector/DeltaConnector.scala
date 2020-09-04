@@ -2,6 +2,7 @@ package com.jcdecaux.setl.storage.connector
 
 import com.jcdecaux.setl.config.{Conf, DeltaConnectorConf}
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.internal.HasReaderWriter
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import io.delta.tables.DeltaTable
@@ -14,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * DeltaConnector contains functionality for transforming [[DataFrame]] into DeltaLake files
  */
-class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector  {
+class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with HasReaderWriter  {
 
   val storage = Storage.DELTA
 

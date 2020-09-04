@@ -321,7 +321,7 @@ class MockCassandra(connector: CassandraConnector, keyspace: String) {
 
 object MockCassandra {
   val keyspace: String = "test_space"
-  val host: String = "localhost" // System.getProperty("setl.test.cassandra.host", "localhost")
+  val host: String = "127.0.0.1" // System.getProperty("setl.test.cassandra.host", "localhost")
 
   val cassandraConf: SparkConf = new SparkConf(true)
     .set("spark.cassandra.connection.host", host)

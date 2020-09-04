@@ -204,19 +204,6 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
   /** Get spark.sql.shuffle.partitions */
   def getShufflePartitions: String = get(SPARK_SHUFFLE_PARTITIONS)
 
-  /**
-   * Set spark.sql.shuffle.partitions
-   *
-   * @param par default number of partition
-   * @return
-   */
-  @deprecated("To avoid ambiguity, use setShufflePartitions", "0.4.1")
-  def setParallelism(par: Int): this.type = this.setShufflePartitions(par)
-
-  /** Get spark.sql.shuffle.partitions */
-  @deprecated("To avoid ambiguity, use getShufflePartitions", "0.4.1")
-  def getParallelism: String = getShufflePartitions
-
   def useKryo(boo: Boolean): this.type = set(SPARK_SERIALIZER, "org.apache.spark.serializer.KryoSerializer")
 
   def useKryo: Boolean = get(SPARK_SERIALIZER) == "org.apache.spark.serializer.KryoSerializer"

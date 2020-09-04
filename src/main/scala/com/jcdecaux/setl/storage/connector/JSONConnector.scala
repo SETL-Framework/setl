@@ -9,7 +9,7 @@ import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode}
 
 /**
  * Connector that loads JSON files and returns the results as a `DataFrame`.
@@ -73,18 +73,6 @@ class JSONConnector(override val options: FileConnectorConf) extends FileConnect
   def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
 
   def this(conf: Conf) = this(conf.toMap)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: FileConnectorConf) = this(options)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, options: Map[String, String]) = this(spark, FileConnectorConf.fromMap(options))
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, config: Config) = this(spark = spark, options = TypesafeConfigUtils.getMap(config))
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, conf: Conf) = this(spark = spark, options = conf.toMap)
 
   override val storage: Storage = Storage.JSON
   options.setStorage(storage)

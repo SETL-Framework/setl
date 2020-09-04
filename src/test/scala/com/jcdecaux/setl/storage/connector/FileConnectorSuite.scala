@@ -30,7 +30,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     override def write(t: DataFrame, suffix: Option[String]): Unit = {}
   }
 
-  test("Instanciation of constructors") {
+  test("Instantiation of constructors") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     val options = Map[String, String](
@@ -47,7 +47,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
       override def write(t: DataFrame, suffix: Option[String]): Unit = {}
     }
 
-    val connector2: SparkSession => FileConnector = spark => new FileConnector(spark, fileConnectorConf) {
+    val connector2: SparkSession => FileConnector = spark => new FileConnector(fileConnectorConf) {
       override val storage: Storage = Storage.OTHER
 
       override def read(): DataFrame = null
@@ -63,7 +63,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
       override def write(t: DataFrame, suffix: Option[String]): Unit = {}
     }
 
-    val connector4: SparkSession => FileConnector = spark => new FileConnector(spark, options) {
+    val connector4: SparkSession => FileConnector = spark => new FileConnector(options) {
       override val storage: Storage = Storage.OTHER
 
       override def read(): DataFrame = null

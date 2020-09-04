@@ -73,7 +73,7 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
     val context: Setl = Setl.builder()
       .setConfigLoader(configLoader)
       .setSetlConfigPath("context")
-      .setParallelism(500)
+      .setShufflePartitions(500)
       .getOrCreate()
 
     assert(context.spark.sparkContext.getConf.get("spark.sql.shuffle.partitions") === "500",
@@ -142,6 +142,34 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
 
     assert(read.count() === 2)
     assert(repo.findBy(Condition("partition1", "=", 1)).count() === 1)
+
+    repo.getConnector.asInstanceOf[FileConnector].delete()
+  }
+
+  test("getSparkRepository should return a registered repository without changing it") {
+    val context = Setl.builder()
+      .setConfigLoader(configLoader)
+      .getOrCreate()
+
+    import com.jcdecaux.setl.SetlSuite.TestGetRepository
+    import context.spark.implicits._
+
+    val ds = this.ds.toDS()
+
+    context
+      .setSparkRepository[TestObject]("csv_dc_context", deliveryId = "id")
+
+    val repo = context.getSparkRepository[TestObject]("csv_dc_context")
+    repo.save(ds)
+
+    assert(context.hasExternalInput(context.repositoryIdOf("csv_dc_context")))
+    assert(!context.hasExternalInput(context.repositoryIdOf("csv_dc_context_non_exist")))
+    assert(context.listInputs().size === 1)
+
+    context
+      .newPipeline()
+      .addStage[TestGetRepository]()
+      .run()
 
     repo.getConnector.asInstanceOf[FileConnector].delete()
   }
@@ -416,6 +444,29 @@ class SetlSuite extends AnyFunSuite with PrivateMethodTester with Matchers {
 }
 
 object SetlSuite {
+
+  class TestGetRepository extends Factory[Dataset[TestObject]] {
+
+    @Delivery(id = "id")
+    private[this] val repo = SparkRepository[TestObject]
+
+    /** Read data */
+    override def read(): TestGetRepository.this.type = this
+
+    /** Process data */
+    override def process(): TestGetRepository.this.type = {
+      repo.findAll().show()
+      this
+    }
+
+    /** Write data */
+    override def write(): TestGetRepository.this.type = this
+
+    /** Get the processed data */
+    override def get(): Dataset[TestObject] = {
+      repo.findAll()
+    }
+  }
 
   class MyFactory(spark: SparkSession) extends Factory[Dataset[TestObject]] {
 

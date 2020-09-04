@@ -38,35 +38,23 @@ class JSONConnectorSuite extends AnyFunSuite with Matchers {
 
     val connector = new JSONConnector(FileConnectorConf.fromMap(options))
     connector.write(testTable.toDF())
-    val connector2 = new JSONConnector(spark, FileConnectorConf.fromMap(options))
     assert(connector.read().collect().length == testTable.length)
-    assert(connector2.read().collect().length == testTable.length)
     connector.delete()
-    connector2.delete()
 
     val connector3 = new JSONConnector(options)
-    val connector4 = new JSONConnector(spark, options)
     connector3.write(testTable.toDF())
     assert(connector3.read().collect().length == testTable.length)
-    assert(connector4.read().collect().length == testTable.length)
     connector3.delete()
-    connector4.delete()
 
     val connector5 = new JSONConnector(Properties.jsonConfig)
-    val connector6 = new JSONConnector(spark, Properties.jsonConfig)
     connector5.write(testTable.toDF())
     assert(connector5.read().collect().length == testTable.length)
-    assert(connector6.read().collect().length == testTable.length)
     connector5.delete()
-    connector6.delete()
 
     val connector7 = new JSONConnector(conf)
-    val connector8 = new JSONConnector(spark, conf)
     connector7.write(testTable.toDF())
     assert(connector7.read().collect().length == testTable.length)
-    assert(connector8.read().collect().length == testTable.length)
     connector7.delete()
-    connector8.delete()
   }
 
   test("JSON should give correct path") {

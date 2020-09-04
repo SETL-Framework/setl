@@ -84,14 +84,10 @@ class JDBCConnectorSuite extends AnyFunSuite {
 
     val connector4 = new JDBCConnector(Properties.jdbcConfig)
     connector4.write(data)
-    val connector5 = new JDBCConnector(spark, Properties.jdbcConfig)
     assert(connector4.read().collect().length === 2)
-    assert(connector5.read().collect().length === 2)
 
     val connector6 = new JDBCConnector(conf)
-    val connector7 = new JDBCConnector(spark, conf)
     assert(connector6.read().collect().length === 2)
-    assert(connector7.read().collect().length === 2)
   }
 
   test("JDBCConnector should read and write data") {
@@ -216,5 +212,5 @@ class JDBCConnectorSuite extends AnyFunSuite {
 }
 
 object JDBCConnectorSuite {
-  val psqlHost: String = "localhost"  // System.getProperty("setl.test.postgres.host", "localhost")
+  val psqlHost: String = "127.0.0.1"  // System.getProperty("setl.test.postgres.host", "localhost")
 }

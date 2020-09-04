@@ -3,6 +3,7 @@ package com.jcdecaux.setl.storage.connector
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.{Conf, DynamoDBConnectorConf}
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.internal.HasReaderWriter
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -21,7 +22,7 @@ import org.apache.spark.sql._
  * }}}
  */
 @InterfaceStability.Evolving
-class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
+class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector with HasReaderWriter {
 
   def this(conf: Map[String, String]) = this(new DynamoDBConnectorConf().set(conf))
 
@@ -45,19 +46,6 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
 
   def this(conf: Conf) = this(conf.toMap)
 
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession,
-           region: String, // "eu-west-1"
-           table: String,
-           saveMode: SaveMode,
-           throughput: String = "10000") = this(region, table, saveMode, throughput)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, config: Config) = this(config)
-
-  @deprecated("use the constructor with no spark session", "0.3.4")
-  def this(spark: SparkSession, conf: Conf) = this(conf)
-
   private[this] val sourceName: String = "com.audienceproject.spark.dynamodb.datasource"
 
   require(conf.getTable.nonEmpty, "DynamoDB table is not defined")
@@ -73,6 +61,7 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
     df.write
       .options(conf.getWriterConf)
+      .mode(conf.getSaveMode)
       .format(sourceName)
   }
 
@@ -81,7 +70,12 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector {
   private[this] def writeDynamoDB(df: DataFrame, tableName: String): Unit = {
     this.setJobDescription(s"Write data to table $tableName}")
     conf.getWriterConf.foreach(log.debug)
-    writer(df).option("tableName", tableName).save()
+
+    import com.audienceproject.spark.dynamodb.implicits._
+    df.write
+      .options(conf.getWriterConf)
+      .mode(conf.getSaveMode)
+      .dynamodb(tableName)
   }
 
   override def read(): DataFrame = {
