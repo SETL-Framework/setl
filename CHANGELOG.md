@@ -20,6 +20,8 @@
 
 - Parameters of the method `DeltaConnector.update`
 - Parameters of the method `DeltaConnector.partition`
+- Parameter readCache in Setl.setSparkRepository was renamed to cacheData to avoid ambiguity
+- Deprecated `FileConnector.delete()` to avoid ambiguity (use `FileConnector.drop()` instead)
 
 ### Removed:
 
