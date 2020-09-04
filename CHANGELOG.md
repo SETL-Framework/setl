@@ -7,7 +7,7 @@
   - CanVacuum
   - CanUpdate
   - CanPartition
-  - CanWaite
+  - CanWait
 - New IO methods in SparkRepository:
   - drop
   - delete
