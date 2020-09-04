@@ -18,7 +18,7 @@ import scala.concurrent.{Await, Future}
 
 class SparkRepositoryBuilderSuite extends AnyFunSuite {
 
-  import SparkRepositorySuite.deleteRecursively
+  import com.jcdecaux.setl.util.IOUtils.deleteRecursively
 
   test("spark repository builder configuration") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
@@ -377,12 +377,10 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
     import SparkRepositoryBuilderSuite.StreamingText
-    import com.jcdecaux.setl.storage.repository.streaming._
     import spark.implicits._
 
     import scala.concurrent.ExecutionContext.Implicits.global
     import scala.concurrent.duration._
-
 
     val conf = ConfigFactory.load("streaming_test_resources/streaming.conf")
 
@@ -395,7 +393,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     )
 
     val inputRepo = new SparkRepositoryBuilder[StreamingText](inputConf).getOrCreate()
-    val outputRepo = new SparkRepositoryBuilder[StreamingText](outputConf).getOrCreate().toStreamingRepository
+    val outputRepo = new SparkRepositoryBuilder[StreamingText](outputConf).getOrCreate()
     val csvConnector = new CSVConnector(csvOutputConf)
 
     val input = inputRepo.findAll()
@@ -410,7 +408,7 @@ class SparkRepositoryBuilderSuite extends AnyFunSuite {
     try {
       Await.result(future, 5 second)
     } catch {
-      case _: java.util.concurrent.TimeoutException => outputRepo.stop()
+      case _: java.util.concurrent.TimeoutException => outputRepo.stopStreaming()
     }
 
     csvConnector.read().show()

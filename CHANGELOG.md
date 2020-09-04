@@ -3,6 +3,25 @@
 ### Added:
 
 - A new trait `ConnectorInterface` that simplify the use of custom connectors
+- New traits in `com.jcdecaux.setl.internal`:
+  - CanVacuum
+  - CanUpdate
+  - CanPartition
+  - CanWait
+- New IO methods in SparkRepository:
+  - drop
+  - delete
+  - create
+  - vacuum
+  - awaitTermination
+  - stopStreaming
+  
+### Changed:
+
+- Parameters of the method `DeltaConnector.update`
+- Parameters of the method `DeltaConnector.partition`
+- Parameter readCache in Setl.setSparkRepository was renamed to cacheData to avoid ambiguity
+- Deprecated `FileConnector.delete()` to avoid ambiguity (use `FileConnector.drop()` instead)
 
 ### Removed:
 

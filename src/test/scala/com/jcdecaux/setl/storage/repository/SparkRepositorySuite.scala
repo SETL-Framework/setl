@@ -2,20 +2,26 @@ package com.jcdecaux.setl.storage.repository
 
 import java.io.{ByteArrayOutputStream, File}
 
+import com.jcdecaux.setl.annotation.CompoundKey
+import com.jcdecaux.setl.config.Conf
 import com.jcdecaux.setl.enums.Storage
+import com.jcdecaux.setl.exception.InvalidConnectorException
+import com.jcdecaux.setl.internal.{CanCreate, CanDelete, CanDrop, CanUpdate, CanVacuum, CanWait}
 import com.jcdecaux.setl.internal.TestClasses.InnerClass
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.connector._
 import com.jcdecaux.setl.{SparkSessionBuilder, SparkTestUtils, TestObject}
+import com.typesafe.config.Config
 import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
 import org.apache.spark.SparkException
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
 class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
-  import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
+  import com.jcdecaux.setl.util.IOUtils.deleteRecursively
 
   val path: String = "src/test/resources/test_parquet"
   val table: String = "test_table"
@@ -68,7 +74,17 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assert(repo.getConnector === parquetConnector)
 
     assert(repo.findBy(condition).count() === 1)
-    deleteRecursively(new File(path))
+
+    assertThrows[InvalidConnectorException](repo.vacuum())
+    assertThrows[InvalidConnectorException](repo.vacuum(1))
+    assertThrows[InvalidConnectorException](repo.update(testTable.toDS()))
+    assertThrows[InvalidConnectorException](repo.awaitTerminationOrTimeout(1))
+    assertThrows[InvalidConnectorException](repo.awaitTermination())
+    assertThrows[InvalidConnectorException](repo.stopStreaming())
+    assertThrows[InvalidConnectorException](repo.stopStreaming())
+    assertThrows[InvalidConnectorException](repo.delete(""))
+    repo.drop()
+    assert(!new File(path).exists())
 
   }
 
@@ -125,7 +141,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val connector2 = new JDBCConnector(options)
     connector2.write(ds.toDF())
     val repo2 = new SparkRepository[MyObject].setConnector(connector2)
-    repo2.partitionBy("partition")
+    assertThrows[InvalidConnectorException](repo2.partitionBy("partition"),
+      "InvalidConnectorException should be thrown as JDBCConnector doesn't inherit CanPartition")
     assert(!connector2.read().columns.contains("partition"))
   }
 
@@ -425,4 +442,218 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assert(!field2.get(repoNotCached).asInstanceOf[DataFrame].storageLevel.useMemory)
     connector.delete()
   }
+
+  test("SparkRepository IO methods") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    import SparkRepositorySuite._
+    val testDrop = new TestDrop
+
+    val repo = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testDrop)
+    assert(SparkTestUtils.testConsolePrint(repo.drop(), "drop"))
+    assertThrows[InvalidConnectorException](repo.delete("test"))
+    assertThrows[InvalidConnectorException](repo.create(spark.emptyDataFrame))
+    assertThrows[InvalidConnectorException](repo.create(spark.emptyDataFrame, Some("suffix")))
+
+    val testDelete = new TestDelete
+    assert(
+      SparkTestUtils.testConsolePrint(
+        new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testDelete).delete("test"),
+        "delete"
+      )
+    )
+
+    val testCreate = new TestCreate
+    val repoCreate = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testCreate)
+    assert(SparkTestUtils.testConsolePrint(repoCreate.create(null), "create"))
+    assert(SparkTestUtils.testConsolePrint(repoCreate.create(null, Some("qsdf")), "create with suffix"))
+
+    val testUpdate = new TestUpdate
+    val repoUpdate = new SparkRepository[MyTestClass].setConnector(testUpdate)
+    assert(
+      SparkTestUtils.testConsolePrint(
+        repoUpdate.update(spark.emptyDataset[MyTestClass](ExpressionEncoder[MyTestClass])),
+        "update")
+    )
+
+    val repoUpdate2 = new SparkRepository[MyTestClassWithoutKey].setConnector(testUpdate)
+    assert(
+      SparkTestUtils.testConsolePrint(
+        repoUpdate2.update(spark.emptyDataset[MyTestClassWithoutKey](ExpressionEncoder[MyTestClassWithoutKey])),
+        "write"),
+      "The save method should be called when the case class has no key"
+    )
+
+    val testVacuum = new TestVacuum
+    val repoVacuum = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testVacuum)
+    assert(SparkTestUtils.testConsolePrint(repoVacuum.vacuum(1), "vacuum with retention"))
+    assert(SparkTestUtils.testConsolePrint(repoVacuum.vacuum(), "vacuum"))
+    assertThrows[InvalidConnectorException](repoVacuum.drop())
+
+
+    val testWait = new TestWait
+    val repoWait = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testWait)
+    assert(SparkTestUtils.testConsolePrint(repoWait.awaitTermination(), "await"))
+    assert(SparkTestUtils.testConsolePrint(repoWait.stopStreaming(), "stop"))
+    assert(repoWait.awaitTerminationOrTimeout(1))
+
+  }
+
+}
+
+object SparkRepositorySuite {
+
+  case class MyTestClass(@CompoundKey("a", "1") x: String)
+  case class MyTestClassWithoutKey(x: String)
+
+  class TestDrop extends ConnectorInterface with CanDrop {
+    override def setConf(conf: Conf): Unit = ""
+
+    override def setConfig(config: Config): Unit = ""
+
+    /**
+     * Drop the entire table.
+     */
+    override def drop(): Unit = println("drop")
+
+    override def read(): DataFrame = null
+
+    override def write(t: DataFrame, suffix: Option[String]): Unit = println("write with suffix")
+
+    override def write(t: DataFrame): Unit = println("write")
+  }
+
+  class TestDelete extends ConnectorInterface with CanDelete {
+    override def setConf(conf: Conf): Unit = ???
+
+    override def setConfig(config: Config): Unit = ???
+
+    /**
+     * Delete rows according to the query
+     *
+     * @param query a query string
+     */
+    override def delete(query: String): Unit = println("delete")
+
+    override def read(): DataFrame = null
+
+    override def write(t: DataFrame, suffix: Option[String]): Unit = println("write with suffix")
+
+    override def write(t: DataFrame): Unit = println("write")
+  }
+
+  class TestCreate extends ConnectorInterface with CanCreate {
+    override def setConf(conf: Conf): Unit = ???
+
+    override def setConfig(config: Config): Unit = ???
+
+    /**
+     * Create a data storage (e.g. table in a database or file/folder in a file system) with a suffix
+     *
+     * @param t      data frame to be written
+     * @param suffix suffix to be appended at the end of the data storage name
+     */
+    override def create(t: DataFrame, suffix: Option[String]): Unit = println("create with suffix")
+
+    /**
+     * Create a data storage (e.g. table in a database or file/folder in a file system)
+     *
+     * @param t data frame to be written
+     */
+    override def create(t: DataFrame): Unit = println("create")
+
+    override def read(): DataFrame = ???
+
+    override def write(t: DataFrame, suffix: Option[String]): Unit = ???
+
+    override def write(t: DataFrame): Unit = ???
+  }
+
+  class TestUpdate extends ConnectorInterface with CanUpdate {
+    override def setConf(conf: Conf): Unit = ???
+
+    /**
+     * Update the data store with a new data frame and the given matching columns.
+     *
+     * All the matched data will be updated, the non-matched data will be inserted
+     *
+     * @param df      new data
+     * @param columns other columns to be matched
+     */
+    override def update(df: DataFrame, columns: String*): Unit = println("update")
+
+    override def setConfig(config: Config): Unit = ???
+
+    override def read(): DataFrame = ???
+
+    override def write(t: DataFrame, suffix: Option[String]): Unit = println("write with suffix")
+
+    override def write(t: DataFrame): Unit = println("write")
+  }
+
+  class TestVacuum extends ConnectorInterface with CanVacuum {
+    override def setConf(conf: Conf): Unit = ???
+
+    override def setConfig(config: Config): Unit = ???
+
+    /**
+     * Recursively delete files and directories in the table that are not needed by the table for
+     * maintaining older versions up to the given retention threshold. This method will return an
+     * empty DataFrame on successful completion.
+     *
+     * @param retentionHours The retention threshold in hours. Files required by the table for
+     *                       reading versions earlier than this will be preserved and the
+     *                       rest of them will be deleted.
+     */
+    override def vacuum(retentionHours: Double): Unit = println("vacuum with retention")
+
+    /**
+     * Recursively delete files and directories in the table that are not needed by the table for
+     * maintaining older versions up to the given retention threshold. This method will return an
+     * empty DataFrame on successful completion.
+     *
+     * note: This will use the default retention period of 7 days.
+     */
+    override def vacuum(): Unit = println("vacuum")
+
+    override def read(): DataFrame = ???
+
+    override def write(t: DataFrame, suffix: Option[String]): Unit = ???
+
+    override def write(t: DataFrame): Unit = ???
+  }
+
+  class TestWait extends ConnectorInterface with CanWait {
+    override def setConf(conf: Conf): Unit = ???
+
+    override def setConfig(config: Config): Unit = ???
+
+    /**
+     * Wait for the execution to stop. Any exceptions that occurs during the execution
+     * will be thrown in this thread.
+     */
+    override def awaitTermination(): Unit = println("await")
+
+    /**
+     * Wait for the execution to stop. Any exceptions that occurs during the execution
+     * will be thrown in this thread.
+     *
+     * @param timeout time to wait in milliseconds
+     * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
+     *         if the waiting time elapsed before returning from the method.
+     */
+    override def awaitTerminationOrTimeout(timeout: Long): Boolean = true
+
+    /**
+     * Stops the execution of this query if it is running.
+     */
+    override def stop(): Unit = println("stop")
+
+    override def read(): DataFrame = ???
+
+    override def write(t: DataFrame, suffix: Option[String]): Unit = ???
+
+    override def write(t: DataFrame): Unit = ???
+  }
+
 }

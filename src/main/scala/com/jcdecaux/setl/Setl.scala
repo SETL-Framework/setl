@@ -74,14 +74,15 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
    * @param config     path to spark repository configuration
    * @param consumer   Seq of consumer
    * @param deliveryId id of this delivery that will be used during the delivery matching
+   * @param cacheData  default false, if set to true, then the SparkRepository will cache the data after reading it
    * @tparam DT type of spark repository
    * @return the current SETL context with the added repository
    */
   def resetSparkRepository[DT: ru.TypeTag](config: String,
                                            consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                            deliveryId: String = Deliverable.DEFAULT_ID,
-                                           readCache: Boolean = false): this.type = {
-    val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).getOrCreate().persistReadData(readCache)
+                                           cacheData: Boolean = false): this.type = {
+    val repo = new SparkRepositoryBuilder[DT](configLoader.getConfig(config)).getOrCreate().persistReadData(cacheData)
     resetSparkRepository(repo, consumer, deliveryId, config)
     this
   }
@@ -93,15 +94,16 @@ abstract class Setl(val configLoader: ConfigLoader) extends HasRegistry[Pipeline
    * @param config     path to spark repository configuration
    * @param consumer   Seq of consumer
    * @param deliveryId id of this delivery that will be used during the delivery matching
+   * @param cacheData  default false, if set to true, then the SparkRepository will cache the data after reading it
    * @tparam DT type of spark repository
    * @return the current SETL context with the added repository
    */
   def setSparkRepository[DT: ru.TypeTag](config: String,
                                          consumer: Seq[Class[_ <: Factory[_]]] = Seq.empty,
                                          deliveryId: String = Deliverable.DEFAULT_ID,
-                                         readCache: Boolean = false): this.type = {
+                                         cacheData: Boolean = false): this.type = {
     if (!hasExternalInput(repositoryIdOf(config))) {
-      resetSparkRepository[DT](config, consumer, deliveryId, readCache)
+      resetSparkRepository[DT](config, consumer, deliveryId, cacheData)
     }
     this
   }
@@ -323,7 +325,7 @@ object Setl {
       this.shufflePartitions = Some(par)
       this
     }
-    
+
     /**
      * Provide a user-defined config loader
      *

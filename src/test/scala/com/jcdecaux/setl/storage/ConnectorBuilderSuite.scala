@@ -5,12 +5,12 @@ import java.io.File
 import com.datastax.spark.connector.cql.{CassandraConnector => CC}
 import com.jcdecaux.setl.config.{Conf, Properties}
 import com.jcdecaux.setl.enums.Storage
-import com.jcdecaux.setl.exception.{ConfException, UnknownException}
-import com.jcdecaux.setl.storage.SparkRepositorySuite.deleteRecursively
-import com.jcdecaux.setl.storage.connector.{CSVConnector, ConnectorInterface, DeltaConnector, JSONConnector, StructuredStreamingConnector, StructuredStreamingConnectorSuite}
-import com.jcdecaux.setl.{CustomConnector, MockCassandra, SparkSessionBuilder, SparkTestUtils, TestObject}
-import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import com.jcdecaux.setl.exception.ConfException
+import com.jcdecaux.setl.storage.connector._
+import com.jcdecaux.setl.util.IOUtils.deleteRecursively
+import com.jcdecaux.setl._
+import com.typesafe.config.ConfigFactory
+import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 

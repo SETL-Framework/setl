@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, File}
 import java.sql.{Date, Timestamp}
 
 import com.jcdecaux.setl.config.{Conf, Properties}
-import com.jcdecaux.setl.storage.SparkRepositorySuite
+import com.jcdecaux.setl.util.IOUtils.deleteRecursively
 import com.jcdecaux.setl.{SparkSessionBuilder, TestObject, TestObject2}
 import org.apache.commons.lang.SystemUtils
 import org.apache.log4j.{Logger, SimpleLayout, WriterAppender}
@@ -36,8 +36,6 @@ class ExcelConnectorSuite extends AnyFunSuite with Matchers {
       SparkSession.clearDefaultSession()
     }
   }
-
-  import SparkRepositorySuite.deleteRecursively
 
   val path: String = "src/test/resources/test_excel.xlsx"
 

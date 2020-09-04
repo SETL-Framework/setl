@@ -2,7 +2,7 @@ package com.jcdecaux.setl.storage.connector
 
 import com.jcdecaux.setl.config.{Conf, DeltaConnectorConf}
 import com.jcdecaux.setl.enums.Storage
-import com.jcdecaux.setl.internal.HasReaderWriter
+import com.jcdecaux.setl.internal.{CanPartition, HasReaderWriter}
 import com.jcdecaux.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import io.delta.tables.DeltaTable
@@ -15,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * DeltaConnector contains functionality for transforming [[DataFrame]] into DeltaLake files
  */
-class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with HasReaderWriter  {
+class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with HasReaderWriter with CanPartition {
 
   val storage = Storage.DELTA
 
@@ -61,11 +61,19 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
       .save(options.getPath)
   }
 
-  override def update(df: DataFrame, column: String, columns: String *): Unit = {
+  /**
+   * Update the data store with a new data frame and the given matching columns.
+   *
+   * All the matched data will be updated, the non-matched data will be inserted
+   *
+   * @param df new data
+   * @param columns columns to be matched
+   */
+  override def update(df: DataFrame, columns: String *): Unit = {
     DeltaTable.forPath(options.getPath).as("oldData")
       .merge(
         df.toDF().as("newData"),
-        (columns :+ column).map(col => s"oldData.$col = newData.$col").mkString(" AND ")
+        columns.map(col => s"oldData.$col = newData.$col").mkString(" AND ")
       )
       .whenMatched
       .updateAll()
@@ -79,14 +87,27 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
     write(t)
   }
 
+  /**
+   * Delete rows according to the query
+   *
+   * @param query a query string
+   */
   override def delete(query: String): Unit = {
     this.delete(expr(query))
   }
 
+  /**
+   * Delete rows according to the query
+   *
+   * @param condition a spark column
+   */
   def delete(condition: Column): Unit = {
     DeltaTable.forPath(options.getPath).delete(condition)
   }
 
+  /**
+   * Drop the entire table.
+   */
   override def drop(): Unit = {
     log.debug(s"Delete ${options.getPath}")
     FileSystem
@@ -94,17 +115,48 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
       .delete(new Path(options.getPath), _recursive)
   }
 
-  def partitionBy(column: String, columns: String*): this.type = {
+  /**
+   * Partitions the output by the given columns on the file system. If specified, the output is
+   * laid out on the file system similar to Hive's partitioning scheme. As an example, when we
+   * partition a dataset by year and then month, the directory layout would look like:
+   * <ul>
+   * <li>year=2016/month=01/</li>
+   * <li>year=2016/month=02/</li>
+   * </ul>
+   *
+   * Partitioning is one of the most widely used techniques to optimize physical data layout.
+   * It provides a coarse-grained index for skipping unnecessary data reads when queries have
+   * predicates on the partitioned columns. In order for partitioning to work well, the number
+   * of distinct values in each column should typically be less than tens of thousands.
+   *
+   * This is applicable for all file-based data sources (e.g. Parquet, JSON)
+   */
+  override def partitionBy(columns: String*): this.type = {
     log.debug(s"Delta files will be partitioned by ${columns.mkString(", ")}")
-    partition.append(column)
     partition.append(columns: _*)
     this
   }
 
+  /**
+   * Recursively delete files and directories in the table that are not needed by the table for
+   * maintaining older versions up to the given retention threshold. This method will return an
+   * empty DataFrame on successful completion.
+   *
+   * @param retentionHours The retention threshold in hours. Files required by the table for
+   *                       reading versions earlier than this will be preserved and the
+   *                       rest of them will be deleted.
+   */
   override def vacuum(retentionHours: Double): Unit = {
     DeltaTable.forPath(options.getPath).vacuum(retentionHours)
   }
 
+  /**
+   * Recursively delete files and directories in the table that are not needed by the table for
+   * maintaining older versions up to the given retention threshold. This method will return an
+   * empty DataFrame on successful completion.
+   *
+   * note: This will use the default retention period of 7 days.
+   */
   override def vacuum(): Unit = {
     DeltaTable.forPath(options.getPath).vacuum()
   }

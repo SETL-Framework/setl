@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.jcdecaux.setl.annotation.InterfaceStability
 import com.jcdecaux.setl.config.FileConnectorConf
-import com.jcdecaux.setl.internal.HasReaderWriter
+import com.jcdecaux.setl.internal.{CanDrop, CanPartition, HasReaderWriter}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
 import org.apache.spark.sql._
@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 @InterfaceStability.Evolving
-abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter {
+abstract class FileConnector(val options: FileConnectorConf) extends Connector with HasReaderWriter with CanDrop with CanPartition {
 
   def this(options: Map[String, String]) = this(FileConnectorConf.fromMap(options))
 
@@ -406,16 +406,22 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
       .partitionBy(partition: _*)
   }
 
-  def partitionBy(columns: String*): this.type = {
+  override def partitionBy(columns: String*): this.type = {
     log.info(s"Data will be partitioned by ${columns.mkString(", ")}")
     partition.append(columns: _*)
     this
   }
 
   /**
+   * Alias of drop
+   */
+  @deprecated("To avoid ambiguity, use drop()", "1.0.0")
+  def delete(): Unit = drop()
+
+  /**
    * Delete the current file or directory
    */
-  def delete(): Unit = {
+  override def drop(): Unit = {
     log.info(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
     resetSuffix(true)

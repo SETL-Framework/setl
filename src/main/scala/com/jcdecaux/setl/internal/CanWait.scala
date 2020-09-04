@@ -16,7 +16,7 @@ trait CanWait {
    * @return `true` if it's stopped; or throw the reported error during the execution; or `false`
    *         if the waiting time elapsed before returning from the method.
    */
-  def awaitTerminationOrTimeout(timeout: Long): Unit
+  def awaitTerminationOrTimeout(timeout: Long): Boolean
 
   /**
    * Stops the execution of this query if it is running.
