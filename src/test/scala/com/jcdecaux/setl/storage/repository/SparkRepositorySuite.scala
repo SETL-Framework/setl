@@ -452,6 +452,8 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val repo = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testDrop)
     assert(SparkTestUtils.testConsolePrint(repo.drop(), "drop"))
     assertThrows[InvalidConnectorException](repo.delete("test"))
+    assertThrows[InvalidConnectorException](repo.create(spark.emptyDataFrame))
+    assertThrows[InvalidConnectorException](repo.create(spark.emptyDataFrame, Some("suffix")))
 
     val testDelete = new TestDelete
     assert(
@@ -474,10 +476,20 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
         "update")
     )
 
+    val repoUpdate2 = new SparkRepository[MyTestClassWithoutKey].setConnector(testUpdate)
+    assert(
+      SparkTestUtils.testConsolePrint(
+        repoUpdate2.update(spark.emptyDataset[MyTestClassWithoutKey](ExpressionEncoder[MyTestClassWithoutKey])),
+        "write"),
+      "The save method should be called when the case class has no key"
+    )
+
     val testVacuum = new TestVacuum
     val repoVacuum = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testVacuum)
     assert(SparkTestUtils.testConsolePrint(repoVacuum.vacuum(1), "vacuum with retention"))
     assert(SparkTestUtils.testConsolePrint(repoVacuum.vacuum(), "vacuum"))
+    assertThrows[InvalidConnectorException](repoVacuum.drop())
+
 
     val testWait = new TestWait
     val repoWait = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(testWait)
@@ -492,6 +504,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 object SparkRepositorySuite {
 
   case class MyTestClass(@CompoundKey("a", "1") x: String)
+  case class MyTestClassWithoutKey(x: String)
 
   class TestDrop extends ConnectorInterface with CanDrop {
     override def setConf(conf: Conf): Unit = ""
@@ -573,9 +586,9 @@ object SparkRepositorySuite {
 
     override def read(): DataFrame = ???
 
-    override def write(t: DataFrame, suffix: Option[String]): Unit = ???
+    override def write(t: DataFrame, suffix: Option[String]): Unit = println("write with suffix")
 
-    override def write(t: DataFrame): Unit = ???
+    override def write(t: DataFrame): Unit = println("write")
   }
 
   class TestVacuum extends ConnectorInterface with CanVacuum {
