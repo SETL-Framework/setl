@@ -3,6 +3,23 @@
 ### Added:
 
 - A new trait `ConnectorInterface` that simplify the use of custom connectors
+- New traits in `com.jcdecaux.setl.internal`:
+  - CanVacuum
+  - CanUpdate
+  - CanPartition
+  - CanWaite
+- New IO methods in SparkRepository:
+  - drop
+  - delete
+  - create
+  - vacuum
+  - awaitTermination
+  - stopStreaming
+  
+### Changed:
+
+- Parameters of the method `DeltaConnector.update`
+- Parameters of the method `DeltaConnector.partition`
 
 ### Removed:
 
