@@ -13,6 +13,6 @@ trait ConnectorInterface extends Connector {
 
   def setConf(conf: Conf): Unit
 
-  def setConfig(config: Config): Unit
+  def setConfig(config: Config): Unit = this.setConf(Conf.fromConfig(config))
 
 }

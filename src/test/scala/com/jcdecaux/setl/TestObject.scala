@@ -18,8 +18,6 @@ case class TestObject2(col1: String, col2: Int, col3: Double, col4: Timestamp, c
 class CustomConnector extends ConnectorInterface with CanDrop {
   override def setConf(conf: Conf): Unit = null
 
-  override def setConfig(config: Config): Unit = null
-
   override def read(): DataFrame = {
     import spark.implicits._
     Seq(1, 2, 3).toDF("id")

@@ -509,8 +509,6 @@ object SparkRepositorySuite {
   class TestDrop extends ConnectorInterface with CanDrop {
     override def setConf(conf: Conf): Unit = ""
 
-    override def setConfig(config: Config): Unit = ""
-
     /**
      * Drop the entire table.
      */
@@ -525,8 +523,6 @@ object SparkRepositorySuite {
 
   class TestDelete extends ConnectorInterface with CanDelete {
     override def setConf(conf: Conf): Unit = ???
-
-    override def setConfig(config: Config): Unit = ???
 
     /**
      * Delete rows according to the query
@@ -544,8 +540,6 @@ object SparkRepositorySuite {
 
   class TestCreate extends ConnectorInterface with CanCreate {
     override def setConf(conf: Conf): Unit = ???
-
-    override def setConfig(config: Config): Unit = ???
 
     /**
      * Create a data storage (e.g. table in a database or file/folder in a file system) with a suffix
@@ -581,9 +575,7 @@ object SparkRepositorySuite {
      * @param columns other columns to be matched
      */
     override def update(df: DataFrame, columns: String*): Unit = println("update")
-
-    override def setConfig(config: Config): Unit = ???
-
+    
     override def read(): DataFrame = ???
 
     override def write(t: DataFrame, suffix: Option[String]): Unit = println("write with suffix")
@@ -593,8 +585,6 @@ object SparkRepositorySuite {
 
   class TestVacuum extends ConnectorInterface with CanVacuum {
     override def setConf(conf: Conf): Unit = ???
-
-    override def setConfig(config: Config): Unit = ???
 
     /**
      * Recursively delete files and directories in the table that are not needed by the table for
@@ -625,8 +615,6 @@ object SparkRepositorySuite {
 
   class TestWait extends ConnectorInterface with CanWait {
     override def setConf(conf: Conf): Unit = ???
-
-    override def setConfig(config: Config): Unit = ???
 
     /**
      * Wait for the execution to stop. Any exceptions that occurs during the execution

@@ -197,8 +197,6 @@ You can implement you own data source connector by implementing the `ConnectorIn
 class CustomConnector extends ConnectorInterface with CanDrop {
   override def setConf(conf: Conf): Unit = null
 
-  override def setConfig(config: Config): Unit = null
-
   override def read(): DataFrame = {
     import spark.implicits._
     Seq(1, 2, 3).toDF("id")
@@ -224,7 +222,7 @@ myConnector {
 }
 ```
 
-### Generate pipeline diagram (with v0.4.1+)
+### Generate pipeline diagram
 
 You can generate a [Mermaid diagram](https://mermaid-js.github.io/mermaid/#/) by doing:
 ```scala
