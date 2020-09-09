@@ -310,7 +310,7 @@ class Pipeline extends Logging
       .toSet
   }
 
-  /** */
+  /** Find middle factories output that can be used as a deliverable */
   private[this] def getStagesMiddleOutputs(stages: List[Stage]): Set[ExpectedDeliverable] = {
     stages
       .dropRight(1)
@@ -338,7 +338,7 @@ class Pipeline extends Logging
       .toSet
   }
 
-  /** */
+  /** Find all needed deliverables */
   private[this] def getNeededDeliverables(stages: List[Stage]): Set[ExpectedDeliverable] = {
     stages
       .flatMap(s => s.createNodes())
@@ -364,7 +364,7 @@ class Pipeline extends Logging
       .toSet
   }
 
-  /** */
+  /** Compare available deliverables and needed deliverables */
   private[this] def compareDeliverables(availableDeliverables: Set[ExpectedDeliverable], neededDeliverables: Set[ExpectedDeliverable]): Unit = {
     neededDeliverables.foreach(
       needed => {
@@ -383,7 +383,7 @@ class Pipeline extends Logging
         // If there is no available deliverable with the correct consumer, we need to find one without consumer
         // If there is, no requirement is needed
         if (!potentialDeliverables.exists(p => needed.consumer == p.consumer)) {
-          require(potentialDeliverables.exists(p => p.consumer == null))
+          require(potentialDeliverables.exists(p => p.consumer == null), s"Deliverable of type ${needed.deliverableType} with deliveryId ${if (needed.deliveryId == "") "null" else needed.deliveryId} produced by ${ReflectUtils.getPrettyName(needed.producer)} is expected in ${ReflectUtils.getPrettyName(needed.consumer)}.")
         }
       }
     )
