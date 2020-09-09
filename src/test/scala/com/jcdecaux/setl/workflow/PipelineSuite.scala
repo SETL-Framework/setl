@@ -146,12 +146,15 @@ class PipelineSuite extends AnyFunSuite with Matchers {
 
   test("Check deliveries before running pipeline") {
     val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
-    val errorMessage = "requirement failed"
+
+    def errorMessage(deliverableType: String, deliveryId: String, producer: String, factory: String): String = {
+      "requirement failed: Deliverable of type " + deliverableType + " with deliveryId " + deliveryId + " produced by " + producer + " is expected in " + factory + "."
+    }
 
     // 1) Missing input Delivery in the first Factory
     val pipeline = new Pipeline()
       .addStage[DatasetFactory](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline.run()).getMessage == errorMessage("Product1", "null", "External", "DatasetFactory"))
 
     // 2) No missing input Delivery in the first Factory
     new Pipeline()
@@ -163,7 +166,7 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     val pipeline3 = new Pipeline()
       .addStage[Product2Factory]()
       .addStage[DatasetFactory](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline3.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline3.run()).getMessage == errorMessage("Product1", "null", "External", "DatasetFactory"))
 
     // 4) No missing input Delivery in the second Factory
     new Pipeline()
@@ -183,7 +186,7 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     val pipeline6 = new Pipeline()
       .setInput[Product1](Product1("good product1"), deliveryId = "goodId")
       .addStage[DatasetFactory](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline6.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline6.run()).getMessage == errorMessage("Product1", "null", "External", "DatasetFactory"))
 
     // 7) Missing input Delivery in the second Factory because of deliveryId
     // The first Factory is not even run
@@ -191,7 +194,7 @@ class PipelineSuite extends AnyFunSuite with Matchers {
       .setInput[Product1](Product1("good product1"), deliveryId = "goodId")
       .addStage[Product2Factory]()
       .addStage[DatasetFactory](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline7.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline7.run()).getMessage == errorMessage("Product1", "null", "External", "DatasetFactory"))
 
     // 8) No missing factory output Delivery in the second factory of the second Stage
     val stage = new Stage()
@@ -206,12 +209,12 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     val pipeline9 = new Pipeline()
       .setInput[Product1](Product1("wrong product1"))
       .addStage[DatasetFactoryBis](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline9.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline9.run()).getMessage == errorMessage("Product1", "null", "ProductFactoryBis", "DatasetFactoryBis"))
     val pipeline9bis = new Pipeline()
       .setInput[String]("wrong product1")
       .addStage[ProductFactory]()
       .addStage[DatasetFactoryBis](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline9bis.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline9bis.run()).getMessage == errorMessage("Product1", "null", "ProductFactoryBis", "DatasetFactoryBis"))
 
     // 10) No missing factory output Delivery
     new Pipeline()
@@ -224,7 +227,7 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     val pipeline11 = new Pipeline()
       .setInput[String]("wrong consumer", consumer = classOf[DatasetFactory])
       .addStage[ProductFactory]()
-    assert(the[IllegalArgumentException].thrownBy(pipeline11.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline11.run()).getMessage == errorMessage("String", "null", "External", "ProductFactory"))
 
     // 12 No missing input Delivery due to wrong consumer
     new Pipeline()
@@ -241,7 +244,7 @@ class PipelineSuite extends AnyFunSuite with Matchers {
       .setInput[String]("test")
       .addStage[ProductFactoryBis]()
       .addStage[DatasetFactoryBis2](Array(spark))
-    assert(the[IllegalArgumentException].thrownBy(pipeline13.run()).getMessage == errorMessage)
+    assert(the[IllegalArgumentException].thrownBy(pipeline13.run()).getMessage == errorMessage("Product1", "null", "External", "DatasetFactoryBis2"))
   }
 
   test("Test Dataset pipeline") {
