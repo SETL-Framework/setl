@@ -22,6 +22,8 @@
 - Parameters of the method `DeltaConnector.partition`
 - Parameter readCache in Setl.setSparkRepository was renamed to cacheData to avoid ambiguity
 - Deprecated `FileConnector.delete()` to avoid ambiguity (use `FileConnector.drop()` instead)
+- Upgraded spark-cassandra-connector to 3.0.0 for the mvn profile `spark_3.0`
+- New logo
 
 ### Removed:
 
