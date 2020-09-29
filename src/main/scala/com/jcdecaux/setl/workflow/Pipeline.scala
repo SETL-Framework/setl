@@ -209,18 +209,7 @@ class Pipeline extends Logging
    */
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage(factory: Class[_ <: Factory[_]], constructorArgs: Any*): this.type = {
-    val _constructorArgs: Seq[Object] = constructorArgs
-      .map {
-        case bool: Boolean => new java.lang.Boolean(bool)
-        case byte: Byte => new java.lang.Byte(byte)
-        case char: Char => new java.lang.Character(char)
-        case short: Short => new java.lang.Short(short)
-        case int: Int => new java.lang.Integer(int)
-        case long: Long => new java.lang.Long(long)
-        case float: Float => new java.lang.Float(float)
-        case double: Double => new java.lang.Double(double)
-        case o => o.asInstanceOf[AnyRef]
-      }
+    val _constructorArgs: Seq[Object] = constructorArgs.map(boxPrimitiveType)
     addStage(new Stage().addFactory(factory, _constructorArgs: _*))
   }
 
@@ -236,19 +225,22 @@ class Pipeline extends Logging
   @throws[IllegalArgumentException]("Exception will be thrown if the length of constructor arguments are not correct")
   def addStage[T <: Factory[_] : ClassTag](constructorArgs: Array[Any] = Array.empty,
                                            persistence: Boolean = true): this.type = {
-    val _constructorArgs: Array[Object] = constructorArgs
-      .map {
-        case bool: Boolean => new java.lang.Boolean(bool)
-        case byte: Byte => new java.lang.Byte(byte)
-        case char: Char => new java.lang.Character(char)
-        case short: Short => new java.lang.Short(short)
-        case int: Int => new java.lang.Integer(int)
-        case long: Long => new java.lang.Long(long)
-        case float: Float => new java.lang.Float(float)
-        case double: Double => new java.lang.Double(double)
-        case o => o.asInstanceOf[AnyRef]
-      }
+    val _constructorArgs: Array[Object] = constructorArgs.map(boxPrimitiveType)
     addStage(new Stage().addFactory[T](_constructorArgs, persistence))
+  }
+
+  private[this] def boxPrimitiveType(t: Any): Object = {
+    t match {
+      case bool: Boolean => java.lang.Boolean.valueOf(bool)
+      case byte: Byte => java.lang.Byte.valueOf(byte)
+      case char: Char => java.lang.Character.valueOf(char)
+      case short: Short => java.lang.Short.valueOf(short)
+      case int: Int => java.lang.Integer.valueOf(int)
+      case long: Long => java.lang.Long.valueOf(long)
+      case float: Float => java.lang.Float.valueOf(float)
+      case double: Double => java.lang.Double.valueOf(double)
+      case o => o.asInstanceOf[AnyRef]
+    }
   }
 
   /**
