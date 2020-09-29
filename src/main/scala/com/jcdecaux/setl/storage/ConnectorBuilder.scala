@@ -80,10 +80,10 @@ class ConnectorBuilder(val config: Either[Config, Conf]) extends Builder[Connect
         classOf[Conf]
       }
 
-      log.debug(s"Build ${storage.get} connector with ${argClass.getCanonicalName}")
+      logDebug(s"Build ${storage.get} connector with ${argClass.getCanonicalName}")
 
       if (classOf[ConnectorInterface].isAssignableFrom(Class.forName(storage.get.connectorName()))) {
-        log.debug("Detect V2 connector")
+        logDebug("Detect V2 connector")
         instantiateConnectorInterface(storage.get.connectorName(), config)
       } else {
         val constructor = connectorConstructorOf(storage.get, argClass)

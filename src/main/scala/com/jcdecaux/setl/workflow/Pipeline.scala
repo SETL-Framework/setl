@@ -250,7 +250,7 @@ class Pipeline extends Logging
    * @return
    */
   def addStage(stage: Stage): this.type = {
-    log.debug(s"Add stage ${_stageCounter}")
+    logDebug(s"Add stage ${_stageCounter}")
 
     resetEndStage()
     registerNewItem(stage.setStageId(_stageCounter))
@@ -409,7 +409,7 @@ class Pipeline extends Logging
           this.benchmark match {
             case Some(boo) =>
               if (!boo) {
-                log.debug("Disable benchmark")
+                logDebug("Disable benchmark")
                 stage.benchmark(false)
               }
             case _ =>

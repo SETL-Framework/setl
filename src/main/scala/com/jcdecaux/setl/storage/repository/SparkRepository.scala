@@ -87,7 +87,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   def setUserDefinedSuffixKey(key: String): this.type = {
     connector match {
       case c: FileConnector => c.setUserDefinedSuffixKey(key)
-      case _ => log.warn(s"Current connector doesn't support user defined suffix, skip UDS setting")
+      case _ => logWarning(s"Current connector doesn't support user defined suffix, skip UDS setting")
     }
     this
   }
@@ -106,7 +106,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   def setUserDefinedSuffixKey(key: Option[String]): this.type = {
     key match {
       case Some(k) => this.setUserDefinedSuffixKey(k)
-      case _ => log.warn(s"Current connector doesn't support user defined suffix, skip UDS setting")
+      case _ => logWarning(s"Current connector doesn't support user defined suffix, skip UDS setting")
     }
     this
   }
@@ -179,7 +179,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
 
     if (conditions.nonEmpty) {
       val sql = conditions.toSqlRequest
-      log.debug(s"Spark SQL request: $sql")
+      logDebug(s"Spark SQL request: $sql")
       connector.read().filter(sql)
     } else {
       connector.read()
@@ -213,17 +213,17 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
   private[repository] def readDataFrame(conditions: Set[Condition] = Set.empty): DataFrame = {
     if (cacheLastReadData.get()) {
       lock.lock()
-      log.debug("Acquire thread lock")
+      logDebug("Acquire thread lock")
       val thisReadHashCode = conditions.hashCode
       val flush = flushReadCache.getAndSet(false)
       val sameHash = lastReadHashCode.getAndSet(thisReadHashCode) == thisReadHashCode
 
       try {
         if (!flush && sameHash) {
-          log.debug("Load data from read cache")
+          logDebug("Load data from read cache")
           readCache
         } else {
-          log.debug("Load and cache data")
+          logDebug("Load and cache data")
           if (readCache != null) readCache.unpersist()
           readCache = findDataFrameBy(conditions)
           readCache.persist(persistenceStorageLevel)
@@ -233,7 +233,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
         lock.unlock()
       }
     } else {
-      log.debug("No read cache found, load from data storage")
+      logDebug("No read cache found, load from data storage")
       findDataFrameBy(conditions)
     }
   }
@@ -288,7 +288,7 @@ class SparkRepository[DataType: TypeTag] extends Repository[Dataset[DataType]] w
         if (primaryColumns.nonEmpty)
           updateDataFrame(dataToSave, primaryColumns: _*)
         else {
-          log.warn(s"Current Dataset doesn't contain any compound key! Normal write operation will do used.")
+          logWarning(s"Current Dataset doesn't contain any compound key! Normal write operation will do used.")
           writeDataFrame(dataToSave)
         }
       case _ =>

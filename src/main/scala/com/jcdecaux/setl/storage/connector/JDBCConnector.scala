@@ -62,7 +62,7 @@ class JDBCConnector(val conf: JDBCConnectorConf) extends DBConnector with HasRea
   override def create(t: DataFrame, suffix: Option[String]): Unit = create(t)
 
   override def create(t: DataFrame): Unit = {
-    log.warn("Create is not supported in JDBC Connector")
+    logWarning("Create is not supported in JDBC Connector")
   }
 
   override def delete(condition: String): Unit = {

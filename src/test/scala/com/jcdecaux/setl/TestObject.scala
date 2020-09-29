@@ -23,12 +23,12 @@ class CustomConnector extends ConnectorInterface with CanDrop {
     Seq(1, 2, 3).toDF("id")
   }
 
-  override def write(t: DataFrame, suffix: Option[String]): Unit = log.debug("Write with suffix")
+  override def write(t: DataFrame, suffix: Option[String]): Unit = logDebug("Write with suffix")
 
-  override def write(t: DataFrame): Unit = log.debug("Write")
+  override def write(t: DataFrame): Unit = logDebug("Write")
 
   /**
    * Drop the entire table.
    */
-  override def drop(): Unit = log.debug("drop")
+  override def drop(): Unit = logDebug("drop")
 }

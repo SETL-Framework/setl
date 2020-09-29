@@ -86,21 +86,21 @@ private[workflow] case class Node(factoryClass: Class[_ <: Factory[_]],
   def targetNode(next: Node): Boolean = {
 
     val validNodeUUID = if (this.getUUID == next.getUUID) {
-      log.debug("The two nodes have the same UUID")
+      logDebug("The two nodes have the same UUID")
       false
     } else {
       true
     }
 
     val validClassUUID = if (this.factoryUUID == next.factoryUUID) {
-      log.debug("The two nodes are representing one same factory")
+      logDebug("The two nodes are representing one same factory")
       false
     } else {
       true
     }
 
     val validStage = if (this.stage >= next.stage) {
-      log.debug("The two nodes are in the same stage")
+      logDebug("The two nodes are in the same stage")
       false
     } else {
       true

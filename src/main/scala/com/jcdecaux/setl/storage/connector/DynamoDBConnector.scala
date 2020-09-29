@@ -52,7 +52,7 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector wit
   require(conf.getRegion.nonEmpty, "DynamoDB region is not defined")
 
   override val reader: DataFrameReader = {
-    log.debug(s"DynamoDB connector read throughput ${conf.get(DynamoDBConnectorConf.THROUGHPUT)}")
+    logDebug(s"DynamoDB connector read throughput ${conf.get(DynamoDBConnectorConf.THROUGHPUT)}")
     spark.read
       .options(conf.getReaderConf)
       .format(sourceName)
@@ -80,26 +80,26 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector wit
 
   override def read(): DataFrame = {
     this.setJobDescription(s"Write data to table ${conf.getTable.getOrElse("unknown")}")
-    log.debug(s"Reading DynamoDB table ${conf.getTable.get} in ${conf.getRegion.get}")
+    logDebug(s"Reading DynamoDB table ${conf.getTable.get} in ${conf.getRegion.get}")
     conf.getReaderConf.foreach(log.debug)
     reader.option("tableName", conf.getTable.get).load()
   }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignored in DynamoDBConnector")
+    logWarning("Suffix will be ignored in DynamoDBConnector")
     write(t)
   }
 
   override def create(t: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Create is not supported in DynamoDBConnector")
+    logWarning("Create is not supported in DynamoDBConnector")
   }
 
   override def delete(query: String): Unit = {
-    log.warn("Delete is not supported in DynamoDBConnector")
+    logWarning("Delete is not supported in DynamoDBConnector")
   }
 
   override def create(t: DataFrame): Unit = {
-    log.warn("Create is not supported in DynamoDBConnector")
+    logWarning("Create is not supported in DynamoDBConnector")
   }
 
   override def write(t: DataFrame): Unit = {
@@ -107,7 +107,7 @@ class DynamoDBConnector(val conf: DynamoDBConnectorConf) extends DBConnector wit
   }
 
   override def drop(): Unit = {
-    log.warn("Drop is not supported in DynamoDBConnector")
+    logWarning("Drop is not supported in DynamoDBConnector")
   }
 
 }

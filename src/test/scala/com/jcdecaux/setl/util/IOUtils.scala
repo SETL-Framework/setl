@@ -53,7 +53,7 @@ object IOUtils extends Logging {
   }
 
   def deleteRecursively(file: File): Unit = {
-    log.debug(s"Remove ${file.getCanonicalPath}")
+    logDebug(s"Remove ${file.getCanonicalPath}")
     if (file.isDirectory)
       file.listFiles.foreach(deleteRecursively)
     if (file.exists && !file.delete)

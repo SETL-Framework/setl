@@ -43,7 +43,7 @@ class StructuredStreamingConnector(val conf: StructuredStreamingConnectorConf) e
 
   override def read(): DataFrame = {
     if (conf.has(StructuredStreamingConnectorConf.SCHEMA)) {
-      log.info("Apply user-defined schema")
+      logInfo("Apply user-defined schema")
       streamReader
         .schema(conf.getSchema)
         .load()
@@ -53,7 +53,7 @@ class StructuredStreamingConnector(val conf: StructuredStreamingConnectorConf) e
   }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignored by StructuredStreamingConnector")
+    logWarning("Suffix will be ignored by StructuredStreamingConnector")
     write(t)
   }
 

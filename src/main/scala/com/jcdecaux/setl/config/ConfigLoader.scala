@@ -56,7 +56,7 @@ abstract class ConfigLoader extends Logging {
     Option(ConfigFactory.load())
   } catch {
     case a: ConfigException.UnresolvedSubstitution =>
-      log.warn(a.toString)
+      logWarning(a.toString)
       None
     case e: Throwable => throw e
   }
@@ -67,7 +67,7 @@ abstract class ConfigLoader extends Logging {
         Option(config.getString(setlEnvironmentConfigPath))
       } catch {
         case _: ConfigException.Missing =>
-          log.debug("No setl.environment was found in the default config file")
+          logDebug("No setl.environment was found in the default config file")
           None
         case e: Throwable => throw e
       }
@@ -79,7 +79,7 @@ abstract class ConfigLoader extends Logging {
 
   def getConfigPath: String = {
     val cf = configPath.getOrElse(s"$appEnv.conf")
-    log.debug(s"Load config file: $cf")
+    logDebug(s"Load config file: $cf")
     cf
   }
 
@@ -97,11 +97,11 @@ abstract class ConfigLoader extends Logging {
    */
   private[this] def updateAppEnv(): Unit = {
     if (getAppEnvFromJvmProperties.isDefined) {
-      log.debug(s"Find app.environment=${getAppEnvFromJvmProperties.get} in jvm properties")
+      logDebug(s"Find app.environment=${getAppEnvFromJvmProperties.get} in jvm properties")
       applicationEnvironment = getAppEnvFromJvmProperties
 
     } else if (defaultConfigAppEnvironment.isDefined) {
-      log.debug(s"Find setl.environment=${defaultConfigAppEnvironment.get} in default config file")
+      logDebug(s"Find setl.environment=${defaultConfigAppEnvironment.get} in default config file")
       applicationEnvironment = defaultConfigAppEnvironment
 
     }
@@ -111,9 +111,9 @@ abstract class ConfigLoader extends Logging {
    * Config loaded from filesystem
    */
   lazy val config: Config = {
-    log.debug("Before execution of beforeAll")
+    logDebug("Before execution of beforeAll")
     this.beforeAll()
-    log.debug("After execution of beforeAll")
+    logDebug("After execution of beforeAll")
 
     // Try to update application environment if it's still undefined
     if (applicationEnvironment.isEmpty) updateAppEnv()
@@ -225,7 +225,7 @@ object ConfigLoader {
       import scala.collection.JavaConverters._
       properties.asScala.foreach {
         case (k, v) =>
-          log.debug(s"Add property $k: $v")
+          logDebug(s"Add property $k: $v")
           System.setProperty(k, v)
       }
 

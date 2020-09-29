@@ -115,7 +115,7 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
   @throws[NoSuchElementException]
   override def archive(outputPath: Path): this.type = {
     this.validInputs()
-    log.info(s"Archive to ${outputPath.toString}")
+    logInfo(s"Archive to ${outputPath.toString}")
 
     val dataOutputStream: OutputStream = fileSystem match {
       case Some(hdfs) => hdfs.create(outputPath)
@@ -155,7 +155,7 @@ class ZipArchiver() extends Compressor with Archiver with Logging {
   }
 
   private[this] def inputStreamOf(path: Path): InputStream = {
-    log.debug(s"Read ${path.toString}")
+    logDebug(s"Read ${path.toString}")
     fileSystem match {
       case Some(hdfs) => hdfs.open(path)
       case _ =>

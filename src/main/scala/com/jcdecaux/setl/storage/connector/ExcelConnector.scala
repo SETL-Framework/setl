@@ -124,11 +124,11 @@ class ExcelConnector(val path: String,
   //END CONSTRUCTOR
 
   if (sheetName.isDefined) {
-    log.warn("The option `sheetName` is ignored. Use dataAddress")
+    logWarning("The option `sheetName` is ignored. Use dataAddress")
   }
 
   if (inferSchema.toBoolean && schema.isEmpty) {
-    log.warn("Excel connect may not behave as expected when parsing/saving Integers. " +
+    logWarning("Excel connect may not behave as expected when parsing/saving Integers. " +
       "It's recommended to define a schema instead of infer one")
   }
 
@@ -189,7 +189,7 @@ class ExcelConnector(val path: String,
   }
 
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
-    if (suffix.isDefined) log.warn("Suffix is not supported in ExcelConnector")
+    if (suffix.isDefined) logWarning("Suffix is not supported in ExcelConnector")
     this.setJobDescription(s"Write Excel to $path")
     writer(df).save(path)
   }

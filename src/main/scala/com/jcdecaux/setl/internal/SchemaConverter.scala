@@ -211,7 +211,7 @@ object SchemaConverter extends Logging {
       .toSet
 
     if (columnsToDrop.nonEmpty && dataFrame.columns.intersect(columnsToDrop.toSeq.map(compoundKeyName)).isEmpty) {
-      log.warn("Some compound key columns are missing in the data source")
+      logWarning("Some compound key columns are missing in the data source")
     }
 
     columnsToDrop
@@ -290,7 +290,7 @@ object SchemaConverter extends Logging {
       .foldLeft(dataFrame) {
         (df, sf) =>
           val compressorName = sf.metadata.getStringArray(COMPRESS).head
-          val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
+          val compressor = Class.forName(compressorName).getConstructor().newInstance().asInstanceOf[Compressor]
           val compress: String => Array[Byte] = input => compressor.compress(input)
           val compressUDF = functions.udf(compress)
           df.withColumn(sf.name, compressUDF(functions.to_json(functions.col(sf.name))))
@@ -312,7 +312,7 @@ object SchemaConverter extends Logging {
       .foldLeft(dataFrame) {
         (df, sf) => {
           val compressorName = sf.metadata.getStringArray(COMPRESS).head
-          val compressor = Class.forName(compressorName).newInstance().asInstanceOf[Compressor]
+          val compressor = Class.forName(compressorName).getConstructor().newInstance().asInstanceOf[Compressor]
           val decompress: Array[Byte] => String = input => compressor.decompress(input)
           val decompressUDF = functions.udf(decompress)
           df.withColumn(sf.name, functions.from_json(decompressUDF(functions.col(sf.name)), sf.dataType))
