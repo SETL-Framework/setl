@@ -72,7 +72,7 @@ class CassandraConnector(val keyspace: String,
    * @return
    */
   override def read(): DataFrame = {
-    log.debug(s"Read $keyspace.$table")
+    logDebug(s"Read $keyspace.$table")
     reader.load()
   }
 
@@ -85,7 +85,7 @@ class CassandraConnector(val keyspace: String,
    */
   private[this] def writeCassandra(df: DataFrame, table: String, keyspace: String): Unit = {
 
-    log.debug(s"Write DataFrame to $keyspace.$table")
+    logDebug(s"Write DataFrame to $keyspace.$table")
     this.setJobDescription(s"Write data to cassandra table $keyspace.$table")
 
     writer(df)
@@ -99,7 +99,7 @@ class CassandraConnector(val keyspace: String,
    * @param df DataFrame to be saved
    */
   override def write(df: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignored in CassandraConnector")
+    logWarning("Suffix will be ignored in CassandraConnector")
     write(df)
   }
 
@@ -109,20 +109,20 @@ class CassandraConnector(val keyspace: String,
    * @param df DataFrame that will be used to create Cassandra table
    */
   override def create(df: DataFrame, suffix: Option[String]): Unit = {
-    log.warn("Suffix will be ignored in CassandraConnector")
+    logWarning("Suffix will be ignored in CassandraConnector")
     create(df)
   }
 
 
   override def create(df: DataFrame): Unit = {
-    log.debug(s"Create cassandra table $keyspace.$table")
-    log.debug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
-    log.debug(s"Clustering keys: ${clusteringKeyColumns.getOrElse(Seq("None")).mkString(", ")}")
+    logDebug(s"Create cassandra table $keyspace.$table")
+    logDebug(s"Partition keys: ${partitionKeyColumns.get.mkString(", ")}")
+    logDebug(s"Clustering keys: ${clusteringKeyColumns.getOrElse(Seq("None")).mkString(", ")}")
     this.setJobDescription(s"Create cassandra table $keyspace.$table")
     try {
       df.createCassandraTable(keyspace, table, partitionKeyColumns, clusteringKeyColumns)
     } catch {
-      case _: AlreadyExistsException => log.warn(s"Table $keyspace.$table already exist")
+      case _: AlreadyExistsException => logWarning(s"Table $keyspace.$table already exist")
     }
   }
 
@@ -154,7 +154,7 @@ class CassandraConnector(val keyspace: String,
   }
 
   override def drop(): Unit = {
-    log.debug(s"Drop cassandra table $keyspace.$table")
+    logDebug(s"Drop cassandra table $keyspace.$table")
     cqlConnection.withSessionDo {
       session =>
         session.execute(s"DROP TABLE IF EXISTS $keyspace.$table;")
@@ -163,7 +163,7 @@ class CassandraConnector(val keyspace: String,
 
   @throws[com.datastax.oss.driver.api.core.servererrors.QueryValidationException]("Make sure the strategy is correct")
   def createKeyspace(strategy: String, replicationFactor: Int): Unit = {
-    log.debug(s"Create cassandra keyspace $keyspace")
+    logDebug(s"Create cassandra keyspace $keyspace")
     cqlConnection.withSessionDo {
       session =>
         session.execute(s"CREATE KEYSPACE IF NOT EXISTS $keyspace WITH replication = {'class':'$strategy', 'replication_factor':$replicationFactor};")
@@ -171,7 +171,7 @@ class CassandraConnector(val keyspace: String,
   }
 
   private[this] def dropKeyspace(): Unit = {
-    log.debug(s"Drop cassandra keyspace $keyspace")
+    logDebug(s"Drop cassandra keyspace $keyspace")
     cqlConnection.withSessionDo {
       session =>
         session.execute(s"DROP KEYSPACE IF EXISTS $keyspace;")

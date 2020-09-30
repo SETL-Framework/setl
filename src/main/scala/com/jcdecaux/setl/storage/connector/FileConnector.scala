@@ -27,7 +27,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
 
   val schema: Option[StructType] = options.getSchema match {
     case Some(sm) =>
-      log.debug("Detect user-defined schema")
+      logDebug("Detect user-defined schema")
       Option(StructType.fromDDL(sm))
     case _ => None
   }
@@ -118,7 +118,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
     URI.create(options.getPath)
   } catch {
     case _: IllegalArgumentException =>
-      log.warn("Can't create URI from path. Try encoding it")
+      logWarning("Can't create URI from path. Try encoding it")
       URI.create(URLEncoder.encode(options.getPath, options.getEncoding))
     case e: Throwable => throw e
   }
@@ -161,7 +161,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
    * characters like whitespace "%20%", etc
    */
   private[connector] val absolutePath: Path = {
-    log.debug(s"File system URI: ${fileSystem.getUri}")
+    logDebug(s"File system URI: ${fileSystem.getUri}")
 
     if (fileSystem.isInstanceOf[LocalFileSystem]) {
       new Path(URLDecoder.decode(pathURI.toString, options.getEncoding))
@@ -219,7 +219,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
 
   private[this] val filenamePattern: Option[Regex] = options.getFilenamePattern match {
     case Some(pattern) =>
-      log.debug(s"Detect filename pattern: $pattern")
+      logDebug(s"Detect filename pattern: $pattern")
       Some(pattern.r)
     case _ => None
   }
@@ -259,7 +259,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
         filePaths += status.getPath
       }
     }
-    log.debug(s"Find ${filePaths.length} files")
+    logDebug(s"Find ${filePaths.length} files")
     filePaths.toArray
   }
 
@@ -306,7 +306,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
       suffix match {
         case Some(_) => suffix
         case _ =>
-          log.info("Can't remove user defined suffix (UDS) when another " +
+          logInfo("Can't remove user defined suffix (UDS) when another " +
             "UDS has already been saved. Replace it with 'default'")
           Some("default")
       }
@@ -328,7 +328,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
   }
 
   private[this] def updateSuffixState(suffix: Option[String]): Unit = {
-    log.debug(s"(${Thread.currentThread().getId}) Update suffix state.")
+    logDebug(s"(${Thread.currentThread().getId}) Update suffix state.")
     suffix match {
       case Some(_) => suffixState.set(1) // with suffix
       case None => suffixState.set(2) // without suffix
@@ -349,12 +349,12 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
     val locked = lock.tryLock(10, TimeUnit.SECONDS)
 
     val _suffix = if (locked) {
-      log.trace(s"(${Thread.currentThread().getId}) Acquire lock")
+      logTrace(s"(${Thread.currentThread().getId}) Acquire lock")
       try {
         if (suffixState.get() == 0) updateSuffixState(suffix)
         validateSuffix(suffix)
       } finally {
-        log.trace(s"(${Thread.currentThread().getId}) Release lock")
+        logTrace(s"(${Thread.currentThread().getId}) Release lock")
         lock.unlock()
       }
     } else {
@@ -372,7 +372,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
    */
   def resetSuffix(force: Boolean = false): this.type = {
     if (force) {
-      log.warn("Clear suffix. This may cause unexpected behavior of FileConnector")
+      logWarning("Clear suffix. This may cause unexpected behavior of FileConnector")
       this.UDSValue.set(None)
       this.writeCount.set(0L)
       this.suffixState.set(0)
@@ -393,7 +393,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
   @inline override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
     val reOrderedDf = schema match {
       case Some(sm) => // If schema is defined, reorder df's columns
-        log.debug("Detect schema, reorder columns before writing")
+        logDebug("Detect schema, reorder columns before writing")
         val schemaColumns = sm.map(_.name)
         df.select(schemaColumns.map(functions.col): _*)
 
@@ -407,7 +407,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
   }
 
   override def partitionBy(columns: String*): this.type = {
-    log.info(s"Data will be partitioned by ${columns.mkString(", ")}")
+    logInfo(s"Data will be partitioned by ${columns.mkString(", ")}")
     partition.append(columns: _*)
     this
   }
@@ -422,7 +422,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
    * Delete the current file or directory
    */
   override def drop(): Unit = {
-    log.info(s"Delete $absolutePath")
+    logInfo(s"Delete $absolutePath")
     fileSystem.delete(absolutePath, _recursive)
     resetSuffix(true)
   }
@@ -441,7 +441,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
    */
   def writeToPath(df: DataFrame, filepath: String): Unit = {
     this.setJobDescription(s"Write file to $filepath")
-    log.debug(s"(${Thread.currentThread().getId}) Write DataFrame to $filepath")
+    logDebug(s"(${Thread.currentThread().getId}) Write DataFrame to $filepath")
     incrementWriteCounter()
     writer(df).format(storage.toString.toLowerCase()).save(filepath)
   }
@@ -480,7 +480,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
   @throws[org.apache.spark.sql.AnalysisException](s"$absolutePath doesn't exist")
   override def read(): DataFrame = {
-    log.debug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
+    logDebug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
     this.setJobDescription(s"Read file(s) from '${absolutePath.toString}'")
 
     val df = reader

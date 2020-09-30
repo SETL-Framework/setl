@@ -48,7 +48,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
   @throws[java.io.FileNotFoundException](s"${options.getPath} doesn't exist")
   @throws[org.apache.spark.sql.AnalysisException](s"${options.getPath} doesn't exist")
   override def read(): DataFrame = {
-    log.debug(s"Reading ${storage.toString} file in: '${options.getPath}'")
+    logDebug(s"Reading ${storage.toString} file in: '${options.getPath}'")
     this.setJobDescription(s"Read file(s) from '${options.getPath}'")
     reader.load(options.getPath)
   }
@@ -83,7 +83,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
   }
 
   override def write(t: DataFrame, suffix: Option[String]): Unit = {
-    if (suffix.isDefined) log.warn("Suffix is not supported in DeltaConnector")
+    if (suffix.isDefined) logWarning("Suffix is not supported in DeltaConnector")
     write(t)
   }
 
@@ -109,7 +109,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
    * Drop the entire table.
    */
   override def drop(): Unit = {
-    log.debug(s"Delete ${options.getPath}")
+    logDebug(s"Delete ${options.getPath}")
     FileSystem
       .get(spark.sparkContext.hadoopConfiguration)
       .delete(new Path(options.getPath), _recursive)
@@ -132,7 +132,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
    * This is applicable for all file-based data sources (e.g. Parquet, JSON)
    */
   override def partitionBy(columns: String*): this.type = {
-    log.debug(s"Delta files will be partitioned by ${columns.mkString(", ")}")
+    logDebug(s"Delta files will be partitioned by ${columns.mkString(", ")}")
     partition.append(columns: _*)
     this
   }

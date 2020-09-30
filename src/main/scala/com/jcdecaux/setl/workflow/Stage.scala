@@ -152,7 +152,7 @@ class Stage extends Logging
 
   /** Describe the current stage */
   override def describe(): this.type = {
-    log.info(s"Stage $stageId contains $getRegistryLength factories")
+    logInfo(s"Stage $stageId contains $getRegistryLength factories")
     factories.foreach(_.describe())
     this
   }
@@ -161,11 +161,11 @@ class Stage extends Logging
   def run(): this.type = {
     _deliverable = parallelFactories match {
       case Left(par) =>
-        log.debug(s"Stage $stageId will be run in parallel mode")
+        logDebug(s"Stage $stageId will be run in parallel mode")
         par.map(runFactory).toArray
 
       case Right(nonpar) =>
-        log.debug(s"Stage $stageId will be run in sequential mode")
+        logDebug(s"Stage $stageId will be run in sequential mode")
         nonpar.map(runFactory)
     }
     this
@@ -185,7 +185,7 @@ class Stage extends Logging
 
     val benchmarkInvocationHandler = new BenchmarkInvocationHandler(factory)
 
-    log.info(s"Start benchmarking $factoryName")
+    logInfo(s"Start benchmarking $factoryName")
     val start = System.nanoTime()
 
     // Create the factory proxy
@@ -201,12 +201,12 @@ class Stage extends Logging
     proxyFactory.process()
 
     if (shouldWrite(factory)) {
-      log.debug(s"Persist output of ${factory.getPrettyName}")
+      logDebug(s"Persist output of ${factory.getPrettyName}")
       proxyFactory.write()
     }
 
     val elapsed = (System.nanoTime() - start) / 1000000000.0
-    log.info(s"Execution of $factoryName finished in $elapsed s")
+    logInfo(s"Execution of $factoryName finished in $elapsed s")
 
     val result = benchmarkInvocationHandler.getBenchmarkResult
 
@@ -236,7 +236,7 @@ class Stage extends Logging
         // Otherwise run the factory without benchmarking
         factory.read().process()
         if (shouldWrite(factory)) {
-          log.debug(s"Persist output of ${factory.getPrettyName}")
+          logDebug(s"Persist output of ${factory.getPrettyName}")
           factory.write()
         }
 

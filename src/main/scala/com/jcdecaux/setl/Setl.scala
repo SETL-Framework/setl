@@ -410,7 +410,7 @@ object Setl {
             TypesafeConfigUtils.getMap(cl.getConfig(pathOf("spark")))
           } catch {
             case _: com.typesafe.config.ConfigException.Missing =>
-              log.warn(s"Config path ${pathOf("spark")} doesn't exist")
+              logWarning(s"Config path ${pathOf("spark")} doesn't exist")
               Map.empty
           }
 
@@ -449,7 +449,7 @@ object Setl {
       val _spark = sparkSession match {
         case Some(ss) => ss
         case _ =>
-          log.debug("Build new spark session")
+          logDebug("Build new spark session")
           buildSparkSession()
       }
 

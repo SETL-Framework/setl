@@ -43,7 +43,7 @@ private[setl] class DeliverableDispatcher extends Logging
    * @return this DeliverableDispatcher
    */
   private[workflow] def addDeliverable(v: Deliverable[_]): this.type = {
-    log.debug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
+    logDebug(s"Add new delivery: ${v.payloadType}. Producer: ${v.producer.getSimpleName}")
     registerNewItem(v)
     this
   }
@@ -60,38 +60,38 @@ private[setl] class DeliverableDispatcher extends Logging
                                    producer: Class[_ <: Factory[_]]): Option[Deliverable[_]] = {
     availableDeliverable.length match {
       case 0 =>
-        log.warn("Can not find any deliverable")
+        logWarning("Can not find any deliverable")
         None
       case 1 =>
         val deliverable = availableDeliverable.head
         if (deliverable.consumer.nonEmpty && !deliverable.consumer.contains(consumer)) {
           throw new InvalidDeliveryException(s"Can't find ${consumer.getSimpleName} in the consumer list")
         }
-        log.debug("Find Deliverable")
+        logDebug("Find Deliverable")
         Some(availableDeliverable.head)
       case _ =>
-        log.info("Find multiple Deliverable with same type. Try matching by producer")
+        logInfo("Find multiple Deliverable with same type. Try matching by producer")
         val matchedByProducer = availableDeliverable.filter(_.producer == producer)
 
         matchedByProducer.length match {
           case 0 =>
-            log.warn("Can not find any deliverable that matches the producer")
+            logWarning("Can not find any deliverable that matches the producer")
             None
           case 1 =>
-            log.debug("Find Deliverable")
+            logDebug("Find Deliverable")
             Some(matchedByProducer.head)
           case _ =>
-            log.info("Find multiple Deliverable with same type and same producer Try matching by consumer")
+            logInfo("Find multiple Deliverable with same type and same producer Try matching by consumer")
             val matchedByConsumer = matchedByProducer
               .filter(_.consumer.nonEmpty)
               .filter(_.consumer.contains(consumer))
 
             matchedByConsumer.length match {
               case 0 =>
-                log.warn("Can not find any deliverable that matches the consumer")
+                logWarning("Can not find any deliverable that matches the consumer")
                 None
               case 1 =>
-                log.debug("Find Deliverable")
+                logDebug("Find Deliverable")
                 Some(matchedByConsumer.head)
               case _ =>
                 throw new InvalidDeliveryException("Find multiple deliveries having the same type, producer and consumer")
@@ -195,7 +195,7 @@ private[setl] class DeliverableDispatcher extends Logging
   private[this] def handleDeliveryCondition[D: ru.TypeTag](condition: String,
                                                            deliverable: Deliverable[D]): Option[Deliverable[D]] = {
     if (condition != "" && deliverable.payloadClass.isAssignableFrom(classOf[Dataset[Row]])) {
-      log.debug("Find data frame filtering condition to be applied")
+      logDebug("Find data frame filtering condition to be applied")
       Some(
         new Deliverable(
           deliverable
@@ -232,7 +232,7 @@ private[setl] class DeliverableDispatcher extends Logging
 
     if (isDataset) {
       val repoName = getRepositoryNameFromDataset(argType)
-      log.info("Auto load enabled, looking for repository")
+      logInfo("Auto load enabled, looking for repository")
 
       val availableRepos = findDeliverableBy {
         deliverable => deliverable.hasSamePayloadType(repoName) && deliverable.deliveryId == deliveryId
@@ -273,11 +273,11 @@ private[setl] class DeliverableDispatcher extends Logging
     deliveries
       .foreach {
         deliveryMeta =>
-          log.debug(s"Delivery name: ${deliveryMeta.name}")
+          logDebug(s"Delivery name: ${deliveryMeta.name}")
           // Loop through the type of all arguments of a method and get the Deliverable that correspond to the type
           val args = deliveryMeta.argTypes.map {
             argType =>
-              log.debug(s"Look for available ${simpleTypeNameOf(argType)} in delivery pool")
+              logDebug(s"Look for available ${simpleTypeNameOf(argType)} in delivery pool")
 
               val availableDeliverable = findDeliverableBy {
                 deliverable => deliverable.hasSamePayloadType(argType) && deliverable.deliveryId == deliveryMeta.id
@@ -322,15 +322,15 @@ private[setl] class DeliverableDispatcher extends Logging
           }
 
           if (args.exists(_.isEmpty)) {
-            log.warn(s"No deliverable was found for optional input ${deliveryMeta.name}")
+            logWarning(s"No deliverable was found for optional input ${deliveryMeta.name}")
           } else {
             deliveryMeta.deliverySetter match {
               case Left(field) =>
-                log.debug(s"Set value of ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
+                logDebug(s"Set value of ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
                 field.setAccessible(true)
                 field.set(consumer, args.head.getPayload.asInstanceOf[Object])
               case Right(method) =>
-                log.debug(s"Invoke ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
+                logDebug(s"Invoke ${consumer.getClass.getSimpleName}.${deliveryMeta.name}")
                 method.setAccessible(true)
                 method.invoke(consumer, args.map(_.getPayload.asInstanceOf[Object]): _*)
             }

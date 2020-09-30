@@ -27,4 +27,20 @@ private[setl] trait Logging {
     this.getClass.getName.stripSuffix("$")
   }
 
+  protected def logInfo(msg: => String): Unit = {
+    if (log.isInfoEnabled) log.info(msg)
+  }
+
+  protected def logDebug(msg: => String): Unit = {
+    if (log.isDebugEnabled) log.debug(msg)
+  }
+
+  protected def logTrace(msg: => String): Unit = {
+    if (log.isTraceEnabled) log.trace(msg)
+  }
+
+  protected def logWarning(msg: => String): Unit = log.warn(msg)
+
+  protected def logError(msg: => String): Unit = log.error(msg)
+
 }

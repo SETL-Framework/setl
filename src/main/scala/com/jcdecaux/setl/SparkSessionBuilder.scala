@@ -64,12 +64,12 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     }
 
     if (initialization) {
-      log.debug("Initialize spark config")
+      logDebug("Initialize spark config")
       this.sparkConf = new SparkConf()
     }
 
     // Set default Spark master URL
-    log.debug(s"Detect $appEnv environment")
+    logDebug(s"Detect $appEnv environment")
     if (appEnv.toLowerCase().contains("local") && !properties.containsKey(SPARK_MASTER)) {
       setSparkMaster("local[*]")
     }
@@ -80,7 +80,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
     }
 
     if (useKryo) {
-      log.debug("User Kryo serializer")
+      logDebug("User Kryo serializer")
       this.sparkConf.registerKryoClasses(kryoRegister)
     }
 
@@ -112,7 +112,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
         sparkConf.set(key, value)
       }
     } else {
-      log.info(s"Skip spark configuration $key -> $value")
+      logInfo(s"Skip spark configuration $key -> $value")
     }
   }
 
@@ -122,7 +122,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
    * @return
    */
   private[this] def createSparkSession: SparkSession = {
-    log.info(s"Spark session summarize: \n${sparkConf.toDebugString}")
+    logInfo(s"Spark session summarize: \n${sparkConf.toDebugString}")
     SparkSession
       .builder()
       .config(this.sparkConf)
@@ -151,7 +151,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
    * @return
    */
   def setAppName(name: String): this.type = {
-    log.debug(s"Set application name to $name")
+    logDebug(s"Set application name to $name")
     set(SPARK_APP_NAME, name)
     this
   }
@@ -181,7 +181,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
    * @return
    */
   def setCassandraHost(host: String): this.type = {
-    log.debug(s"Set cassandra host to $host")
+    logDebug(s"Set cassandra host to $host")
     set(CQL_HOST, host)
     this
   }
@@ -227,7 +227,7 @@ class SparkSessionBuilder(usages: String*) extends Builder[SparkSession] {
    * @return
    */
   def withSparkConf(conf: SparkConf): this.type = {
-    log.info("Set customized spark configuration")
+    logInfo("Set customized spark configuration")
     this.sparkConf = conf
     this.initialization = false
     this

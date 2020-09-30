@@ -48,7 +48,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
   }
 
   private[this] def updateDag(newNode: Node, dag: DAG): DAG = {
-    log.debug(s"Update DAG for node ${newNode.getPrettyName}")
+    logDebug(s"Update DAG for node ${newNode.getPrettyName}")
     val oldNode = dag.nodes.find(_.factoryUUID == newNode.factoryUUID).get
 
     val startingFlows = dag.flows
@@ -70,7 +70,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
   private[this] def validateStage(newStageID: Int, dag: DAG): Int = {
     val nodeCount = dag.nodes.count(_.stage == newStageID)
     if (nodeCount < parallelism) {
-      log.debug(s"Valid stage ID: $newStageID")
+      logDebug(s"Valid stage ID: $newStageID")
       newStageID
     } else {
       validateStage(newStageID + 1, dag)
@@ -78,7 +78,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
   }
 
   private[this] def updateNode(oldNode: Node, dag: DAG): DAG = {
-    log.debug(s"Optimize node: ${oldNode.getPrettyName} of stage ${oldNode.stage}")
+    logDebug(s"Optimize node: ${oldNode.getPrettyName} of stage ${oldNode.stage}")
     val currentDag = dag.copy()
     val flows = flowsOf(oldNode, dag)
 
@@ -87,7 +87,7 @@ class SimplePipelineOptimizer(val parallelism: Int = 4) extends PipelineOptimize
       case _ => flows.map(_.stage).max + 1
     }
 
-    log.debug(s"Max input stage of ${oldNode.getPrettyName}: $maxInputStage")
+    logDebug(s"Max input stage of ${oldNode.getPrettyName}: $maxInputStage")
 
     val validStage = validateStage(maxInputStage, dag)
 

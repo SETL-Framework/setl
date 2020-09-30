@@ -79,7 +79,7 @@ private[setl] object FactoryDeliveryMetadata {
 
     override def build(): this.type = {
 
-      log.debug(s"Look for Deliveries of ${cls.getSimpleName}")
+      logDebug(s"Look for Deliveries of ${cls.getSimpleName}")
 
       val runtimeMirror = runtime.universe.runtimeMirror(getClass.getClassLoader)
       val classSymbol = runtimeMirror.classSymbol(cls)
@@ -87,11 +87,11 @@ private[setl] object FactoryDeliveryMetadata {
         x => x.annotations.exists(y => y.tree.tpe =:= runtime.universe.typeOf[Delivery])
       }
 
-      if (symbolsWithDeliveryAnnotation.isEmpty) log.info("No method having @Delivery annotation")
+      if (symbolsWithDeliveryAnnotation.isEmpty) logInfo("No method having @Delivery annotation")
 
       metadata = symbolsWithDeliveryAnnotation.map {
         symbol =>
-          log.debug(s"Retrieve metadata of delivery `${nameOf(symbol)}`")
+          logDebug(s"Retrieve metadata of delivery `${nameOf(symbol)}`")
 
           val argTypes = if (symbol.isMethod) {
             symbol.typeSignature.paramLists.head.map(_.typeSignature)

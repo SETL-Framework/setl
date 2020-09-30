@@ -126,7 +126,7 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
    * @return
    */
   override def build(): SparkRepositoryBuilder.this.type = {
-    log.debug(s"Build SparkRepository[${ru.typeOf[DataType]}]")
+    logDebug(s"Build SparkRepository[${ru.typeOf[DataType]}]")
     if (connector == null) {
       connector = createConnector()
     }
@@ -143,13 +143,13 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
     // if a TypeSafe config is set, then return a corresponding connector
     config match {
       case Some(typeSafeConfig) =>
-        log.debug("Build connector with TypeSafe configuration")
+        logDebug("Build connector with TypeSafe configuration")
         return new ConnectorBuilder(typeSafeConfig).build().get()
       case _ =>
     }
 
     // Otherwise, build a connector according to the current configuration
-    log.debug("No TypeSafe configuration was found, build with parameters")
+    logDebug("No TypeSafe configuration was found, build with parameters")
     new ConnectorBuilder(conf)
       .build()
       .get()
@@ -157,7 +157,7 @@ class SparkRepositoryBuilder[DataType: ru.TypeTag](var storage: Option[Storage],
   }
 
   def setConnector(connector: Connector): this.type = {
-    log.info(s"Set user-defined ${connector.getClass} connector")
+    logInfo(s"Set user-defined ${connector.getClass} connector")
     this.connector = connector
     this
   }

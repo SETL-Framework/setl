@@ -55,7 +55,7 @@ abstract class Factory[A: ru.TypeTag] extends AbstractFactory[A]
 
   /** Describe the */
   override def describe(): this.type = {
-    log.info(s"$getPrettyName will produce a ${ReflectUtils.getPrettyName(deliveryType())}")
+    logInfo(s"$getPrettyName will produce a ${ReflectUtils.getPrettyName(deliveryType())}")
     this
   }
 
