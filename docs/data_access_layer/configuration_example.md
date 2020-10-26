@@ -186,6 +186,7 @@ dynamodb {
 | clusteringKeyColumns | `None` |
 
 ### Example
+
 ```
 cassandra {
   storage = "CASSANDRA"
@@ -199,6 +200,7 @@ cassandra {
 ## JDBC
 
 ### Options
+
 | name  | default |
 | ------  |  ------- |
 | url | <user_input>  |
@@ -210,6 +212,7 @@ cassandra {
 For other options, please refer to [the Spark documentation](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html)
 
 ### Example
+
 ```
 jdbcExample {
   storage = "JDBC"
