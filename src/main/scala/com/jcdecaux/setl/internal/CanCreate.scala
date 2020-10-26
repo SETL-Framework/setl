@@ -2,7 +2,10 @@ package com.jcdecaux.setl.internal
 
 import org.apache.spark.sql.DataFrame
 
-trait CanCreate {
+/**
+ * Connectors that inherit CanCreate should be able to create a table in a database or a file/folder in a file system
+ */
+trait CanCreate { Connector =>
 
   /**
    * Create a data storage (e.g. table in a database or file/folder in a file system) with a suffix

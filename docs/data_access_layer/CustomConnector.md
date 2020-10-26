@@ -3,8 +3,15 @@
 You can implement you own data source connector by implementing the `ConnectorInterface`
 
 ```scala
+import com.jcdecaux.setl.storage.connector.ConnectorInterface
+import com.jcdecaux.setl.internal.CanDrop
+import com.jcdecaux.setl.config.Conf
+import org.apache.spark.sql.DataFrame
+
 class CustomConnector extends ConnectorInterface with CanDrop {
-  override def setConf(conf: Conf): Unit = null
+  override def setConf(conf: Conf): Unit = {
+    // configuration
+  }
 
   override def read(): DataFrame = {
     import spark.implicits._
@@ -15,18 +22,24 @@ class CustomConnector extends ConnectorInterface with CanDrop {
 
   override def write(t: DataFrame): Unit = logDebug("Write")
 
-  /**
-   * Drop the entire table.
-   */
   override def drop(): Unit = logDebug("drop")
 }
 ```
 
-To use it, just set the storage to **OTHER** and provide the class reference of your connector:
+### Functionalities
+
+Like the previous example, by extending your connector class with functionality traits (like `CanDrop`) 
+and implementing accordingly their abstract methods, SparkRepository will be able to use these specific
+functionalities.
+
+### Use the custom connector
+
+To use this connector, set the storage to **OTHER** and provide the class reference of your connector:
 
 ```txt
 myConnector {
   storage = "OTHER"
-  class = "com.example.CustomConnector"  // class reference of your connector 
+  class = "com.example.CustomConnector"  // class reference of your connector
+  yourParam = "some parameter" // put your parameters here
 }
 ```

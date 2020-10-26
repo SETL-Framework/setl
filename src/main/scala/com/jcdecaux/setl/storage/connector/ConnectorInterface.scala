@@ -9,10 +9,21 @@ import com.typesafe.config.Config
  */
 trait ConnectorInterface extends Connector {
 
+  /**
+   * By default, the custom connector's storage type should be OTHER.
+   */
   override val storage: Storage = Storage.OTHER
 
+  /**
+   * Configure the connector with the given [[Conf]]
+   * @param conf an object of [[Conf]]
+   */
   def setConf(conf: Conf): Unit
 
+  /**
+   * Configure the connector with the given [[Config]]
+   * @param config an object of [[Config]]
+   */
   def setConfig(config: Config): Unit = this.setConf(Conf.fromConfig(config))
 
 }
