@@ -1,6 +1,10 @@
 package com.jcdecaux.setl.internal
 
-trait CanVacuum {
+/**
+ * Connectors that inherit CanVacuum should be able to recursively delete files and directories in the table that are
+ * not needed by the table for maintaining older versions up to the given retention threshold
+ */
+trait CanVacuum { Connector =>
 
   /**
    * Recursively delete files and directories in the table that are not needed by the table for

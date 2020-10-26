@@ -11,6 +11,35 @@ import com.typesafe.config.Config
 
 import scala.reflect.runtime.universe._
 
+/**
+ * Conf is a class that holds data of configuration.
+ * Internally, Conf use a [[ConcurrentHashMap]] for saving the configuration arguments.
+ *
+ * We can instantiate a Conf directly from a Scala [[Map]] or a [[Config]] from the typesafe config library.
+ *
+ * {{{
+ *   val conf1 = Conf(myMap)  // equivalent to Conf.fromMap(myMap)
+ *   val conf2 = Conf(myConfig)  //equivalent to Conf.fromConfig(myConfig)
+ * }}}
+ *
+ * We can also instantiate manually
+ *
+ * {{{
+ *   val conf3 = new Conf()
+ *   conf3.set("k", "v")
+ *   conf3.set(Map("k1" -> "v1", "k2" -> "v2"))
+ *   conf3 += anotherConf
+ * }}}
+ *
+ * Configuration arguments can be retrieved by calling the get() method. Conf provide also several implicit converters that
+ * handle the type conversion.
+ *
+ * For example:
+ * {{{
+ *   val double = conf.getAs[Double]("dKey")
+ *   val intArray = conf.getAs[Array[Int]]("aiKey")
+ * }}}
+ */
 @InterfaceStability.Evolving
 class Conf extends Serializable with Configurable {
 

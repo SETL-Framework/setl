@@ -1,6 +1,9 @@
 package com.jcdecaux.setl.internal
 
-trait CanDelete {
+/**
+ * Connectors that inherit CanDelete should be able to delete records for a given query string
+ */
+trait CanDelete { Connector =>
 
   /**
    * Delete rows according to the query
