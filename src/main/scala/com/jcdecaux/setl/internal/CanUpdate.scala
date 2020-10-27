@@ -1,12 +1,14 @@
 package com.jcdecaux.setl.internal
 
+import com.jcdecaux.setl.storage.connector.Connector
 import org.apache.spark.sql.DataFrame
 
 /**
  * Connectors that inherit CanUpdate should be able to update the data store with a new data frame and a given matching
  * columns.
  */
-trait CanUpdate { Connector =>
+trait CanUpdate {
+  self: Connector =>
 
   /**
    * Update the data store with a new data frame and the given matching columns.

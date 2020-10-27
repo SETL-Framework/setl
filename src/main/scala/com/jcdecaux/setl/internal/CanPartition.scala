@@ -1,9 +1,12 @@
 package com.jcdecaux.setl.internal
 
+import com.jcdecaux.setl.storage.connector.Connector
+
 /**
  * Connectors that inherit CanPartition should be able to partition the output by the given columns on the file system
  */
-trait CanPartition { Connector =>
+trait CanPartition {
+  self: Connector =>
 
   /**
    * Partitions the output by the given columns on the file system. If specified, the output is
