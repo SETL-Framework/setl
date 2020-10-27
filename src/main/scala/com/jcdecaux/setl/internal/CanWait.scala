@@ -1,9 +1,12 @@
 package com.jcdecaux.setl.internal
 
+import com.jcdecaux.setl.storage.connector.Connector
+
 /**
  * Connectors that inherit CanWait should be able to wait for the execution to stop
  */
-trait CanWait { Connector =>
+trait CanWait {
+  self: Connector =>
 
   /**
    * Wait for the execution to stop. Any exceptions that occurs during the execution
