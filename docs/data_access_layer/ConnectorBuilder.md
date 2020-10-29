@@ -51,4 +51,4 @@ connector.write(df)
 ```
 
 ## Parameters
-Please refer to [Connector documentation](Connector)
+Please refer to [Connector documentation](data_access_layer/Connector)
