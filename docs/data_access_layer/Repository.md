@@ -105,6 +105,6 @@ mySparkRepository.findBy(myCondition)  // load data from disk as the condition c
 mySparkRepository.findBy(myCondition2)  // load data from disk as the condition differs from the previous one
 mySparkRepository.findBy(myCondition2)  // load data from cache
 
-mySparkRepository.save(data)  // read cache will be cleared when save is invoked
+mySparkRepository.save(data)  // read cache will be cleared when save is called
 mySparkRepository.findBy(myCondition2)  // load data from disk
 ```
