@@ -1,6 +1,6 @@
 ## Description
 
-Based on the same idea of [**ConnectorBuilder**](data_access_layer/ConnectorBuilder), [**SparkRepositoryBuilder**](https://github.com/SETL-Developers/setl/tree/master/src/main/scala/com/jcdecaux/setl/storage/SparkRepositoryBuilder.scala) helps you create your **SparkRepository** :ok_hand: 
+Based on the same idea of [**ConnectorBuilder**](ConnectorBuilder), [**SparkRepositoryBuilder**](https://github.com/SETL-Developers/setl/tree/master/src/main/scala/com/jcdecaux/setl/storage/SparkRepositoryBuilder.scala) helps you create your **SparkRepository** :ok_hand: 
 
 ## Usage
 Firstly, you should create a configuration file in your project's resources directory.
@@ -27,4 +27,4 @@ repo.save(dataset)
 ```
 
 ## Parameters
-Please refer to [Connector documentation](data_access_layer/Connector)
+Please refer to [Connector documentation](Connector)
