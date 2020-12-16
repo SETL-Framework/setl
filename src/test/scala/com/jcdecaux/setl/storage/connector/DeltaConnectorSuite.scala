@@ -2,7 +2,7 @@ package com.jcdecaux.setl.storage.connector
 
 import java.io.File
 
-import com.jcdecaux.setl.config.{Conf, FileConnectorConf, Properties}
+import com.jcdecaux.setl.config.{Conf, DeltaConnectorConf, FileConnectorConf, Properties}
 import com.jcdecaux.setl.storage.Condition
 import com.jcdecaux.setl.storage.repository.SparkRepository
 import com.jcdecaux.setl.util.SparkUtils
@@ -97,6 +97,17 @@ class DeltaConnectorSuite extends AnyFunSuite {
 
     assert(deltaConnector.read().count() === 4)
     assert(deltaConnector.read().select("value").distinct().count() === 3)
+
+    val deltaConnectorOld = new DeltaConnector(DeltaConnectorConf.fromMap(
+      Map[String, String](
+        "path" -> path,
+        "saveMode" -> saveMode.toString,
+        "versionAsOf" -> "0"
+      )
+    ))
+
+    assert(deltaConnectorOld.read().count === testTable.length)
+
     deltaConnector.drop()
   }
 
