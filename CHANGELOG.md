@@ -25,6 +25,10 @@
 - Upgraded spark-cassandra-connector to 3.0.0 for the mvn profile `spark_3.0`
 - New logo
 
+### Fixed:
+
+- DeltaConnector reader options (PR #170)
+
 ### Removed:
 
 - Deprecated methods and constructors
