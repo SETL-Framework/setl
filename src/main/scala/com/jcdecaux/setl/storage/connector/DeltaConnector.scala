@@ -37,6 +37,7 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
   override val reader: DataFrameReader = {
     spark.read
       .format("delta")
+      .options(options.getReaderConf)
   }
 
   override val writer: DataFrame => DataFrameWriter[Row] = (df: DataFrame) => {
