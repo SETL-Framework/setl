@@ -304,10 +304,33 @@ You should also provide Scala and Spark in your pom file. SETL is tested against
 | ------------- | -------------  | -----------------------------|
 |     3.0       |        2.12    | :heavy_check_mark: Ok        |
 |     2.4       |        2.12    | :heavy_check_mark: Ok        |
-|     2.4       |        2.11    | :heavy_check_mark: Ok        |
+|     2.4       |        2.11    | :warning: see *known issues* |
 |     2.3       |        2.11    | :warning: see *known issues* |
 
 ## Known issues
+
+### Spark 2.4 with Scala 2.11
+
+When using `setl_2.11-1.x.x` with Spark 2.4 and Scala 2.11, you may need to include manually these following dependencies to override the default version:
+```xml
+<dependency>
+    <groupId>com.audienceproject</groupId>
+    <artifactId>spark-dynamodb_2.11</artifactId>
+    <version>1.0.4</version>
+</dependency>
+<dependency>
+    <groupId>io.delta</groupId>
+    <artifactId>delta-core_2.11</artifactId>
+    <version>0.6.1</version>
+</dependency>
+<dependency>
+    <groupId>com.datastax.spark</groupId>
+    <artifactId>spark-cassandra-connector_2.11</artifactId>
+    <version>2.5.1</version>
+</dependency>
+```
+
+### Spark 2.3 with Scala 2.11
 
 - `DynamoDBConnector` doesn't work with Spark version 2.3
 - `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
