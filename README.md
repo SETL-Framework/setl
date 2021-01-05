@@ -276,6 +276,102 @@ Or you can try the live editor: https://mermaid-js.github.io/mermaid-live-editor
 
 You can either copy the code into a Markdown viewer or just copy the link into your browser ([link](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNeUZhY3Rvcnkge1xuICA8PEZhY3RvcnlbRGF0YXNldFtUZXN0T2JqZWN0XV0-PlxuICArU3BhcmtSZXBvc2l0b3J5W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIERhdGFzZXRUZXN0T2JqZWN0IHtcbiAgPDxEYXRhc2V0W1Rlc3RPYmplY3RdPj5cbiAgPnBhcnRpdGlvbjE6IEludFxuICA-cGFydGl0aW9uMjogU3RyaW5nXG4gID5jbHVzdGVyaW5nMTogU3RyaW5nXG4gID52YWx1ZTogTG9uZ1xufVxuXG5EYXRhc2V0VGVzdE9iamVjdCA8fC4uIE15RmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgQW5vdGhlckZhY3Rvcnkge1xuICA8PEZhY3RvcnlbU3RyaW5nXT4-XG4gICtEYXRhc2V0W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIFN0cmluZ0ZpbmFsIHtcbiAgPDxTdHJpbmc-PlxuICBcbn1cblxuU3RyaW5nRmluYWwgPHwuLiBBbm90aGVyRmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgU3BhcmtSZXBvc2l0b3J5VGVzdE9iamVjdEV4dGVybmFsIHtcbiAgPDxTcGFya1JlcG9zaXRvcnlbVGVzdE9iamVjdF0-PlxuICBcbn1cblxuQW5vdGhlckZhY3RvcnkgPHwtLSBEYXRhc2V0VGVzdE9iamVjdCA6IElucHV0XG5NeUZhY3RvcnkgPHwtLSBTcGFya1JlcG9zaXRvcnlUZXN0T2JqZWN0RXh0ZXJuYWwgOiBJbnB1dFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0=)) 🍻
 
+### App Configuration
+
+The configuration system of SETL allows users to execute their Spark application in different execution environments, by
+using environment-specific configurations.
+
+In `src/main/resources` directory, you should have at least two configuration files named `application.conf`
+and `local.conf`
+(take a look at this [example](https://github.com/SETL-Developers/setl-template/tree/master/src/main/resources)). These
+are what you need if you only want to run your application in one single environment.
+
+You can also create other configurations (for example `dev.conf` and `prod.conf`), in which environment-specific
+parameters can be defined.
+
+##### application.conf
+
+This configuration file should contain universal configurations that could be used regardless the execution environment.
+
+##### env.conf (e.g. local.conf, dev.conf)
+
+These files should contain environment-specific parameters. By default, `local.conf` will be used.
+
+##### How to use the configuration
+
+Imagine the case we have two environments, a local development environment and a remote production environment. Our application
+needs a repository for saving and loading data. In this use case, let's prepare `application.conf`, `local.conf`, `prod.conf`
+and `storage.conf`
+
+```hocon
+# application.conf
+setl.environment = ${app.environment}
+setl.config {
+  spark.app.name = "my_application"
+  # and other general spark configurations  
+}
+```
+
+```hocon
+# local.conf
+include "application.conf"
+
+setl.config {
+  spark.default.parallelism = "200"
+  spark.sql.shuffle.partitions = "200"
+  # and other local spark configurations  
+}
+
+app.root.dir = "/some/local/path"
+
+include "storage.conf"
+```
+
+```hocon
+# prod.conf
+setl.config {
+  spark.default.parallelism = "1000"
+  spark.sql.shuffle.partitions = "1000"
+  # and other production spark configurations  
+}
+
+app.root.dir = "/some/remote/path"
+
+include "storage.conf"
+```
+
+```hocon
+# storage.conf
+myRepository {
+  storage = "CSV"
+  path = ${app.root.dir}  // this path will depend on the execution environment
+  inferSchema = "true"
+  delimiter = ";"
+  header = "true"
+  saveMode = "Append"
+}
+```
+
+To compile with local configuration, with maven, just run:
+```shell
+mvn compile
+```
+
+To compile with production configuration, pass the jvm property `app.environment`.
+```shell
+mvn compile -Dapp.environment=prod
+```
+
+Make sure that your resources directory has filtering enabled:
+```xml
+<resources>
+    <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+    </resource>
+</resources>
+```
+
 ## Dependencies
 
 **SETL** currently supports the following data source. You won't need to provide these libraries in your project (except the JDBC driver):
