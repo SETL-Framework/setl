@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/SETL-Developers/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Developers/setl)
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
 [![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
-[![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-developers.github.io/setl/)
+[![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-framework.github.io/setl/)
 
 If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
 
@@ -19,7 +19,7 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
 
 ### In a new project
 
-You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
+You can start working by cloning [this template project](https://github.com/SETL-Framework/setl-template).
 
 ### In an existing project
 
@@ -63,7 +63,7 @@ The entry point of a SETL project is the object `com.jcdecaux.setl.Setl`, which 
 
 ### Show me some code
 
-You can find the following tutorial code in [the starter template of SETL](https://github.com/qxzzxq/setl-template). Go and clone it :)
+You can find the following tutorial code in [the starter template of SETL](https://github.com/SETL-Framework/setl-template). Go and clone it :)
 
 Here we show a simple example of creating and saving a **Dataset[TestObject]**. The case class **TestObject** is defined as follows:
 
