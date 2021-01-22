@@ -1,8 +1,8 @@
 ![logo](docs/img/logo_setl.png)
 ----------
 
-[![build](https://github.com/SETL-Developers/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Developers/setl/actions)
-[![codecov](https://codecov.io/gh/SETL-Developers/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Developers/setl)
+[![build](https://github.com/SETL-Framework/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Framework/setl/actions)
+[![codecov](https://codecov.io/gh/SETL-Framework/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Framework/setl)
 [![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
 [![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
 [![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-framework.github.io/setl/)
@@ -283,7 +283,7 @@ using environment-specific configurations.
 
 In `src/main/resources` directory, you should have at least two configuration files named `application.conf`
 and `local.conf`
-(take a look at this [example](https://github.com/SETL-Developers/setl-template/tree/master/src/main/resources)). These
+(take a look at this [example](https://github.com/SETL-Framework/setl-template/tree/master/src/main/resources)). These
 are what you need if you only want to run your application in one single environment.
 
 You can also create other configurations (for example `dev.conf` and `prod.conf`), in which environment-specific
@@ -433,13 +433,13 @@ When using `setl_2.11-1.x.x` with Spark 2.4 and Scala 2.11, you may need to incl
 
 ## Test Coverage
 
-[![coverage.svg](https://codecov.io/gh/SETL-Developers/setl/branch/master/graphs/sunburst.svg)](https://codecov.io/gh/SETL-Developers/setl)
+[![coverage.svg](https://codecov.io/gh/SETL-Framework/setl/branch/master/graphs/sunburst.svg)](https://codecov.io/gh/SETL-Framework/setl)
 
 ## Documentation
 
-[https://setl-developers.github.io/setl/](https://setl-developers.github.io/setl/)
+[https://setl-framework.github.io/setl/](https://setl-framework.github.io/setl/)
 
 ## Contributing to SETL
 
-[Check our contributing guide](https://github.com/SETL-Developers/setl/blob/master/CONTRIBUTING.md)
+[Check our contributing guide](https://github.com/SETL-Framework/setl/blob/master/CONTRIBUTING.md)
 
