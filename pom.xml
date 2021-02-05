@@ -68,7 +68,7 @@
         <java.version>1.8</java.version>
         <app.environment>local</app.environment>
         <apache.hadoop.version>3.2.0</apache.hadoop.version>
-        <delta.version>0.7.0</delta.version>
+        <delta.version>0.8.0</delta.version>
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <scala.maven.plugin.version>4.4.0</scala.maven.plugin.version>
