@@ -67,13 +67,13 @@ class DeltaConnector(val options: DeltaConnectorConf) extends ACIDConnector with
    *
    * All the matched data will be updated, the non-matched data will be inserted
    *
-   * @param df new data
+   * @param df      new data
    * @param columns columns to be matched
    */
-  override def update(df: DataFrame, columns: String *): Unit = {
+  override def update(df: DataFrame, columns: String*): Unit = {
     DeltaTable.forPath(options.getPath).as("oldData")
       .merge(
-        df.toDF().as("newData"),
+        df.toDF().as("newData"),  // TODO @maroil is .toDF() necessary here?
         columns.map(col => s"oldData.$col = newData.$col").mkString(" AND ")
       )
       .whenMatched
