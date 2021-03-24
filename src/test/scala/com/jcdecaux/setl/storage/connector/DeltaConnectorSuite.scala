@@ -48,7 +48,11 @@ class DeltaConnectorSuite extends AnyFunSuite {
   )
 
   test("Instantiation of constructors") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark = SparkSession.builder().master("local")
+      .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .getOrCreate()
+
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     import spark.implicits._
@@ -80,7 +84,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector update") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark = SparkSession.builder().master("local").getOrCreate()
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
@@ -112,10 +116,10 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector vacuum") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local")
-      .set("spark.databricks.delta.retentionDurationCheck.enabled", "false")
-      .build()
-      .get()
+    val spark = SparkSession.builder().master("local")
+      .config("spark.databricks.delta.retentionDurationCheck.enabled", "false")
+      .getOrCreate()
+
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
@@ -139,12 +143,11 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector delete") {
-    val spark: SparkSession = new SparkSessionBuilder()
-      .setEnv("local")
-      .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-      .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-      .build()
-      .get()
+    val spark = SparkSession.builder().master("local")
+      .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .getOrCreate()
+
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Append)
@@ -160,11 +163,10 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("Delta connector should push down filter and select") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local")
-      .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-      .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-      .build()
-      .get()
+    val spark = SparkSession.builder().master("local")
+      .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .getOrCreate()
 
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
@@ -188,7 +190,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector with different file path") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark = SparkSession.builder().master("local").getOrCreate()
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     val deltaConnector = new DeltaConnector(path, SaveMode.Overwrite)
@@ -207,7 +209,7 @@ class DeltaConnectorSuite extends AnyFunSuite {
   }
 
   test("test Delta connector partition by") {
-    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val spark = SparkSession.builder().master("local").getOrCreate()
     assume(SparkTestUtils.checkSparkVersion("2.4.2"))
 
     import spark.implicits._
