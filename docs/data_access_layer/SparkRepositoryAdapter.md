@@ -30,7 +30,7 @@ So the data conversions that we want to hide are:
 
 Let's implement our dataset converter:
 ```scala
-import com.jcdecaux.setl.storage.DatasetConverter
+import io.github.setl.storage.DatasetConverter
 
 implicit val myConverter = new DatasetConverter[ProjectFormat, DataSourceFormat] {
   override def convertFrom(t2: Dataset[DataSourceFormat]): Dataset[ProjectFormat] = {
@@ -49,7 +49,7 @@ implicit val myConverter = new DatasetConverter[ProjectFormat, DataSourceFormat]
 
 To use this converter:
 ```scala
-import com.jcdecaux.setl.storage.repository.ImplicitRepositoryAdapter._
+import io.github.setl.storage.repository.ImplicitRepositoryAdapter._
 
 // Supposed that we have a repository of type ProjectFormat.
 // After the import, several new methods will be added to the SparkRepository

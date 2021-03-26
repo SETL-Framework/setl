@@ -3,9 +3,9 @@
 You can implement you own data source connector by implementing the `ConnectorInterface`
 
 ```scala
-import com.jcdecaux.setl.storage.connector.ConnectorInterface
-import com.jcdecaux.setl.internal.CanDrop
-import com.jcdecaux.setl.config.Conf
+import io.github.setl.storage.connector.ConnectorInterface
+import io.github.setl.internal.CanDrop
+import io.github.setl.config.Conf
 import org.apache.spark.sql.DataFrame
 
 class CustomConnector extends ConnectorInterface with CanDrop {

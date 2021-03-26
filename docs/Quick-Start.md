@@ -9,7 +9,7 @@ methods (*read*, *process*, *write* and *get*) that should be implemented by the
 The class `SparkRepository[T]` is a data access layer abstraction. It could be used to read/write a `Dataset[T]` from/to
 a datastore. It should be defined in a configuration file. You can have as many SparkRepositories as you want.
 
-The entry point of a SETL project is the object `com.jcdecaux.setl.Setl`, which will handle the pipeline and spark
+The entry point of a SETL project is the object `io.github.setl.Setl`, which will handle the pipeline and spark
 repository instantiation.
 
 ### Show me some code

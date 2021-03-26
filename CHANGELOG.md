@@ -3,7 +3,7 @@
 ### Added:
 
 - A new trait `ConnectorInterface` that simplify the use of custom connectors
-- New traits in `com.jcdecaux.setl.internal`:
+- New traits in `io.github.setl.internal`:
   - CanVacuum
   - CanUpdate
   - CanPartition
@@ -228,7 +228,7 @@ case class CompressionDemo(@Compress col1: Seq[Int],
 ## 0.2.7 (2019-06-21)
 
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods of `SparkRepositoryBuilder` to use the conf object
-- Changed package name `com.jcdecaux.setl.annotations` to `com.jcdecaux.setl.annotation`
+- Changed package name `io.github.setl.annotations` to `io.github.setl.annotation`
 
 ## 0.2.6 (2019-06-18)
 
