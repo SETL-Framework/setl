@@ -57,7 +57,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
 
 
   test("Instantiation") {
-    assertThrows[SparkException](new SparkRepository().spark)
+    assertThrows[Throwable](new SparkRepository().spark)
 
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val parquetConnector = new ParquetConnector(path, SaveMode.Overwrite)
