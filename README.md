@@ -36,7 +36,7 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
 <repositories>
   <repository>
     <id>ossrh-snapshots</id>
-    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
   </repository>
 </repositories>
 
