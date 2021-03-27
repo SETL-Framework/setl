@@ -3,8 +3,8 @@
 
 [![build](https://github.com/SETL-Framework/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Framework/setl/actions)
 [![codecov](https://codecov.io/gh/SETL-Framework/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Framework/setl)
-[![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
-[![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/io.github.setl/setl)
+[![javadoc](https://javadoc.io/badge2/io.github.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/io.github.setl/setl_2.11)
 [![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-framework.github.io/setl/)
 
 If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
@@ -25,7 +25,7 @@ You can start working by cloning [this template project](https://github.com/SETL
 
 ```xml
 <dependency>
-  <groupId>com.jcdecaux.setl</groupId>
+  <groupId>io.github.setl-framework</groupId>
   <artifactId>setl_2.12</artifactId>
   <version>1.0.0-RC1</version>
 </dependency>
@@ -42,7 +42,7 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
 
 <dependencies>
   <dependency>
-    <groupId>com.jcdecaux.setl</groupId>
+    <groupId>io.github.setl-framework</groupId>
     <artifactId>setl_2.12</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </dependency>
@@ -59,7 +59,7 @@ The class `Factory[T]` is an abstraction of a data transformation that will prod
 
 The class `SparkRepository[T]` is a data access layer abstraction. It could be used to read/write a `Dataset[T]` from/to a datastore. It should be defined in a configuration file. You can have as many SparkRepositories as you want.
 
-The entry point of a SETL project is the object `com.jcdecaux.setl.Setl`, which will handle the pipeline and spark repository instantiation.
+The entry point of a SETL project is the object `io.github.setl.Setl`, which will handle the pipeline and spark repository instantiation.
 
 ### Show me some code
 
@@ -417,7 +417,7 @@ When using `setl_2.11-1.x.x` with Spark 2.4 and Scala 2.11, you may need to incl
 <dependency>
     <groupId>io.delta</groupId>
     <artifactId>delta-core_2.11</artifactId>
-    <version>0.6.1</version>
+    <version>0.7.0</version>
 </dependency>
 <dependency>
     <groupId>com.datastax.spark</groupId>

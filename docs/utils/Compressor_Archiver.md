@@ -8,7 +8,7 @@ can:
 ## Example:
 
 ```scala
-import com.jcdecaux.setl.storage.GZIPCompressor
+import io.github.setl.storage.GZIPCompressor
 
 val compressor = new GZIPCompressor()
 

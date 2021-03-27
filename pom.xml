@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.jcdecaux.setl</groupId>
+    <groupId>io.github.setl-framework</groupId>
     <artifactId>setl_2.12</artifactId>
     <version>${revision}${changelist}</version>
     <packaging>jar</packaging>
@@ -13,7 +13,7 @@
         SETL is an open-source Scala framework powered by Apache Spark that helps developers to structure ETL projects,
         modularize data transformation logic and speed up the development.
     </description>
-    <url>https://github.com/SETL-Developers/setl</url>
+    <url>https://github.com/SETL-Framework/setl</url>
 
     <licenses>
         <license>
@@ -23,8 +23,8 @@
     </licenses>
 
     <organization>
-        <name>JCDecaux SA</name>
-        <url>https://www.jcdecaux.com</url>
+        <name>SETL Framework</name>
+        <url>https://github.com/SETL-Framework</url>
     </organization>
 
     <developers>
@@ -46,9 +46,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/SETL-Developers/setl.git</connection>
-        <developerConnection>scm:git:ssh://github.com:SETL-Developers/setl.git</developerConnection>
-        <url>https://github.com/SETL-Developers/setl/tree/master</url>
+        <connection>scm:git:git://github.com/SETL-Framework/setl.git</connection>
+        <developerConnection>scm:git:ssh://github.com:SETL-Framework/setl.git</developerConnection>
+        <url>https://github.com/SETL-Framework/setl/tree/master</url>
     </scm>
 
     <repositories>
