@@ -129,7 +129,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
-    new ParquetConnector(path, SaveMode.Overwrite).delete()
+    new ParquetConnector(path, SaveMode.Overwrite).drop()
   }
 
   test("File connector should handle wildcard file path (csv)") {
@@ -163,7 +163,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
-    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).drop()
   }
 
 
@@ -196,7 +196,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
-    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).drop()
   }
 
   test("File connector functionality") {
@@ -235,7 +235,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connector.write(dff.toDF, None)
     assertThrows[IllegalArgumentException](connector.write(dff.toDF, Some("test")))
     assertThrows[IllegalArgumentException](connector.setSuffix(Some("test")))
-    connector.delete()
+    connector.drop()
   }
 
   test("FileConnector should handle parallel write") {
@@ -289,7 +289,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
       case other: Exception => throw other
     }
 
-    connector.delete()
+    connector.drop()
   }
 
   test("FileConnector should handle base path correctly") {
