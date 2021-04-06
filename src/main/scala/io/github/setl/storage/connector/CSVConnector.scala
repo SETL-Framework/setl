@@ -91,12 +91,13 @@ class CSVConnector(override val options: FileConnectorConf) extends FileConnecto
 
   def this(config: Conf) = this(config.toMap)
 
-  def this(path: String, inferSchema: String, delimiter: String, header: String, saveMode: SaveMode) =
+  def this(path: String, inferSchema: String, delimiter: String, header: String, saveMode: SaveMode, native: String = "false") =
     this(Map[String, String](
       "path" -> path,
       "inferSchema" -> inferSchema,
       "header" -> header,
-      "saveMode" -> saveMode.toString
+      "saveMode" -> saveMode.toString,
+      "native" -> native
     ))
 
   override val storage: Storage = Storage.CSV

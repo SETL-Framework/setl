@@ -31,6 +31,10 @@ class FileConnectorConfSuite extends AnyFunSuite {
     conf.setPath("path")
     assert(conf.get("path").get === "path")
 
+    assert(conf.get("native") === None)
+    conf.setNative("true")
+    assert(conf.get("native").get === "true")
+
     assert(conf.get("credentialsProvider") === None)
     conf.setS3CredentialsProvider("credentialsProvider")
     assert(conf.get("fs.s3a.aws.credentials.provider").get === "credentialsProvider")
@@ -53,6 +57,7 @@ class FileConnectorConfSuite extends AnyFunSuite {
     assert(conf.getSaveMode === SaveMode.Overwrite)
     assert(conf.getStorage === Storage.EXCEL)
     assert(conf.getPath === "path")
+    assert(conf.getNative === "true")
     assert(conf.getSchema === None)
     assert(conf.getS3CredentialsProvider === Some("credentialsProvider"))
     assert(conf.getS3AccessKey === Some("accessKey"))

@@ -166,6 +166,39 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
   }
 
+
+  test("File connector should handle spark native reader") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val path = "src/test/resources/fileconnector_test_dir_csv"
+    import spark.implicits._
+    val df = Seq(
+      ("a", "A", "aa", "AA"),
+      ("a", "A", "bb", "BB"),
+      ("a", "B", "aa", "AA"),
+      ("a", "B", "bb", "BB"),
+      ("b", "A", "aa", "AA"),
+      ("b", "A", "bb", "BB"),
+      ("b", "B", "aa", "AA"),
+      ("b", "B", "bb", "BB")
+    ).toDF("col1", "col2", "col3", "col4")
+
+    df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").option("header", "true").csv(path)
+
+    val connector = new CSVConnector(s"$path/col1=*/col2=A/*.csv", "true", ",", "true", SaveMode.Overwrite, "true")
+    val connectorRead = connector.read()
+    connectorRead.show()
+
+    val sparkRead = spark.read
+      .option("header", "true")
+      .csv(s"$path/col1=*/col2=A/*.csv")
+    sparkRead.show()
+
+    connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
+
+    // remove test files
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
+  }
+
   test("File connector functionality") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
