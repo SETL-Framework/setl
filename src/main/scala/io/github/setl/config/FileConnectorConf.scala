@@ -11,6 +11,7 @@ class FileConnectorConf extends ConnectorConf {
 
   private[this] val defaultEncoding: String = "UTF-8"
   private[this] val defaultSaveMode: String = SaveMode.ErrorIfExists.toString
+  private[this] val defaultNative: String = "false"
 
   def setStorage(storage: String): this.type = set("storage", storage.toUpperCase)
 
@@ -24,6 +25,8 @@ class FileConnectorConf extends ConnectorConf {
 
   def setPath(path: String): this.type = set("path", path)
 
+  def setNative(native: String): this.type = set("native", native)
+
   def setS3CredentialsProvider(value: String): this.type = set("fs.s3a.aws.credentials.provider", value)
 
   def setS3AccessKey(value: String): this.type = set("fs.s3a.access.key", value)
@@ -35,6 +38,8 @@ class FileConnectorConf extends ConnectorConf {
   def getEncoding: String = get("encoding", defaultEncoding)
 
   def getSaveMode: SaveMode = SaveMode.valueOf(get("saveMode", defaultSaveMode))
+
+  def getNative: String = get("native", defaultNative)
 
   def getStorage: Storage = get("storage") match {
     case Some(storage) => Storage.valueOf(storage)
