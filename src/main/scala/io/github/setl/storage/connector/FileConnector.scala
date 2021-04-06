@@ -479,14 +479,20 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
    */
   @throws[java.io.FileNotFoundException](s"$absolutePath doesn't exist")
   @throws[org.apache.spark.sql.AnalysisException](s"$absolutePath doesn't exist")
-  override def read(): DataFrame = {
+  override def read(native: Boolean = false): DataFrame = {
     logDebug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
     this.setJobDescription(s"Read file(s) from '${absolutePath.toString}'")
 
-    val df = reader
-      .option("basePath", basePath.toString)
-      .format(options.getStorage.toString.toLowerCase())
-      .load(listFilesToLoad(false): _*)
+    val df = if (native) {
+      reader
+        .format(options.getStorage.toString.toLowerCase())
+        .path(listFilesToLoad(false): _*)
+    } else {
+      reader
+        .option("basePath", basePath.toString)
+        .format(options.getStorage.toString.toLowerCase())
+        .load(listFilesToLoad(false): _*)
+    }
 
     if (dropUserDefinedSuffix & df.columns.contains(UDSKey)) {
       df.drop(UDSKey)
