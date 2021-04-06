@@ -486,7 +486,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
     val df = if (native) {
       reader
         .format(options.getStorage.toString.toLowerCase())
-        .path(listFilesToLoad(false): _*)
+        .load(options.getPath)
     } else {
       reader
         .option("basePath", basePath.toString)
