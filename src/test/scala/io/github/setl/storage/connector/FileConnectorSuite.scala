@@ -1,7 +1,7 @@
 package io.github.setl.storage.connector
 
 import io.github.setl.config.FileConnectorConf
-import io.github.setl.enums.Storage
+import io.github.setl.enums.{PathFormat, Storage}
 import io.github.setl.{SparkSessionBuilder, TestObject}
 import org.apache.hadoop.fs.{LocalFileSystem, Path}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
@@ -167,7 +167,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
   }
 
 
-  test("File connector should handle spark native reader") {
+  test("File connector should handle spark native path format") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
     val path = "src/test/resources/fileconnector_test_dir_csv"
     import spark.implicits._
@@ -184,7 +184,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
 
     df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").option("header", "true").csv(path)
 
-    val connector = new CSVConnector(s"$path/col1=*/col2=A/*.csv", "true", ",", "true", SaveMode.Overwrite, "true")
+    val connector = new CSVConnector(s"$path/col1=*/col2=A/*.csv", "true", ",", "true", SaveMode.Overwrite, PathFormat.WILDCARD)
     val connectorRead = connector.read()
     connectorRead.show()
 

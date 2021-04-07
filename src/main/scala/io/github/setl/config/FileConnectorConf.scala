@@ -1,7 +1,7 @@
 package io.github.setl.config
 
 import io.github.setl.annotation.InterfaceStability
-import io.github.setl.enums.Storage
+import io.github.setl.enums.{PathFormat, Storage}
 import io.github.setl.exception.ConfException
 import io.github.setl.annotation.InterfaceStability.Evolving
 import org.apache.spark.sql.SaveMode
@@ -11,7 +11,7 @@ class FileConnectorConf extends ConnectorConf {
 
   private[this] val defaultEncoding: String = "UTF-8"
   private[this] val defaultSaveMode: String = SaveMode.ErrorIfExists.toString
-  private[this] val defaultNative: String = "false"
+  private[this] val defaultPathFormat: String = PathFormat.REGEX.toString
 
   def setStorage(storage: String): this.type = set("storage", storage.toUpperCase)
 
@@ -25,7 +25,7 @@ class FileConnectorConf extends ConnectorConf {
 
   def setPath(path: String): this.type = set("path", path)
 
-  def setNative(native: String): this.type = set("native", native)
+  def setPathFormat(pathFormat: PathFormat): this.type = set("pathFormat", pathFormat.toString)
 
   def setS3CredentialsProvider(value: String): this.type = set("fs.s3a.aws.credentials.provider", value)
 
@@ -39,7 +39,7 @@ class FileConnectorConf extends ConnectorConf {
 
   def getSaveMode: SaveMode = SaveMode.valueOf(get("saveMode", defaultSaveMode))
 
-  def getNative: String = get("native", defaultNative)
+  def getPathFormat: String = get("pathFormat", defaultPathFormat)
 
   def getStorage: Storage = get("storage") match {
     case Some(storage) => Storage.valueOf(storage)

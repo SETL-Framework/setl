@@ -4,9 +4,9 @@ import java.net.{URI, URLDecoder, URLEncoder}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import java.util.concurrent.locks.ReentrantLock
-
 import io.github.setl.annotation.InterfaceStability
 import io.github.setl.config.FileConnectorConf
+import io.github.setl.enums.PathFormat
 import io.github.setl.internal.{CanDrop, CanPartition, HasReaderWriter}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, LocalFileSystem, Path}
@@ -483,15 +483,18 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
     logDebug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
     this.setJobDescription(s"Read file(s) from '${absolutePath.toString}'")
 
-    val df = if (options.getNative.equals("true")) {
-      reader
-        .format(options.getStorage.toString.toLowerCase())
-        .load(options.getPath)
-    } else {
-      reader
-        .option("basePath", basePath.toString)
-        .format(options.getStorage.toString.toLowerCase())
-        .load(listFilesToLoad(false): _*)
+    val df = PathFormat.valueOf(options.getPathFormat) match {
+      case PathFormat.WILDCARD =>
+        reader
+          .format(options.getStorage.toString.toLowerCase())
+          .load(options.getPath)
+      case PathFormat.REGEX =>
+        reader
+          .option("basePath", basePath.toString)
+          .format(options.getStorage.toString.toLowerCase())
+          .load(listFilesToLoad(false): _*)
+      case _ =>
+        throw new UnsupportedOperationException(s"Unsupported path format ${options.getPath}.")
     }
 
     if (dropUserDefinedSuffix & df.columns.contains(UDSKey)) {

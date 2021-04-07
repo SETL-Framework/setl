@@ -19,6 +19,7 @@
 | emptyValue | sets the string representation of an empty value | true, default empty string|  |
 | dateFormat  | sets the string that indicates a date format | true, default `yyyy-MM-dd`| |
 | timestampFormat | sets the string that indicates a timestamp format  | true, default `yyyy-MM-dd'T'HH:mm:ss.SSSXXX`| |
+| pathFormat | choose between REGEX path format (ex: s3://bucket//col1=*/col2=A/*) or WILDCARD path format (ex: s3://bucket/*/*A*/internal-*.csv) | true, default `REGEX`| `WILDCARD` |
 
 For other options, please refer to [this doc](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/DataFrameReader.html).
 
@@ -69,6 +70,7 @@ csvWithSchema {
 | dateFormat  | sets the string that indicates a date format | true, default `yyyy-MM-dd`| |
 | timestampFormat | sets the string that indicates a timestamp format  | true, default `yyyy-MM-dd'T'HH:mm:ss.SSSXXX`| |
 | dropFieldIfAllNull | whether to ignore column of all null values or empty array/struct during schema inference  | true, default `false` | |
+| pathFormat | choose between REGEX path format (ex: s3://bucket//col1=*/col2=A/*) or WILDCARD path format (ex: s3://bucket/*/*A*/internal-*.csv) | true, default `REGEX`| `WILDCARD` |
 
 For other options, please refer to [this doc](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/DataFrameReader.html).
 
@@ -91,6 +93,7 @@ json {
 | path | directory of parquet files |   | |
 | saveMode |  |  true, default `ErrorIfExists` | `Append` |
 | filenamePattern | Regex of the names of file to be read. When `filenamePattern` is set, then this connector can only be used for reading data | true, default empty | `(file)(.*)(\\.csv)` |
+| pathFormat | choose between REGEX path format (ex: s3://bucket//col1=*/col2=A/*) or WILDCARD path format (ex: s3://bucket/*/*A*/internal-*.csv) | true, default `REGEX`| `WILDCARD` |
 
 ### Example
 
