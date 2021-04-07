@@ -483,12 +483,12 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
     logDebug(s"Reading ${options.getStorage.toString} file in: '${absolutePath.toString}'")
     this.setJobDescription(s"Read file(s) from '${absolutePath.toString}'")
 
-    val df = PathFormat.valueOf(options.getPathFormat) match {
-      case PathFormat.WILDCARD =>
+    val df = options.getPathFormat match {
+      case value if value == PathFormat.WILDCARD.toString =>
         reader
           .format(options.getStorage.toString.toLowerCase())
           .load(options.getPath)
-      case PathFormat.REGEX =>
+      case value if value == PathFormat.REGEX.toString =>
         reader
           .option("basePath", basePath.toString)
           .format(options.getStorage.toString.toLowerCase())

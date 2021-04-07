@@ -199,6 +199,24 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).drop()
   }
 
+  test("FileConnector should throw exception with unsupported pathFormat option") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    import spark.implicits._
+    val options = Map[String, String](
+      "path" -> "src/test/resources",
+      "pathFormat" -> "TEST"
+    )
+    val fileConnectorConf = new FileConnectorConf()
+    fileConnectorConf.set(options)
+
+    val fileConnector = new FileConnector(fileConnectorConf) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assertThrows[UnsupportedOperationException](fileConnector.read())
+  }
+
   test("File connector functionality") {
     val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
 
