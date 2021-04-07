@@ -494,7 +494,7 @@ abstract class FileConnector(val options: FileConnectorConf) extends Connector w
           .format(options.getStorage.toString.toLowerCase())
           .load(listFilesToLoad(false): _*)
       case _ =>
-        throw new UnsupportedOperationException(s"Unsupported path format ${options.getPath}.")
+        throw new UnsupportedOperationException(s"Unsupported path format ${options.getPathFormat}.")
     }
 
     if (dropUserDefinedSuffix & df.columns.contains(UDSKey)) {
