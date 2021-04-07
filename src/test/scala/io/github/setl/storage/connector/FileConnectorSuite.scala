@@ -1,7 +1,7 @@
 package io.github.setl.storage.connector
 
 import io.github.setl.config.FileConnectorConf
-import io.github.setl.enums.Storage
+import io.github.setl.enums.{PathFormat, Storage}
 import io.github.setl.{SparkSessionBuilder, TestObject}
 import org.apache.hadoop.fs.{LocalFileSystem, Path}
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
@@ -129,7 +129,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
-    new ParquetConnector(path, SaveMode.Overwrite).delete()
+    new ParquetConnector(path, SaveMode.Overwrite).drop()
   }
 
   test("File connector should handle wildcard file path (csv)") {
@@ -163,7 +163,58 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
 
     // remove test files
-    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).delete()
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).drop()
+  }
+
+
+  test("File connector should handle spark native path format") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+    val path = "src/test/resources/fileconnector_test_dir_csv"
+    import spark.implicits._
+    val df = Seq(
+      ("a", "A", "aa", "AA"),
+      ("a", "A", "bb", "BB"),
+      ("a", "B", "aa", "AA"),
+      ("a", "B", "bb", "BB"),
+      ("b", "A", "aa", "AA"),
+      ("b", "A", "bb", "BB"),
+      ("b", "B", "aa", "AA"),
+      ("b", "B", "bb", "BB")
+    ).toDF("col1", "col2", "col3", "col4")
+
+    df.write.mode(SaveMode.Overwrite).partitionBy("col1", "col2").option("header", "true").csv(path)
+
+    val connector = new CSVConnector(s"$path/col1=*/col2=A/*.csv", "true", ",", "true", SaveMode.Overwrite, PathFormat.WILDCARD)
+    val connectorRead = connector.read()
+    connectorRead.show()
+
+    val sparkRead = spark.read
+      .option("header", "true")
+      .csv(s"$path/col1=*/col2=A/*.csv")
+    sparkRead.show()
+
+    connectorRead.collect() should contain theSameElementsAs sparkRead.collect()
+
+    // remove test files
+    new CSVConnector(path, "true", ",", "true", SaveMode.Overwrite).drop()
+  }
+
+  test("FileConnector should throw exception with unsupported pathFormat option") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    import spark.implicits._
+    val options = Map[String, String](
+      "path" -> "src/test/resources",
+      "pathFormat" -> "TEST"
+    )
+    val fileConnectorConf = new FileConnectorConf()
+    fileConnectorConf.set(options)
+
+    val fileConnector = new FileConnector(fileConnectorConf) {
+      override val storage: Storage = Storage.CSV
+    }
+
+    assertThrows[UnsupportedOperationException](fileConnector.read())
   }
 
   test("File connector functionality") {
@@ -202,7 +253,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     connector.write(dff.toDF, None)
     assertThrows[IllegalArgumentException](connector.write(dff.toDF, Some("test")))
     assertThrows[IllegalArgumentException](connector.setSuffix(Some("test")))
-    connector.delete()
+    connector.drop()
   }
 
   test("FileConnector should handle parallel write") {
@@ -256,7 +307,7 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
       case other: Exception => throw other
     }
 
-    connector.delete()
+    connector.drop()
   }
 
   test("FileConnector should handle base path correctly") {

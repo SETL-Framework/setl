@@ -2,7 +2,7 @@ package io.github.setl.storage.connector
 
 import io.github.setl.annotation.InterfaceStability
 import io.github.setl.config.{Conf, FileConnectorConf}
-import io.github.setl.enums.Storage
+import io.github.setl.enums.{PathFormat, Storage}
 import io.github.setl.util.TypesafeConfigUtils
 import com.typesafe.config.Config
 import org.apache.spark.sql._
@@ -91,12 +91,13 @@ class CSVConnector(override val options: FileConnectorConf) extends FileConnecto
 
   def this(config: Conf) = this(config.toMap)
 
-  def this(path: String, inferSchema: String, delimiter: String, header: String, saveMode: SaveMode) =
+  def this(path: String, inferSchema: String, delimiter: String, header: String, saveMode: SaveMode, pathFormat: PathFormat = PathFormat.REGEX) =
     this(Map[String, String](
       "path" -> path,
       "inferSchema" -> inferSchema,
       "header" -> header,
-      "saveMode" -> saveMode.toString
+      "saveMode" -> saveMode.toString,
+      "pathFormat" -> pathFormat.toString
     ))
 
   override val storage: Storage = Storage.CSV
