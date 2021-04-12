@@ -27,7 +27,7 @@ You can start working by cloning [this template project](https://github.com/SETL
 <dependency>
   <groupId>io.github.setl-framework</groupId>
   <artifactId>setl_2.12</artifactId>
-  <version>1.0.0-RC1</version>
+  <version>1.0.0-RC2</version>
 </dependency>
 ```
 
