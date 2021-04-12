@@ -33,6 +33,12 @@
 
 - Deprecated methods and constructors
 
+## 1.0.0-RC2 (2021-03-31)
+
+### BREAKING CHANGE:
+
+- Change group id to io.github.setl-framework (PR #192)
+
 ## 1.0.0-RC1 (2020-08-19)
 
 ### Added:
