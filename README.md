@@ -3,8 +3,8 @@
 
 [![build](https://github.com/SETL-Framework/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Framework/setl/actions)
 [![codecov](https://codecov.io/gh/SETL-Framework/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Framework/setl)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/io.github.setl/setl)
-[![javadoc](https://javadoc.io/badge2/io.github.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/io.github.setl/setl_2.11)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.setl-framework/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/io.github.setl-framework/setl)
+[![javadoc](https://javadoc.io/badge2/io.github.setl-framework/setl_2.12/javadoc.svg)](https://javadoc.io/doc/io.github.setl-framework/setl_2.12)
 [![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-framework.github.io/setl/)
 
 If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
