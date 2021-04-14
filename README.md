@@ -13,7 +13,7 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
 - Debugging others’ code is a nightmare
 - Spending a lot of time solving non-business-related issues 
 
-**SETL** (pronounced "settle") is a Scala framework powered by [Apache Spark](https://spark.apache.org/) that helps you structure your Spark ETL projects, modularize your data transformation logic and speed up your development.
+**SETL** (pronounced "settle") is a Scala ETL framework powered by [Apache Spark](https://spark.apache.org/) that helps you structure your Spark ETL projects, modularize your data transformation logic and speed up your development.
 
 ## Use SETL
 
