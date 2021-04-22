@@ -57,6 +57,8 @@ class JDBCConnectorConf extends ConnectorConf {
 
   def getTruncate: Option[String] = get(TRUNCATE)
 
+  def setDriver(driver: String): this.type = set(DRIVER, driver)
+
   def getDriver: Option[String] = get(DRIVER)
 
   def getFormat: Option[String] = Option(FORMAT)

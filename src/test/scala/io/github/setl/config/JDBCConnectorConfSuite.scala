@@ -72,7 +72,7 @@ class JDBCConnectorConfSuite extends AnyFunSuite {
     assert(conf.get(truncate).get === truncate)
 
     assert(conf.get(driver) === None)
-    conf.setTruncate(driver)
+    conf.setDriver(driver)
     assert(conf.get(driver).get === driver)
   }
 
