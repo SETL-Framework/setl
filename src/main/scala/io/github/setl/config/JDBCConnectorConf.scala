@@ -59,6 +59,8 @@ class JDBCConnectorConf extends ConnectorConf {
 
   def getFormat: Option[String] = Option(FORMAT)
 
+  def getDriver: Option[String] = Option(FORMAT)
+
   override def getReaderConf: Map[String, String] = {
     import scala.collection.JavaConverters._
     settings.asScala.toMap - BATCH_SIZE - TRUNCATE - SAVEMODE - FORMAT
@@ -75,7 +77,8 @@ class JDBCConnectorConf extends ConnectorConf {
       JDBCConnectorConf.USER,
       JDBCConnectorConf.PASSWORD,
       JDBCConnectorConf.URL,
-      JDBCConnectorConf.DB_TABLE
+      JDBCConnectorConf.DB_TABLE,
+      JDBCConnectorConf.DRIVER
     ).collect {
       case key: String if this.has(key) => key -> this.get(key).get
     }.toMap
@@ -103,5 +106,5 @@ object JDBCConnectorConf {
   val PARTITION_COLUMN: String = "partitionColumn"
   val LOWER_BOUND: String = "lowerBound"
   val UPPER_BOUND: String = "upperBound"
-
+  val DRIVER: String = "driver"
 }
