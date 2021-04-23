@@ -2,7 +2,7 @@ package io.github.setl.transformation
 
 import io.github.setl.internal.{HasDiagram, HasType}
 import io.github.setl.util.ReflectUtils
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{DataFrame, Dataset}
 
 import scala.reflect.runtime
 
@@ -32,9 +32,16 @@ private[setl] case class FactoryOutput(override val runtimeType: runtime.univers
     }
 
     if (isDataset) {
-      val datasetTypeArgFields = super.getTypeArgList(this.runtimeType.typeArgs.head)
-      datasetTypeArgFields.map {
-        i => s">${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
+      // DataFrame
+      if (this.runtimeType.typeArgs.isEmpty) {
+        List.empty
+      }
+      // Dataset
+      else {
+        val datasetTypeArgFields = super.getTypeArgList(this.runtimeType.typeArgs.head)
+        datasetTypeArgFields.map {
+          i => s">${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
+        }
       }
 
     } else if (isCaseClass) {

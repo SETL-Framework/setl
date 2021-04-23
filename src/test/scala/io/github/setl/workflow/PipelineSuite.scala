@@ -8,7 +8,7 @@ import io.github.setl.storage.SparkRepositoryBuilder
 import io.github.setl.storage.connector.FileConnector
 import io.github.setl.transformation.{Deliverable, Factory}
 import io.github.setl.workflow.DeliverableDispatcherSuite.FactoryWithMultipleAutoLoad
-import org.apache.spark.sql.{Dataset, SparkSession, functions}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -595,6 +595,20 @@ class PipelineSuite extends AnyFunSuite with Matchers {
     fac.floatArray should contain theSameElementsAs fltAry
   }
 
+  test("SETL-197: Mermaid diagram should be shown even when the factory output is a DataFrame") {
+    val spark = new SparkSessionBuilder("test").setEnv("local").setSparkMaster("local").getOrCreate()
+
+    new Pipeline()
+      .setInput[String]("id_of_product1", classOf[ProductFactory])
+      .setInput[String]("dataframe", classOf[DataFrameFactory])
+      .addStage[ProductFactory]()
+      .addStage[DatasetFactory](Array(spark))
+      .addStage[DataFrameFactory](Array(spark))
+      .addStage[DatasetFactory4](Array(spark))
+      .run()
+      .showDiagram()
+  }
+
 }
 
 object PipelineSuite {
@@ -857,13 +871,26 @@ object PipelineSuite {
 
     override def read(): DatasetFactory4.this.type = this
 
-    override def process(): DatasetFactory4.this.type = {
-      this
-    }
+    override def process(): DatasetFactory4.this.type = this
 
     override def write(): DatasetFactory4.this.type = this
 
     override def get(): Long = ds1.count()
+  }
+
+  class DataFrameFactory(spark: SparkSession) extends Factory[DataFrame] {
+    import spark.implicits._
+
+    @Delivery
+    var input: String = null
+
+    override def read(): DataFrameFactory.this.type = this
+
+    override def process(): DataFrameFactory.this.type = this
+
+    override def write(): DataFrameFactory.this.type = this
+
+    override def get(): DataFrame = Seq(input).toDF("column1")
   }
 
   class PrimaryDeliveryFactory extends Factory[String] {
