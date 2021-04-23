@@ -211,6 +211,8 @@ cassandra {
 | user | <user_input>  |
 | password | <user_input>  |
 | saveMode | `ErrorIfExists`  |
+| driver | <user_input>  |
+
 
 For other options, please refer to [the Spark documentation](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html)
 
@@ -224,6 +226,7 @@ jdbcExample {
   saveMode = "Overwrite"
   user = "postgres"
   password = "postgres"
+  driver = "org.postgresql.Driver"
 }
 ```
 

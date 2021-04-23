@@ -17,6 +17,7 @@ class JDBCConnectorConfSuite extends AnyFunSuite {
   val fetchSize = "fetchsize"
   val batchSize = "batchsize"
   val truncate = "truncate"
+  val driver = "driver"
 
   test("Set JDBCConnectorConf") {
     assert(conf.get(url) === None)
@@ -69,6 +70,10 @@ class JDBCConnectorConfSuite extends AnyFunSuite {
     assert(conf.get(truncate) === None)
     conf.setTruncate(truncate)
     assert(conf.get(truncate).get === truncate)
+
+    assert(conf.get(driver) === None)
+    conf.setDriver(driver)
+    assert(conf.get(driver).get === driver)
   }
 
   test("Getters of JDBCConnectorConf") {
@@ -84,5 +89,6 @@ class JDBCConnectorConfSuite extends AnyFunSuite {
     assert(conf.getFetchSize === Some(fetchSize))
     assert(conf.getBatchSize === Some(batchSize))
     assert(conf.getTruncate === Some(truncate))
+    assert(conf.getDriver === Some(driver))
   }
 }
