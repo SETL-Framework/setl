@@ -2,7 +2,7 @@ package io.github.setl.transformation
 
 import io.github.setl.internal.{HasDiagram, HasType}
 import io.github.setl.util.ReflectUtils
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.Dataset
 
 import scala.reflect.runtime
 
