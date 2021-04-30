@@ -32,9 +32,15 @@ private[setl] case class FactoryOutput(override val runtimeType: runtime.univers
     }
 
     if (isDataset) {
-      val datasetTypeArgFields = super.getTypeArgList(this.runtimeType.typeArgs.head)
-      datasetTypeArgFields.map {
-        i => s">${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
+      if (this.runtimeType.typeArgs.isEmpty) {
+        // DataFrame
+        List.empty
+      } else {
+        // Dataset
+        val datasetTypeArgFields = super.getTypeArgList(this.runtimeType.typeArgs.head)
+        datasetTypeArgFields.map {
+          i => s">${i.name}: ${ReflectUtils.getPrettyName(i.typeSignature)}"
+        }
       }
 
     } else if (isCaseClass) {
