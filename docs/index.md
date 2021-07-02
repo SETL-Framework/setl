@@ -36,7 +36,7 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
   - [ConfigLoader](ConfigLoader)
   - [DateUtils](DateUtils)
   - [Condition](Condition)
-- Developper
+- Developer
   - [StructAnalyser](StructAnalyser)
   - [SchemaConverter](SchemaConverter)
   - [PipelineInspector](PipelineInspector)
