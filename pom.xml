@@ -81,7 +81,7 @@
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
         <spark.version>3.0.1</spark.version>
         <spark.compat.version>3.0</spark.compat.version>
-        <spark.cassandra.connector.version>3.0.0</spark.cassandra.connector.version>
+        <spark.cassandra.connector.version>3.1.0</spark.cassandra.connector.version>
         <spark.dynamodb.version>1.1.2</spark.dynamodb.version>
         <spark.excel.version>0.13.7</spark.excel.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
