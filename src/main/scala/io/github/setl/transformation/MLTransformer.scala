@@ -1,8 +1,7 @@
 package io.github.setl.transformation
-
+import org.apache.spark.ml.{Transformer => SparkTransformer}
 import io.github.setl.annotation.InterfaceStability
 import org.apache.hadoop.fs.Path
-import org.apache.spark.ml.Model
 
 /**
  * A MLTransformer is a basic transformer with a ML model and ML-related functionality.
@@ -10,7 +9,7 @@ import org.apache.spark.ml.Model
  * @tparam T Data type of the transformer
  */
 @InterfaceStability.Evolving
-trait MLTransformer[T, M <: Model[_]] extends Transformer[T] {
+trait MLTransformer[T, M <: SparkTransformer] extends Transformer[T] {
 
   var model: M = _
   val modelPath: Path
