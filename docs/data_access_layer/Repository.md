@@ -87,7 +87,7 @@ As we may observe, firstly the field **column1** is renamed to **col1** in the p
 
 This functionality could be useful in some cases where the number of key columns is limited (e.g. in DynamoDB)
 
-For more detail, refer to [Annotation doc](Annotations)
+For more detail, refer to [Annotation doc](../Annotations)
 
 ### Read cache
 You can make **SparkRepository** caching the last read data by setting `persistReadData` to *true*. Then SparkRepository will automatically cache the data by invoking the `persist(StorageLevel)` method of DataFrame. 
