@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.jcdecaux.setl</groupId>
+    <groupId>io.github.setl-framework</groupId>
     <artifactId>setl_2.12</artifactId>
     <version>${revision}${changelist}</version>
     <packaging>jar</packaging>
@@ -13,7 +13,7 @@
         SETL is an open-source Scala framework powered by Apache Spark that helps developers to structure ETL projects,
         modularize data transformation logic and speed up the development.
     </description>
-    <url>https://github.com/SETL-Developers/setl</url>
+    <url>https://github.com/SETL-Framework/setl</url>
 
     <licenses>
         <license>
@@ -23,8 +23,8 @@
     </licenses>
 
     <organization>
-        <name>JCDecaux SA</name>
-        <url>https://www.jcdecaux.com</url>
+        <name>SETL Framework</name>
+        <url>https://github.com/SETL-Framework</url>
     </organization>
 
     <developers>
@@ -46,9 +46,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/SETL-Developers/setl.git</connection>
-        <developerConnection>scm:git:ssh://github.com:SETL-Developers/setl.git</developerConnection>
-        <url>https://github.com/SETL-Developers/setl/tree/master</url>
+        <connection>scm:git:git://github.com/SETL-Framework/setl.git</connection>
+        <developerConnection>scm:git:ssh://github.com:SETL-Framework/setl.git</developerConnection>
+        <url>https://github.com/SETL-Framework/setl/tree/master</url>
     </scm>
 
     <repositories>
@@ -59,6 +59,10 @@
         <repository>
             <id>ossrh-snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>ossrh-snapshots-2</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
 
@@ -71,19 +75,19 @@
         <delta.version>0.7.0</delta.version>
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
-        <scala.maven.plugin.version>4.4.0</scala.maven.plugin.version>
+        <scala.maven.plugin.version>4.4.1</scala.maven.plugin.version>
         <scalatest.version>3.2.1</scalatest.version>
-        <scalatest.maven.plugin.version>2.0.0</scalatest.maven.plugin.version>
+        <scalatest.maven.plugin.version>2.0.2</scalatest.maven.plugin.version>
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
-        <spark.version>3.0.0</spark.version>
+        <spark.version>3.0.1</spark.version>
         <spark.compat.version>3.0</spark.compat.version>
-        <spark.cassandra.connector.version>3.0.0-beta</spark.cassandra.connector.version>
-        <spark.dynamodb.version>1.1.0</spark.dynamodb.version>
-        <spark.excel.version>0.13.5</spark.excel.version>
+        <spark.cassandra.connector.version>3.0.0</spark.cassandra.connector.version>
+        <spark.dynamodb.version>1.1.2</spark.dynamodb.version>
+        <spark.excel.version>0.13.7</spark.excel.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
-        <postgresql.version>42.2.16</postgresql.version>
+        <postgresql.version>42.2.18</postgresql.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
@@ -93,7 +97,7 @@
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <maven.site.plugin.version>3.9.1</maven.site.plugin.version>
         <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
-        <typesafe.config.version>1.4.0</typesafe.config.version>
+        <typesafe.config.version>1.4.1</typesafe.config.version>
     </properties>
 
     <dependencies>
@@ -325,7 +329,7 @@
                 </executions>
                 <configuration>
                     <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
@@ -383,7 +387,7 @@
         <profile>
             <id>spark_2.4</id>
             <properties>
-                <spark.version>2.4.5</spark.version>
+                <spark.version>2.4.7</spark.version>
                 <spark.compat.version>2.4</spark.compat.version>
                 <spark.cassandra.connector.version>2.5.1</spark.cassandra.connector.version>
                 <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
@@ -415,7 +419,7 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
         </profile>
@@ -453,7 +457,7 @@
             <distributionManagement>
                 <repository>
                     <id>ossrh</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
         </profile>

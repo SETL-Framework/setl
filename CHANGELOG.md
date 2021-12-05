@@ -3,10 +3,41 @@
 ### Added:
 
 - A new trait `ConnectorInterface` that simplify the use of custom connectors
+- New traits in `io.github.setl.internal`:
+  - CanVacuum
+  - CanUpdate
+  - CanPartition
+  - CanWait
+- New IO methods in SparkRepository:
+  - drop
+  - delete
+  - create
+  - vacuum
+  - awaitTermination
+  - stopStreaming
+  
+### Changed:
+
+- Parameters of the method `DeltaConnector.update`
+- Parameters of the method `DeltaConnector.partition`
+- Parameter readCache in Setl.setSparkRepository was renamed to cacheData to avoid ambiguity
+- Deprecated `FileConnector.delete()` to avoid ambiguity (use `FileConnector.drop()` instead)
+- Upgraded spark-cassandra-connector to 3.0.0 for the mvn profile `spark_3.0`
+- New logo
+
+### Fixed:
+
+- DeltaConnector reader options (PR #170)
 
 ### Removed:
 
 - Deprecated methods and constructors
+
+## 1.0.0-RC2 (2021-03-31)
+
+### BREAKING CHANGE:
+
+- Change group id to io.github.setl-framework (PR #192)
 
 ## 1.0.0-RC1 (2020-08-19)
 
@@ -203,7 +234,7 @@ case class CompressionDemo(@Compress col1: Seq[Int],
 ## 0.2.7 (2019-06-21)
 
 - Added `Conf` into `SparkRepositoryBuilder` and changed all the set methods of `SparkRepositoryBuilder` to use the conf object
-- Changed package name `com.jcdecaux.setl.annotations` to `com.jcdecaux.setl.annotation`
+- Changed package name `io.github.setl.annotations` to `io.github.setl.annotation`
 
 ## 0.2.6 (2019-06-18)
 

@@ -34,7 +34,7 @@ val setl = Setl.builder()
 ```
 
 # Repository management
-**Setl** helps you to create and manage the [**SparkRepository**](Repository) of your application.
+**Setl** helps you to create and manage the [**SparkRepository**](data_access_layer/Repository) of your application.
 
 To register spark repository:
 ```scala
@@ -56,18 +56,20 @@ You can have as many SparkRepositories as possible, even if they have the same t
 
 To use a repository in a **Factory**
 ```scala
-class MyFactory extends Factory[Any] {
+class MyFactory extends Factory[Any] with HasSparkSession {
+  import spark.implicits._
+
   @Delivery
-  var repo: SparkRepository[MyClass] = _  // this variable will be delivered at runtime
+  val repo = SparkRepository[MyClass]  // this variable will be delivered at runtime
 
   @Delivery(autoLoad = true)
-  var ds: Dataset[MyClass] = _  // pipeline will invoke the "findAll" method of an available  
-                                // SparkRepository[MyClass], and deliver the result to this variable.
+  val ds = spark.emptyDataset[MyClass]  // pipeline will invoke the "findAll" method of an available  
+                                        // SparkRepository[MyClass], and deliver the result to this variable.
 }
 ```
 
 # Connector management
-**Setl** handles [**Connectors**](Connector) in a similar way as it handles repositories. You can have as many connectors as possible as long as each of them has a different configuration path and delivery ID.
+**Setl** handles [**Connectors**](data_access_layer/Connector) in a similar way as it handles repositories. You can have as many connectors as possible as long as each of them has a different configuration path and delivery ID.
 
 To register a connector:
 ```scala

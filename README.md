@@ -1,11 +1,11 @@
 ![logo](docs/img/logo_setl.png)
 ----------
 
-[![build](https://github.com/SETL-Developers/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Developers/setl/actions)
-[![codecov](https://codecov.io/gh/SETL-Developers/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Developers/setl)
-[![Maven Central](https://img.shields.io/maven-central/v/com.jcdecaux.setl/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/com.jcdecaux.setl/setl)
-[![javadoc](https://javadoc.io/badge2/com.jcdecaux.setl/setl_2.11/javadoc.svg)](https://javadoc.io/doc/com.jcdecaux.setl/setl_2.11)
-[![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-developers.github.io/setl/)
+[![build](https://github.com/SETL-Framework/setl/workflows/build/badge.svg?branch=master)](https://github.com/SETL-Framework/setl/actions)
+[![codecov](https://codecov.io/gh/SETL-Framework/setl/branch/master/graph/badge.svg)](https://codecov.io/gh/SETL-Framework/setl)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.setl-framework/setl_2.11.svg?label=Maven%20Central&color=blue)](https://mvnrepository.com/artifact/io.github.setl-framework/setl)
+[![javadoc](https://javadoc.io/badge2/io.github.setl-framework/setl_2.12/javadoc.svg)](https://javadoc.io/doc/io.github.setl-framework/setl_2.12)
+[![documentation](https://img.shields.io/badge/docs-passing-1f425f.svg)](https://setl-framework.github.io/setl/)
 
 If you’re a **data scientist** or **data engineer**, this might sound familiar while working on an **ETL** project: 
 
@@ -13,21 +13,21 @@ If you’re a **data scientist** or **data engineer**, this might sound familiar
 - Debugging others’ code is a nightmare
 - Spending a lot of time solving non-business-related issues 
 
-**SETL** (pronounced "settle") is a Scala framework powered by [Apache Spark](https://spark.apache.org/) that helps you structure your Spark ETL projects, modularize your data transformation logic and speed up your development.
+**SETL** (pronounced "settle") is a Scala ETL framework powered by [Apache Spark](https://spark.apache.org/) that helps you structure your Spark ETL projects, modularize your data transformation logic and speed up your development.
 
 ## Use SETL
 
 ### In a new project
 
-You can start working by cloning [this template project](https://github.com/qxzzxq/setl-template).
+You can start working by cloning [this template project](https://github.com/SETL-Framework/setl-template).
 
 ### In an existing project
 
 ```xml
 <dependency>
-  <groupId>com.jcdecaux.setl</groupId>
+  <groupId>io.github.setl-framework</groupId>
   <artifactId>setl_2.12</artifactId>
-  <version>1.0.0-RC1</version>
+  <version>1.0.0-RC2</version>
 </dependency>
 ```
 
@@ -36,13 +36,13 @@ To use the SNAPSHOT version, add Sonatype snapshot repository to your `pom.xml`
 <repositories>
   <repository>
     <id>ossrh-snapshots</id>
-    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
   </repository>
 </repositories>
 
 <dependencies>
   <dependency>
-    <groupId>com.jcdecaux.setl</groupId>
+    <groupId>io.github.setl-framework</groupId>
     <artifactId>setl_2.12</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </dependency>
@@ -59,11 +59,11 @@ The class `Factory[T]` is an abstraction of a data transformation that will prod
 
 The class `SparkRepository[T]` is a data access layer abstraction. It could be used to read/write a `Dataset[T]` from/to a datastore. It should be defined in a configuration file. You can have as many SparkRepositories as you want.
 
-The entry point of a SETL project is the object `com.jcdecaux.setl.Setl`, which will handle the pipeline and spark repository instantiation.
+The entry point of a SETL project is the object `io.github.setl.Setl`, which will handle the pipeline and spark repository instantiation.
 
 ### Show me some code
 
-You can find the following tutorial code in [the starter template of SETL](https://github.com/qxzzxq/setl-template). Go and clone it :)
+You can find the following tutorial code in [the starter template of SETL](https://github.com/SETL-Framework/setl-template). Go and clone it :)
 
 Here we show a simple example of creating and saving a **Dataset[TestObject]**. The case class **TestObject** is defined as follows:
 
@@ -197,21 +197,19 @@ You can implement you own data source connector by implementing the `ConnectorIn
 class CustomConnector extends ConnectorInterface with CanDrop {
   override def setConf(conf: Conf): Unit = null
 
-  override def setConfig(config: Config): Unit = null
-
   override def read(): DataFrame = {
     import spark.implicits._
     Seq(1, 2, 3).toDF("id")
   }
 
-  override def write(t: DataFrame, suffix: Option[String]): Unit = log.debug("Write with suffix")
+  override def write(t: DataFrame, suffix: Option[String]): Unit = logDebug("Write with suffix")
 
-  override def write(t: DataFrame): Unit = log.debug("Write")
+  override def write(t: DataFrame): Unit = logDebug("Write")
 
   /**
    * Drop the entire table.
    */
-  override def drop(): Unit = log.debug("drop")
+  override def drop(): Unit = logDebug("drop")
 }
 ```
 
@@ -224,7 +222,7 @@ myConnector {
 }
 ```
 
-### Generate pipeline diagram (with v0.4.1+)
+### Generate pipeline diagram
 
 You can generate a [Mermaid diagram](https://mermaid-js.github.io/mermaid/#/) by doing:
 ```scala
@@ -278,6 +276,102 @@ Or you can try the live editor: https://mermaid-js.github.io/mermaid-live-editor
 
 You can either copy the code into a Markdown viewer or just copy the link into your browser ([link](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNeUZhY3Rvcnkge1xuICA8PEZhY3RvcnlbRGF0YXNldFtUZXN0T2JqZWN0XV0-PlxuICArU3BhcmtSZXBvc2l0b3J5W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIERhdGFzZXRUZXN0T2JqZWN0IHtcbiAgPDxEYXRhc2V0W1Rlc3RPYmplY3RdPj5cbiAgPnBhcnRpdGlvbjE6IEludFxuICA-cGFydGl0aW9uMjogU3RyaW5nXG4gID5jbHVzdGVyaW5nMTogU3RyaW5nXG4gID52YWx1ZTogTG9uZ1xufVxuXG5EYXRhc2V0VGVzdE9iamVjdCA8fC4uIE15RmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgQW5vdGhlckZhY3Rvcnkge1xuICA8PEZhY3RvcnlbU3RyaW5nXT4-XG4gICtEYXRhc2V0W1Rlc3RPYmplY3RdXG59XG5cbmNsYXNzIFN0cmluZ0ZpbmFsIHtcbiAgPDxTdHJpbmc-PlxuICBcbn1cblxuU3RyaW5nRmluYWwgPHwuLiBBbm90aGVyRmFjdG9yeSA6IE91dHB1dFxuY2xhc3MgU3BhcmtSZXBvc2l0b3J5VGVzdE9iamVjdEV4dGVybmFsIHtcbiAgPDxTcGFya1JlcG9zaXRvcnlbVGVzdE9iamVjdF0-PlxuICBcbn1cblxuQW5vdGhlckZhY3RvcnkgPHwtLSBEYXRhc2V0VGVzdE9iamVjdCA6IElucHV0XG5NeUZhY3RvcnkgPHwtLSBTcGFya1JlcG9zaXRvcnlUZXN0T2JqZWN0RXh0ZXJuYWwgOiBJbnB1dFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0=)) 🍻
 
+### App Configuration
+
+The configuration system of SETL allows users to execute their Spark application in different execution environments, by
+using environment-specific configurations.
+
+In `src/main/resources` directory, you should have at least two configuration files named `application.conf`
+and `local.conf`
+(take a look at this [example](https://github.com/SETL-Framework/setl-template/tree/master/src/main/resources)). These
+are what you need if you only want to run your application in one single environment.
+
+You can also create other configurations (for example `dev.conf` and `prod.conf`), in which environment-specific
+parameters can be defined.
+
+##### application.conf
+
+This configuration file should contain universal configurations that could be used regardless the execution environment.
+
+##### env.conf (e.g. local.conf, dev.conf)
+
+These files should contain environment-specific parameters. By default, `local.conf` will be used.
+
+##### How to use the configuration
+
+Imagine the case we have two environments, a local development environment and a remote production environment. Our application
+needs a repository for saving and loading data. In this use case, let's prepare `application.conf`, `local.conf`, `prod.conf`
+and `storage.conf`
+
+```hocon
+# application.conf
+setl.environment = ${app.environment}
+setl.config {
+  spark.app.name = "my_application"
+  # and other general spark configurations  
+}
+```
+
+```hocon
+# local.conf
+include "application.conf"
+
+setl.config {
+  spark.default.parallelism = "200"
+  spark.sql.shuffle.partitions = "200"
+  # and other local spark configurations  
+}
+
+app.root.dir = "/some/local/path"
+
+include "storage.conf"
+```
+
+```hocon
+# prod.conf
+setl.config {
+  spark.default.parallelism = "1000"
+  spark.sql.shuffle.partitions = "1000"
+  # and other production spark configurations  
+}
+
+app.root.dir = "/some/remote/path"
+
+include "storage.conf"
+```
+
+```hocon
+# storage.conf
+myRepository {
+  storage = "CSV"
+  path = ${app.root.dir}  // this path will depend on the execution environment
+  inferSchema = "true"
+  delimiter = ";"
+  header = "true"
+  saveMode = "Append"
+}
+```
+
+To compile with local configuration, with maven, just run:
+```shell
+mvn compile
+```
+
+To compile with production configuration, pass the jvm property `app.environment`.
+```shell
+mvn compile -Dapp.environment=prod
+```
+
+Make sure that your resources directory has filtering enabled:
+```xml
+<resources>
+    <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+    </resource>
+</resources>
+```
+
 ## Dependencies
 
 **SETL** currently supports the following data source. You won't need to provide these libraries in your project (except the JDBC driver):
@@ -306,23 +400,46 @@ You should also provide Scala and Spark in your pom file. SETL is tested against
 | ------------- | -------------  | -----------------------------|
 |     3.0       |        2.12    | :heavy_check_mark: Ok        |
 |     2.4       |        2.12    | :heavy_check_mark: Ok        |
-|     2.4       |        2.11    | :heavy_check_mark: Ok        |
+|     2.4       |        2.11    | :warning: see *known issues* |
 |     2.3       |        2.11    | :warning: see *known issues* |
 
 ## Known issues
+
+### Spark 2.4 with Scala 2.11
+
+When using `setl_2.11-1.x.x` with Spark 2.4 and Scala 2.11, you may need to include manually these following dependencies to override the default version:
+```xml
+<dependency>
+    <groupId>com.audienceproject</groupId>
+    <artifactId>spark-dynamodb_2.11</artifactId>
+    <version>1.0.4</version>
+</dependency>
+<dependency>
+    <groupId>io.delta</groupId>
+    <artifactId>delta-core_2.11</artifactId>
+    <version>0.7.0</version>
+</dependency>
+<dependency>
+    <groupId>com.datastax.spark</groupId>
+    <artifactId>spark-cassandra-connector_2.11</artifactId>
+    <version>2.5.1</version>
+</dependency>
+```
+
+### Spark 2.3 with Scala 2.11
 
 - `DynamoDBConnector` doesn't work with Spark version 2.3
 - `Compress` annotation can only be used on Struct field or Array of Struct field with Spark 2.3
 
 ## Test Coverage
 
-[![coverage.svg](https://codecov.io/gh/SETL-Developers/setl/branch/master/graphs/sunburst.svg)](https://codecov.io/gh/SETL-Developers/setl)
+[![coverage.svg](https://codecov.io/gh/SETL-Framework/setl/branch/master/graphs/sunburst.svg)](https://codecov.io/gh/SETL-Framework/setl)
 
 ## Documentation
 
-[https://setl-developers.github.io/setl/](https://setl-developers.github.io/setl/)
+[https://setl-framework.github.io/setl/](https://setl-framework.github.io/setl/)
 
 ## Contributing to SETL
 
-[Check our contributing guide](https://github.com/SETL-Developers/setl/blob/master/CONTRIBUTING.md)
+[Check our contributing guide](https://github.com/SETL-Framework/setl/blob/master/CONTRIBUTING.md)
 

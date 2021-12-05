@@ -9,11 +9,11 @@ Imagine we have three data transformation jobs in an ETL application:
 This could be done with Pipeline, Stage, and Factory
 
 ```scala
-import com.jcdecaux.setl.SparkSessionBuilder
-import com.jcdecaux.setl.annotation.Delivery
-import com.jcdecaux.setl.transformation.Factory
+import io.github.setl.SparkSessionBuilder
+import io.github.setl.annotation.Delivery
+import io.github.setl.transformation.Factory
 import org.apache.spark.sql.{Dataset, SparkSession, functions}
-import com.jcdecaux.setl.workflow.{Pipeline, Stage}
+import io.github.setl.workflow.{Pipeline, Stage}
 
 // Define our class
 case class Product1(x: String)
