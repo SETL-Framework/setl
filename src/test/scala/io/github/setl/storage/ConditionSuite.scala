@@ -57,13 +57,14 @@ class ConditionSuite extends AnyFunSuite {
   test("Condition should handle Column") {
     import org.apache.spark.sql.functions._
     val condition = Condition(
-      col("test").isin(1, 2, 3)
+      col("test col").isin(1, 2, 3)
     )
-    assert(condition.toSqlRequest === Condition("test", "IN", Set(1, 2, 3)).toSqlRequest)
+
+    assert(condition.toSqlRequest === Condition("test col", "IN", Set(1, 2, 3)).toSqlRequest)
 
     val condition2 = Condition(
-      col("test").isin(1, 2, 3) && col("test2") === "A"
+      col("test col").isin(1, 2, 3) && col("test col 2") === "A"
     )
-    assert(condition2.toSqlRequest === "((`test` IN (1, 2, 3)) AND (`test2` = 'A'))")
+    assert(condition2.toSqlRequest === "((`test col` IN (1, 2, 3)) AND (`test col 2` = 'A'))")
   }
 }

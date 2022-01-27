@@ -490,7 +490,7 @@ object SparkRepository {
                 col =>
                   val alias = col.metadata.getStringArray(SchemaConverter.COLUMN_NAME).headOption
                   if (alias.nonEmpty) {
-                    sqlString = sqlString.replace(s"`${col.name}`", s"`${alias.get}`")
+                    sqlString = sqlString.replace(s"${col.name}", s"${alias.get}")
                   }
               }
               cond.copy(value = Option(sqlString))
