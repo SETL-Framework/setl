@@ -219,6 +219,7 @@ class ConnectorBuilderSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("build DeltaConnector") {
+    org.apache.spark.sql.delta.DeltaLog.clearCache()
     val spark: SparkSession = new SparkSessionBuilder("cassandra")
       .withSparkConf(MockCassandra.cassandraConf)
       .setEnv("local")
