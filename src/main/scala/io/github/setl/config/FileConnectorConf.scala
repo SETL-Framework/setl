@@ -35,6 +35,8 @@ class FileConnectorConf extends ConnectorConf {
 
   def setS3SessionToken(value: String): this.type = set("fs.s3a.session.token", value)
 
+  def setFilenamePattern(value: String): this.type = set("filenamePattern", value)
+
   def getEncoding: String = get("encoding", defaultEncoding)
 
   def getSaveMode: SaveMode = SaveMode.valueOf(get("saveMode", defaultSaveMode))

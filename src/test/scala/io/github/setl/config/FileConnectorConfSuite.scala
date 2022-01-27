@@ -50,6 +50,10 @@ class FileConnectorConfSuite extends AnyFunSuite {
     assert(conf.get("sessionToken") === None)
     conf.setS3SessionToken("sessionToken")
     assert(conf.get("fs.s3a.session.token").get === "sessionToken")
+
+    assert(conf.get("filenamePattern") === None)
+    conf.setFilenamePattern("(file)(.*)(\\.csv)")
+    assert(conf.get("filenamePattern").get === "(file)(.*)(\\.csv)")
   }
 
   test("Getters FileConnectorConf") {
@@ -63,7 +67,7 @@ class FileConnectorConfSuite extends AnyFunSuite {
     assert(conf.getS3AccessKey === Some("accessKey"))
     assert(conf.getS3SecretKey === Some("secretKey"))
     assert(conf.getS3SessionToken === Some("sessionToken"))
-    assert(conf.getFilenamePattern === None)
+    assert(conf.getFilenamePattern === Some("(file)(.*)(\\.csv)"))
 
     val newConf = new FileConnectorConf()
     assertThrows[ConfException](newConf.getStorage)
