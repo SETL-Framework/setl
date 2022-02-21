@@ -205,7 +205,8 @@ class FileConnectorSuite extends AnyFunSuite with Matchers {
     import spark.implicits._
     val options = Map[String, String](
       "path" -> "src/test/resources",
-      "pathFormat" -> "TEST"
+      "pathFormat" -> "TEST",
+      "storage" -> "CSV"
     )
     val fileConnectorConf = new FileConnectorConf()
     fileConnectorConf.set(options)
