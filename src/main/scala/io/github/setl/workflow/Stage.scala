@@ -8,12 +8,13 @@ import io.github.setl.transformation.{AbstractFactory, Deliverable, Factory}
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.parallel.ForkJoinTaskSupport
 import scala.collection.parallel.mutable.ParArray
 import scala.reflect.ClassTag
 
 /**
  * A Stage is a collection of independent Factories. All the stages of a pipeline will be executed
- * sequentially at runtime. Within a stage, all factories could be executed in parallel or in sequential order.
+ * sequentially at runtime. Within a stage, factories could be executed in parallel or in sequential order.
  */
 @InterfaceStability.Evolving
 class Stage extends Logging
@@ -27,6 +28,7 @@ class Stage extends Logging
   private[this] var _optimization: Boolean = false
   private[this] var _end: Boolean = true
   private[this] var _parallel: Boolean = true
+  private[this] var _parallelismLevel: Option[Int] = None
   private[this] var _stageId: Int = _
   private[this] var _deliverable: Array[Deliverable[_]] = _
   private[this] val _benchmarkResult: ArrayBuffer[BenchmarkResult] = ArrayBuffer.empty
@@ -65,6 +67,28 @@ class Stage extends Logging
    */
   def parallel(boo: Boolean): this.type = {
     _parallel = boo
+    this
+  }
+
+  /**
+   * Set the parallelism level
+   * @param parallelismLevel Int, parallelism level
+   * @throws IllegalArgumentException will be thrown if the input parallelism level is less or equal than 0
+   * @return this
+   */
+  @throws[IllegalArgumentException]
+  def parallel(parallelismLevel: Int): this.type = {
+    if (parallelismLevel <=0) {
+      throw new IllegalArgumentException("Invalid parallelism level. It must be a positive integer.")
+    }
+
+    if (parallelismLevel != 1) {
+      _parallel = true
+      _parallelismLevel = Some(parallelismLevel)
+    } else {
+      _parallel = false
+    }
+
     this
   }
 
@@ -162,7 +186,19 @@ class Stage extends Logging
     _deliverable = parallelFactories match {
       case Left(par) =>
         logDebug(s"Stage $stageId will be run in parallel mode")
-        par.map(runFactory).toArray
+
+        this._parallelismLevel match {
+          case Some(level) =>
+            val forkJoinPool = new java.util.concurrent.ForkJoinPool(level)
+            par.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
+            logInfo(s"Set the stage parallelism level to $level")
+            val output = par.map(runFactory).toArray
+            forkJoinPool.shutdown()
+            output
+          case _ =>
+            par.map(runFactory).toArray
+        }
+
 
       case Right(nonpar) =>
         logDebug(s"Stage $stageId will be run in sequential mode")
