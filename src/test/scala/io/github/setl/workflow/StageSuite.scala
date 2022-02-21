@@ -106,7 +106,7 @@ class StageSuite extends AnyFunSuite {
 
     assert(connector.read().count() === 2, "Output should be persisted")
 
-    connector.delete()
+    connector.drop()
   }
 
   test("Getters of stage") {
@@ -139,7 +139,29 @@ class StageSuite extends AnyFunSuite {
       .addFactory[PersistenceTest](Array(connector))
       .run()
 
-    connector.delete()
+    connector.drop()
+  }
+
+  test("Set stage parallelism") {
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
+
+    val connectorOptions: Map[String, String] = Map[String, String](
+      "path" -> "src/test/resources/test_csv_persistence",
+      "inferSchema" -> "true",
+      "delimiter" -> "|",
+      "header" -> "true",
+      "saveMode" -> "Overwrite"
+    )
+
+    val connector = new CSVConnector(connectorOptions)
+    val stage = new Stage().writable(true)
+
+    stage
+      .addFactory[PersistenceTest](Array(connector))
+      .parallel(5)
+      .run()
+
+    connector.drop()
   }
 }
 

@@ -22,6 +22,11 @@ private[setl] object SparkUtils {
     thisVer.take(3).toInt >= targetVer.take(3).toInt
   }
 
+  def checkScalaVersion(requiredVersion: String): Boolean = {
+    val currentVersion = scala.util.Properties.versionNumberString
+    currentVersion >= requiredVersion
+  }
+
   def withSparkVersion[T](minVersion: String)(fun: Boolean => T): T = {
     try {
       fun(checkSparkVersion(minVersion))
