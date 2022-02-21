@@ -15,6 +15,7 @@
   - vacuum
   - awaitTermination
   - stopStreaming
+- Controllable stage parallelism level (#240)
   
 ### Changed:
 
