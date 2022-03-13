@@ -71,7 +71,7 @@
         <changelist>-SNAPSHOT</changelist>
         <java.version>1.8</java.version>
         <app.environment>local</app.environment>
-        <apache.hadoop.version>3.2.0</apache.hadoop.version>
+        <apache.hadoop.version>3.3.2</apache.hadoop.version>
         <delta.version>1.1.0</delta.version>
         <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
@@ -83,7 +83,7 @@
         <spark.compat.version>3.2</spark.compat.version>
         <spark.cassandra.connector.version>3.1.0</spark.cassandra.connector.version>
         <spark.dynamodb.version>1.1.2</spark.dynamodb.version>
-        <spark.excel.version>0.13.7</spark.excel.version>
+        <spark.excel.version>3.2.1_0.16.5-pre1</spark.excel.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
