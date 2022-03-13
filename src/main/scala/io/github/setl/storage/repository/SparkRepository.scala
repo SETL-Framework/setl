@@ -477,7 +477,7 @@ object SparkRepository {
               // Check if use is trying to filter an binary column
               (binaryColumnNames ++ aliasBinaryColumns).toSet.foreach {
                 colName: String =>
-                  if (sqlString.contains(s"`$colName`")) {
+                  if (sqlString.contains(s"$colName")) {
                     throw new IllegalArgumentException(s"Binary column ${cond.key} couldn't be filtered")
                   }
               }
@@ -490,7 +490,7 @@ object SparkRepository {
                 col =>
                   val alias = col.metadata.getStringArray(SchemaConverter.COLUMN_NAME).headOption
                   if (alias.nonEmpty) {
-                    sqlString = sqlString.replace(s"`${col.name}`", s"`${alias.get}`")
+                    sqlString = sqlString.replace(s"${col.name}", s"${alias.get}")
                   }
               }
               cond.copy(value = Option(sqlString))

@@ -261,7 +261,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assert(df.count() === 8)
 
     df.show()
-    connector.delete()
+    connector.drop()
   }
 
   test("SparkRepository should handle column name changed by annotation while filtering") {
@@ -313,7 +313,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     findedBis4.collect() should contain theSameElementsAs findedBis3.collect()
     findedBis4.collect() should contain theSameElementsAs findedBis5.collect()
 
-    connector.delete()
+    connector.drop()
   }
 
   test("SparkRepository should compress columns with Compress annotation") {
@@ -356,7 +356,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assertThrows[IllegalArgumentException](repo.findBy(Set(Condition("col1", "=", "haha"), Condition("col4", "=", "test"))))
     assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test"))
     assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test" && $"col1" === "haha"))
-    connector.delete()
+    connector.drop()
   }
 
   test("SparkRepository should compress columns with Compress annotation with another Compressor") {
@@ -380,7 +380,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     // Write non compressed data
     connector.write(test.toDF())
     val sizeUncompressed = connector.getSize
-    connector.delete()
+    connector.drop()
 
     // Write compressed data
     repo.save(test)
@@ -400,7 +400,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     assertThrows[IllegalArgumentException](repo.findBy(Set(Condition("col1", "=", "haha"), Condition("col4", "=", "test"))))
     assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test"))
     assertThrows[IllegalArgumentException](repo.findBy($"col4" === "test" && $"col1" === "haha"))
-    connector.delete()
+    connector.drop()
   }
 
   test("SparkRepository should cache read data unless there are new data be written") {
@@ -428,7 +428,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val field = repoCached.getClass.getDeclaredField("readCache")
     field.setAccessible(true)
     assert(field.get(repoCached).asInstanceOf[DataFrame].storageLevel.useMemory)
-    connector.delete()
+    connector.drop()
 
     // Test cache-disabled repository
     val repoNotCached = new SparkRepository[TestCompressionRepositoryGZIP].setConnector(connector)
@@ -440,7 +440,7 @@ class SparkRepositorySuite extends AnyFunSuite with Matchers {
     val field2 = repoCached.getClass.getDeclaredField("readCache")
     field2.setAccessible(true)
     assert(!field2.get(repoNotCached).asInstanceOf[DataFrame].storageLevel.useMemory)
-    connector.delete()
+    connector.drop()
   }
 
   test("SparkRepository IO methods") {
