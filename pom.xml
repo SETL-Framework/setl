@@ -97,7 +97,7 @@
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <maven.site.plugin.version>3.9.1</maven.site.plugin.version>
         <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
-        <typesafe.config.version>1.4.1</typesafe.config.version>
+        <typesafe.config.version>1.4.2</typesafe.config.version>
     </properties>
 
     <dependencies>
