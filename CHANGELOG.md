@@ -1,4 +1,4 @@
-## Unreleased
+## 1.0.0 (2022-03-12)
 
 ### Added:
 
@@ -24,6 +24,7 @@
 - Deprecated `FileConnector.delete()` to avoid ambiguity (use `FileConnector.drop()` instead)
 - Upgraded spark-cassandra-connector to 3.0.0 for the mvn profile `spark_3.0`
 - New logo
+- Update Delta version to v1.0 (PR #234)
 
 ### Fixed:
 
