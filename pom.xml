@@ -73,7 +73,7 @@
         <app.environment>local</app.environment>
         <apache.hadoop.version>3.2.0</apache.hadoop.version>
         <delta.version>1.1.0</delta.version>
-        <scala.version>2.12.10</scala.version>
+        <scala.version>2.13.8</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <scala.maven.plugin.version>4.4.1</scala.maven.plugin.version>
         <scalatest.version>3.2.1</scalatest.version>
