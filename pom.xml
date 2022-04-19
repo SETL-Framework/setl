@@ -83,7 +83,7 @@
         <spark.compat.version>3.2</spark.compat.version>
         <spark.cassandra.connector.version>3.1.0</spark.cassandra.connector.version>
         <spark.dynamodb.version>1.1.2</spark.dynamodb.version>
-        <spark.excel.version>0.13.7</spark.excel.version>
+        <spark.excel.version>3.2.1_0.17.0</spark.excel.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.timezone>UTC</project.timezone>
