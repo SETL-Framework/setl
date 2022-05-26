@@ -63,6 +63,6 @@ class HudiConnector(val options: HudiConnectorConf) extends Connector with HasRe
    */
   override def write(t: DataFrame): Unit = {
     this.setJobDescription(s"Write file to ${options.getPath}")
-    writer(t)
+    writer(t).save(options.getPath)
   }
 }
