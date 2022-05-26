@@ -1,13 +1,18 @@
 package io.github.setl.storage.connector
 
+import com.typesafe.config.Config
 import io.github.setl.config.Conf
 import io.github.setl.enums.Storage
+import io.github.setl.util.TypesafeConfigUtils
 import org.apache.spark.sql.DataFrame
 
 class SparkSQLConnector(val query: String) extends Connector {
   override val storage: Storage = Storage.SPARK_SQL
 
   def this(conf: Conf) = this(conf.get("query", ""))
+  def this(config: Config) = this(
+    query = TypesafeConfigUtils.getAs[String](config, "query").getOrElse("")
+  )
 
   /**
    * Read data from the data source
