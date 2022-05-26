@@ -98,6 +98,8 @@
         <maven.site.plugin.version>3.9.1</maven.site.plugin.version>
         <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
         <typesafe.config.version>1.4.2</typesafe.config.version>
+        <hudi.version>0.11.0</hudi.version>
+        <spark.avro.version>3.0.2</spark.avro.version>
     </properties>
 
     <dependencies>
@@ -176,6 +178,18 @@
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
             <version>${delta.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-spark3.1-bundle_${scala.compat.version}</artifactId>
+            <version>${hudi.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-avro_${scala.compat.version}</artifactId>
+            <version>${spark.avro.version}</version>
         </dependency>
 
         <!-- TYPESAFE CONFIG -->
