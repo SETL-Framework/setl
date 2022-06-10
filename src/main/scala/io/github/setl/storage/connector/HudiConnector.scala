@@ -12,8 +12,6 @@ class HudiConnector(val options: HudiConnectorConf) extends Connector with HasRe
 
   def this(options: Map[String, String]) = this(HudiConnectorConf.fromMap(options))
 
-  def this(path: String, saveMode: SaveMode) = this(Map("path" -> path, "saveMode" -> saveMode.toString))
-
   def this(config: Config) = this(TypesafeConfigUtils.getMap(config))
 
   def this(conf: Conf) = this(conf.toMap)

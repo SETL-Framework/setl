@@ -99,6 +99,7 @@
         <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
         <typesafe.config.version>1.4.2</typesafe.config.version>
         <hudi.version>0.11.0</hudi.version>
+        <hudi.bundle.version>spark3-bundle</hudi.bundle.version>
         <spark.avro.version>3.0.2</spark.avro.version>
     </properties>
 
@@ -182,7 +183,7 @@
 
         <dependency>
             <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-spark${spark.compat.version}-bundle_${scala.compat.version}</artifactId>
+            <artifactId>hudi-${hudi.bundle.version}_${scala.compat.version}</artifactId>
             <version>${hudi.version}</version>
         </dependency>
 
@@ -407,6 +408,7 @@
                 <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
                 <delta.version>0.6.1</delta.version>
                 <apache.hadoop.version>2.9.2</apache.hadoop.version>
+                <hudi.bundle.version>spark-bundle</hudi.bundle.version>
                 <spark.avro.version>2.4.8</spark.avro.version>
             </properties>
         </profile>
