@@ -1,7 +1,7 @@
 package io.github.setl.storage.connector
 
 import io.github.setl.config.{HudiConnectorConf, Properties}
-import io.github.setl.{SparkTestUtils, TestObject2}
+import io.github.setl.{SparkSessionBuilder, SparkTestUtils, TestObject2}
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -32,7 +32,12 @@ class HudiConnectorSuite extends AnyFunSuite {
   )
 
   test("Instantiation of constructors") {
-    val spark: SparkSession = SparkSession.builder().config("spark.serializer", "org.apache.spark.serializer.KryoSerializer").master("local").getOrCreate()
+
+    // New spark session here since Hudi only supports KryoSerializer
+    val spark: SparkSession = new SparkSessionBuilder().setEnv("local")
+      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .build()
+      .get()
     assume(SparkTestUtils.checkSparkVersion("2.4"))
 
     import spark.implicits._
