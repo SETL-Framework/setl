@@ -422,6 +422,7 @@
                 <delta.version>0.6.1</delta.version>
                 <apache.hadoop.version>2.9.2</apache.hadoop.version>
                 <hudi.bundle.version>spark-bundle</hudi.bundle.version>
+                <hudi.version>0.7.0</hudi.version>
                 <spark.avro.version>2.4.8</spark.avro.version>
             </properties>
         </profile>
