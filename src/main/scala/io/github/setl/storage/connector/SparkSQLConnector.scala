@@ -14,6 +14,8 @@ class SparkSQLConnector(val query: String) extends Connector {
     query = TypesafeConfigUtils.getAs[String](config, "query").getOrElse("")
   )
 
+  require(query.nonEmpty, "query is not defined")
+
   /**
    * Read data from the data source
    *
