@@ -19,10 +19,7 @@ class HudiConnectorSuite extends AnyFunSuite {
     "hoodie.table.name" -> "test_object",
     "hoodie.datasource.write.recordkey.field" -> "col1",
     "hoodie.datasource.write.precombine.field" -> "col4",
-    "hoodie.datasource.write.table.type" -> "MERGE_ON_READ",
-    "hoodie.index.type" -> "BUCKET",
-    "hoodie.bucket.index.num.buckets" -> "1",
-    "hoodie.storage.layout.partitioner.class" -> "org.apache.hudi.table.action.commit.SparkBucketIndexPartitioner"
+    "hoodie.datasource.write.table.type" -> "MERGE_ON_READ"
   )
 
   val testTable: Seq[TestObject2] = Seq(
