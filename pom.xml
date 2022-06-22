@@ -98,6 +98,9 @@
         <maven.site.plugin.version>3.9.1</maven.site.plugin.version>
         <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
         <typesafe.config.version>1.4.2</typesafe.config.version>
+        <hudi.version>0.11.0</hudi.version>
+        <hudi.bundle.version>spark3.2-bundle</hudi.bundle.version>
+        <spark.avro.version>3.0.2</spark.avro.version>
     </properties>
 
     <dependencies>
@@ -176,6 +179,18 @@
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
             <version>${delta.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-${hudi.bundle.version}_${scala.compat.version}</artifactId>
+            <version>${hudi.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-avro_${scala.compat.version}</artifactId>
+            <version>${spark.avro.version}</version>
         </dependency>
 
         <!-- TYPESAFE CONFIG -->
@@ -393,6 +408,8 @@
                 <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
                 <delta.version>0.6.1</delta.version>
                 <apache.hadoop.version>2.9.2</apache.hadoop.version>
+                <hudi.bundle.version>spark2.4-bundle</hudi.bundle.version>
+                <spark.avro.version>2.4.8</spark.avro.version>
             </properties>
         </profile>
         <profile>
@@ -404,6 +421,9 @@
                 <spark.dynamodb.version>1.0.4</spark.dynamodb.version>
                 <delta.version>0.6.1</delta.version>
                 <apache.hadoop.version>2.9.2</apache.hadoop.version>
+                <hudi.bundle.version>spark-bundle</hudi.bundle.version>
+                <hudi.version>0.7.0</hudi.version>
+                <spark.avro.version>2.4.4</spark.avro.version>
             </properties>
         </profile>
         <profile>
@@ -413,6 +433,8 @@
                 <spark.compat.version>3.0</spark.compat.version>
                 <spark.cassandra.connector.version>3.0.0</spark.cassandra.connector.version>
                 <delta.version>0.7.0</delta.version>
+                <hudi.bundle.version>spark3.0.3-bundle</hudi.bundle.version>
+                <hudi.version>0.10.1</hudi.version>
             </properties>
         </profile>
         <profile>

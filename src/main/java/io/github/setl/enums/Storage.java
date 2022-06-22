@@ -13,6 +13,7 @@ public enum Storage {
     JSON("io.github.setl.storage.connector.JSONConnector"),
     JDBC("io.github.setl.storage.connector.JDBCConnector"),
     STRUCTURED_STREAMING("io.github.setl.storage.connector.StructuredStreamingConnector"),
+    HUDI("io.github.setl.storage.connector.HudiConnector"),
     OTHER(null);
 
     private String connectorName;

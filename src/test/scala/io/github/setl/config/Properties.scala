@@ -25,6 +25,8 @@ object Properties {
 
   val jdbcConfig: Config = cl.getConfig("psql.test")
 
+  val hudiConfig : Config = cl.getConfig("hudi.test")
+
   val excelConfigConnector: Config = cl.getConfig("connector.excel")
   val cassandraConfigConnector: Config = cl.getConfig("connector.cassandra")
   val csvConfigConnector: Config = cl.getConfig("connector.csv")
