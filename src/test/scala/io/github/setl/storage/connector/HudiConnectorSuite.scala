@@ -1,6 +1,6 @@
 package io.github.setl.storage.connector
 
-import io.github.setl.config.{HudiConnectorConf, Properties}
+import io.github.setl.config.{Conf, HudiConnectorConf, Properties}
 import io.github.setl.{SparkSessionBuilder, SparkTestUtils, TestObject2}
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
@@ -42,6 +42,18 @@ class HudiConnectorSuite extends AnyFunSuite {
     val connector = new HudiConnector(HudiConnectorConf.fromMap(options))
     connector.write(testTable.toDF)
     assert(connector.read().collect().length == testTable.length)
+
+    val path2: String = Paths.get("src", "test", "resources", "test_hudi_2").toFile.getAbsolutePath
+    val options2 = options + ("path" -> path2)
+    val connector2 = new HudiConnector(options2)
+    connector2.write(testTable.toDF)
+    assert(connector2.read().collect().length == testTable.length)
+
+    val path3: String = Paths.get("src", "test", "resources", "test_hudi_3").toFile.getAbsolutePath
+    val options3 = options + ("path" -> path3)
+    val connector3 = new HudiConnector(Conf.fromMap(options3))
+    connector3.write(testTable.toDF, Some("any_"))
+    assert(connector3.read().collect().length == testTable.length)
 
     val connector7 = new HudiConnector(Properties.hudiConfig)
     connector7.write(testTable.toDF)

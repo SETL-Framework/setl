@@ -13,8 +13,12 @@ class HudiConnectorConfSuite  extends AnyFunSuite {
     assert(conf.getSaveMode === SaveMode.Append)
     conf.setSaveMode("Overwrite")
     assert(conf.getSaveMode === SaveMode.Overwrite)
+    conf.setSaveMode(SaveMode.Overwrite)
+    assert(conf.getSaveMode === SaveMode.Overwrite)
 
     assert(conf.get("path") === None)
+    assertThrows[ConfException](conf.getPath)
+
     conf.setPath("path")
     assert(conf.getPath === "path")
   }

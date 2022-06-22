@@ -55,6 +55,15 @@ export SPARK_VER=2.4
 ./dev/test.sh
 ```
 
+Note: in some case you get the following error 
+```
+java.net.BindException: Can't assign requested address: Service 'sparkDriver'
+```
+then you have to bind the spark to local ip like this
+```shell
+export SPARK_LOCAL_IP=127.0.0.1
+```
+
 ## Styleguide
 
 ### Commit styleguide
