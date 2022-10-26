@@ -2,6 +2,7 @@ package io.github.setl.storage.connector
 
 import io.github.setl.config.{Conf, Properties}
 import io.github.setl.{SparkSessionBuilder, TestObject}
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -47,8 +48,6 @@ class SparkSQLConnectorSuite extends AnyFunSuite{
     "query" -> query
   )
 
-  val spark: SparkSession = new SparkSessionBuilder().setEnv("local").build().get()
-  import spark.implicits._
 
   test("Instantiation of constructors") {
     val connector = new SparkSQLConnector(query)
@@ -67,6 +66,9 @@ class SparkSQLConnectorSuite extends AnyFunSuite{
   }
 
   test("Read/Write of SparkSQLConnector") {
+    val spark: SparkSession = SparkSession.builder().config(new SparkConf()).master("local[*]").getOrCreate()
+    import spark.implicits._
+
     val connector = new SparkSQLConnector(query)
     assert(connector.read().collect().length == 100)
 
