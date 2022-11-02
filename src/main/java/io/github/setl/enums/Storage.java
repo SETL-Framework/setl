@@ -14,6 +14,7 @@ public enum Storage {
     JDBC("io.github.setl.storage.connector.JDBCConnector"),
     STRUCTURED_STREAMING("io.github.setl.storage.connector.StructuredStreamingConnector"),
     HUDI("io.github.setl.storage.connector.HudiConnector"),
+    SPARK_SQL("io.github.setl.storage.connector.SparkSQLConnector"),
     OTHER(null);
 
     private String connectorName;
